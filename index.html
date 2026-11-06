@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cotswolds Ambient Weather &amp; Frost Watch • TV Dashboard</title>
+  <title>Cotswolds Ambient Weather &amp; Frost Watch</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,16 +27,16 @@
     *, *::before, *::after {
       box-sizing: border-box;
     }
+    
+    /* DEFAULT (TV / Landscape): Zero-scroll 16:9 widescreen layout */
     html, body {
-      height: 100vh;
-      width: 100vw;
       margin: 0;
       padding: 0;
-      overflow: hidden;
       background-color: #060813;
       color: #f1f5f9;
       user-select: none;
     }
+
     .glass-card {
       background: rgba(15, 23, 42, 0.78);
       backdrop-filter: blur(12px);
@@ -48,8 +48,6 @@
       background: rgba(0, 0, 0, 0.28);
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
-    ::-webkit-scrollbar { display: none; }
-    * { -ms-overflow-style: none; scrollbar-width: none; }
     
     .ambient-glow {
       position: fixed;
@@ -66,15 +64,77 @@
       background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 70%);
     }
 
-    #dashboardRoot {
-      height: 100vh;
-      width: 100vw;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 8px 28px 8px 28px;
-      transition: transform 0.2s ease;
-      transform-origin: top center;
+    /* WIDESCREEN / TV MODE (Landscape): Strictly 100vh with 3 columns */
+    @media (orientation: landscape) and (min-width: 641px) {
+      html, body {
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+      #dashboardRoot {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 8px 28px 8px 28px;
+        transition: transform 0.2s ease;
+        transform-origin: top center;
+      }
+      #mainGrid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        flex: 1 1 0%;
+        min-height: 0;
+        margin: 4px 0;
+      }
+      ::-webkit-scrollbar { display: none; }
+      * { -ms-overflow-style: none; scrollbar-width: none; }
+    }
+
+    /* MOBILE MODE (Portrait - e.g. Galaxy Note 9): Scrollable single-column native layout */
+    @media (orientation: portrait), (max-width: 640px) {
+      html, body {
+        height: auto !important;
+        min-height: 100vh;
+        overflow-y: auto !important;
+        overflow-x: hidden;
+      }
+      #dashboardRoot {
+        height: auto !important;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 14px 24px 14px;
+        transform: none !important;
+      }
+      #mainGrid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .tv-only {
+        display: none !important;
+      }
+      /* Comfortable card heights on mobile */
+      .glass-card {
+        padding: 14px !important;
+      }
+      #footerTimeline {
+        order: 2; /* Put timeline right under current weather on phone */
+        margin-top: 0 !important;
+      }
+      #colFrost {
+        order: 1; /* Frost watch near top */
+      }
+      #colWeather {
+        order: 0; /* Weather top */
+      }
+      #colSevenDay {
+        order: 3; /* 7-day at bottom */
+      }
     }
   </style>
 </head>
@@ -83,24 +143,24 @@
 
   <div id="dashboardRoot">
     
-    <!-- TOP HEADER BAR (~38px height) -->
-    <header class="relative z-10 flex items-center justify-between pb-1 border-b border-white/10 flex-shrink-0">
+    <!-- HEADER BAR -->
+    <header class="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-white/10 flex-shrink-0">
       <div class="flex items-center gap-2">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></div>
         <div class="flex items-baseline gap-2">
           <h1 id="headerLocationTitle" class="text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5">
             Nailsworth &amp; Stroud
           </h1>
-          <button onclick="promptChangePostcode()" title="Click to change location or UK postcode" class="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
+          <button onclick="promptChangePostcode()" title="Change UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
             <span id="headerPostcodeBadge">GL5 5HH</span>
             <span class="text-[8px] text-indigo-400">✏️</span>
           </button>
-          <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden sm:inline">51.70°N, 2.23°W • Elev. 120m</span>
+          <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline">51.70°N, 2.23°W</span>
         </div>
       </div>
 
       <!-- Center/Right: Clock, Date, TV Zoom & Controls -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
         <div class="text-right flex items-baseline gap-2">
           <div id="clockDate" class="text-[11px] text-slate-300 font-medium">
             Loading date...
@@ -110,15 +170,15 @@
           </div>
         </div>
 
-        <!-- TV Zoom / Scale Selector -->
-        <div class="flex items-center gap-0.5 bg-black/40 rounded-lg p-0.5 border border-white/10 text-xs">
+        <!-- TV Zoom / Scale Selector (hidden on mobile phones) -->
+        <div class="tv-only flex items-center gap-0.5 bg-black/40 rounded-lg p-0.5 border border-white/10 text-xs">
           <button onclick="adjustScale(-0.05)" title="Shrink layout (TV Zoom Out)" class="px-1.5 py-0.2 rounded hover:bg-white/10 text-slate-300 hover:text-white">A-</button>
           <span id="scaleLabel" class="text-[10px] font-mono px-1 text-slate-400">100%</span>
           <button onclick="adjustScale(0.05)" title="Enlarge layout (TV Zoom In)" class="px-1.5 py-0.2 rounded hover:bg-white/10 text-slate-300 hover:text-white">A+</button>
         </div>
 
         <div class="flex items-center gap-1">
-          <button onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition">
+          <button onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="tv-only p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
             </svg>
@@ -132,11 +192,11 @@
       </div>
     </header>
 
-    <!-- MAIN 3-COLUMN GRID -->
-    <main class="relative z-10 flex-1 min-h-0 grid grid-cols-3 gap-2 my-1">
+    <!-- MAIN GRID CONTAINER -->
+    <main id="mainGrid" class="relative z-10">
 
       <!-- COLUMN 1: HERO WEATHER & 6 METRIC TILES -->
-      <div class="h-full flex flex-col min-w-0">
+      <div id="colWeather" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           
           <!-- Current Temp & Condition -->
@@ -148,18 +208,18 @@
               <span id="lastUpdated" class="text-[9px] font-mono text-slate-400">Syncing...</span>
             </div>
 
-            <div class="mt-0.5 flex items-center justify-between">
+            <div class="mt-1 flex items-center justify-between">
               <div class="flex items-baseline gap-2">
-                <span id="currentTemp" class="text-4xl font-extrabold tracking-tighter text-white font-mono">--°</span>
+                <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
                 <div>
                   <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
                   <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
                 </div>
               </div>
               <div class="text-right flex items-center gap-1.5">
-                <div id="weatherIconLg" class="text-2xl">☁️</div>
+                <div id="weatherIconLg" class="text-3xl">☁️</div>
                 <div class="text-left">
-                  <div id="weatherDesc" class="text-xs font-bold text-white capitalize leading-tight">Overcast</div>
+                  <div id="weatherDesc" class="text-sm font-bold text-white capitalize leading-tight">Overcast</div>
                   <div id="weatherSubDesc" class="text-[9px] text-slate-400">Calm valley air</div>
                 </div>
               </div>
@@ -167,84 +227,84 @@
           </div>
 
           <!-- 6 Dense Tiles (2 cols x 3 rows) -->
-          <div class="grid grid-cols-2 gap-1 mt-1 pt-1 border-t border-white/10 flex-1 min-h-0">
+          <div class="grid grid-cols-2 gap-1.5 mt-1.5 pt-1.5 border-t border-white/10 flex-1 min-h-0">
             
             <!-- Wind -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between text-[9px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Wind</span>
                 <span id="windCompass" class="text-sky-400 font-mono font-bold">--</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
                 <span id="windSpeed" class="text-sm font-bold font-mono text-white leading-none">--</span>
-                <span class="text-[8px] text-slate-400">mph</span>
+                <span class="text-[9px] text-slate-400">mph</span>
               </div>
-              <div id="windGust" class="text-[8px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
+              <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
             </div>
 
             <!-- Barometer -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between text-[9px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Barometer</span>
-                <span id="pressureTrend" class="text-[8px] font-mono text-emerald-400">Steady</span>
+                <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400">Steady</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
                 <span id="barometer" class="text-sm font-bold font-mono text-white leading-none">----</span>
-                <span class="text-[8px] text-slate-400">hPa</span>
+                <span class="text-[9px] text-slate-400">hPa</span>
               </div>
-              <div class="text-[8px] text-slate-500 leading-none">Surface pressure</div>
+              <div class="text-[9px] text-slate-500 leading-none">Surface pressure</div>
             </div>
 
             <!-- Humidity & Dew -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between text-[9px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Humidity</span>
-                <span id="dewPoint" class="text-[8px] font-mono text-slate-300">Dew --°</span>
+                <span id="dewPoint" class="text-[9px] font-mono text-slate-300">Dew --°</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
                 <span id="humidity" class="text-sm font-bold font-mono text-white leading-none">--</span>
-                <span class="text-[8px] text-slate-400">%</span>
+                <span class="text-[9px] text-slate-400">%</span>
               </div>
-              <div class="text-[8px] text-slate-500 leading-none">Moisture level</div>
+              <div class="text-[9px] text-slate-500 leading-none">Moisture level</div>
             </div>
 
             <!-- Air Quality (AQI) -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between text-[9px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Air Quality</span>
-                <span id="aqiBadge" class="text-[8px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300">Good</span>
+                <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300">Good</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
                 <span id="aqiVal" class="text-sm font-bold font-mono text-white leading-none">--</span>
-                <span class="text-[8px] text-slate-400">AQI</span>
+                <span class="text-[9px] text-slate-400">AQI</span>
               </div>
-              <div id="pm25Val" class="text-[8px] text-slate-500 truncate leading-none">PM2.5: --</div>
+              <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
             </div>
 
             <!-- Rain Today -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between text-[9px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Rain Today</span>
-                <span id="precipProbToday" class="text-[8px] text-sky-400 font-mono">--%</span>
+                <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono">--%</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
                 <span id="precipToday" class="text-sm font-bold font-mono text-white leading-none">0.0</span>
-                <span class="text-[8px] text-slate-400">mm</span>
+                <span class="text-[9px] text-slate-400">mm</span>
               </div>
-              <div class="text-[8px] text-slate-500 leading-none">Accumulated</div>
+              <div class="text-[9px] text-slate-500 leading-none">Accumulated</div>
             </div>
 
             <!-- Cloud & UV -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between text-[9px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Cloud &amp; UV</span>
-                <span id="uvIndexBadge" class="text-[8px] font-mono text-amber-400">UV: --</span>
+                <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400">UV: --</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
                 <span id="cloudCover" class="text-sm font-bold font-mono text-white leading-none">--</span>
-                <span class="text-[8px] text-slate-400">%</span>
+                <span class="text-[9px] text-slate-400">%</span>
               </div>
-              <div class="text-[8px] text-slate-500 leading-none">Sky cover</div>
+              <div class="text-[9px] text-slate-500 leading-none">Sky cover</div>
             </div>
 
           </div>
@@ -253,59 +313,59 @@
       </div>
 
       <!-- COLUMN 2: FROST WATCH + NIGHT SKY + SOLAR PATH -->
-      <div class="h-full flex flex-col min-w-0">
+      <div id="colFrost" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           
           <!-- 1. CAR & MORNING FROST PREDICTOR -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <span class="px-2 py-0.2 text-[9px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
                 <span id="frostIcon">🚗</span> Car &amp; Frost Watch
               </span>
-              <span id="frostTimeWindow" class="text-[8px] font-mono text-slate-400 truncate">
+              <span id="frostTimeWindow" class="text-[9px] font-mono text-slate-400 truncate">
                 Tomorrow (05-08 AM)
               </span>
             </div>
 
-            <div id="frostCardBg" class="p-2 rounded-xl bg-slate-900/60 border border-white/10 transition-colors">
+            <div id="frostCardBg" class="p-2.5 rounded-xl bg-slate-900/60 border border-white/10 transition-colors">
               <div class="flex items-center justify-between">
                 <div>
-                  <div class="text-[8px] uppercase tracking-wider font-semibold text-slate-400 leading-none">Windscreen Condition</div>
-                  <div id="frostStatus" class="text-xs lg:text-sm font-bold text-white flex items-center gap-1 mt-0.5">
+                  <div class="text-[9px] uppercase tracking-wider font-semibold text-slate-400 leading-none">Windscreen Condition</div>
+                  <div id="frostStatus" class="text-sm font-bold text-white flex items-center gap-1 mt-0.5">
                     Calculating frost...
                   </div>
                 </div>
-                <div id="frostBadge" class="text-[9px] font-bold font-mono px-1.5 py-0.2 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <div id="frostBadge" class="text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   Checking...
                 </div>
               </div>
-              <p id="frostDetail" class="text-[9px] text-slate-300 mt-1 leading-tight">
+              <p id="frostDetail" class="text-[10px] text-slate-300 mt-1 leading-normal">
                 Analyzing radiative cooling, surface soil temperature, and dew point...
               </p>
             </div>
           </div>
 
           <!-- 2. NIGHT SKY & LUNAR CYCLE -->
-          <div class="my-0.5 pt-1 border-t border-white/10">
-            <div class="flex items-center justify-between mb-0.5">
-              <span class="text-[9px] font-semibold uppercase tracking-wider text-purple-300 flex items-center gap-1">
+          <div class="my-1 pt-1.5 border-t border-white/10">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-semibold uppercase tracking-wider text-purple-300 flex items-center gap-1">
                 <span>✨</span> Night Sky &amp; Moon
               </span>
-              <span id="nightSkyScoreBadge" class="text-[8px] font-bold font-mono px-1.5 py-0.2 rounded bg-white/10 text-slate-300">
+              <span id="nightSkyScoreBadge" class="text-[9px] font-bold font-mono px-1.5 py-0.2 rounded bg-white/10 text-slate-300">
                 Evaluating...
               </span>
             </div>
 
-            <div class="flex items-center gap-2 p-1.5 glass-tile rounded-xl">
-              <div id="moonIcon" class="text-xl filter drop-shadow-[0_0_6px_rgba(255,255,255,0.25)] flex-shrink-0">
+            <div class="flex items-center gap-2.5 p-2 glass-tile rounded-xl">
+              <div id="moonIcon" class="text-2xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.25)] flex-shrink-0">
                 🌕
               </div>
               <div class="flex-grow min-w-0">
                 <div class="flex items-center justify-between">
-                  <span id="moonPhaseName" class="text-[11px] font-bold text-white truncate">Full Moon</span>
-                  <span id="moonIllumination" class="text-[9px] font-mono text-purple-300">--% lit</span>
+                  <span id="moonPhaseName" class="text-xs font-bold text-white truncate">Full Moon</span>
+                  <span id="moonIllumination" class="text-[10px] font-mono text-purple-300">--% lit</span>
                 </div>
-                <p id="stargazingAdvice" class="text-[9px] text-slate-300 truncate mt-0.5">
+                <p id="stargazingAdvice" class="text-[10px] text-slate-300 truncate mt-0.5">
                   Tonight: Checking cloud cover...
                 </p>
               </div>
@@ -313,31 +373,31 @@
           </div>
 
           <!-- 3. SOLAR PATH & DAYLIGHT MILESTONES -->
-          <div class="pt-1 border-t border-white/10">
-            <div class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-0.5 flex items-center justify-between">
+          <div class="pt-1.5 border-t border-white/10">
+            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1 flex items-center justify-between">
               <span>Solar Path &amp; Daylight</span>
-              <span id="sunCountdown" class="text-amber-400 font-mono font-medium text-[9px]">--</span>
+              <span id="sunCountdown" class="text-amber-400 font-mono font-medium text-[10px]">--</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-1">
-              <div class="flex items-center gap-1.5 p-1 glass-tile rounded-lg">
-                <span class="text-sm">🌅</span>
+            <div class="grid grid-cols-2 gap-1.5">
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg">
+                <span class="text-base">🌅</span>
                 <div>
-                  <div class="text-[8px] text-slate-400 leading-none">Sunrise</div>
-                  <div id="sunriseTime" class="text-[11px] font-bold font-mono text-white leading-tight">--:--</div>
+                  <div class="text-[9px] text-slate-400 leading-none">Sunrise</div>
+                  <div id="sunriseTime" class="text-xs font-bold font-mono text-white leading-tight">--:--</div>
                 </div>
               </div>
 
-              <div class="flex items-center gap-1.5 p-1 glass-tile rounded-lg">
-                <span class="text-sm">🌇</span>
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg">
+                <span class="text-base">🌇</span>
                 <div>
-                  <div class="text-[8px] text-slate-400 leading-none">Sunset</div>
-                  <div id="sunsetTime" class="text-[11px] font-bold font-mono text-white leading-tight">--:--</div>
+                  <div class="text-[9px] text-slate-400 leading-none">Sunset</div>
+                  <div id="sunsetTime" class="text-xs font-bold font-mono text-white leading-tight">--:--</div>
                 </div>
               </div>
             </div>
 
-            <div class="mt-0.5 flex items-center justify-between text-[8px] text-slate-400 px-0.5 font-mono">
+            <div class="mt-1 flex items-center justify-between text-[9px] text-slate-400 px-0.5 font-mono">
               <span>Daylight: <strong id="daylightLength" class="text-slate-200">--h --m</strong></span>
               <span>Source: <strong class="text-slate-200">Met UK</strong></span>
             </div>
@@ -347,23 +407,22 @@
       </div>
 
       <!-- COLUMN 3: 7-DAY OUTLOOK WITH FROST FLAGS -->
-      <div class="h-full flex flex-col min-w-0">
+      <div id="colSevenDay" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div>
-            <div class="flex items-center justify-between mb-0.5">
-              <span class="px-2 py-0.2 text-[9px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30">
+            <div class="flex items-center justify-between mb-1">
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30">
                 7-Day Forecast &amp; Frost Risk
               </span>
-              <span class="text-[8px] text-slate-400 font-mono">Temp / Rain / Frost</span>
+              <span class="text-[9px] text-slate-400 font-mono">Temp / Rain / Frost</span>
             </div>
 
-            <!-- 7 Compact Rows (Fits 100% of height) -->
-            <div id="sevenDayList" class="space-y-0.5 mt-0.5">
+            <div id="sevenDayList" class="space-y-1 mt-1">
               <div class="text-xs text-slate-400 text-center py-4">Loading 7-day outlook...</div>
             </div>
           </div>
 
-          <div class="pt-1 border-t border-white/10 flex items-center justify-between text-[8px] text-slate-400 font-mono">
+          <div class="pt-1.5 border-t border-white/10 flex items-center justify-between text-[9px] text-slate-400 font-mono">
             <span>Auto-refreshes every 15m</span>
             <span>No Ads • Pure Data</span>
           </div>
@@ -372,19 +431,19 @@
 
     </main>
 
-    <!-- BOTTOM HORIZONTAL TIMELINE: 18-HOUR HOURLY STRIP -->
-    <footer class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0">
-      <div class="flex items-center justify-between mb-0.5 px-0.5">
-        <div class="text-[9px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+    <!-- 18-HOUR HOURLY TIMELINE STRIP -->
+    <footer id="footerTimeline" class="relative z-10 glass-card rounded-2xl px-2.5 py-1.5 flex-shrink-0">
+      <div class="flex items-center justify-between mb-1 px-0.5">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
           18-Hour Forecast &amp; Rain Probability
         </div>
-        <div class="text-[9px] text-slate-400 font-mono">
+        <div class="text-[10px] text-slate-400 font-mono">
           Hourly Trend
         </div>
       </div>
 
-      <!-- Horizontal Strip -->
+      <!-- Horizontal Scrollable Strip -->
       <div id="hourlyTimeline" class="flex gap-1.5 overflow-x-auto pb-0.5">
         <div class="text-xs text-slate-400 py-1">Loading hourly forecast...</div>
       </div>
@@ -394,7 +453,6 @@
 
   <!-- SCRIPT LOGIC -->
   <script>
-    // DEFAULT LOCATION: Nailsworth & Stroud (GL5 5HH)
     let CURRENT_LOCATION = {
       name: 'Nailsworth & Stroud',
       postcode: 'GL5 5HH',
@@ -404,7 +462,6 @@
     };
     const TIMEZONE = 'Europe/London';
 
-    // Interactive or URL-based postcode lookup
     async function initLocation() {
       const params = new URLSearchParams(window.location.search);
       const pc = params.get('postcode') || params.get('pc');
@@ -429,7 +486,7 @@
             postcode: r.postcode,
             lat: r.latitude,
             lon: r.longitude,
-            desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W • ${r.admin_district}`
+            desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
           };
         }
       } catch (err) {
@@ -446,7 +503,7 @@
     }
 
     function promptChangePostcode() {
-      const pc = prompt("Enter a UK postcode (e.g. GL7 1AA, GL54 3AA):", CURRENT_LOCATION.postcode);
+      const pc = prompt("Enter a UK postcode (e.g. GL7 1AA, GL5 5HH):", CURRENT_LOCATION.postcode);
       if (pc && pc.trim() !== "") {
         const url = new URL(window.location.href);
         url.searchParams.set('postcode', pc.trim().toUpperCase());
@@ -459,15 +516,17 @@
     function adjustScale(delta) {
       currentScale = Math.max(0.75, Math.min(1.25, currentScale + delta));
       const root = document.getElementById('dashboardRoot');
-      root.style.transform = `scale(${currentScale})`;
-      root.style.height = `${100 / currentScale}vh`;
-      root.style.width = `${100 / currentScale}vw`;
+      if (window.innerWidth > 640 && window.matchMedia("(orientation: landscape)").matches) {
+        root.style.transform = `scale(${currentScale})`;
+        root.style.height = `${100 / currentScale}vh`;
+        root.style.width = `${100 / currentScale}vw`;
+      }
       document.getElementById('scaleLabel').textContent = `${Math.round(currentScale * 100)}%`;
       localStorage.setItem('dashboard_scale', currentScale);
     }
 
     const savedScale = localStorage.getItem('dashboard_scale');
-    if (savedScale) {
+    if (savedScale && window.innerWidth > 640) {
       currentScale = parseFloat(savedScale);
       setTimeout(() => adjustScale(0), 10);
     }
@@ -505,10 +564,7 @@
 
     function getWeatherInfo(code, isDay = 1) {
       const match = WEATHER_CODES[code] || { desc: 'Variable', iconDay: '⛅', iconNight: '☁️' };
-      return {
-        desc: match.desc,
-        icon: isDay ? match.iconDay : match.iconNight
-      };
+      return { desc: match.desc, icon: isDay ? match.iconDay : match.iconNight };
     }
 
     function degToCompass(deg) {
@@ -638,7 +694,7 @@
       document.getElementById('frostIcon').textContent = icon;
       document.getElementById('frostStatus').innerHTML = status;
       document.getElementById('frostBadge').textContent = badgeText;
-      document.getElementById('frostBadge').className = `text-[9px] font-mono px-1.5 py-0.2 rounded-lg ${badgeClass}`;
+      document.getElementById('frostBadge').className = `text-[9px] font-mono px-1.5 py-0.5 rounded-lg ${badgeClass}`;
       document.getElementById('frostCardBg').className = `p-2 rounded-xl transition-colors ${cardBgClass}`;
       document.getElementById('frostDetail').textContent = detail;
     }
@@ -750,16 +806,16 @@
         const aqiBadge = document.getElementById('aqiBadge');
         if (aqi <= 20) {
           aqiBadge.textContent = 'Good';
-          aqiBadge.className = 'text-[8px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300';
         } else if (aqi <= 40) {
           aqiBadge.textContent = 'Fair';
-          aqiBadge.className = 'text-[8px] font-bold px-1 rounded bg-sky-500/20 text-sky-300';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-sky-500/20 text-sky-300';
         } else if (aqi <= 60) {
           aqiBadge.textContent = 'Moderate';
-          aqiBadge.className = 'text-[8px] font-bold px-1 rounded bg-amber-500/20 text-amber-300';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-amber-500/20 text-amber-300';
         } else {
           aqiBadge.textContent = 'Poor';
-          aqiBadge.className = 'text-[8px] font-bold px-1 rounded bg-rose-500/20 text-rose-300';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-rose-500/20 text-rose-300';
         }
       }
 
@@ -823,25 +879,25 @@
         const hasFrostRisk = min <= 3.5;
 
         const row = document.createElement('div');
-        row.className = `flex items-center justify-between py-0.5 px-2 rounded-lg glass-tile text-xs transition ${hasFrostRisk ? 'border-l-2 border-l-cyan-400' : ''}`;
+        row.className = `flex items-center justify-between py-1.5 px-2.5 rounded-lg glass-tile text-xs transition ${hasFrostRisk ? 'border-l-2 border-l-cyan-400' : ''}`;
         row.innerHTML = `
-          <div class="w-16 flex items-center gap-1">
-            <span class="font-bold text-white text-[10px]">${dayName}</span>
-            <span class="text-[8px] text-slate-400 font-mono">${dateSub}</span>
+          <div class="w-20 flex items-center gap-1">
+            <span class="font-bold text-white text-[11px]">${dayName}</span>
+            <span class="text-[9px] text-slate-400 font-mono">${dateSub}</span>
           </div>
           
-          <div class="flex items-center gap-1">
-            <span class="text-xs">${info.icon}</span>
-            <span class="text-[9px] text-sky-400 font-mono ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
-            ${hasFrostRisk ? '<span class="text-[9px] text-cyan-300 font-bold">❄️</span>' : ''}
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm">${info.icon}</span>
+            <span class="text-[10px] text-sky-400 font-mono ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
+            ${hasFrostRisk ? '<span class="text-[10px] text-cyan-300 font-bold">❄️</span>' : ''}
           </div>
 
-          <div class="flex items-center gap-1 font-mono text-[10px]">
-            <span class="${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'} w-4 text-right">${min}°</span>
-            <div class="w-10 h-1 rounded-full bg-slate-800 overflow-hidden relative">
+          <div class="flex items-center gap-1.5 font-mono text-[11px]">
+            <span class="${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'} w-5 text-right">${min}°</span>
+            <div class="w-14 h-1.5 rounded-full bg-slate-800 overflow-hidden relative">
               <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${Math.max(0, (min / 25) * 100)}%; width: ${Math.max(18, ((max - min) / 20) * 100)}%"></div>
             </div>
-            <span class="text-white font-bold w-4">${max}°</span>
+            <span class="text-white font-bold w-5">${max}°</span>
           </div>
         `;
         container.appendChild(row);
@@ -876,7 +932,7 @@
         const isNearFreezing = temp <= 3;
 
         const card = document.createElement('div');
-        card.className = `flex-shrink-0 flex flex-col items-center justify-between p-1 rounded-lg border min-w-[62px] transition ${
+        card.className = `flex-shrink-0 flex flex-col items-center justify-between p-2 rounded-xl border min-w-[66px] transition ${
           i === startIndex 
             ? 'bg-sky-500/15 border-sky-400/40 shadow-[0_0_8px_rgba(56,189,248,0.15)]' 
             : isNearFreezing
@@ -886,14 +942,14 @@
 
         card.innerHTML = `
           <div class="flex items-center gap-0.5 leading-none">
-            <span class="text-[8px] font-mono font-semibold ${i === startIndex ? 'text-sky-300' : 'text-slate-400'}">${timeStr}</span>
+            <span class="text-[9px] font-mono font-semibold ${i === startIndex ? 'text-sky-300' : 'text-slate-400'}">${timeStr}</span>
             ${isNearFreezing ? '<span class="text-[8px] text-cyan-300">❄️</span>' : ''}
           </div>
-          <span class="text-xs my-0.5">${info.icon}</span>
-          <span class="text-[11px] font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : 'text-white'} leading-none">${temp}°</span>
+          <span class="text-base my-0.5">${info.icon}</span>
+          <span class="text-xs font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : 'text-white'} leading-none">${temp}°</span>
           
-          <div class="w-full text-center mt-0.5">
-            <span class="text-[8px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
+          <div class="w-full text-center mt-1">
+            <span class="text-[9px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
               ${rainProb}%
             </span>
             <div class="h-0.5 w-full bg-slate-800 rounded-full mt-0.5 overflow-hidden">
@@ -920,7 +976,6 @@
     updateClock();
     setInterval(updateClock, 1000);
 
-    // Initialize with dynamic or default location
     initLocation();
     setInterval(fetchWeatherData, 15 * 60 * 1000);
   </script>
