@@ -28,14 +28,20 @@
       box-sizing: border-box;
     }
     
-    /* DEFAULT (TV / Landscape): Zero-scroll 16:9 widescreen layout */
     html, body {
       margin: 0;
       padding: 0;
       background-color: #060813;
       color: #f1f5f9;
       user-select: none;
+      /* Smooth touch scrolling with hidden scrollbar */
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
     }
+
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
 
     .glass-card {
       background: rgba(15, 23, 42, 0.78);
@@ -64,22 +70,18 @@
       background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 70%);
     }
 
-    /* WIDESCREEN / TV MODE (Landscape): Strictly 100vh with 3 columns */
-    @media (orientation: landscape) and (min-width: 641px) {
-      html, body {
-        height: 100vh;
-        width: 100vw;
-        overflow: hidden;
-      }
+    /* WIDESCREEN / TV & PHONE LANDSCAPE */
+    @media (orientation: landscape) and (min-width: 600px) {
       #dashboardRoot {
-        height: 100vh;
+        min-height: 100vh;
         width: 100vw;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 8px 28px 8px 28px;
+        padding: 8px 24px 12px 24px;
         transition: transform 0.2s ease;
         transform-origin: top center;
+        gap: 6px;
       }
       #mainGrid {
         display: grid;
@@ -87,27 +89,28 @@
         gap: 8px;
         flex: 1 1 0%;
         min-height: 0;
-        margin: 4px 0;
       }
-      ::-webkit-scrollbar { display: none; }
-      * { -ms-overflow-style: none; scrollbar-width: none; }
     }
 
-    /* MOBILE MODE (Portrait - e.g. Galaxy Note 9): Scrollable single-column native layout */
-    @media (orientation: portrait), (max-width: 640px) {
+    /* TV ONLY (Landscape with large height >= 640px): Locks strictly to 100vh zero-scroll */
+    @media (orientation: landscape) and (min-width: 900px) and (min-height: 640px) {
       html, body {
-        height: auto !important;
-        min-height: 100vh;
-        overflow-y: auto !important;
-        overflow-x: hidden;
+        height: 100vh;
+        overflow: hidden;
       }
       #dashboardRoot {
-        height: auto !important;
+        height: 100vh;
+      }
+    }
+
+    /* MOBILE PORTRAIT (e.g. Note 9 held upright) */
+    @media (orientation: portrait), (max-width: 599px) {
+      #dashboardRoot {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        padding: 12px 14px 24px 14px;
+        padding: 12px 14px 28px 14px;
         transform: none !important;
       }
       #mainGrid {
@@ -118,22 +121,21 @@
       .tv-only {
         display: none !important;
       }
-      /* Comfortable card heights on mobile */
       .glass-card {
         padding: 14px !important;
       }
       #footerTimeline {
-        order: 2; /* Put timeline right under current weather on phone */
+        order: 2;
         margin-top: 0 !important;
       }
       #colFrost {
-        order: 1; /* Frost watch near top */
+        order: 1;
       }
       #colWeather {
-        order: 0; /* Weather top */
+        order: 0;
       }
       #colSevenDay {
-        order: 3; /* 7-day at bottom */
+        order: 3;
       }
     }
   </style>
@@ -516,17 +518,15 @@
     function adjustScale(delta) {
       currentScale = Math.max(0.75, Math.min(1.25, currentScale + delta));
       const root = document.getElementById('dashboardRoot');
-      if (window.innerWidth > 640 && window.matchMedia("(orientation: landscape)").matches) {
+      if (window.innerWidth > 600 && window.matchMedia("(orientation: landscape)").matches) {
         root.style.transform = `scale(${currentScale})`;
-        root.style.height = `${100 / currentScale}vh`;
-        root.style.width = `${100 / currentScale}vw`;
       }
       document.getElementById('scaleLabel').textContent = `${Math.round(currentScale * 100)}%`;
       localStorage.setItem('dashboard_scale', currentScale);
     }
 
     const savedScale = localStorage.getItem('dashboard_scale');
-    if (savedScale && window.innerWidth > 640) {
+    if (savedScale && window.innerWidth > 600) {
       currentScale = parseFloat(savedScale);
       setTimeout(() => adjustScale(0), 10);
     }
