@@ -34,9 +34,6 @@
       background-color: #060813;
       color: #f1f5f9;
       user-select: none;
-      /* Smooth touch scrolling with hidden scrollbar */
-      overflow-y: auto;
-      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -70,18 +67,22 @@
       background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 70%);
     }
 
-    /* WIDESCREEN / TV & PHONE LANDSCAPE */
-    @media (orientation: landscape) and (min-width: 600px) {
+    /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 581px) - Zero scroll */
+    @media (orientation: landscape) and (min-height: 581px) {
+      html, body {
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
       #dashboardRoot {
-        min-height: 100vh;
+        height: 100vh;
         width: 100vw;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 8px 24px 12px 24px;
+        padding: 8px 28px 8px 28px;
         transition: transform 0.2s ease;
         transform-origin: top center;
-        gap: 6px;
       }
       #mainGrid {
         display: grid;
@@ -89,22 +90,57 @@
         gap: 8px;
         flex: 1 1 0%;
         min-height: 0;
+        margin: 4px 0;
       }
     }
 
-    /* TV ONLY (Landscape with large height >= 640px): Locks strictly to 100vh zero-scroll */
-    @media (orientation: landscape) and (min-width: 900px) and (min-height: 640px) {
+    /* 2. PHONE IN LANDSCAPE (Short screens: height <= 580px - e.g. Galaxy Note 9 sideways) */
+    @media (orientation: landscape) and (max-height: 580px) {
       html, body {
-        height: 100vh;
-        overflow: hidden;
+        height: auto !important;
+        min-height: 100vh;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
       }
       #dashboardRoot {
-        height: 100vh;
+        height: auto !important;
+        min-height: 100vh !important;
+        width: 100vw;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        padding: 8px 16px 28px 16px !important;
+        gap: 8px !important;
+        transform: none !important;
+      }
+      #mainGrid {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        height: auto !important;
+        flex: none !important;
+      }
+      #mainGrid > div {
+        height: auto !important;
+      }
+      .glass-card {
+        height: auto !important;
+      }
+      #footerTimeline {
+        height: auto !important;
+        flex: none !important;
+        margin-top: 4px !important;
       }
     }
 
-    /* MOBILE PORTRAIT (e.g. Note 9 held upright) */
+    /* 3. MOBILE PORTRAIT (e.g. Note 9 held upright) */
     @media (orientation: portrait), (max-width: 599px) {
+      html, body {
+        height: auto !important;
+        min-height: 100vh;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+      }
       #dashboardRoot {
         min-height: 100vh;
         display: flex;
@@ -172,7 +208,7 @@
           </div>
         </div>
 
-        <!-- TV Zoom / Scale Selector (hidden on mobile phones) -->
+        <!-- TV Zoom / Scale Selector (hidden on mobile portrait) -->
         <div class="tv-only flex items-center gap-0.5 bg-black/40 rounded-lg p-0.5 border border-white/10 text-xs">
           <button onclick="adjustScale(-0.05)" title="Shrink layout (TV Zoom Out)" class="px-1.5 py-0.2 rounded hover:bg-white/10 text-slate-300 hover:text-white">A-</button>
           <span id="scaleLabel" class="text-[10px] font-mono px-1 text-slate-400">100%</span>
@@ -518,7 +554,7 @@
     function adjustScale(delta) {
       currentScale = Math.max(0.75, Math.min(1.25, currentScale + delta));
       const root = document.getElementById('dashboardRoot');
-      if (window.innerWidth > 600 && window.matchMedia("(orientation: landscape)").matches) {
+      if (window.innerWidth > 600 && window.matchMedia("(orientation: landscape) and (min-height: 581px)").matches) {
         root.style.transform = `scale(${currentScale})`;
       }
       document.getElementById('scaleLabel').textContent = `${Math.round(currentScale * 100)}%`;
