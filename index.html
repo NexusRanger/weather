@@ -665,8 +665,8 @@
       </div>
 
       <!-- Leaflet Map Container -->
-      <div class="my-3 flex-1 min-h-[300px] md:min-h-[420px] rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
-        <div id="historyLeafletMap" class="w-full h-full"></div>
+      <div class="my-3 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950" style="height: 58vh; min-height: 380px;">
+        <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 380px;"></div>
       </div>
 
       <!-- Quick Recent Chips Bar -->
@@ -685,8 +685,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
-    const APP_BUILD = 12;
-    const APP_VERSION = '1.3.1';
+    const APP_BUILD = 13;
+    const APP_VERSION = '1.3.2';
 
     async function checkForUpdates() {
       try {
@@ -716,23 +716,25 @@
     let historyMarkersLayer = null;
 
     function getHistoryQueries() {
-      try {
-        const raw = localStorage.getItem('ambient_location_queries');
-        if (raw) {
-          const arr = JSON.parse(raw);
-          const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-          return arr.filter(q => q && q.timestamp && q.timestamp >= cutoff);
-        }
-      } catch (_) {}
       const now = Date.now();
-      const initial = [
+      const defaultSeeds = [
         { name: 'Nailsworth & Stroud', postcode: 'GL5 5HH', lat: 51.7032, lon: -2.2259, timestamp: now },
         { name: 'Vienna, Austria', postcode: 'AT', lat: 48.2082, lon: 16.3738, timestamp: now - 3600000 },
         { name: 'Los Angeles, California', postcode: 'US', lat: 34.0522, lon: -118.2437, timestamp: now - 7200000 },
         { name: 'Cairngorm / Aviemore', postcode: 'PH22 1RB', lat: 57.133, lon: -3.666, timestamp: now - 14400000 }
       ];
-      try { localStorage.setItem('ambient_location_queries', JSON.stringify(initial)); } catch (_) {}
-      return initial;
+      try {
+        const raw = localStorage.getItem('ambient_location_queries');
+        if (raw) {
+          const arr = JSON.parse(raw);
+          const cutoff = now - 30 * 24 * 60 * 60 * 1000;
+          const filtered = Array.isArray(arr) ? arr.filter(q => q && q.timestamp && q.timestamp >= cutoff) : [];
+          if (filtered.length > 0) return filtered;
+        }
+      } catch (_) {}
+
+      try { localStorage.setItem('ambient_location_queries', JSON.stringify(defaultSeeds)); } catch (_) {}
+      return defaultSeeds;
     }
 
     function recordLocationQuery(loc) {
@@ -847,9 +849,11 @@
         historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
       }
 
-      setTimeout(() => {
-        if (historyLeafletMap) historyLeafletMap.invalidateSize();
-      }, 200);
+      [80, 250, 500].forEach(delay => {
+        setTimeout(() => {
+          if (historyLeafletMap) historyLeafletMap.invalidateSize();
+        }, delay);
+      });
 
       if (historyMarkersLayer) {
         historyMarkersLayer.clearLayers();
@@ -1013,6 +1017,7 @@
               desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
             };
             saveSavedLocation();
+            recordLocationQuery(CURRENT_LOCATION);
             updateLocationHeader();
             fetchWeatherData();
             return true;
