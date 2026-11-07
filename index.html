@@ -703,8 +703,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
-    const APP_BUILD = 18;
-    const APP_VERSION = '1.3.7';
+    const APP_BUILD = 19;
+    const APP_VERSION = '1.3.8';
 
     async function checkForUpdates() {
       try {
@@ -821,11 +821,23 @@
       }
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    let mapMarkerMap = {};
+
     function loadLocationFromMap(name, lat, lon, postcode) {
       closeHistoryMapModal();
       CURRENT_LOCATION = {
         name: name,
-        postcode: postcode || 'GEO',
+        postcode: (postcode && postcode !== 'undefined') ? postcode : 'GEO',
         lat: parseFloat(lat),
         lon: parseFloat(lon),
         desc: `${parseFloat(lat).toFixed(2)}°N, ${Math.abs(parseFloat(lon)).toFixed(2)}°W`
@@ -836,55 +848,151 @@
       fetchWeatherData();
     }
 
-    async function initOrRefreshHistoryMap() {
-      let queries = getHistoryQueries();
-
-      // Attempt to load shared queries from Google Sheet
-      const endpoint = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
-      try {
-        const res = await fetch(endpoint);
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
-            const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-            json.data.forEach(sq => {
-              const ts = sq.timestamp ? new Date(sq.timestamp).getTime() : Date.now();
-              if (sq.lat && sq.lon && ts >= cutoff) {
-                if (!queries.some(lq => Math.abs(lq.lat - sq.lat) < 0.05 && Math.abs(lq.lon - sq.lon) < 0.05)) {
-                  queries.push({
-                    name: sq.name || 'Location',
-                    postcode: sq.postcode || '',
-                    lat: parseFloat(sq.lat),
-                    lon: parseFloat(sq.lon),
-                    timestamp: ts
-                  });
-                }
-              }
-            });
-            try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
-          }
-        }
-      } catch (_) {}
-
+    function renderHistoryMarkersAndChips(queries) {
       const countEl = document.getElementById('mapQueryCount');
       if (countEl) countEl.textContent = `${queries.length} location${queries.length === 1 ? '' : 's'}`;
+
+      if (historyMarkersLayer) {
+        historyMarkersLayer.clearLayers();
+      }
+      mapMarkerMap = {};
 
       const chipsEl = document.getElementById('mapRecentChips');
       if (chipsEl) {
         chipsEl.innerHTML = '';
         queries.slice(0, 8).forEach(q => {
           const btn = document.createElement('button');
-          btn.className = 'px-2 py-0.5 rounded-lg bg-white/5 hover:bg-sky-500/20 border border-white/10 hover:border-sky-400/30 text-xs text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-1';
-          btn.innerHTML = `<span>📍</span> <span>${q.name.split('&')[0].trim()}</span>`;
+          btn.className = 'px-2.5 py-1 rounded-lg bg-white/10 hover:bg-sky-500/30 border border-white/15 hover:border-sky-400 text-xs text-sky-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white focus:bg-sky-600/50 cursor-pointer flex-shrink-0';
+          btn.tabIndex = 0;
+          btn.title = `Focus ${q.name} on map`;
+          btn.innerHTML = `<span style="font-size:11px;">📍</span> <span>${escapeHtml(q.name.split('&')[0].trim())}</span>`;
           btn.onclick = () => {
+            const key = `${q.lat.toFixed(4)}_${q.lon.toFixed(4)}`;
+            const m = mapMarkerMap[key];
             if (historyLeafletMap) {
-              historyLeafletMap.flyTo([q.lat, q.lon], 7, { duration: 1.2 });
+              historyLeafletMap.flyTo([q.lat, q.lon], Math.max(historyLeafletMap.getZoom(), 7), { duration: 1.0 });
+              if (m) {
+                setTimeout(() => {
+                  m.openPopup();
+                }, 350);
+              }
             }
           };
           chipsEl.appendChild(btn);
         });
       }
 
+      const bounds = [];
+      queries.forEach(q => {
+        bounds.push([q.lat, q.lon]);
+        
+        // Large, easy-to-hit 36x36 target with pulsating cyan halo
+        const iconHtml = `
+          <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            <div style="position: absolute; width: 26px; height: 26px; border-radius: 50%; background: rgba(56, 189, 248, 0.45); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; pointer-events: none;"></div>
+            <div style="position: relative; width: 14px; height: 14px; border-radius: 50%; background: #0284c7; border: 2.5px solid #ffffff; box-shadow: 0 0 10px #38bdf8, 0 2px 4px rgba(0,0,0,0.8); pointer-events: none;"></div>
+          </div>
+        `;
+        const customIcon = L.divIcon({
+          html: iconHtml,
+          className: 'custom-map-pin',
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        });
+
+        const dateStr = new Date(q.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+        // Safe DOM popup node (immune to string quotes or character escaping)
+        const popupWrapper = document.createElement('div');
+        popupWrapper.style.cssText = 'padding: 4px; font-family: sans-serif; min-width: 170px; text-align: left;';
+        
+        const titleEl = document.createElement('div');
+        titleEl.style.cssText = 'font-weight: 800; color: #ffffff; font-size: 13px; margin-bottom: 2px;';
+        titleEl.textContent = q.name;
+        popupWrapper.appendChild(titleEl);
+
+        const subEl = document.createElement('div');
+        subEl.style.cssText = 'font-size: 10px; color: #38bdf8; font-family: monospace; font-weight: 600;';
+        subEl.textContent = `${(q.postcode && q.postcode !== 'undefined') ? q.postcode + ' • ' : ''}${q.lat.toFixed(2)}°, ${q.lon.toFixed(2)}°`;
+        popupWrapper.appendChild(subEl);
+
+        const timeEl = document.createElement('div');
+        timeEl.style.cssText = 'font-size: 10px; color: #94a3b8; margin-top: 4px;';
+        timeEl.textContent = `Last queried: ${dateStr}`;
+        popupWrapper.appendChild(timeEl);
+
+        const forecastBtn = document.createElement('button');
+        forecastBtn.tabIndex = 0;
+        forecastBtn.style.cssText = 'margin-top: 10px; width: 100%; padding: 6px 10px; background: #0284c7; color: white; border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); outline: none; transition: background 0.2s;';
+        forecastBtn.innerHTML = '<span>🌤️</span> <span>View Forecast</span>';
+        forecastBtn.onfocus = () => { forecastBtn.style.background = '#0ea5e9'; forecastBtn.style.boxShadow = '0 0 10px rgba(56,189,248,0.8)'; };
+        forecastBtn.onblur = () => { forecastBtn.style.background = '#0284c7'; forecastBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.4)'; };
+        forecastBtn.onclick = (e) => {
+          if (e) {
+            e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+          }
+          loadLocationFromMap(q.name, q.lat, q.lon, q.postcode);
+        };
+        popupWrapper.appendChild(forecastBtn);
+
+        const marker = L.marker([q.lat, q.lon], {
+          icon: customIcon,
+          riseOnHover: true,
+          keyboard: true
+        });
+
+        marker.bindPopup(popupWrapper, {
+          closeButton: true,
+          autoPan: true,
+          closeOnClick: false,
+          minWidth: 180
+        });
+
+        // Explicit click listener on marker
+        marker.on('click', (e) => {
+          if (e && e.originalEvent) {
+            L.DomEvent.stopPropagation(e.originalEvent);
+          }
+          marker.openPopup();
+        });
+
+        if (historyMarkersLayer) {
+          historyMarkersLayer.addLayer(marker);
+        }
+
+        setTimeout(() => {
+          const el = marker.getElement();
+          if (el) {
+            el.style.cursor = 'pointer';
+            el.setAttribute('tabindex', '0');
+            el.setAttribute('role', 'button');
+            el.setAttribute('aria-label', `Location: ${q.name}. Press OK or click to view forecast.`);
+            el.onclick = (e) => {
+              if (e) e.stopPropagation();
+              marker.openPopup();
+            };
+            el.onkeydown = (e) => {
+              if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13) {
+                e.preventDefault();
+                marker.openPopup();
+              }
+            };
+          }
+        }, 50);
+
+        const key = `${q.lat.toFixed(4)}_${q.lon.toFixed(4)}`;
+        mapMarkerMap[key] = marker;
+      });
+
+      if (bounds.length > 0 && historyLeafletMap) {
+        try {
+          historyLeafletMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+        } catch (_) {}
+      }
+    }
+
+    async function initOrRefreshHistoryMap() {
       if (!historyLeafletMap) {
         const container = document.getElementById('historyLeafletMap');
         if (!container) return;
@@ -892,7 +1000,7 @@
         historyLeafletMap = L.map('historyLeafletMap', {
           zoomControl: true,
           attributionControl: true,
-          keyboard: false,  // CRITICAL: Prevent Leaflet from trapping TV D-pad navigation
+          keyboard: false,  // Prevent Leaflet from trapping TV D-pad navigation
           boxZoom: false
         }).setView([40, -10], 2);
 
@@ -942,50 +1050,41 @@
         }, delay);
       });
 
-      if (historyMarkersLayer) {
-        historyMarkersLayer.clearLayers();
-      }
+      // 1. Immediately render existing local queries without network lag
+      let queries = getHistoryQueries();
+      renderHistoryMarkersAndChips(queries);
 
-      const bounds = [];
-      queries.forEach(q => {
-        bounds.push([q.lat, q.lon]);
-        
-        const iconHtml = `
-          <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; width: 18px; height: 18px; border-radius: 50%; background: rgba(56, 189, 248, 0.4); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="width: 10px; height: 10px; border-radius: 50%; background: #38bdf8; border: 2px solid #ffffff; box-shadow: 0 0 8px #38bdf8;"></div>
-          </div>
-        `;
-        const customIcon = L.divIcon({
-          html: iconHtml,
-          className: 'custom-map-pin',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
-
-        const dateStr = new Date(q.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-
-        const popupContent = `
-          <div style="padding: 2px; font-family: sans-serif; min-width: 160px;">
-            <div style="font-weight: 700; color: #ffffff; font-size: 13px; margin-bottom: 2px;">${q.name}</div>
-            <div style="font-size: 10px; color: #94a3b8; font-family: monospace;">${q.postcode ? q.postcode + ' • ' : ''}${q.lat.toFixed(2)}°, ${q.lon.toFixed(2)}°</div>
-            <div style="font-size: 10px; color: #cbd5e1; margin-top: 4px;">Last queried: ${dateStr}</div>
-            <button onclick="loadLocationFromMap('${q.name.replace(/'/g, "\\'")}', ${q.lat}, ${q.lon}, '${q.postcode}')" style="margin-top: 8px; width: 100%; padding: 5px 8px; background: #0284c7; color: white; border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">
-              View Forecast
-            </button>
-          </div>
-        `;
-
-        const marker = L.marker([q.lat, q.lon], { icon: customIcon });
-        marker.bindPopup(popupContent);
-        historyMarkersLayer.addLayer(marker);
-      });
-
-      if (bounds.length > 0) {
-        try {
-          historyLeafletMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
-        } catch (_) {}
-      }
+      // 2. Fetch shared queries from Google Sheets endpoint in background
+      const endpoint = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
+      try {
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+            const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            let updated = false;
+            json.data.forEach(sq => {
+              const ts = sq.timestamp ? new Date(sq.timestamp).getTime() : Date.now();
+              if (sq.lat && sq.lon && ts >= cutoff) {
+                if (!queries.some(lq => Math.abs(lq.lat - sq.lat) < 0.05 && Math.abs(lq.lon - sq.lon) < 0.05)) {
+                  queries.push({
+                    name: sq.name || 'Location',
+                    postcode: sq.postcode || '',
+                    lat: parseFloat(sq.lat),
+                    lon: parseFloat(sq.lon),
+                    timestamp: ts
+                  });
+                  updated = true;
+                }
+              }
+            });
+            if (updated) {
+              try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
+              renderHistoryMarkersAndChips(queries);
+            }
+          }
+        }
+      } catch (_) {}
     }
 
     function reloadDashboard() {
@@ -1946,6 +2045,13 @@
       }
     });
 
+    // Register Samsung Tizen return key if running on Tizen TV
+    try {
+      if (window.tizen && window.tizen.tvinputdevice) {
+        window.tizen.tvinputdevice.registerKey('Return');
+      }
+    } catch (_) {}
+
     function isTvBackKey(e) {
       const code = e.keyCode || e.which;
       const key = (e.key || '').toLowerCase();
@@ -1954,10 +2060,12 @@
         code === 27 ||                  // Escape
         code === 8 ||                   // Backspace
         code === 10009 ||               // Samsung Tizen Return / Back
-        code === 461 ||                 // LG webOS Return / Back
+        code === 461 ||                 // LG webOS Return / Back, Panasonic, Hisense VIDAA
         code === 166 ||                 // Browser Back
         code === 227 ||                 // Media Rewind / Back
+        code === 10182 ||               // Sony Bravia TV Guide / Back
         key === 'escape' ||
+        key === 'xfe89' ||
         key === 'backspace' ||
         key === 'back' ||
         key === 'goback' ||
