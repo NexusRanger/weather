@@ -703,8 +703,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
-    const APP_BUILD = 19;
-    const APP_VERSION = '1.3.8';
+    const APP_BUILD = 20;
+    const APP_VERSION = '1.3.9';
 
     async function checkForUpdates() {
       try {
@@ -733,26 +733,35 @@
     let historyLeafletMap = null;
     let historyMarkersLayer = null;
 
+    // Immediate startup purge of legacy test seeds (like Los Angeles)
+    try {
+      const rawMem = localStorage.getItem('ambient_location_queries');
+      if (rawMem) {
+        let memArr = JSON.parse(rawMem);
+        if (Array.isArray(memArr)) {
+          memArr = memArr.filter(q => q && q.name && !q.name.toLowerCase().includes('los angeles'));
+          localStorage.setItem('ambient_location_queries', JSON.stringify(memArr));
+        }
+      }
+    } catch (_) {}
+
     function getHistoryQueries() {
       const now = Date.now();
-      const defaultSeeds = [
-        { name: 'Nailsworth & Stroud', postcode: 'GL5 5HH', lat: 51.7032, lon: -2.2259, timestamp: now },
-        { name: 'Vienna, Austria', postcode: 'AT', lat: 48.2082, lon: 16.3738, timestamp: now - 3600000 },
-        { name: 'Los Angeles, California', postcode: 'US', lat: 34.0522, lon: -118.2437, timestamp: now - 7200000 },
-        { name: 'Cairngorm / Aviemore', postcode: 'PH22 1RB', lat: 57.133, lon: -3.666, timestamp: now - 14400000 }
-      ];
       try {
         const raw = localStorage.getItem('ambient_location_queries');
         if (raw) {
           const arr = JSON.parse(raw);
           const cutoff = now - 30 * 24 * 60 * 60 * 1000;
-          const filtered = Array.isArray(arr) ? arr.filter(q => q && q.timestamp && q.timestamp >= cutoff) : [];
-          if (filtered.length > 0) return filtered;
+          if (Array.isArray(arr)) {
+            return arr.filter(q => {
+              if (!q || !q.lat || !q.lon || !q.name) return false;
+              if (q.name.toLowerCase().includes('los angeles')) return false;
+              return q.timestamp && q.timestamp >= cutoff;
+            });
+          }
         }
       } catch (_) {}
-
-      try { localStorage.setItem('ambient_location_queries', JSON.stringify(defaultSeeds)); } catch (_) {}
-      return defaultSeeds;
+      return [];
     }
 
     function recordLocationQuery(loc) {
@@ -1060,28 +1069,37 @@
         const res = await fetch(endpoint);
         if (res.ok) {
           const json = await res.json();
-          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+          if (json && json.data && Array.isArray(json.data)) {
             const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-            let updated = false;
+            const sheetQueries = [];
             json.data.forEach(sq => {
               const ts = sq.timestamp ? new Date(sq.timestamp).getTime() : Date.now();
               if (sq.lat && sq.lon && ts >= cutoff) {
-                if (!queries.some(lq => Math.abs(lq.lat - sq.lat) < 0.05 && Math.abs(lq.lon - sq.lon) < 0.05)) {
-                  queries.push({
-                    name: sq.name || 'Location',
+                const name = (sq.name || '').trim();
+                // Filter out any mock test data
+                if (name && !name.toLowerCase().includes('los angeles')) {
+                  sheetQueries.push({
+                    name: name,
                     postcode: sq.postcode || '',
                     lat: parseFloat(sq.lat),
                     lon: parseFloat(sq.lon),
                     timestamp: ts
                   });
-                  updated = true;
                 }
               }
             });
-            if (updated) {
-              try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
-              renderHistoryMarkersAndChips(queries);
-            }
+
+            // Authoritative synchronization with Google Sheet:
+            // Deduplicate the sheet queries by proximity (keeping newest entries)
+            const deduped = [];
+            sheetQueries.slice().reverse().forEach(sq => {
+              if (!deduped.some(d => Math.abs(d.lat - sq.lat) < 0.05 && Math.abs(d.lon - sq.lon) < 0.05)) {
+                deduped.push(sq);
+              }
+            });
+            queries = deduped;
+            try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
+            renderHistoryMarkersAndChips(queries);
           }
         }
       } catch (_) {}
@@ -1137,6 +1155,10 @@
         const saved = loadSavedLocation();
         if (saved && saved.lat && saved.lon) {
           CURRENT_LOCATION = saved;
+          if (saved.name === 'Current Location') {
+            await lookupCoords(saved.lat, saved.lon);
+            return;
+          }
         }
         updateLocationHeader();
         fetchWeatherData();
@@ -1216,31 +1238,51 @@
     }
 
     async function lookupCoords(lat, lon) {
+      let resolvedName = '';
+      let resolvedPostcode = '';
+
+      // 1. UK high-accuracy lookup with wideSearch and 1000m radius
       try {
-        const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
+        const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`);
         if (pcRes.ok) {
           const pcData = await pcRes.json();
           if (pcData.result && pcData.result.length > 0) {
             const r = pcData.result[0];
-            const town = r.parish || r.admin_ward || r.admin_district || 'Local';
-            CURRENT_LOCATION = {
-              name: `${town} & ${r.admin_district}`,
-              postcode: r.postcode,
-              lat: r.latitude,
-              lon: r.longitude,
-              desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
-            };
-            saveSavedLocation();
-            updateLocationHeader();
-            fetchWeatherData();
-            return;
+            const town = r.parish || r.ced || r.admin_ward || r.admin_district || 'Local';
+            const district = r.admin_district || 'Gloucestershire';
+            resolvedName = `${town} & ${district}`;
+            resolvedPostcode = r.postcode || '';
           }
         }
       } catch (_) {}
 
+      // 2. Global fallback reverse geocoding via BigDataCloud (fast, client-side, zero key)
+      if (!resolvedName) {
+        try {
+          const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+          if (bdcRes.ok) {
+            const bdc = await bdcRes.json();
+            const place = bdc.locality || bdc.city || bdc.principalSubdivision || '';
+            const district = (bdc.localityInfo && bdc.localityInfo.administrative && bdc.localityInfo.administrative.length > 3)
+              ? bdc.localityInfo.administrative[bdc.localityInfo.administrative.length - 2].name
+              : bdc.countryName || '';
+            if (place) {
+              resolvedName = district && district !== place ? `${place} & ${district}` : `${place}, ${bdc.countryCode || ''}`;
+            }
+            if (bdc.postcode) resolvedPostcode = bdc.postcode;
+          }
+        } catch (_) {}
+      }
+
+      // 3. Fallback if still unknown
+      if (!resolvedName) {
+        resolvedName = `GPS (${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
+        resolvedPostcode = 'GPS';
+      }
+
       CURRENT_LOCATION = {
-        name: 'Current Location',
-        postcode: 'GPS',
+        name: resolvedName,
+        postcode: resolvedPostcode || 'GPS',
         lat: lat,
         lon: lon,
         desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
