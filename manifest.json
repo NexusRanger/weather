@@ -3,8 +3,8 @@
   "short_name": "Weather",
   "description": "Live ambient weather, frost watch, traffic & rain nowcasting",
   "start_url": "./index.html",
-  "display": "fullscreen",
-  "orientation": "landscape",
+  "display": "standalone",
+  "orientation": "any",
   "background_color": "#030712",
   "theme_color": "#030712",
   "icons": [
