@@ -38,14 +38,23 @@ async function fetchTrafficData() {
     const flow = data.flowSegmentData;
     if (!flow) throw new Error('No flow data returned');
 
-    const { currentSpeed, freeFlowSpeed, roadClosure } = flow;
+    const { currentSpeed, freeFlowSpeed, roadClosure, frc } = flow;
     const delayPct = freeFlowSpeed > 0 ? Math.round(((freeFlowSpeed - currentSpeed) / freeFlowSpeed) * 100) : 0;
+    const isMajorRoad = ['FRC0', 'FRC1', 'FRC2', 'FRC3'].includes(frc);
 
     if (roadClosure) {
-      card.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1">⛔ Closed</span>`;
-    } else if (delayPct >= 35) {
+      if (currentSpeed >= 15) {
+        card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Works (${currentSpeed} mph)</span>`;
+      } else if (currentSpeed > 0) {
+        card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Slow (${currentSpeed} mph)</span>`;
+      } else if (!isMajorRoad) {
+        card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1">⚠️ Local Restriction</span>`;
+      } else {
+        card.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1">⛔ Road Closed</span>`;
+      }
+    } else if (delayPct >= 40 && currentSpeed < 15) {
       card.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span> Heavy Delays (${currentSpeed} mph)</span>`;
-    } else if (delayPct >= 15) {
+    } else if (delayPct >= 20) {
       card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Moderate (${currentSpeed} mph)</span>`;
     } else {
       card.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Flowing (${currentSpeed} mph)</span>`;

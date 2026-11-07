@@ -17,6 +17,8 @@
     <!-- Leaflet World Map (30-day History) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- QR Code Generator -->
+  <script src="qrcode.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -144,7 +146,7 @@
         flex-direction: column;
         justify-content: space-between;
         /* TV Safe-Area Inset: 10px top, 52px left/right (prevents bezel clipping), 36px bottom (lifts timeline above TV frame) */
-        padding: max(10px, env(safe-area-inset-top)) max(52px, env(safe-area-inset-right)) max(36px, env(safe-area-inset-bottom)) max(52px, env(safe-area-inset-left));
+        padding: max(10px, env(safe-area-inset-top)) max(52px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(52px, env(safe-area-inset-left));
         transition: transform 0.2s ease;
         transform-origin: top center;
       }
@@ -600,8 +602,8 @@
 
     </main>
     
-    <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC & RIVERS) -->
-    <div id="colLocalInfo" class="flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0">
+    <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC, RIVERS & SHARE) -->
+    <div id="colLocalInfo" class="flex flex-wrap items-center gap-2.5 my-1 flex-shrink-0" style="min-height: 32px;">
       <!-- Traffic Pill -->
       <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="Live Traffic Flow (A46 / Local Area via TomTom)">
         <span class="text-xs">🚗</span>
@@ -615,6 +617,13 @@
         <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Rivers:</span>
         <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
       </div>
+
+      <!-- Share Dashboard Pill -->
+      <button id="shareBtn" onclick="openShareModal()" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer text-left group" title="Share this dashboard or scan QR code" tabindex="0">
+        <span class="text-xs">📲</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Share:</span>
+        <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link ↗</span>
+      </button>
     </div>
 
 
@@ -736,11 +745,115 @@
     </div>
   </div>
 
+  
+  <!-- SHARE DASHBOARD / QR CODE MODAL -->
+  <div id="shareModal" onclick="closeShareModal()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 md:p-6 text-left cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-lg w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center text-lg shadow-md flex-shrink-0">
+            📲
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Share Dashboard
+            </h3>
+            <p class="text-[11px] text-slate-400">Scan QR code or copy link to open on phone, tablet, or TV</p>
+          </div>
+        </div>
+        <button id="closeShareBtnTop" onclick="closeShareModal()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500/30 border border-white/20 hover:border-rose-400/40 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-sky-500/30 active:scale-95 cursor-pointer" tabindex="0" title="Close Share (Esc / Back)">
+          <span>✕ Close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="py-4 space-y-4 overflow-y-auto">
+        <!-- QR Code & Link Card -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 p-3.5 rounded-xl bg-slate-900/70 border border-white/10">
+          <!-- QR Code Container -->
+          <div class="flex-shrink-0 p-2.5 bg-white rounded-xl shadow-lg flex items-center justify-center" style="width: 170px; height: 170px;">
+            <div id="shareQrCode" class="w-[150px] h-[150px] flex items-center justify-center"></div>
+          </div>
+
+          <!-- Link info & actions -->
+          <div class="flex-1 min-w-0 text-left w-full flex flex-col justify-between h-full">
+            <div>
+              <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Dashboard Link</div>
+              <div id="shareUrlText" class="text-xs font-mono text-sky-300 break-all bg-black/40 p-2 rounded-lg border border-white/10 mt-1 select-all select-text">
+                Loading link...
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 mt-3">
+              <button id="copyShareLinkBtn" onclick="copyShareUrl()" class="flex-1 px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0">
+                <span id="copyShareIcon">📋</span>
+                <span id="copyShareLabel">Copy Link</span>
+              </button>
+              <button id="nativeShareBtn" onclick="triggerNativeShare()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0" title="Share via phone share menu">
+                <span>↗ Share</span>
+              </button>
+            </div>
+            <div class="text-[10px] text-emerald-400 font-mono mt-1.5 flex items-center gap-1">
+              <span>📷</span> Scan with phone camera to open instantly
+            </div>
+          </div>
+        </div>
+
+        <!-- How to Use on Every Device -->
+        <div class="space-y-2">
+          <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider px-0.5">Where can I use this?</div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+            <!-- Phone & Tablet -->
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+              <div class="flex items-center gap-1.5 font-bold text-white mb-1">
+                <span>📱</span> Phone &amp; Tablet
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Scan the QR code. Tap <strong class="text-sky-300">Share</strong> (Safari) or <strong class="text-sky-300">⋮ Menu</strong> (Chrome) and select <strong class="text-amber-300">Add to Home Screen</strong> to install it as a standalone app.
+              </p>
+            </div>
+
+            <!-- Smart TV -->
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+              <div class="flex items-center gap-1.5 font-bold text-white mb-1">
+                <span>📺</span> Smart TV &amp; Shield
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Open in TV browser (<strong class="text-sky-300">TV Bro</strong>, Samsung, or Silk) and press <strong class="text-amber-300">F</strong> or the fullscreen icon. Auto-refreshes 24/7 with zero screen burn-in.
+              </p>
+            </div>
+
+            <!-- Laptop & PC -->
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+              <div class="flex items-center gap-1.5 font-bold text-white mb-1">
+                <span>💻</span> Laptop &amp; PC
+              </div>
+              <p class="text-[11px] text-slate-300 leading-relaxed">
+                Works in any browser. On Chrome or Edge, click the <strong class="text-amber-300">Install App (➕)</strong> icon in the address bar to run it as a clean desktop window.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 border-t border-white/10 flex items-center justify-end gap-2 flex-shrink-0">
+        <button onclick="closeShareModal()" class="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer" tabindex="0">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=25"></script>
+  <script src="traffic-flood.js?v=26"></script>
     <script>
-    const APP_BUILD = 25;
-    const APP_VERSION = '1.4.4';
+    const APP_BUILD = 26;
+    const APP_VERSION = '1.4.5';
 
     async function checkForUpdates() {
       try {
@@ -1533,12 +1646,12 @@
 
     const WEATHER_CODES = {
       0: { desc: 'Clear Sky', iconDay: '☀️', iconNight: '🌙' },
-      1: { desc: 'Mainly Clear', iconDay: '🌤️', iconNight: '🌤️' },
+      1: { desc: 'Mainly Clear', iconDay: '🌤️', iconNight: '🌙' },
       2: { desc: 'Partly Cloudy', iconDay: '⛅', iconNight: '☁️' },
       3: { desc: 'Overcast', iconDay: '☁️', iconNight: '☁️' },
       45: { desc: 'Foggy Valley', iconDay: '🌫️', iconNight: '🌫️' },
       48: { desc: 'Rime Fog', iconDay: '🌫️', iconNight: '🌫️' },
-      51: { desc: 'Light Drizzle', iconDay: '🌦️', iconNight: '🌦️' },
+      51: { desc: 'Light Drizzle', iconDay: '🌦️', iconNight: '🌧️' },
       53: { desc: 'Moderate Drizzle', iconDay: '🌧️', iconNight: '🌧️' },
       55: { desc: 'Heavy Drizzle', iconDay: '🌧️', iconNight: '🌧️' },
       56: { desc: 'Freezing Drizzle', iconDay: '🌨️', iconNight: '🌨️' },
@@ -1664,7 +1777,7 @@
       document.getElementById('frostTimeWindow').textContent = timeLabel;
 
       let status = "Frost-Free";
-      let badgeText = "Clean Glass";
+      let badgeText = "Glass Clear";
       let badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
       let cardBgClass = "bg-slate-900/60 border border-white/10";
       let icon = "🚗";
@@ -1781,7 +1894,7 @@
       }
     }
 
-    function getPrecipDetails(code, amount = 0) {
+    function getPrecipDetails(code, amount = 0, isDay = 1) {
       // Snow & snow grains
       if ([71, 73, 75, 77, 85, 86].includes(code)) {
         const isHeavy = code === 75 || code === 86;
@@ -1822,7 +1935,7 @@
           type: 'drizzle',
           verb: 'Drizzling now',
           name: code === 55 ? 'Heavy drizzle' : code === 53 ? 'Moderate drizzle' : 'Light drizzle',
-          icon: '🌦️',
+          icon: isDay ? '🌦️' : '🌧️',
           bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-between text-xs transition-colors overflow-hidden',
           badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 flex-shrink-0 ml-1.5'
         };
@@ -1844,7 +1957,7 @@
         type: 'rain',
         verb: isHeavy ? 'Heavy rain now' : 'Raining now',
         name: isHeavy ? 'Heavy rain' : 'Rain',
-        icon: isHeavy ? '🌧️' : '🌦️',
+        icon: isHeavy ? '🌧️' : (isDay ? '🌦️' : '🌧️'),
         bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
         badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0 ml-1.5'
       };
@@ -1853,9 +1966,10 @@
     function evaluateRainNowcast(cur, minutely_15, hourly) {
       const tileSub = document.getElementById('rainTileNowcast');
       const now = new Date();
+      const isDay = cur && typeof cur.is_day === 'number' ? cur.is_day === 1 : (now.getHours() >= 7 && now.getHours() < 17);
       const curPrecip = (cur && typeof cur.precipitation === 'number') ? cur.precipitation : 0;
       const curCode = (cur && typeof cur.weather_code === 'number') ? cur.weather_code : 0;
-      const curDetails = getPrecipDetails(curCode, curPrecip);
+      const curDetails = getPrecipDetails(curCode, curPrecip, isDay ? 1 : 0);
       const isCurrentlyPrecipitating = curPrecip >= 0.1 || [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99].includes(curCode);
 
       if (minutely_15 && minutely_15.time && minutely_15.time.length > 0) {
@@ -1922,7 +2036,9 @@
           
           // Check upcoming code or temperature
           const slotCode = (minutely_15 && minutely_15.weather_code && minutely_15.weather_code[futureSlots.indexOf(rainSlot)]) || curCode;
-          const slotDetails = getPrecipDetails(slotCode, rainSlot.precip);
+          const slotHour = rainSlot.date.getHours();
+          const slotIsDay = slotHour >= 7 && slotHour < 17 ? 1 : 0;
+          const slotDetails = getPrecipDetails(slotCode, rainSlot.precip, slotIsDay);
           const intensity = slotDetails.name;
 
           if (tileSub) tileSub.textContent = `${slotDetails.type} ~${m}m (${conf}%)`;
@@ -2255,7 +2371,7 @@
         if (darkTagEl) darkTagEl.textContent = `+${effectiveTwilightMins}m`;
 
         const summaryEl = document.getElementById('cloudLightSummary');
-        const cloudLabel = cloudPct >= 80 ? '☁️ Overcast' : cloudPct >= 40 ? '⛅ Patchy' : '☀️ Clear';
+        const cloudLabel = cloudPct >= 80 ? '☁️ Overcast' : cloudPct >= 40 ? '⛅ Patchy' : (isDay ? '☀️ Clear' : '🌙 Clear');
         if (summaryEl) summaryEl.textContent = `${cloudLabel} (${cloudPct}% cloud)`;
 
         solarMilestones = {
@@ -2455,6 +2571,115 @@
       );
     }
 
+        function openShareModal() {
+      const modal = document.getElementById('shareModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      // Generate current share URL with postcode
+      let shareUrl = window.location.href;
+      try {
+        const u = new URL(window.location.href);
+        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.postcode) {
+          u.searchParams.set('postcode', CURRENT_LOCATION.postcode);
+        }
+        shareUrl = u.toString();
+      } catch (_) {}
+
+      const urlText = document.getElementById('shareUrlText');
+      if (urlText) urlText.textContent = shareUrl;
+
+      const qrContainer = document.getElementById('shareQrCode');
+      if (qrContainer) {
+        qrContainer.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(qrContainer, {
+              text: shareUrl,
+              width: 150,
+              height: 150,
+              colorDark: "#0f172a",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch (e) {
+            renderQrFallback(qrContainer, shareUrl);
+          }
+        } else {
+          renderQrFallback(qrContainer, shareUrl);
+        }
+      }
+
+      // Hide native share button if not supported
+      const nativeBtn = document.getElementById('nativeShareBtn');
+      if (nativeBtn) {
+        if (navigator.share) {
+          nativeBtn.classList.remove('hidden');
+        } else {
+          nativeBtn.classList.add('hidden');
+        }
+      }
+
+      const closeBtn = document.getElementById('closeShareBtnTop');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function renderQrFallback(container, url) {
+      container.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=4&data=${encodeURIComponent(url)}`;
+      img.alt = 'QR Code';
+      img.className = 'w-[150px] h-[150px] rounded-lg shadow';
+      container.appendChild(img);
+    }
+
+    function closeShareModal() {
+      const modal = document.getElementById('shareModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function copyShareUrl() {
+      const urlText = document.getElementById('shareUrlText');
+      const label = document.getElementById('copyShareLabel');
+      const icon = document.getElementById('copyShareIcon');
+      if (!urlText) return;
+      const url = urlText.textContent.trim();
+
+      try {
+        await navigator.clipboard.writeText(url);
+        if (label) label.textContent = 'Copied! ✓';
+        if (icon) icon.textContent = '✅';
+        setTimeout(() => {
+          if (label) label.textContent = 'Copy Link';
+          if (icon) icon.textContent = '📋';
+        }, 2500);
+      } catch (err) {
+        const range = document.createRange();
+        range.selectNodeContents(urlText);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        if (label) label.textContent = 'Selected!';
+      }
+    }
+
+    async function triggerNativeShare() {
+      const urlText = document.getElementById('shareUrlText');
+      const url = urlText ? urlText.textContent.trim() : window.location.href;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${CURRENT_LOCATION.name} - Ambient Weather`,
+            text: `Live weather, rain nowcast, and frost watch for ${CURRENT_LOCATION.name}`,
+            url: url
+          });
+        } catch (_) {}
+      }
+    }
+
     function handleGlobalBack(e) {
       if (isTvBackKey(e)) {
         const mapModal = document.getElementById('historyMapModal');
@@ -2463,6 +2688,14 @@
           e.stopPropagation();
           if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
           closeHistoryMapModal();
+          return false;
+        }
+        const shareModal = document.getElementById('shareModal');
+        if (shareModal && !shareModal.classList.contains('hidden')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          closeShareModal();
           return false;
         }
         const locModal = document.getElementById('locationModal');
