@@ -179,6 +179,15 @@
 <body>
   <div id="ambientGlow" class="ambient-glow"></div>
 
+  <!-- AUTO-UPDATE NOTIFICATION BANNER -->
+  <div id="updateBanner" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden">
+    <button onclick="applyAppUpdate()" class="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-sky-600 to-indigo-600 hover:from-indigo-500 hover:to-sky-500 text-white text-xs font-semibold shadow-[0_0_20px_rgba(99,102,241,0.6)] border border-white/20 flex items-center gap-2.5 transition transform hover:scale-105 active:scale-95 animate-pulse">
+      <span class="text-sm">✨</span>
+      <span id="updateBannerText">New dashboard update ready</span>
+      <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-normal">Tap to reload</span>
+    </button>
+  </div>
+
   <div id="dashboardRoot">
     
     <!-- HEADER BAR -->
@@ -593,6 +602,36 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
+    const APP_BUILD = 6;
+    const APP_VERSION = '1.2.0';
+
+    async function checkForUpdates() {
+      try {
+        const res = await fetch(`version.json?_=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
+            const banner = document.getElementById('updateBanner');
+            const text = document.getElementById('updateBannerText');
+            if (text && data.version) {
+              text.textContent = `New update available (v${data.version})`;
+            }
+            if (banner) {
+              banner.classList.remove('hidden');
+            }
+          }
+        }
+      } catch (e) {
+        // Silently ignore update check errors
+      }
+    }
+
+    function applyAppUpdate() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('v', Date.now().toString());
+      window.location.href = url.toString();
+    }
+
     let CURRENT_LOCATION = {
       name: 'Nailsworth & Stroud',
       postcode: 'GL5 5HH',
@@ -1198,6 +1237,7 @@
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
         document.getElementById('lastUpdated').textContent = `Updated ${timeStr}`;
+        checkForUpdates();
       } catch (err) {
         console.error('Fetch error:', err);
         document.getElementById('lastUpdated').textContent = 'Sync issue (retrying...)';
@@ -1508,6 +1548,9 @@
 
     initLocation();
     setInterval(fetchWeatherData, 15 * 60 * 1000);
+
+    checkForUpdates();
+    setInterval(checkForUpdates, 3 * 60 * 1000);
   </script>
 </body>
 </html>
