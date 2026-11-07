@@ -186,12 +186,16 @@
       <div class="flex items-center gap-2">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></div>
         <div class="flex items-baseline gap-2">
-          <h1 id="headerLocationTitle" class="text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5">
+          <h1 id="headerLocationTitle" class="text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5 cursor-pointer hover:text-sky-300 transition" onclick="openLocationModal()" title="Click to change location">
             Nailsworth &amp; Stroud
           </h1>
-          <button onclick="promptChangePostcode()" title="Change UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
+          <button onclick="openLocationModal()" title="Change town or UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
             <span id="headerPostcodeBadge">GL5 5HH</span>
             <span class="text-[8px] text-indigo-400">✏️</span>
+          </button>
+          <button onclick="detectCurrentLocation()" title="Use Current GPS Location" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1">
+            <span id="gpsButtonIcon">📍</span>
+            <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
           </button>
           <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline">51.70°N, 2.23°W</span>
         </div>
@@ -541,6 +545,51 @@
 
   </div>
 
+  <!-- LOCATION SEARCH MODAL -->
+  <div id="locationModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card rounded-2xl p-5 max-w-md w-full border border-white/15 shadow-2xl relative text-left">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>📍</span> Set Location (Postcode, Town or GPS)
+        </h3>
+        <button onclick="closeLocationModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="mt-4">
+        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter UK Postcode or Town Name</label>
+        <div class="flex gap-2">
+          <input id="locationInput" type="text" placeholder="e.g. Stroud, Bath, GL5 5HH, Cheltenham" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400" onkeydown="if(event.key==='Enter') searchLocationFromModal()">
+          <button id="searchLocBtn" onclick="searchLocationFromModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition">
+            Search
+          </button>
+        </div>
+        <div id="locationSearchStatus" class="text-[11px] text-slate-400 mt-2 min-h-[16px]"></div>
+      </div>
+
+      <!-- Quick GPS Button -->
+      <div class="mt-3 pt-3 border-t border-white/10">
+        <button onclick="detectCurrentLocation(); closeLocationModal();" class="w-full py-2 px-3 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/30 font-semibold text-xs transition flex items-center justify-center gap-2">
+          <span>📍</span> Use My Current Location (GPS)
+        </button>
+      </div>
+
+      <!-- Quick Preset Chips -->
+      <div class="mt-3 pt-3 border-t border-white/10">
+        <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-2">Popular / Cotswolds Quick Picks:</div>
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="selectQuickLocation('GL5 5HH')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Nailsworth</button>
+          <button onclick="selectQuickLocation('Stroud')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Stroud</button>
+          <button onclick="selectQuickLocation('Cirencester')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Cirencester</button>
+          <button onclick="selectQuickLocation('Cheltenham')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Cheltenham</button>
+          <button onclick="selectQuickLocation('Bath')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Bath</button>
+          <button onclick="selectQuickLocation('Bristol')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Bristol</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
@@ -557,8 +606,16 @@
     async function initLocation() {
       const params = new URLSearchParams(window.location.search);
       const pc = params.get('postcode') || params.get('pc');
-      if (pc) {
+      const loc = params.get('location') || params.get('town') || params.get('q');
+      const lat = params.get('lat');
+      const lon = params.get('lon');
+
+      if (lat && lon) {
+        await lookupCoords(parseFloat(lat), parseFloat(lon));
+      } else if (pc) {
         await lookupPostcode(pc);
+      } else if (loc) {
+        await lookupTown(loc);
       } else {
         updateLocationHeader();
         fetchWeatherData();
@@ -580,12 +637,198 @@
             lon: r.longitude,
             desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
           };
+          updateLocationHeader();
+          fetchWeatherData();
+          return true;
         }
       } catch (err) {
-        console.warn('Postcode lookup error, using default:', err);
+        console.warn('Postcode lookup error:', err);
       }
+      return false;
+    }
+
+    async function lookupTown(townName) {
+      try {
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(townName)}&count=5&language=en&format=json`;
+        const res = await fetch(geoUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.results && data.results.length > 0) {
+            // Prioritize UK results if available
+            const match = data.results.find(r => r.country_code === 'GB') || data.results[0];
+            const lat = match.latitude;
+            const lon = match.longitude;
+            
+            // Reverse postcode lookup for nearest UK postcode
+            let pc = match.country_code || 'UK';
+            try {
+              const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
+              if (pcRes.ok) {
+                const pcData = await pcRes.json();
+                if (pcData.result && pcData.result.length > 0) {
+                  pc = pcData.result[0].postcode;
+                }
+              }
+            } catch (_) {}
+
+            const admin = match.admin1 || match.admin2 || match.country || 'UK';
+            CURRENT_LOCATION = {
+              name: `${match.name} & ${admin}`,
+              postcode: pc,
+              lat: lat,
+              lon: lon,
+              desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
+            };
+            updateLocationHeader();
+            fetchWeatherData();
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn('Town lookup error:', err);
+      }
+      return false;
+    }
+
+    async function lookupCoords(lat, lon) {
+      try {
+        const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
+        if (pcRes.ok) {
+          const pcData = await pcRes.json();
+          if (pcData.result && pcData.result.length > 0) {
+            const r = pcData.result[0];
+            const town = r.parish || r.admin_ward || r.admin_district || 'Local';
+            CURRENT_LOCATION = {
+              name: `${town} & ${r.admin_district}`,
+              postcode: r.postcode,
+              lat: r.latitude,
+              lon: r.longitude,
+              desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
+            };
+            updateLocationHeader();
+            fetchWeatherData();
+            return;
+          }
+        }
+      } catch (_) {}
+
+      CURRENT_LOCATION = {
+        name: 'Current Location',
+        postcode: 'GPS',
+        lat: lat,
+        lon: lon,
+        desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
+      };
       updateLocationHeader();
       fetchWeatherData();
+    }
+
+    function detectCurrentLocation() {
+      const gpsBtn = document.getElementById('gpsButtonText');
+      const gpsIcon = document.getElementById('gpsButtonIcon');
+      if (gpsIcon) gpsIcon.textContent = '⏳';
+      if (gpsBtn) gpsBtn.textContent = 'Locating...';
+
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your device or browser.');
+        if (gpsIcon) gpsIcon.textContent = '📍';
+        if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const url = new URL(window.location.href);
+          url.searchParams.set('lat', lat.toFixed(4));
+          url.searchParams.set('lon', lon.toFixed(4));
+          url.searchParams.delete('postcode');
+          url.searchParams.delete('town');
+          url.searchParams.delete('q');
+          window.history.pushState({}, '', url);
+
+          await lookupCoords(lat, lon);
+          if (gpsIcon) gpsIcon.textContent = '📍';
+          if (gpsBtn) gpsBtn.textContent = 'Located!';
+          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
+        },
+        (error) => {
+          console.warn('Geolocation error:', error);
+          let msg = 'Could not access location.';
+          if (error.code === 1) msg = 'Location access was denied in browser settings.';
+          else if (error.code === 2) msg = 'Location unavailable on this network/device.';
+          else if (error.code === 3) msg = 'Location request timed out.';
+          alert(msg);
+          if (gpsIcon) gpsIcon.textContent = '📍';
+          if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+
+    function openLocationModal() {
+      const modal = document.getElementById('locationModal');
+      const input = document.getElementById('locationInput');
+      const status = document.getElementById('locationSearchStatus');
+      if (status) status.textContent = '';
+      if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 100);
+      }
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeLocationModal() {
+      const modal = document.getElementById('locationModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    async function searchLocationFromModal() {
+      const input = document.getElementById('locationInput');
+      const status = document.getElementById('locationSearchStatus');
+      const btn = document.getElementById('searchLocBtn');
+      if (!input || !input.value.trim()) return;
+
+      const q = input.value.trim();
+      if (status) status.textContent = 'Searching location...';
+      if (btn) btn.disabled = true;
+
+      const isPostcode = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(q);
+      let success = false;
+
+      if (isPostcode) {
+        success = await lookupPostcode(q);
+      }
+      if (!success) {
+        success = await lookupTown(q);
+      }
+      if (!success && !isPostcode) {
+        success = await lookupPostcode(q);
+      }
+
+      if (btn) btn.disabled = false;
+
+      if (success) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('q', q);
+        window.history.pushState({}, '', url);
+        closeLocationModal();
+      } else {
+        if (status) status.textContent = `Could not find "${q}". Try another town or UK postcode.`;
+      }
+    }
+
+    function selectQuickLocation(query) {
+      const input = document.getElementById('locationInput');
+      if (input) input.value = query;
+      searchLocationFromModal();
     }
 
     function updateLocationHeader() {
