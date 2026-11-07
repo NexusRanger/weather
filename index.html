@@ -703,8 +703,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
-    const APP_BUILD = 22;
-    const APP_VERSION = '1.4.1';
+    const APP_BUILD = 23;
+    const APP_VERSION = '1.4.2';
 
     async function checkForUpdates() {
       try {
@@ -730,6 +730,24 @@
     // -------------------------------------------------------------
     // 30-Day Location History & Google Sheets Integration
     // -------------------------------------------------------------
+    // Master switch: change to true when you want the map active for everyone
+    const PUBLIC_MAP_ENABLED = false;
+
+    function isMapUnlocked() {
+      if (PUBLIC_MAP_ENABLED) return true;
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('admin') === '1' || params.get('admin') === 'showmethemap' || params.get('map') === 'showmethemap') {
+        try { localStorage.setItem('ambient_map_unlocked', 'true'); } catch (_) {}
+        return true;
+      }
+      try {
+        if (localStorage.getItem('ambient_map_unlocked') === 'true') {
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
+
     let historyLeafletMap = null;
     let historyMarkersLayer = null;
 
@@ -801,6 +819,10 @@
     }
 
     function openHistoryMapModal() {
+      if (!isMapUnlocked()) {
+        // Without the password, clicking the globe does nothing
+        return;
+      }
       const modal = document.getElementById('historyMapModal');
       if (!modal) return;
       modal.classList.remove('hidden');
@@ -1378,6 +1400,33 @@
       if (!input || !input.value.trim()) return;
 
       const q = input.value.trim();
+
+      // Check for secret map unlock password
+      if (q.toLowerCase() === 'showmethemap') {
+        try { localStorage.setItem('ambient_map_unlocked', 'true'); } catch (_) {}
+        if (status) {
+          status.style.color = '#38bdf8';
+          status.textContent = '✅ Map access unlocked on this device!';
+        }
+        input.value = '';
+        setTimeout(() => {
+          closeLocationModal();
+          openHistoryMapModal();
+        }, 800);
+        return;
+      }
+
+      // Optional re-lock code
+      if (q.toLowerCase() === 'hidethemap' || q.toLowerCase() === 'lockthemap') {
+        try { localStorage.removeItem('ambient_map_unlocked'); } catch (_) {}
+        if (status) {
+          status.style.color = '#f43f5e';
+          status.textContent = '🔒 Map locked on this device.';
+        }
+        input.value = '';
+        return;
+      }
+
       if (status) status.textContent = 'Searching location...';
       if (btn) btn.disabled = true;
 
