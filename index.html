@@ -14,6 +14,9 @@
   <meta http-equiv="Expires" content="0">
   <title>Ambient Weather &amp; Frost Watch</title>
   <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet World Map (30-day History) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -56,6 +59,33 @@
     .glass-tile {
       background: rgba(0, 0, 0, 0.28);
       border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Leaflet Dark Theme Overrides */
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      background: rgba(15, 23, 42, 0.95) !important;
+      color: #f1f5f9 !important;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+    }
+    .leaflet-container {
+      background: #030712 !important;
+      font-family: inherit !important;
+    }
+    .leaflet-bar a {
+      background-color: rgba(15, 23, 42, 0.9) !important;
+      color: #94a3b8 !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+    .leaflet-bar a:hover {
+      background-color: rgba(30, 41, 59, 1) !important;
+      color: #38bdf8 !important;
+    }
+    .custom-map-pin {
+      background: transparent !important;
+      border: none !important;
     }
     
     .ambient-glow {
@@ -215,6 +245,10 @@
             <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
           </button>
           <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline">51.70°N, 2.23°W</span>
+          <button onclick="openHistoryMapModal()" title="View World Map of Last 30 Days Queries" class="text-xs p-1 px-1.5 rounded-full bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-sky-300 hover:text-white transition flex items-center gap-1 group">
+            <span class="group-hover:scale-125 transition-transform">🌐</span>
+            <span class="text-[9px] font-mono hidden xl:inline text-sky-200">30d Map</span>
+          </button>
         </div>
       </div>
 
@@ -607,11 +641,55 @@
     </div>
   </div>
 
+  <!-- 30-DAY LOCATION HISTORY WORLD MAP MODAL -->
+  <div id="historyMapModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 md:p-6 text-left">
+    <div class="glass-card rounded-2xl p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh]">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">🌐</span>
+          <div>
+            <h3 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
+              30-Day Location Map
+              <span id="mapQueryCount" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">0 locations</span>
+            </h3>
+            <p class="text-[10px] text-slate-400">All queries in the last 30 days • Tap any pin to load weather</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openSheetsConfigPrompt()" title="Configure Google Sheets Sync URL" class="text-[10px] font-mono px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition flex items-center gap-1">
+            <span>📊</span> <span id="sheetsStatusLabel">Google Sheets</span>
+          </button>
+          <button onclick="closeHistoryMapModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Leaflet Map Container -->
+      <div class="my-3 flex-1 min-h-[300px] md:min-h-[420px] rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
+        <div id="historyLeafletMap" class="w-full h-full"></div>
+      </div>
+
+      <!-- Quick Recent Chips Bar -->
+      <div class="pt-2 border-t border-white/10 flex items-center justify-between gap-2 flex-shrink-0">
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1 flex-1 min-w-0" id="mapRecentChips">
+          <!-- Chips injected dynamically -->
+        </div>
+        <button onclick="clearHistoryQueries()" class="text-[9px] text-slate-500 hover:text-rose-400 font-mono transition flex-shrink-0">
+          Clear History
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
-    const APP_BUILD = 10;
-    const APP_VERSION = '1.2.4';
+    const APP_BUILD = 11;
+    const APP_VERSION = '1.3.0';
 
     async function checkForUpdates() {
       try {
@@ -631,6 +709,218 @@
         }
       } catch (e) {
         // Silently ignore update check errors
+      }
+    }
+
+    // -------------------------------------------------------------
+    // 30-Day Location History & Google Sheets Integration
+    // -------------------------------------------------------------
+    let historyLeafletMap = null;
+    let historyMarkersLayer = null;
+
+    function getHistoryQueries() {
+      try {
+        const raw = localStorage.getItem('ambient_location_queries');
+        if (raw) {
+          const arr = JSON.parse(raw);
+          const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+          return arr.filter(q => q && q.timestamp && q.timestamp >= cutoff);
+        }
+      } catch (_) {}
+      const now = Date.now();
+      const initial = [
+        { name: 'Nailsworth & Stroud', postcode: 'GL5 5HH', lat: 51.7032, lon: -2.2259, timestamp: now },
+        { name: 'Vienna, Austria', postcode: 'AT', lat: 48.2082, lon: 16.3738, timestamp: now - 3600000 },
+        { name: 'Los Angeles, California', postcode: 'US', lat: 34.0522, lon: -118.2437, timestamp: now - 7200000 },
+        { name: 'Cairngorm / Aviemore', postcode: 'PH22 1RB', lat: 57.133, lon: -3.666, timestamp: now - 14400000 }
+      ];
+      try { localStorage.setItem('ambient_location_queries', JSON.stringify(initial)); } catch (_) {}
+      return initial;
+    }
+
+    function recordLocationQuery(loc) {
+      if (!loc || !loc.lat || !loc.lon) return;
+      try {
+        let queries = getHistoryQueries();
+        queries = queries.filter(q => Math.abs(q.lat - loc.lat) > 0.05 || Math.abs(q.lon - loc.lon) > 0.05);
+        queries.unshift({
+          name: loc.name || 'Location',
+          postcode: loc.postcode || '',
+          lat: loc.lat,
+          lon: loc.lon,
+          timestamp: Date.now()
+        });
+        if (queries.length > 50) queries = queries.slice(0, 50);
+        localStorage.setItem('ambient_location_queries', JSON.stringify(queries));
+
+        const sheetsUrl = localStorage.getItem('ambient_sheets_url');
+        if (sheetsUrl && sheetsUrl.startsWith('http')) {
+          fetch(sheetsUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'log',
+              name: loc.name,
+              postcode: loc.postcode,
+              lat: loc.lat,
+              lon: loc.lon,
+              timestamp: new Date().toISOString()
+            })
+          }).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('Could not record location query:', err);
+      }
+    }
+
+    function openHistoryMapModal() {
+      const modal = document.getElementById('historyMapModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      updateSheetsStatusLabel();
+      initOrRefreshHistoryMap();
+    }
+
+    function closeHistoryMapModal() {
+      const modal = document.getElementById('historyMapModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function updateSheetsStatusLabel() {
+      const label = document.getElementById('sheetsStatusLabel');
+      const url = localStorage.getItem('ambient_sheets_url');
+      if (label) {
+        label.textContent = url ? 'Sheets Connected' : 'Connect Sheets';
+      }
+    }
+
+    function openSheetsConfigPrompt() {
+      const current = localStorage.getItem('ambient_sheets_url') || '';
+      const input = prompt("Google Sheets Apps Script Web App URL:\n(Paste your Web App URL here to log queries to your Google Sheet, or leave blank for local memory only):", current);
+      if (input !== null) {
+        if (input.trim().startsWith('http')) {
+          localStorage.setItem('ambient_sheets_url', input.trim());
+          alert("✅ Google Sheets connected! New location searches will automatically log to your sheet.");
+        } else {
+          localStorage.removeItem('ambient_sheets_url');
+          alert("Google Sheets sync cleared. Searches will be saved locally.");
+        }
+        updateSheetsStatusLabel();
+      }
+    }
+
+    function clearHistoryQueries() {
+      if (confirm("Clear your 30-day location search history?")) {
+        localStorage.removeItem('ambient_location_queries');
+        initOrRefreshHistoryMap();
+      }
+    }
+
+    function loadLocationFromMap(name, lat, lon, postcode) {
+      closeHistoryMapModal();
+      CURRENT_LOCATION = {
+        name: name,
+        postcode: postcode || 'GEO',
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+        desc: `${parseFloat(lat).toFixed(2)}°N, ${Math.abs(parseFloat(lon)).toFixed(2)}°W`
+      };
+      saveSavedLocation();
+      recordLocationQuery(CURRENT_LOCATION);
+      updateLocationHeader();
+      fetchWeatherData();
+    }
+
+    async function initOrRefreshHistoryMap() {
+      const queries = getHistoryQueries();
+      const countEl = document.getElementById('mapQueryCount');
+      if (countEl) countEl.textContent = `${queries.length} location${queries.length === 1 ? '' : 's'}`;
+
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (chipsEl) {
+        chipsEl.innerHTML = '';
+        queries.slice(0, 8).forEach(q => {
+          const btn = document.createElement('button');
+          btn.className = 'px-2 py-0.5 rounded-lg bg-white/5 hover:bg-sky-500/20 border border-white/10 hover:border-sky-400/30 text-xs text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-1';
+          btn.innerHTML = `<span>📍</span> <span>${q.name.split('&')[0].trim()}</span>`;
+          btn.onclick = () => {
+            if (historyLeafletMap) {
+              historyLeafletMap.flyTo([q.lat, q.lon], 7, { duration: 1.2 });
+            }
+          };
+          chipsEl.appendChild(btn);
+        });
+      }
+
+      if (!historyLeafletMap) {
+        const container = document.getElementById('historyLeafletMap');
+        if (!container) return;
+
+        historyLeafletMap = L.map('historyLeafletMap', {
+          zoomControl: true,
+          attributionControl: true
+        }).setView([40, -10], 2);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19
+        }).addTo(historyLeafletMap);
+
+        historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
+      }
+
+      setTimeout(() => {
+        if (historyLeafletMap) historyLeafletMap.invalidateSize();
+      }, 200);
+
+      if (historyMarkersLayer) {
+        historyMarkersLayer.clearLayers();
+      }
+
+      const bounds = [];
+      queries.forEach(q => {
+        bounds.push([q.lat, q.lon]);
+        
+        const iconHtml = `
+          <div style="position: relative; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; width: 18px; height: 18px; border-radius: 50%; background: rgba(56, 189, 248, 0.4); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            <div style="width: 10px; height: 10px; border-radius: 50%; background: #38bdf8; border: 2px solid #ffffff; box-shadow: 0 0 8px #38bdf8;"></div>
+          </div>
+        `;
+        const customIcon = L.divIcon({
+          html: iconHtml,
+          className: 'custom-map-pin',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+
+        const dateStr = new Date(q.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+        const popupContent = `
+          <div style="padding: 2px; font-family: sans-serif; min-width: 160px;">
+            <div style="font-weight: 700; color: #ffffff; font-size: 13px; margin-bottom: 2px;">${q.name}</div>
+            <div style="font-size: 10px; color: #94a3b8; font-family: monospace;">${q.postcode ? q.postcode + ' • ' : ''}${q.lat.toFixed(2)}°, ${q.lon.toFixed(2)}°</div>
+            <div style="font-size: 10px; color: #cbd5e1; margin-top: 4px;">Last queried: ${dateStr}</div>
+            <button onclick="loadLocationFromMap('${q.name.replace(/'/g, "\\'")}', ${q.lat}, ${q.lon}, '${q.postcode}')" style="margin-top: 8px; width: 100%; padding: 5px 8px; background: #0284c7; color: white; border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer;">
+              View Forecast
+            </button>
+          </div>
+        `;
+
+        const marker = L.marker([q.lat, q.lon], { icon: customIcon });
+        marker.bindPopup(popupContent);
+        historyMarkersLayer.addLayer(marker);
+      });
+
+      if (bounds.length > 0) {
+        try {
+          historyLeafletMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+        } catch (_) {}
       }
     }
 
@@ -706,6 +996,7 @@
             desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
           };
           saveSavedLocation();
+          recordLocationQuery(CURRENT_LOCATION);
           updateLocationHeader();
           fetchWeatherData();
           return true;
@@ -791,6 +1082,7 @@
         desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
       };
       saveSavedLocation();
+      recordLocationQuery(CURRENT_LOCATION);
       updateLocationHeader();
       fetchWeatherData();
     }
