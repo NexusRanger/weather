@@ -1203,8 +1203,8 @@
             <span class="text-[9px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
               ${rainProb}%
             </span>
-            <div class="h-0.5 w-full bg-slate-800 rounded-full mt-0.5 overflow-hidden">
-              <div class="h-full bg-sky-400 rounded-full" style="width: ${rainProb}%"></div>
+            <div class="h-1.5 w-full bg-slate-800/90 rounded-full mt-1 overflow-hidden border border-white/5">
+              <div class="h-full ${rainProb >= 50 ? 'bg-gradient-to-r from-sky-400 to-blue-500 shadow-[0_0_6px_rgba(56,189,248,0.5)]' : 'bg-sky-400'} rounded-full transition-all" style="width: ${rainProb}%"></div>
             </div>
           </div>
         `;
