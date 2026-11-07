@@ -88,6 +88,32 @@
       border: none !important;
     }
     
+    /* Solar Milestone Highlight Glows */
+    .milestone-active-light {
+      background: rgba(245, 158, 11, 0.22) !important;
+      border: 1.5px solid #fbbf24 !important;
+      box-shadow: 0 0 14px rgba(251, 191, 36, 0.45) !important;
+      transform: scale(1.02);
+    }
+    .milestone-active-sun {
+      background: rgba(249, 115, 22, 0.22) !important;
+      border: 1.5px solid #f97316 !important;
+      box-shadow: 0 0 14px rgba(249, 115, 22, 0.45) !important;
+      transform: scale(1.02);
+    }
+    .milestone-active-sunset {
+      background: rgba(244, 63, 94, 0.22) !important;
+      border: 1.5px solid #f43f5e !important;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.45) !important;
+      transform: scale(1.02);
+    }
+    .milestone-active-dark {
+      background: rgba(99, 102, 241, 0.22) !important;
+      border: 1.5px solid #818cf8 !important;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.45) !important;
+      transform: scale(1.02);
+    }
+
     .ambient-glow {
       position: fixed;
       top: -15%;
@@ -325,13 +351,15 @@
               </div>
             </div>
 
-            <!-- LIVE RAIN NOWCAST BANNER -->
-            <div id="rainNowcastBanner" class="mt-1 px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors" title="15-minute high-resolution rain nowcasting">
-              <div class="flex items-center gap-1.5 min-w-0 pr-1">
+            <!-- LIVE RAIN NOWCAST BANNER (Animated Ticker) -->
+            <div id="rainNowcastBanner" class="mt-1 px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden" title="15-minute high-resolution rain nowcasting" style="min-height: 28px;">
+              <div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden pr-1">
                 <span id="rainNowcastIcon" class="text-sm flex-shrink-0">☔</span>
-                <span id="rainNowcastText" class="font-semibold text-sky-200 truncate text-[11px]">Checking rain radar...</span>
+                <div class="overflow-hidden flex-1 relative" style="height: 18px;">
+                  <div id="rainNowcastText" class="font-semibold text-sky-200 text-[11px] whitespace-nowrap" style="transition: opacity 0.3s ease, transform 0.3s ease;">Checking rain radar...</div>
+                </div>
               </div>
-              <span id="rainNowcastBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0">--% conf</span>
+              <span id="rainNowcastBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0 ml-1.5">--% conf</span>
             </div>
           </div>
 
@@ -490,42 +518,50 @@
 
             <div class="grid grid-cols-2 gap-1">
               <!-- Sunrise -->
-              <div class="flex items-center gap-1.5 p-1 glass-tile rounded-lg">
+              <div id="tileSunrise" class="flex items-center gap-1.5 p-1 glass-tile rounded-lg transition-all duration-700">
                 <span class="text-base">🌅</span>
-                <div>
-                  <div class="text-[9px] text-slate-400 leading-none">Sunrise</div>
-                  <div id="sunriseTime" class="text-xs font-bold font-mono text-white leading-tight">--:--</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center justify-between">
+                    <span>Sunrise</span>
+                    <span id="sunriseHighlightBadge" class="hidden text-[8px] font-bold font-mono px-1 rounded bg-amber-400 text-slate-950 animate-pulse"></span>
+                  </div>
+                  <div id="sunriseTime" class="text-xs font-bold font-mono text-white leading-tight mt-0.5">--:--</div>
                 </div>
               </div>
 
               <!-- Sunset -->
-              <div class="flex items-center gap-1.5 p-1 glass-tile rounded-lg">
+              <div id="tileSunset" class="flex items-center gap-1.5 p-1 glass-tile rounded-lg transition-all duration-700">
                 <span class="text-base">🌇</span>
-                <div>
-                  <div class="text-[9px] text-slate-400 leading-none">Sunset</div>
-                  <div id="sunsetTime" class="text-xs font-bold font-mono text-white leading-tight">--:--</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center justify-between">
+                    <span>Sunset</span>
+                    <span id="sunsetHighlightBadge" class="hidden text-[8px] font-bold font-mono px-1 rounded bg-rose-400 text-slate-950 animate-pulse"></span>
+                  </div>
+                  <div id="sunsetTime" class="text-xs font-bold font-mono text-white leading-tight mt-0.5">--:--</div>
                 </div>
               </div>
 
               <!-- Light At (Practical Torch-Free Twilight) -->
-              <div class="flex items-center gap-1.5 p-1 glass-tile rounded-lg" title="Light enough to walk along paths and among trees without a torch">
+              <div id="tileLightAt" class="flex items-center gap-1.5 p-1 glass-tile rounded-lg transition-all duration-700" title="Light enough to walk along paths and among trees without a torch">
                 <span class="text-base">💡</span>
-                <div>
-                  <div class="text-[9px] text-slate-400 leading-none flex items-center gap-1">
-                    Light At <span id="lightAtCloudTag" class="text-[8px] text-amber-300 font-mono"></span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center justify-between">
+                    <span class="flex items-center gap-1">Light At <span id="lightAtCloudTag" class="text-[8px] text-amber-300 font-mono"></span></span>
+                    <span id="lightAtHighlightBadge" class="hidden text-[8px] font-bold font-mono px-1 rounded bg-amber-400 text-slate-950 animate-pulse"></span>
                   </div>
-                  <div id="lightAtTime" class="text-xs font-bold font-mono text-amber-300 leading-tight">--:--</div>
+                  <div id="lightAtTime" class="text-xs font-bold font-mono text-amber-300 leading-tight mt-0.5">--:--</div>
                 </div>
               </div>
 
               <!-- Dark By (Practical Torch-Free Twilight) -->
-              <div class="flex items-center gap-1.5 p-1 glass-tile rounded-lg" title="Point where you need a torch to walk under tree canopy / paths">
+              <div id="tileDarkBy" class="flex items-center gap-1.5 p-1 glass-tile rounded-lg transition-all duration-700" title="Point where you need a torch to walk under tree canopy / paths">
                 <span class="text-base">🌙</span>
-                <div>
-                  <div class="text-[9px] text-slate-400 leading-none flex items-center gap-1">
-                    Dark By <span id="darkByCloudTag" class="text-[8px] text-indigo-300 font-mono"></span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center justify-between">
+                    <span class="flex items-center gap-1">Dark By <span id="darkByCloudTag" class="text-[8px] text-indigo-300 font-mono"></span></span>
+                    <span id="darkByHighlightBadge" class="hidden text-[8px] font-bold font-mono px-1 rounded bg-indigo-300 text-slate-950 animate-pulse"></span>
                   </div>
-                  <div id="darkByTime" class="text-xs font-bold font-mono text-indigo-300 leading-tight">--:--</div>
+                  <div id="darkByTime" class="text-xs font-bold font-mono text-indigo-300 leading-tight mt-0.5">--:--</div>
                 </div>
               </div>
             </div>
@@ -701,10 +737,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js"></script>
+  <script src="traffic-flood.js?v=24"></script>
     <script>
-    const APP_BUILD = 23;
-    const APP_VERSION = '1.4.2';
+    const APP_BUILD = 24;
+    const APP_VERSION = '1.4.3';
 
     async function checkForUpdates() {
       try {
@@ -1579,6 +1615,8 @@
       document.getElementById('clockTime').innerHTML = `${hours}:${minutes}<span class="text-xs text-slate-400">:${seconds}</span>`;
       const options = { weekday: 'short', day: 'numeric', month: 'short' };
       document.getElementById('clockDate').textContent = now.toLocaleDateString('en-GB', options);
+      
+      checkSolarMilestoneHighlights();
     }
 
     function evaluateFrost(hourly) {
@@ -1698,14 +1736,53 @@
       document.getElementById('stargazingAdvice').textContent = adviceText;
     }
 
-    function evaluateRainNowcast(cur, minutely_15, hourly) {
-      const banner = document.getElementById('rainNowcastBanner');
-      const icon = document.getElementById('rainNowcastIcon');
-      const text = document.getElementById('rainNowcastText');
-      const badge = document.getElementById('rainNowcastBadge');
-      const tileSub = document.getElementById('rainTileNowcast');
-      if (!banner || !text) return;
+    let rainNowcastSlides = [];
+    let currentRainSlideIndex = 0;
+    let rainTickerTimer = null;
 
+    function setRainNowcastSlides(slides, badgeText, badgeClass, bannerClass, iconChar) {
+      rainNowcastSlides = slides;
+      currentRainSlideIndex = 0;
+      const banner = document.getElementById('rainNowcastBanner');
+      const badge = document.getElementById('rainNowcastBadge');
+      const text = document.getElementById('rainNowcastText');
+      const icon = document.getElementById('rainNowcastIcon');
+      
+      if (banner && bannerClass) banner.className = bannerClass;
+      if (badge && badgeText) badge.textContent = badgeText;
+      if (badge && badgeClass) badge.className = badgeClass;
+      if (icon && iconChar) icon.textContent = iconChar;
+
+      if (text && slides.length > 0) {
+        text.textContent = slides[0];
+        text.style.opacity = '1';
+        text.style.transform = 'translateY(0)';
+      }
+
+      if (rainTickerTimer) {
+        clearInterval(rainTickerTimer);
+        rainTickerTimer = null;
+      }
+
+      // Alternate every 3.8 seconds between status and timing details
+      if (slides.length > 1) {
+        rainTickerTimer = setInterval(() => {
+          const textEl = document.getElementById('rainNowcastText');
+          if (!textEl || rainNowcastSlides.length <= 1) return;
+          textEl.style.opacity = '0';
+          textEl.style.transform = 'translateY(-3px)';
+          setTimeout(() => {
+            currentRainSlideIndex = (currentRainSlideIndex + 1) % rainNowcastSlides.length;
+            textEl.textContent = rainNowcastSlides[currentRainSlideIndex];
+            textEl.style.opacity = '1';
+            textEl.style.transform = 'translateY(0)';
+          }, 300);
+        }, 3800);
+      }
+    }
+
+    function evaluateRainNowcast(cur, minutely_15, hourly) {
+      const tileSub = document.getElementById('rainTileNowcast');
       const now = new Date();
       const curPrecip = (cur && typeof cur.precipitation === 'number') ? cur.precipitation : 0;
       const isCurrentlyRaining = curPrecip >= 0.1 || (cur && [51, 53, 55, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(cur.weather_code));
@@ -1732,21 +1809,31 @@
         if (isCurrentlyRaining) {
           let stopSlot = futureSlots.find(s => s.mins > 0 && s.precip < 0.1 && s.prob < 35);
           if (stopSlot) {
-            icon.textContent = '🌧️';
-            text.textContent = `Raining now • Stopping in ~${stopSlot.mins}m`;
             const conf = Math.min(95, Math.max(65, 100 - stopSlot.prob));
-            badge.textContent = `${conf}% conf`;
-            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors';
-            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0';
             if (tileSub) tileSub.textContent = `Stops ~${stopSlot.mins}m (${conf}%)`;
+            setRainNowcastSlides(
+              [
+                `Raining now (${curPrecip > 0 ? curPrecip.toFixed(1) + 'mm' : 'drizzle'})`,
+                `Stopping in ~${stopSlot.mins} mins`
+              ],
+              `${conf}% conf`,
+              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0 ml-1.5',
+              'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
+              '🌧️'
+            );
             return;
           } else {
-            icon.textContent = '🌧️';
-            text.textContent = `Raining now (${curPrecip.toFixed(1)}mm) • Continuing`;
-            badge.textContent = 'High conf';
-            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors';
-            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0';
             if (tileSub) tileSub.textContent = 'Rain continuing';
+            setRainNowcastSlides(
+              [
+                `Raining now (${curPrecip.toFixed(1)}mm)`,
+                'Rain continuing across area'
+              ],
+              'High conf',
+              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0 ml-1.5',
+              'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
+              '🌧️'
+            );
             return;
           }
         }
@@ -1759,46 +1846,151 @@
           const timeStr = rainSlot.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
           const intensity = rainSlot.precip >= 1.2 ? 'Heavy rain' : rainSlot.precip >= 0.4 ? 'Rain' : 'Light shower';
 
-          if (m <= 20) {
-            icon.textContent = '☔';
-            text.textContent = `${intensity} starting in ~${m || 15} mins`;
-            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-between text-xs transition-colors';
-            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 border border-amber-400/40 flex-shrink-0';
-          } else if (m <= 60) {
-            icon.textContent = '☔';
-            text.textContent = `${intensity} in ~${m} mins`;
-            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-between text-xs transition-colors';
-            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 flex-shrink-0';
-          } else {
-            icon.textContent = '🌦️';
-            text.textContent = `${intensity} expected ~${timeStr}`;
-            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-white/10 flex items-center justify-between text-xs transition-colors';
-            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0';
-          }
-
-          badge.textContent = `${conf}% conf`;
           if (tileSub) tileSub.textContent = `Rain ~${m}m (${conf}%)`;
+
+          if (m <= 20) {
+            setRainNowcastSlides(
+              [
+                `${intensity} starting soon`,
+                `Starting in ~${m || 15} mins`
+              ],
+              `${conf}% conf`,
+              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 border border-amber-400/40 flex-shrink-0 ml-1.5',
+              'mt-1 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
+              '☔'
+            );
+          } else if (m <= 60) {
+            setRainNowcastSlides(
+              [
+                `${intensity} in ~${m} mins`,
+                `Starting approx ${timeStr}`
+              ],
+              `${conf}% conf`,
+              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 flex-shrink-0 ml-1.5',
+              'mt-1 px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-between text-xs transition-colors overflow-hidden',
+              '☔'
+            );
+          } else {
+            setRainNowcastSlides(
+              [
+                `${intensity} expected ~${timeStr}`,
+                `Probability ~${conf}%`
+              ],
+              `${conf}% conf`,
+              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0 ml-1.5',
+              'mt-1 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-white/10 flex items-center justify-between text-xs transition-colors overflow-hidden',
+              '🌦️'
+            );
+          }
           return;
         }
 
         let chanceSlot = futureSlots.find(s => s.prob >= 25);
         if (chanceSlot) {
-          icon.textContent = '🌦️';
-          text.textContent = `Passing shower risk in ~${chanceSlot.mins}m`;
-          badge.textContent = `${chanceSlot.prob}% risk`;
-          banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-white/10 flex items-center justify-between text-xs transition-colors';
-          badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0';
           if (tileSub) tileSub.textContent = `Dry (~${chanceSlot.prob}% risk)`;
+          setRainNowcastSlides(
+            [
+              `Shower risk in ~${chanceSlot.mins}m`,
+              `Chance ~${chanceSlot.prob}% next 90m`
+            ],
+            `${chanceSlot.prob}% risk`,
+            'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0 ml-1.5',
+            'mt-1 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-white/10 flex items-center justify-between text-xs transition-colors overflow-hidden',
+            '🌦️'
+          );
           return;
         }
       }
 
-      icon.textContent = '☀️';
-      text.textContent = 'Dry for the next 3+ hours';
-      badge.textContent = '95% conf';
-      banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-between text-xs transition-colors';
-      badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 flex-shrink-0';
       if (tileSub) tileSub.textContent = 'Dry next 3+ hrs';
+      setRainNowcastSlides(
+        [
+          'Dry next 3+ hours',
+          'No precipitation expected'
+        ],
+        '95% conf',
+        'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 flex-shrink-0 ml-1.5',
+        'mt-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden',
+        '☀️'
+      );
+    }
+
+    let solarMilestones = {
+      lightAt: null,
+      sunrise: null,
+      sunset: null,
+      darkBy: null
+    };
+
+    function checkSolarMilestoneHighlights() {
+      if (!solarMilestones.lightAt || !solarMilestones.sunrise) return;
+      const now = new Date();
+      const nowMs = now.getTime();
+
+      const lightMs = solarMilestones.lightAt.getTime();
+      const sunMs = solarMilestones.sunrise.getTime();
+      const sunsetMs = solarMilestones.sunset.getTime();
+      const darkMs = solarMilestones.darkBy.getTime();
+
+      const tileLight = document.getElementById('tileLightAt');
+      const tileSun = document.getElementById('tileSunrise');
+      const tileSunset = document.getElementById('tileSunset');
+      const tileDark = document.getElementById('tileDarkBy');
+
+      const lightBadge = document.getElementById('lightAtHighlightBadge');
+      const sunBadge = document.getElementById('sunriseHighlightBadge');
+      const sunsetBadge = document.getElementById('sunsetHighlightBadge');
+      const darkBadge = document.getElementById('darkByHighlightBadge');
+
+      const baseClass = 'flex items-center gap-1.5 p-1 glass-tile rounded-lg transition-all duration-700';
+
+      // 1. Light At: active from lightMs for 45 minutes (until sunrise takes over)
+      const isLightActive = (nowMs >= lightMs && nowMs < (lightMs + 45 * 60000) && nowMs < sunMs);
+      if (tileLight) {
+        if (isLightActive) {
+          tileLight.className = baseClass + ' milestone-active-light';
+          if (lightBadge) { lightBadge.textContent = 'LIGHT NOW'; lightBadge.classList.remove('hidden'); }
+        } else {
+          tileLight.className = baseClass;
+          if (lightBadge) lightBadge.classList.add('hidden');
+        }
+      }
+
+      // 2. Sunrise: active from sunrise for 60 minutes
+      const isSunActive = (nowMs >= sunMs && nowMs < (sunMs + 60 * 60000));
+      if (tileSun) {
+        if (isSunActive) {
+          tileSun.className = baseClass + ' milestone-active-sun';
+          if (sunBadge) { sunBadge.textContent = 'SUN UP'; sunBadge.classList.remove('hidden'); }
+        } else {
+          tileSun.className = baseClass;
+          if (sunBadge) sunBadge.classList.add('hidden');
+        }
+      }
+
+      // 3. Sunset: active from sunset for 60 minutes
+      const isSunsetActive = (nowMs >= sunsetMs && nowMs < (sunsetMs + 60 * 60000));
+      if (tileSunset) {
+        if (isSunsetActive) {
+          tileSunset.className = baseClass + ' milestone-active-sunset';
+          if (sunsetBadge) { sunsetBadge.textContent = 'SUNSET'; sunsetBadge.classList.remove('hidden'); }
+        } else {
+          tileSunset.className = baseClass;
+          if (sunsetBadge) sunsetBadge.classList.add('hidden');
+        }
+      }
+
+      // 4. Dark By: active from darkBy for 45 minutes
+      const isDarkActive = (nowMs >= darkMs && nowMs < (darkMs + 45 * 60000));
+      if (tileDark) {
+        if (isDarkActive) {
+          tileDark.className = baseClass + ' milestone-active-dark';
+          if (darkBadge) { darkBadge.textContent = 'DARK NOW'; darkBadge.classList.remove('hidden'); }
+        } else {
+          tileDark.className = baseClass;
+          if (darkBadge) darkBadge.classList.add('hidden');
+        }
+      }
     }
 
     async function fetchWeatherData() {
@@ -1981,6 +2173,14 @@
         const summaryEl = document.getElementById('cloudLightSummary');
         const cloudLabel = cloudPct >= 80 ? '☁️ Overcast' : cloudPct >= 40 ? '⛅ Patchy' : '☀️ Clear';
         if (summaryEl) summaryEl.textContent = `${cloudLabel} (${cloudPct}% cloud)`;
+
+        solarMilestones = {
+          lightAt: lightAtDate,
+          sunrise: sunriseDate,
+          sunset: sunsetDate,
+          darkBy: darkByDate
+        };
+        checkSolarMilestoneHighlights();
       } catch (err) {
         console.error('Light calculation error:', err);
       }
