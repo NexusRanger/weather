@@ -262,6 +262,15 @@
                 </div>
               </div>
             </div>
+
+            <!-- LIVE RAIN NOWCAST BANNER -->
+            <div id="rainNowcastBanner" class="mt-1 px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors" title="15-minute high-resolution rain nowcasting">
+              <div class="flex items-center gap-1.5 min-w-0 pr-1">
+                <span id="rainNowcastIcon" class="text-sm flex-shrink-0">☔</span>
+                <span id="rainNowcastText" class="font-semibold text-sky-200 truncate text-[11px]">Checking rain radar...</span>
+              </div>
+              <span id="rainNowcastBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0">--% conf</span>
+            </div>
           </div>
 
           <!-- 6 Dense Tiles (2 cols x 3 rows) -->
@@ -329,7 +338,7 @@
                 <span id="precipToday" class="text-sm font-bold font-mono text-white leading-none">0.0</span>
                 <span class="text-[9px] text-slate-400">mm</span>
               </div>
-              <div class="text-[9px] text-slate-500 leading-none">Accumulated</div>
+              <div id="rainTileNowcast" class="text-[9px] text-slate-400 leading-none truncate">Accumulated</div>
             </div>
 
             <!-- Cloud & UV -->
@@ -814,13 +823,116 @@
       document.getElementById('stargazingAdvice').textContent = adviceText;
     }
 
+    function evaluateRainNowcast(cur, minutely_15, hourly) {
+      const banner = document.getElementById('rainNowcastBanner');
+      const icon = document.getElementById('rainNowcastIcon');
+      const text = document.getElementById('rainNowcastText');
+      const badge = document.getElementById('rainNowcastBadge');
+      const tileSub = document.getElementById('rainTileNowcast');
+      if (!banner || !text) return;
+
+      const now = new Date();
+      const curPrecip = (cur && typeof cur.precipitation === 'number') ? cur.precipitation : 0;
+      const isCurrentlyRaining = curPrecip >= 0.1 || (cur && [51, 53, 55, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(cur.weather_code));
+
+      if (minutely_15 && minutely_15.time && minutely_15.time.length > 0) {
+        const times = minutely_15.time;
+        const precips = minutely_15.precipitation;
+        const probs = minutely_15.precipitation_probability;
+
+        let futureSlots = [];
+        for (let i = 0; i < times.length; i++) {
+          const slotDate = new Date(times[i]);
+          const diffMins = Math.round((slotDate.getTime() - now.getTime()) / 60000);
+          if (diffMins >= -5) {
+            futureSlots.push({
+              date: slotDate,
+              mins: Math.max(0, diffMins),
+              precip: precips[i] || 0,
+              prob: (probs && probs[i] !== undefined) ? probs[i] : 0
+            });
+          }
+        }
+
+        if (isCurrentlyRaining) {
+          let stopSlot = futureSlots.find(s => s.mins > 0 && s.precip < 0.1 && s.prob < 35);
+          if (stopSlot) {
+            icon.textContent = '🌧️';
+            text.textContent = `Raining now • Stopping in ~${stopSlot.mins}m`;
+            const conf = Math.min(95, Math.max(65, 100 - stopSlot.prob));
+            badge.textContent = `${conf}% conf`;
+            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors';
+            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0';
+            if (tileSub) tileSub.textContent = `Stops ~${stopSlot.mins}m (${conf}%)`;
+            return;
+          } else {
+            icon.textContent = '🌧️';
+            text.textContent = `Raining now (${curPrecip.toFixed(1)}mm) • Continuing`;
+            badge.textContent = 'High conf';
+            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors';
+            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0';
+            if (tileSub) tileSub.textContent = 'Rain continuing';
+            return;
+          }
+        }
+
+        let rainSlot = futureSlots.find(s => (s.precip >= 0.1 && s.prob >= 25) || s.prob >= 50);
+
+        if (rainSlot) {
+          const m = rainSlot.mins;
+          const conf = Math.max(30, Math.min(95, rainSlot.prob));
+          const timeStr = rainSlot.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+          const intensity = rainSlot.precip >= 1.2 ? 'Heavy rain' : rainSlot.precip >= 0.4 ? 'Rain' : 'Light shower';
+
+          if (m <= 20) {
+            icon.textContent = '☔';
+            text.textContent = `${intensity} starting in ~${m || 15} mins`;
+            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-between text-xs transition-colors';
+            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 border border-amber-400/40 flex-shrink-0';
+          } else if (m <= 60) {
+            icon.textContent = '☔';
+            text.textContent = `${intensity} in ~${m} mins`;
+            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-between text-xs transition-colors';
+            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 flex-shrink-0';
+          } else {
+            icon.textContent = '🌦️';
+            text.textContent = `${intensity} expected ~${timeStr}`;
+            banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-white/10 flex items-center justify-between text-xs transition-colors';
+            badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0';
+          }
+
+          badge.textContent = `${conf}% conf`;
+          if (tileSub) tileSub.textContent = `Rain ~${m}m (${conf}%)`;
+          return;
+        }
+
+        let chanceSlot = futureSlots.find(s => s.prob >= 25);
+        if (chanceSlot) {
+          icon.textContent = '🌦️';
+          text.textContent = `Passing shower risk in ~${chanceSlot.mins}m`;
+          badge.textContent = `${chanceSlot.prob}% risk`;
+          banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-white/10 flex items-center justify-between text-xs transition-colors';
+          badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0';
+          if (tileSub) tileSub.textContent = `Dry (~${chanceSlot.prob}% risk)`;
+          return;
+        }
+      }
+
+      icon.textContent = '☀️';
+      text.textContent = 'Dry for the next 3+ hours';
+      badge.textContent = '95% conf';
+      banner.className = 'mt-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-between text-xs transition-colors';
+      badge.className = 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 flex-shrink-0';
+      if (tileSub) tileSub.textContent = 'Dry next 3+ hrs';
+    }
+
     async function fetchWeatherData() {
       const icon = document.getElementById('refreshIcon');
       if (icon) icon.classList.add('animate-spin');
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=${TIMEZONE}&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=${TIMEZONE}&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -868,6 +980,9 @@
       
       document.getElementById('weatherIconLg').textContent = weatherInfo.icon;
       document.getElementById('weatherDesc').textContent = weatherInfo.desc;
+      
+      // Rain Nowcasting (15-min radar projection)
+      evaluateRainNowcast(cur, data.minutely_15, hourly);
       
       // Wind
       document.getElementById('windSpeed').textContent = Math.round(cur.wind_speed_10m);
