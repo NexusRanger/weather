@@ -737,10 +737,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=24"></script>
+  <script src="traffic-flood.js?v=25"></script>
     <script>
-    const APP_BUILD = 24;
-    const APP_VERSION = '1.4.3';
+    const APP_BUILD = 25;
+    const APP_VERSION = '1.4.4';
 
     async function checkForUpdates() {
       try {
@@ -1781,11 +1781,82 @@
       }
     }
 
+    function getPrecipDetails(code, amount = 0) {
+      // Snow & snow grains
+      if ([71, 73, 75, 77, 85, 86].includes(code)) {
+        const isHeavy = code === 75 || code === 86;
+        return {
+          type: 'snow',
+          verb: isHeavy ? 'Heavy snow now' : 'Snowing now',
+          name: isHeavy ? 'Heavy snow' : code === 73 ? 'Moderate snow' : 'Light snow',
+          icon: '❄️',
+          bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
+          badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-200 border border-cyan-400/40 flex-shrink-0 ml-1.5'
+        };
+      }
+      // Hail & severe thunderstorms
+      if ([96, 99].includes(code)) {
+        return {
+          type: 'hail',
+          verb: 'Hail falling now',
+          name: code === 99 ? 'Severe hailstorm' : 'Thunder & hail',
+          icon: '⛈️',
+          bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-rose-500/25 border border-rose-400/50 flex items-center justify-between text-xs transition-colors overflow-hidden',
+          badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-rose-400/25 text-rose-200 border border-rose-400/40 flex-shrink-0 ml-1.5'
+        };
+      }
+      // Freezing rain & freezing drizzle (black ice hazard)
+      if ([56, 57, 66, 67].includes(code)) {
+        return {
+          type: 'ice',
+          verb: 'Freezing rain now',
+          name: 'Freezing rain / ice',
+          icon: '🧊',
+          bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-indigo-500/25 border border-indigo-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
+          badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-indigo-400/20 text-indigo-200 border border-indigo-400/30 flex-shrink-0 ml-1.5'
+        };
+      }
+      // Drizzle
+      if ([51, 53, 55].includes(code)) {
+        return {
+          type: 'drizzle',
+          verb: 'Drizzling now',
+          name: code === 55 ? 'Heavy drizzle' : code === 53 ? 'Moderate drizzle' : 'Light drizzle',
+          icon: '🌦️',
+          bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-between text-xs transition-colors overflow-hidden',
+          badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 flex-shrink-0 ml-1.5'
+        };
+      }
+      // Thunderstorm
+      if (code === 95) {
+        return {
+          type: 'thunder',
+          verb: 'Thunderstorm now',
+          name: 'Thunderstorm',
+          icon: '⚡',
+          bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-amber-500/25 border border-amber-400/50 flex items-center justify-between text-xs transition-colors overflow-hidden',
+          badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-400/25 text-amber-200 border border-amber-400/40 flex-shrink-0 ml-1.5'
+        };
+      }
+      // Standard Rain
+      const isHeavy = amount >= 1.5 || code === 65 || code === 82;
+      return {
+        type: 'rain',
+        verb: isHeavy ? 'Heavy rain now' : 'Raining now',
+        name: isHeavy ? 'Heavy rain' : 'Rain',
+        icon: isHeavy ? '🌧️' : '🌦️',
+        bannerClass: 'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
+        badgeClass: 'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0 ml-1.5'
+      };
+    }
+
     function evaluateRainNowcast(cur, minutely_15, hourly) {
       const tileSub = document.getElementById('rainTileNowcast');
       const now = new Date();
       const curPrecip = (cur && typeof cur.precipitation === 'number') ? cur.precipitation : 0;
-      const isCurrentlyRaining = curPrecip >= 0.1 || (cur && [51, 53, 55, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(cur.weather_code));
+      const curCode = (cur && typeof cur.weather_code === 'number') ? cur.weather_code : 0;
+      const curDetails = getPrecipDetails(curCode, curPrecip);
+      const isCurrentlyPrecipitating = curPrecip >= 0.1 || [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 99].includes(curCode);
 
       if (minutely_15 && minutely_15.time && minutely_15.time.length > 0) {
         const times = minutely_15.time;
@@ -1806,33 +1877,37 @@
           }
         }
 
-        if (isCurrentlyRaining) {
+        if (isCurrentlyPrecipitating) {
           let stopSlot = futureSlots.find(s => s.mins > 0 && s.precip < 0.1 && s.prob < 35);
+          const verb = curDetails.verb;
+          const icon = curDetails.icon;
+          const rateStr = curPrecip > 0 ? `${curPrecip.toFixed(1)}mm/h` : curDetails.type;
+
           if (stopSlot) {
             const conf = Math.min(95, Math.max(65, 100 - stopSlot.prob));
             if (tileSub) tileSub.textContent = `Stops ~${stopSlot.mins}m (${conf}%)`;
             setRainNowcastSlides(
               [
-                `Raining now (${curPrecip > 0 ? curPrecip.toFixed(1) + 'mm' : 'drizzle'})`,
+                `${verb} (${rateStr})`,
                 `Stopping in ~${stopSlot.mins} mins`
               ],
               `${conf}% conf`,
-              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0 ml-1.5',
-              'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
-              '🌧️'
+              curDetails.badgeClass,
+              curDetails.bannerClass,
+              icon
             );
             return;
           } else {
-            if (tileSub) tileSub.textContent = 'Rain continuing';
+            if (tileSub) tileSub.textContent = `${curDetails.name} active`;
             setRainNowcastSlides(
               [
-                `Raining now (${curPrecip.toFixed(1)}mm)`,
-                'Rain continuing across area'
+                `${verb} (${rateStr})`,
+                `${curDetails.name} continuing`
               ],
               'High conf',
-              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-blue-400/20 text-blue-200 border border-blue-400/30 flex-shrink-0 ml-1.5',
-              'mt-1 px-2.5 py-1 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
-              '🌧️'
+              curDetails.badgeClass,
+              curDetails.bannerClass,
+              icon
             );
             return;
           }
@@ -1844,9 +1919,13 @@
           const m = rainSlot.mins;
           const conf = Math.max(30, Math.min(95, rainSlot.prob));
           const timeStr = rainSlot.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-          const intensity = rainSlot.precip >= 1.2 ? 'Heavy rain' : rainSlot.precip >= 0.4 ? 'Rain' : 'Light shower';
+          
+          // Check upcoming code or temperature
+          const slotCode = (minutely_15 && minutely_15.weather_code && minutely_15.weather_code[futureSlots.indexOf(rainSlot)]) || curCode;
+          const slotDetails = getPrecipDetails(slotCode, rainSlot.precip);
+          const intensity = slotDetails.name;
 
-          if (tileSub) tileSub.textContent = `Rain ~${m}m (${conf}%)`;
+          if (tileSub) tileSub.textContent = `${slotDetails.type} ~${m}m (${conf}%)`;
 
           if (m <= 20) {
             setRainNowcastSlides(
@@ -1855,9 +1934,9 @@
                 `Starting in ~${m || 15} mins`
               ],
               `${conf}% conf`,
-              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 border border-amber-400/40 flex-shrink-0 ml-1.5',
-              'mt-1 px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-between text-xs transition-colors overflow-hidden',
-              '☔'
+              slotDetails.badgeClass,
+              slotDetails.bannerClass,
+              slotDetails.icon
             );
           } else if (m <= 60) {
             setRainNowcastSlides(
@@ -1866,9 +1945,9 @@
                 `Starting approx ${timeStr}`
               ],
               `${conf}% conf`,
-              'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-200 border border-sky-400/30 flex-shrink-0 ml-1.5',
-              'mt-1 px-2.5 py-1 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-between text-xs transition-colors overflow-hidden',
-              '☔'
+              slotDetails.badgeClass,
+              slotDetails.bannerClass,
+              slotDetails.icon
             );
           } else {
             setRainNowcastSlides(
@@ -1879,7 +1958,7 @@
               `${conf}% conf`,
               'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0 ml-1.5',
               'mt-1 px-2.5 py-1 rounded-xl bg-slate-800/80 border border-white/10 flex items-center justify-between text-xs transition-colors overflow-hidden',
-              '🌦️'
+              slotDetails.icon
             );
           }
           return;
@@ -1923,7 +2002,7 @@
     };
 
     function checkSolarMilestoneHighlights() {
-      if (!solarMilestones.lightAt || !solarMilestones.sunrise) return;
+      if (!solarMilestones.lightAt || !solarMilestones.sunrise || !solarMilestones.sunset || !solarMilestones.darkBy) return;
       const now = new Date();
       const nowMs = now.getTime();
 
@@ -1944,8 +2023,19 @@
 
       const baseClass = 'flex items-center gap-1.5 p-1 glass-tile rounded-lg transition-all duration-700';
 
-      // 1. Light At: active from lightMs for 45 minutes (until sunrise takes over)
-      const isLightActive = (nowMs >= lightMs && nowMs < (lightMs + 45 * 60000) && nowMs < sunMs);
+      // STRICTLY ONE BOX HIGHLIGHTED AT A TIME:
+      // 1. Light At: active from dawn UNTIL sunrise arrives (superseded immediately by Sunrise)
+      const isLightActive = (nowMs >= lightMs && nowMs < sunMs);
+      
+      // 2. Sunrise: active from sunrise for 45 minutes
+      const isSunActive = (nowMs >= sunMs && nowMs < (sunMs + 45 * 60000));
+
+      // 3. Sunset: active from sunset UNTIL dark arrives (superseded immediately by Dark By)
+      const isSunsetActive = (nowMs >= sunsetMs && nowMs < darkMs);
+
+      // 4. Dark By: active from dark arrival for 45 minutes
+      const isDarkActive = (nowMs >= darkMs && nowMs < (darkMs + 45 * 60000));
+
       if (tileLight) {
         if (isLightActive) {
           tileLight.className = baseClass + ' milestone-active-light';
@@ -1956,8 +2046,6 @@
         }
       }
 
-      // 2. Sunrise: active from sunrise for 60 minutes
-      const isSunActive = (nowMs >= sunMs && nowMs < (sunMs + 60 * 60000));
       if (tileSun) {
         if (isSunActive) {
           tileSun.className = baseClass + ' milestone-active-sun';
@@ -1968,8 +2056,6 @@
         }
       }
 
-      // 3. Sunset: active from sunset for 60 minutes
-      const isSunsetActive = (nowMs >= sunsetMs && nowMs < (sunsetMs + 60 * 60000));
       if (tileSunset) {
         if (isSunsetActive) {
           tileSunset.className = baseClass + ' milestone-active-sunset';
@@ -1980,8 +2066,6 @@
         }
       }
 
-      // 4. Dark By: active from darkBy for 45 minutes
-      const isDarkActive = (nowMs >= darkMs && nowMs < (darkMs + 45 * 60000));
       if (tileDark) {
         if (isDarkActive) {
           tileDark.className = baseClass + ' milestone-active-dark';
