@@ -4,10 +4,12 @@ Serves index.html to your local network for Nvidia Shield, TV, or laptop browser
 """
 
 import http.server
+import http.client
 import socket
 import socketserver
 import os
 import sys
+import urllib.parse
 
 PORT = 8080
 
@@ -21,7 +23,42 @@ def get_local_ip():
     except Exception:
         return '127.0.0.1'
 
-class CustomHandler(http.server.SimpleHTTPRequestHandler):
+class ProxyHandler(http.server.SimpleHTTPRequestHandler):
+    """
+    Handles two kinds of requests:
+      • /proxy?url=ENCODED_URL   → fetches the external URL server‑side and returns the body.
+      • all other paths           → normal static‑file serving (index.html, JS, etc.).
+    """
+    def do_GET(self):
+        if self.path.startswith('/proxy'):
+            # Extract the target URL from the query string
+            parsed_q = urllib.parse.urlparse(self.path)
+            params = urllib.parse.parse_qs(parsed_q.query)
+            target = params.get('url')
+            if not target:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b'Missing url parameter')
+                return
+            target_url = target[0]
+            try:
+                parsed = urllib.parse.urlparse(target_url)
+                conn = http.client.HTTPSConnection(parsed.netloc, timeout=10)
+                path = parsed.path + ('?' + parsed.query if parsed.query else '')
+                conn.request('GET', path, headers={'User-Agent': 'Antigravity-Proxy'})
+                resp = conn.getresponse()
+                data = resp.read()
+                self.send_response(resp.status)
+                self.send_header('Content-Type', resp.getheader('Content-Type') or 'application/octet-stream')
+                self.end_headers()
+                self.wfile.write(data)
+                conn.close()
+            except Exception as e:
+                self.send_response(502)
+                self.end_headers()
+                self.wfile.write(f'Proxy error: {e}'.encode())
+        else:
+            super().do_GET()
     def end_headers(self):
         # Prevent caching so edits or updates apply immediately
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -48,7 +85,7 @@ def main():
     print("=" * 60 + "\n")
 
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), CustomHandler) as httpd:
+    with socketserver.TCPServer(("", PORT), ProxyHandler) as httpd:
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:

@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Cotswolds Ambient Weather &amp; Frost Watch</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #060813;
+      color: #f1f5f9;
+      user-select: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .glass-card {
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.5);
+    }
+    .glass-tile {
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .ambient-glow {
+      position: fixed;
+      top: -15%;
+      right: -10%;
+      width: 60vw;
+      height: 60vw;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.09) 0%, rgba(99, 102, 241, 0.04) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transition: all 2s ease;
+    }
+    .ambient-glow-night {
+      background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 70%);
+    }
+
+    /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 581px) - Zero scroll */
+    @media (orientation: landscape) and (min-height: 581px) {
+      html, body {
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+      #dashboardRoot {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 8px 28px 8px 28px;
+        transition: transform 0.2s ease;
+        transform-origin: top center;
+      }
+      #mainGrid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        flex: 1 1 0%;
+        min-height: 0;
+        margin: 4px 0;
+      }
+    }
+
+    /* 2. PHONE IN LANDSCAPE (Short screens: height <= 580px - e.g. Galaxy Note 9 sideways) */
+    @media (orientation: landscape) and (max-height: 580px) {
+      html, body {
+        height: auto !important;
+        min-height: 100vh;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+      }
+      #dashboardRoot {
+        height: auto !important;
+        min-height: 100vh !important;
+        width: 100vw;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        padding: 8px 16px 28px 16px !important;
+        gap: 8px !important;
+        transform: none !important;
+      }
+      #mainGrid {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        height: auto !important;
+        flex: none !important;
+      }
+      #mainGrid > div {
+        height: auto !important;
+      }
+      .glass-card {
+        height: auto !important;
+      }
+      #footerTimeline {
+        height: auto !important;
+        flex: none !important;
+        margin-top: 4px !important;
+      }
+    }
+
+    /* 3. MOBILE PORTRAIT (e.g. Note 9 held upright) */
+    @media (orientation: portrait), (max-width: 599px) {
+      html, body {
+        height: auto !important;
+        min-height: 100vh;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+      }
+      #dashboardRoot {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 14px 28px 14px;
+        transform: none !important;
+      }
+      #mainGrid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .tv-only {
+        display: none !important;
+      }
+      .glass-card {
+        padding: 14px !important;
+      }
+      #footerTimeline {
+        order: 2;
+        margin-top: 0 !important;
+      }
+      #colFrost {
+        order: 1;
+      }
+      #colWeather {
+        order: 0;
+      }
+      #colSevenDay {
+        order: 3;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="ambientGlow" class="ambient-glow"></div>
+
+  <div id="dashboardRoot">
+    
+    <!-- HEADER BAR -->
+    <header class="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-white/10 flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></div>
+        <div class="flex items-baseline gap-2">
+          <h1 id="headerLocationTitle" class="text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5">
+            Nailsworth &amp; Stroud
+          </h1>
+          <button onclick="promptChangePostcode()" title="Change UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
+            <span id="headerPostcodeBadge">GL5 5HH</span>
+            <span class="text-[8px] text-indigo-400">✏️</span>
+          </button>
+          <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline">51.70°N, 2.23°W</span>
+        </div>
+      </div>
+
+      <!-- Center/Right: Clock, Date, TV Zoom & Controls -->
+      <div class="flex items-center gap-2.5">
+        <div class="text-right flex items-baseline gap-2">
+          <div id="clockDate" class="text-[11px] text-slate-300 font-medium">
+            Loading date...
+          </div>
+          <div id="clockTime" class="text-lg lg:text-xl font-mono font-bold tracking-tight text-white leading-none">
+            --:--<span class="text-xs text-slate-400">--</span>
+          </div>
+        </div>
+
+        <!-- TV Zoom / Scale Selector (hidden on mobile portrait) -->
+        <div class="tv-only flex items-center gap-0.5 bg-black/40 rounded-lg p-0.5 border border-white/10 text-xs">
+          <button onclick="adjustScale(-0.05)" title="Shrink layout (TV Zoom Out)" class="px-1.5 py-0.2 rounded hover:bg-white/10 text-slate-300 hover:text-white">A-</button>
+          <span id="scaleLabel" class="text-[10px] font-mono px-1 text-slate-400">100%</span>
+          <button onclick="adjustScale(0.05)" title="Enlarge layout (TV Zoom In)" class="px-1.5 py-0.2 rounded hover:bg-white/10 text-slate-300 hover:text-white">A+</button>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <button onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="tv-only p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+            </svg>
+          </button>
+          <button onclick="fetchWeatherData()" title="Refresh Forecast" class="p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition group">
+            <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN GRID CONTAINER -->
+    <main id="mainGrid" class="relative z-10">
+
+      <!-- COLUMN 1: HERO WEATHER & 6 METRIC TILES -->
+      <div id="colWeather" class="h-full flex flex-col min-w-0">
+        <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
+          
+          <!-- Current Temp & Condition -->
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.2 text-[9px] font-semibold uppercase tracking-wider rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                Current Conditions
+              </span>
+              <span id="lastUpdated" class="text-[9px] font-mono text-slate-400">Syncing...</span>
+            </div>
+
+            <div class="mt-1 flex items-center justify-between">
+              <div class="flex items-baseline gap-2">
+                <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
+                <div>
+                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
+                  <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
+                </div>
+              </div>
+              <div class="text-right flex items-center gap-1.5">
+                <div id="weatherIconLg" class="text-3xl">☁️</div>
+                <div class="text-left">
+                  <div id="weatherDesc" class="text-sm font-bold text-white capitalize leading-tight">Overcast</div>
+                  <div id="weatherSubDesc" class="text-[9px] text-slate-400">Calm valley air</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6 Dense Tiles (2 cols x 3 rows) -->
+          <div class="grid grid-cols-2 gap-1.5 mt-1.5 pt-1.5 border-t border-white/10 flex-1 min-h-0">
+            
+            <!-- Wind -->
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
+                <span>Wind</span>
+                <span id="windCompass" class="text-sky-400 font-mono font-bold">--</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-0.5">
+                <span id="windSpeed" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                <span class="text-[9px] text-slate-400">mph</span>
+              </div>
+              <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
+            </div>
+
+            <!-- Barometer -->
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
+                <span>Barometer</span>
+                <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400">Steady</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-0.5">
+                <span id="barometer" class="text-sm font-bold font-mono text-white leading-none">----</span>
+                <span class="text-[9px] text-slate-400">hPa</span>
+              </div>
+              <div class="text-[9px] text-slate-500 leading-none">Surface pressure</div>
+            </div>
+
+            <!-- Humidity & Dew -->
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
+                <span>Humidity</span>
+                <span id="dewPoint" class="text-[9px] font-mono text-slate-300">Dew --°</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-0.5">
+                <span id="humidity" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                <span class="text-[9px] text-slate-400">%</span>
+              </div>
+              <div class="text-[9px] text-slate-500 leading-none">Moisture level</div>
+            </div>
+
+            <!-- Air Quality (AQI) -->
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
+                <span>Air Quality</span>
+                <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300">Good</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-0.5">
+                <span id="aqiVal" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                <span class="text-[9px] text-slate-400">AQI</span>
+              </div>
+              <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
+            </div>
+
+            <!-- Rain Today -->
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
+                <span>Rain Today</span>
+                <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono">--%</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-0.5">
+                <span id="precipToday" class="text-sm font-bold font-mono text-white leading-none">0.0</span>
+                <span class="text-[9px] text-slate-400">mm</span>
+              </div>
+              <div class="text-[9px] text-slate-500 leading-none">Accumulated</div>
+            </div>
+
+            <!-- Cloud & UV -->
+            <div class="glass-tile rounded-lg p-2 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
+                <span>Cloud &amp; UV</span>
+                <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400">UV: --</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-0.5">
+                <span id="cloudCover" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                <span class="text-[9px] text-slate-400">%</span>
+              </div>
+              <div class="text-[9px] text-slate-500 leading-none">Sky cover</div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- COLUMN 2: FROST WATCH + NIGHT SKY + SOLAR PATH -->
+      <div id="colFrost" class="h-full flex flex-col min-w-0">
+        <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
+          
+          <!-- 1. CAR & MORNING FROST PREDICTOR -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
+                <span id="frostIcon">🚗</span> Car &amp; Frost Watch
+              </span>
+              <span id="frostTimeWindow" class="text-[9px] font-mono text-slate-400 truncate">
+                Tomorrow (05-08 AM)
+              </span>
+            </div>
+
+            <div id="frostCardBg" class="p-2.5 rounded-xl bg-slate-900/60 border border-white/10 transition-colors">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-[9px] uppercase tracking-wider font-semibold text-slate-400 leading-none">Windscreen Condition</div>
+                  <div id="frostStatus" class="text-sm font-bold text-white flex items-center gap-1 mt-0.5">
+                    Calculating frost...
+                  </div>
+                </div>
+                <div id="frostBadge" class="text-[10px] font-bold font-mono px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Checking...
+                </div>
+              </div>
+              <p id="frostDetail" class="text-[10px] text-slate-300 mt-1 leading-normal">
+                Analyzing radiative cooling, surface soil temperature, and dew point...
+              </p>
+            </div>
+          </div>
+
+          <!-- 2. NIGHT SKY & LUNAR CYCLE -->
+          <div class="my-1 pt-1.5 border-t border-white/10">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-semibold uppercase tracking-wider text-purple-300 flex items-center gap-1">
+                <span>✨</span> Night Sky &amp; Moon
+              </span>
+              <span id="nightSkyScoreBadge" class="text-[9px] font-bold font-mono px-1.5 py-0.2 rounded bg-white/10 text-slate-300">
+                Evaluating...
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2.5 p-2 glass-tile rounded-xl">
+              <div id="moonIcon" class="text-2xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.25)] flex-shrink-0">
+                🌕
+              </div>
+              <div class="flex-grow min-w-0">
+                <div class="flex items-center justify-between">
+                  <span id="moonPhaseName" class="text-xs font-bold text-white truncate">Full Moon</span>
+                  <span id="moonIllumination" class="text-[10px] font-mono text-purple-300">--% lit</span>
+                </div>
+                <p id="stargazingAdvice" class="text-[10px] text-slate-300 truncate mt-0.5">
+                  Tonight: Checking cloud cover...
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. SOLAR PATH & DAYLIGHT MILESTONES -->
+          <div class="pt-1.5 border-t border-white/10">
+            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold mb-1 flex items-center justify-between">
+              <span>Solar Path &amp; Daylight</span>
+              <span id="sunCountdown" class="text-amber-400 font-mono font-medium text-[10px]">--</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1.5">
+              <!-- Sunrise -->
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg">
+                <span class="text-base">🌅</span>
+                <div>
+                  <div class="text-[9px] text-slate-400 leading-none">Sunrise</div>
+                  <div id="sunriseTime" class="text-xs font-bold font-mono text-white leading-tight">--:--</div>
+                </div>
+              </div>
+
+              <!-- Sunset -->
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg">
+                <span class="text-base">🌇</span>
+                <div>
+                  <div class="text-[9px] text-slate-400 leading-none">Sunset</div>
+                  <div id="sunsetTime" class="text-xs font-bold font-mono text-white leading-tight">--:--</div>
+                </div>
+              </div>
+
+              <!-- Light At (Practical Torch-Free Twilight) -->
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg" title="Light enough to walk along paths and among trees without a torch">
+                <span class="text-base">💡</span>
+                <div>
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center gap-1">
+                    Light At <span id="lightAtCloudTag" class="text-[8px] text-amber-300 font-mono"></span>
+                  </div>
+                  <div id="lightAtTime" class="text-xs font-bold font-mono text-amber-300 leading-tight">--:--</div>
+                </div>
+              </div>
+
+              <!-- Dark By (Practical Torch-Free Twilight) -->
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg" title="Point where you need a torch to walk under tree canopy / paths">
+                <span class="text-base">🌙</span>
+                <div>
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center gap-1">
+                    Dark By <span id="darkByCloudTag" class="text-[8px] text-indigo-300 font-mono"></span>
+                  </div>
+                  <div id="darkByTime" class="text-xs font-bold font-mono text-indigo-300 leading-tight">--:--</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-1 flex items-center justify-between text-[9px] text-slate-400 px-0.5 font-mono">
+              <span>Daylight: <strong id="daylightLength" class="text-slate-200">--h --m</strong></span>
+              <span id="cloudLightSummary" class="text-slate-300">Cloud-adjusted</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- COLUMN 3: 7-DAY OUTLOOK WITH FROST FLAGS -->
+      <div id="colSevenDay" class="h-full flex flex-col min-w-0">
+        <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30">
+                7-Day Forecast &amp; Frost Risk
+              </span>
+              <span class="text-[9px] text-slate-400 font-mono">Temp / Rain / Frost</span>
+            </div>
+
+            <div id="sevenDayList" class="space-y-1 mt-1">
+              <div class="text-xs text-slate-400 text-center py-4">Loading 7-day outlook...</div>
+            </div>
+          </div>
+
+          <div class="pt-1.5 border-t border-white/10 flex items-center justify-between text-[9px] text-slate-400 font-mono">
+            <span>Auto-refreshes every 15m</span>
+            <span>No Ads • Pure Data</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+    
+    <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC & RIVERS) -->
+    <div id="colLocalInfo" class="flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0">
+      <!-- Traffic Pill -->
+      <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="Live Traffic Flow (A46 / Local Area via TomTom)">
+        <span class="text-xs">🚗</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Traffic:</span>
+        <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
+      </div>
+
+      <!-- River Pill -->
+      <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="UK Environment Agency Live River & Flood Monitoring">
+        <span class="text-xs">🌊</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Rivers:</span>
+        <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
+      </div>
+    </div>
+
+
+    <!-- 18-HOUR HOURLY TIMELINE STRIP -->
+    <footer id="footerTimeline" class="relative z-10 glass-card rounded-2xl px-2.5 py-1.5 flex-shrink-0">
+      <div class="flex items-center justify-between mb-1 px-0.5">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+          18-Hour Forecast &amp; Rain Probability
+        </div>
+        <div class="text-[10px] text-slate-400 font-mono">
+          Hourly Trend
+        </div>
+      </div>
+
+      <!-- Horizontal Scrollable Strip -->
+      <div id="hourlyTimeline" class="flex gap-1.5 overflow-x-auto pb-0.5">
+        <div class="text-xs text-slate-400 py-1">Loading hourly forecast...</div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script src="traffic-flood.js"></script>
+    <script>
+    let CURRENT_LOCATION = {
+      name: 'Nailsworth & Stroud',
+      postcode: 'GL5 5HH',
+      lat: 51.7032,
+      lon: -2.2259,
+      desc: '51.70°N, 2.23°W • Elev. 120m'
+    };
+    const TIMEZONE = 'Europe/London';
+    const TOMTOM_KEY = 'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz';
+
+    async function initLocation() {
+      const params = new URLSearchParams(window.location.search);
+      const pc = params.get('postcode') || params.get('pc');
+      if (pc) {
+        await lookupPostcode(pc);
+      } else {
+        updateLocationHeader();
+        fetchWeatherData();
+      }
+    }
+
+    async function lookupPostcode(postcode) {
+      try {
+        const cleanPC = postcode.replace(/\s+/g, '');
+        const res = await fetch(`https://api.postcodes.io/postcodes/${cleanPC}`);
+        if (res.ok) {
+          const json = await res.json();
+          const r = json.result;
+          const town = r.parish || r.admin_ward || r.admin_district || 'Gloucestershire';
+          CURRENT_LOCATION = {
+            name: `${town} & ${r.admin_district}`,
+            postcode: r.postcode,
+            lat: r.latitude,
+            lon: r.longitude,
+            desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
+          };
+        }
+      } catch (err) {
+        console.warn('Postcode lookup error, using default:', err);
+      }
+      updateLocationHeader();
+      fetchWeatherData();
+    }
+
+    function updateLocationHeader() {
+      document.getElementById('headerLocationTitle').textContent = CURRENT_LOCATION.name;
+      document.getElementById('headerPostcodeBadge').textContent = CURRENT_LOCATION.postcode;
+      document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
+    }
+
+    function promptChangePostcode() {
+      const pc = prompt("Enter a UK postcode (e.g. GL7 1AA, GL5 5HH):", CURRENT_LOCATION.postcode);
+      if (pc && pc.trim() !== "") {
+        const url = new URL(window.location.href);
+        url.searchParams.set('postcode', pc.trim().toUpperCase());
+        window.history.pushState({}, '', url);
+        lookupPostcode(pc.trim());
+      }
+    }
+
+    let currentScale = 1.0;
+    function adjustScale(delta) {
+      currentScale = Math.max(0.75, Math.min(1.25, currentScale + delta));
+      const root = document.getElementById('dashboardRoot');
+      if (window.innerWidth > 600 && window.matchMedia("(orientation: landscape) and (min-height: 581px)").matches) {
+        root.style.transform = `scale(${currentScale})`;
+      }
+      document.getElementById('scaleLabel').textContent = `${Math.round(currentScale * 100)}%`;
+      localStorage.setItem('dashboard_scale', currentScale);
+    }
+
+    const savedScale = localStorage.getItem('dashboard_scale');
+    if (savedScale && window.innerWidth > 600) {
+      currentScale = parseFloat(savedScale);
+      setTimeout(() => adjustScale(0), 10);
+    }
+
+    const WEATHER_CODES = {
+      0: { desc: 'Clear Sky', iconDay: '☀️', iconNight: '🌙' },
+      1: { desc: 'Mainly Clear', iconDay: '🌤️', iconNight: '🌤️' },
+      2: { desc: 'Partly Cloudy', iconDay: '⛅', iconNight: '☁️' },
+      3: { desc: 'Overcast', iconDay: '☁️', iconNight: '☁️' },
+      45: { desc: 'Foggy Valley', iconDay: '🌫️', iconNight: '🌫️' },
+      48: { desc: 'Rime Fog', iconDay: '🌫️', iconNight: '🌫️' },
+      51: { desc: 'Light Drizzle', iconDay: '🌦️', iconNight: '🌦️' },
+      53: { desc: 'Moderate Drizzle', iconDay: '🌧️', iconNight: '🌧️' },
+      55: { desc: 'Heavy Drizzle', iconDay: '🌧️', iconNight: '🌧️' },
+      56: { desc: 'Freezing Drizzle', iconDay: '🌨️', iconNight: '🌨️' },
+      57: { desc: 'Dense Drizzle', iconDay: '🌨️', iconNight: '🌨️' },
+      61: { desc: 'Slight Rain', iconDay: '🌦️', iconNight: '🌧️' },
+      63: { desc: 'Moderate Rain', iconDay: '🌧️', iconNight: '🌧️' },
+      65: { desc: 'Heavy Rain', iconDay: '🌧️', iconNight: '🌧️' },
+      66: { desc: 'Freezing Rain', iconDay: '🌨️', iconNight: '🌨️' },
+      67: { desc: 'Heavy Freezing Rain', iconDay: '🌨️', iconNight: '🌨️' },
+      71: { desc: 'Slight Snow', iconDay: '🌨️', iconNight: '🌨️' },
+      73: { desc: 'Moderate Snow', iconDay: '🌨️', iconNight: '🌨️' },
+      75: { desc: 'Heavy Snow', iconDay: '❄️', iconNight: '❄️' },
+      77: { desc: 'Snow Grains', iconDay: '❄️', iconNight: '❄️' },
+      80: { desc: 'Light Showers', iconDay: '🌦️', iconNight: '🌧️' },
+      81: { desc: 'Passing Showers', iconDay: '🌧️', iconNight: '🌧️' },
+      82: { desc: 'Heavy Showers', iconDay: '⛈️', iconNight: '⛈️' },
+      85: { desc: 'Snow Showers', iconDay: '🌨️', iconNight: '🌨️' },
+      86: { desc: 'Heavy Snow Showers', iconDay: '❄️', iconNight: '❄️' },
+      95: { desc: 'Thunderstorm', iconDay: '⛈️', iconNight: '⛈️' },
+      96: { desc: 'Thunder & Hail', iconDay: '⛈️', iconNight: '⛈️' },
+      99: { desc: 'Severe Hailstorm', iconDay: '⛈️', iconNight: '⛈️' }
+    };
+
+    function getWeatherInfo(code, isDay = 1) {
+      const match = WEATHER_CODES[code] || { desc: 'Variable', iconDay: '⛅', iconNight: '☁️' };
+      return { desc: match.desc, icon: isDay ? match.iconDay : match.iconNight };
+    }
+
+    function degToCompass(deg) {
+      const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+      const index = Math.round((deg % 360) / 22.5);
+      return directions[index % 16];
+    }
+
+    function calculateMoonPhase(date = new Date()) {
+      const ref = new Date(Date.UTC(2024, 0, 11, 11, 57)).getTime();
+      const diffDays = (date.getTime() - ref) / (1000 * 60 * 60 * 24);
+      const cycle = 29.53058867;
+      const phaseVal = ((diffDays % cycle) + cycle) % cycle;
+      const normalized = phaseVal / cycle;
+      const illumination = Math.round((1 - Math.cos(normalized * 2 * Math.PI)) / 2 * 100);
+
+      let name = 'New Moon';
+      let icon = '🌑';
+      let nextEvent = '';
+
+      if (normalized < 0.03 || normalized >= 0.97) {
+        name = 'New Moon'; icon = '🌑';
+      } else if (normalized < 0.22) {
+        name = 'Waxing Crescent'; icon = '🌒';
+      } else if (normalized < 0.28) {
+        name = 'First Quarter'; icon = '🌓';
+      } else if (normalized < 0.47) {
+        name = 'Waxing Gibbous'; icon = '🌔';
+      } else if (normalized < 0.53) {
+        name = 'Full Moon'; icon = '🌕';
+      } else if (normalized < 0.72) {
+        name = 'Waning Gibbous'; icon = '🌖';
+      } else if (normalized < 0.78) {
+        name = 'Last Quarter'; icon = '🌗';
+      } else {
+        name = 'Waning Crescent'; icon = '🌘';
+      }
+
+      return { normalized, illumination, name, icon, nextEvent };
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+
+      document.getElementById('clockTime').innerHTML = `${hours}:${minutes}<span class="text-xs text-slate-400">:${seconds}</span>`;
+      const options = { weekday: 'short', day: 'numeric', month: 'short' };
+      document.getElementById('clockDate').textContent = now.toLocaleDateString('en-GB', options);
+    }
+
+    function evaluateFrost(hourly) {
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      const isTomorrow = currentHour >= 9;
+      const targetDate = new Date();
+      if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
+      const targetDay = targetDate.getDate();
+
+      let minAir = 999;
+      let minSurface = 999;
+      let minDew = 999;
+      let minCloud = 100;
+      let criticalHour = 7;
+
+      for (let i = 0; i < hourly.time.length; i++) {
+        const d = new Date(hourly.time[i]);
+        const h = d.getHours();
+        if (d.getDate() === targetDay && h >= 4 && h <= 8) {
+          if (hourly.temperature_2m[i] < minAir) {
+            minAir = hourly.temperature_2m[i];
+            criticalHour = h;
+          }
+          if (hourly.soil_temperature_0cm && hourly.soil_temperature_0cm[i] < minSurface) {
+            minSurface = hourly.soil_temperature_0cm[i];
+          }
+          if (hourly.dew_point_2m && hourly.dew_point_2m[i] < minDew) {
+            minDew = hourly.dew_point_2m[i];
+          }
+          if (hourly.cloud_cover && hourly.cloud_cover[i] < minCloud) {
+            minCloud = hourly.cloud_cover[i];
+          }
+        }
+      }
+
+      if (minSurface === 999) minSurface = minAir;
+
+      const isClearSky = minCloud < 45;
+      const radiativeOffset = isClearSky ? 2.5 : 0.8;
+      const estimatedGlassTemp = Math.min(minSurface, minAir - radiativeOffset);
+
+      const timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : "This Morning (05-08 AM)";
+      document.getElementById('frostTimeWindow').textContent = timeLabel;
+
+      let status = "Frost-Free";
+      let badgeText = "Clean Glass";
+      let badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+      let cardBgClass = "bg-slate-900/60 border border-white/10";
+      let icon = "🚗";
+      let detail = `Air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`;
+
+      if (estimatedGlassTemp <= -0.5 || minAir <= 0.5 || minSurface <= 0.0) {
+        status = "Heavy Frost Alert";
+        icon = "❄️";
+        badgeText = "Warm Car 10m Early!";
+        badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
+        cardBgClass = "bg-rose-950/40 border border-rose-500/30";
+        detail = `Windscreen freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM! Have de-icer & scraper ready.`;
+      } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
+        status = "Frost Likely";
+        icon = "🧊";
+        badgeText = "Warm Car 10m Early";
+        badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
+        cardBgClass = "bg-sky-950/40 border border-sky-500/30";
+        detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling will frost windscreens!`;
+      } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
+        status = "Slight Frost Risk";
+        icon = "⚠️";
+        badgeText = "Patchy Ice";
+        badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
+        cardBgClass = "bg-amber-950/30 border border-amber-500/20";
+        detail = `Borderline temps (${minAir.toFixed(1)}°C at ${criticalHour} AM). Valley hollows may catch frost.`;
+      }
+
+      document.getElementById('frostIcon').textContent = icon;
+      document.getElementById('frostStatus').innerHTML = status;
+      document.getElementById('frostBadge').textContent = badgeText;
+      document.getElementById('frostBadge').className = `text-[9px] font-mono px-1.5 py-0.5 rounded-lg ${badgeClass}`;
+      document.getElementById('frostCardBg').className = `p-2 rounded-xl transition-colors ${cardBgClass}`;
+      document.getElementById('frostDetail').textContent = detail;
+    }
+
+    function evaluateStargazing(hourly, currentCloud, moon) {
+      const now = new Date();
+      let nightClouds = [];
+
+      for (let i = 0; i < hourly.time.length; i++) {
+        const d = new Date(hourly.time[i]);
+        const hour = d.getHours();
+        if ((d.getDate() === now.getDate() && hour >= 20) || (d.getDate() === now.getDate() + 1 && hour <= 3)) {
+          nightClouds.push(hourly.cloud_cover[i]);
+        }
+      }
+
+      const avgCloud = nightClouds.length ? Math.round(nightClouds.reduce((a, b) => a + b, 0) / nightClouds.length) : currentCloud;
+      
+      let adviceText = '';
+      let scoreBadge = '';
+
+      if (avgCloud > 80) {
+        scoreBadge = 'Poor (Cloudy)';
+        adviceText = `Overcast night (~${avgCloud}%). Telescopes won't see much.`;
+      } else if (avgCloud > 45) {
+        scoreBadge = 'Fair / Patchy';
+        adviceText = `Partly cloudy (~${avgCloud}%). Moon & planets between breaks.`;
+      } else if (avgCloud > 20) {
+        scoreBadge = 'Good';
+        adviceText = `Mostly clear night (~${avgCloud}%). Great for binoculars/scope.`;
+      } else {
+        scoreBadge = 'Superb 🔭';
+        adviceText = `Dark & crystal clear! Low cloud (~${avgCloud}%) & dim Moon.`;
+      }
+
+      document.getElementById('nightSkyScoreBadge').textContent = scoreBadge;
+      document.getElementById('stargazingAdvice').textContent = adviceText;
+    }
+
+    async function fetchWeatherData() {
+      const icon = document.getElementById('refreshIcon');
+      if (icon) icon.classList.add('animate-spin');
+
+      try {
+        const cacheBust = new Date().getTime();
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=${TIMEZONE}&_=${cacheBust}`;
+        const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
+
+        const [weatherRes, aqiRes] = await Promise.all([
+          fetch(weatherUrl),
+          fetch(aqiUrl).catch(() => null)
+        ]);
+
+        if (!weatherRes.ok) throw new Error('Weather API error: ' + weatherRes.status);
+        const data = await weatherRes.json();
+        
+        let aqiData = null;
+        if (aqiRes && aqiRes.ok) aqiData = await aqiRes.json();
+
+        renderDashboard(data, aqiData);
+        // Fetch local traffic and river data
+        await fetchTrafficData();
+        await fetchFloodData();
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('lastUpdated').textContent = `Updated ${timeStr}`;
+      } catch (err) {
+        console.error('Fetch error:', err);
+        document.getElementById('lastUpdated').textContent = 'Sync issue (retrying...)';
+      } finally {
+        if (icon) icon.classList.remove('animate-spin');
+      }
+    }
+
+    function renderDashboard(data, aqiData) {
+      const cur = data.current;
+      const daily = data.daily;
+      const hourly = data.hourly;
+
+      const isDay = cur.is_day === 1;
+      const weatherInfo = getWeatherInfo(cur.weather_code, isDay);
+
+      const glow = document.getElementById('ambientGlow');
+      if (glow) glow.className = isDay ? 'ambient-glow' : 'ambient-glow ambient-glow-night';
+
+      // Hero
+      document.getElementById('currentTemp').textContent = `${Math.round(cur.temperature_2m)}°`;
+      document.getElementById('feelsLike').textContent = `Feels like ${Math.round(cur.apparent_temperature)}°C`;
+      document.getElementById('todayRange').textContent = `▲ ${Math.round(daily.temperature_2m_max[0])}°  ▼ ${Math.round(daily.temperature_2m_min[0])}°`;
+      
+      document.getElementById('weatherIconLg').textContent = weatherInfo.icon;
+      document.getElementById('weatherDesc').textContent = weatherInfo.desc;
+      
+      // Wind
+      document.getElementById('windSpeed').textContent = Math.round(cur.wind_speed_10m);
+      document.getElementById('windCompass').textContent = degToCompass(cur.wind_direction_10m);
+      document.getElementById('windGust').textContent = `Gusts: ${Math.round(cur.wind_gusts_10m)} mph`;
+
+      // Barometer
+      document.getElementById('barometer').textContent = Math.round(cur.surface_pressure);
+
+      // Humidity & Dew
+      document.getElementById('humidity').textContent = cur.relative_humidity_2m;
+      document.getElementById('dewPoint').textContent = `Dew ${Math.round(cur.dew_point_2m)}°`;
+
+      // Air Quality
+      if (aqiData && aqiData.current) {
+        const aqi = aqiData.current.european_aqi;
+        document.getElementById('aqiVal').textContent = aqi;
+        document.getElementById('pm25Val').textContent = `PM2.5: ${aqiData.current.pm2_5.toFixed(1)}`;
+        const aqiBadge = document.getElementById('aqiBadge');
+        if (aqi <= 20) {
+          aqiBadge.textContent = 'Good';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300';
+        } else if (aqi <= 40) {
+          aqiBadge.textContent = 'Fair';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-sky-500/20 text-sky-300';
+        } else if (aqi <= 60) {
+          aqiBadge.textContent = 'Moderate';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-amber-500/20 text-amber-300';
+        } else {
+          aqiBadge.textContent = 'Poor';
+          aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-rose-500/20 text-rose-300';
+        }
+      }
+
+      // Rain
+      document.getElementById('precipToday').textContent = (daily.precipitation_sum[0] || 0.0).toFixed(1);
+      document.getElementById('precipProbToday').textContent = `${daily.precipitation_probability_max[0] || 0}%`;
+
+      // Clouds & UV
+      document.getElementById('cloudCover').textContent = cur.cloud_cover;
+      document.getElementById('uvIndexBadge').textContent = `Max UV: ${(daily.uv_index_max[0] || 0).toFixed(1)}`;
+
+      // Moon
+      const moon = calculateMoonPhase(new Date());
+      document.getElementById('moonIcon').textContent = moon.icon;
+      document.getElementById('moonPhaseName').textContent = moon.name;
+      document.getElementById('moonIllumination').textContent = `${moon.illumination}% lit`;
+
+      // Sun
+      const sunriseStr = daily.sunrise[0].split('T')[1];
+      const sunsetStr = daily.sunset[0].split('T')[1];
+      document.getElementById('sunriseTime').textContent = sunriseStr;
+      document.getElementById('sunsetTime').textContent = sunsetStr;
+
+      if (daily.daylight_duration && daily.daylight_duration[0]) {
+        const secs = daily.daylight_duration[0];
+        const dh = Math.floor(secs / 3600);
+        const dm = Math.floor((secs % 3600) / 60);
+        document.getElementById('daylightLength').textContent = `${dh}h ${dm}m`;
+      }
+
+      const now = new Date();
+      const sunsetDate = new Date(daily.sunset[0]);
+      const sunriseDate = new Date(daily.sunrise[0]);
+      if (now < sunsetDate && now > sunriseDate) {
+        const diffMins = Math.round((sunsetDate - now) / 60000);
+        const h = Math.floor(diffMins / 60);
+        const m = diffMins % 60;
+        document.getElementById('sunCountdown').textContent = `Sunset in ${h}h ${m}m`;
+      } else {
+        document.getElementById('sunCountdown').textContent = `Night mode`;
+      }
+
+      // Calculate Seasonal Astronomical Civil Twilight & Cloud-Adjusted Light At / Dark By
+      try {
+        const startOfYear = new Date(now.getFullYear(), 0, 0);
+        const dayOfYear = Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24));
+        const latRad = (CURRENT_LOCATION.lat * Math.PI) / 180;
+        const declinationDeg = 23.44 * Math.sin(((360 / 365) * (dayOfYear - 81) * Math.PI) / 180);
+        const decRad = (declinationDeg * Math.PI) / 180;
+
+        // Hour angles: h0 = geometric sunrise/sunset (-0.833°), h1 = practical woodland twilight (-8.5°)
+        // Practical twilight is the outdoor threshold where you can walk along paths / trees without a torch.
+        const cosH0 = (Math.sin((-0.833 * Math.PI) / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
+        const cosH1 = (Math.sin((-8.5 * Math.PI) / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
+
+        let baseTwilightMins = 55; // Default UK baseline for -8.5°
+        if (cosH0 >= -1 && cosH0 <= 1 && cosH1 >= -1 && cosH1 <= 1) {
+          const h0 = (Math.acos(cosH0) * 180) / Math.PI;
+          const h1 = (Math.acos(cosH1) * 180) / Math.PI;
+          baseTwilightMins = Math.max(35, Math.min(105, Math.round(4 * (h1 - h0))));
+        }
+
+        // Cloud factor: In the UK, overcast cloud blocks scattering twilight light from the sky.
+        // 0% cloud -> full twilight advantage (e.g. 1h 15m to 1h 25m in summer, ~55m to 1h 05m in winter).
+        // 100% cloud -> drops to ~30% (~18-22m before sunrise / after sunset).
+        const cloudPct = (cur.cloud_cover !== undefined && cur.cloud_cover !== null) ? cur.cloud_cover : 50;
+        const cloudFactor = Math.max(0.28, 1.0 - (cloudPct / 100) * 0.70);
+        const effectiveTwilightMins = Math.max(12, Math.round(baseTwilightMins * cloudFactor));
+
+        const lightAtDate = new Date(sunriseDate.getTime() - effectiveTwilightMins * 60000);
+        const darkByDate = new Date(sunsetDate.getTime() + effectiveTwilightMins * 60000);
+
+        const fmtTime = (d) => {
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          return `${hh}:${mm}`;
+        };
+
+        const lightAtEl = document.getElementById('lightAtTime');
+        const darkByEl = document.getElementById('darkByTime');
+        if (lightAtEl) lightAtEl.textContent = fmtTime(lightAtDate);
+        if (darkByEl) darkByEl.textContent = fmtTime(darkByDate);
+
+        const lightTagEl = document.getElementById('lightAtCloudTag');
+        const darkTagEl = document.getElementById('darkByCloudTag');
+        if (lightTagEl) lightTagEl.textContent = `-${effectiveTwilightMins}m`;
+        if (darkTagEl) darkTagEl.textContent = `+${effectiveTwilightMins}m`;
+
+        const summaryEl = document.getElementById('cloudLightSummary');
+        const cloudLabel = cloudPct >= 80 ? '☁️ Overcast' : cloudPct >= 40 ? '⛅ Patchy' : '☀️ Clear';
+        if (summaryEl) summaryEl.textContent = `${cloudLabel} (${cloudPct}% cloud)`;
+      } catch (err) {
+        console.error('Light calculation error:', err);
+      }
+
+      evaluateFrost(hourly);
+      evaluateStargazing(hourly, cur.cloud_cover, moon);
+      renderSevenDay(daily, hourly);
+      renderHourly(hourly);
+    }
+
+    function renderSevenDay(daily, hourly) {
+      const container = document.getElementById('sevenDayList');
+      container.innerHTML = '';
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(daily.time[i]);
+        const dayName = i === 0 ? 'Today' : date.toLocaleDateString('en-GB', { weekday: 'short' });
+        const dateSub = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        const info = getWeatherInfo(daily.weather_code[i], 1);
+        const max = Math.round(daily.temperature_2m_max[i]);
+        const min = Math.round(daily.temperature_2m_min[i]);
+        const rainProb = daily.precipitation_probability_max[i] || 0;
+        const hasFrostRisk = min <= 3.5;
+
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between py-1.5 px-2.5 rounded-lg glass-tile text-xs transition ${hasFrostRisk ? 'border-l-2 border-l-cyan-400' : ''}`;
+        row.innerHTML = `
+          <div class="w-20 flex items-center gap-1">
+            <span class="font-bold text-white text-[11px]">${dayName}</span>
+            <span class="text-[9px] text-slate-400 font-mono">${dateSub}</span>
+          </div>
+          
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm">${info.icon}</span>
+            <span class="text-[10px] text-sky-400 font-mono ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
+            ${hasFrostRisk ? '<span class="text-[10px] text-cyan-300 font-bold">❄️</span>' : ''}
+          </div>
+
+          <div class="flex items-center gap-1.5 font-mono text-[11px]">
+            <span class="${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'} w-5 text-right">${min}°</span>
+            <div class="w-14 h-1.5 rounded-full bg-slate-800 overflow-hidden relative">
+              <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${Math.max(0, (min / 25) * 100)}%; width: ${Math.max(18, ((max - min) / 20) * 100)}%"></div>
+            </div>
+            <span class="text-white font-bold w-5">${max}°</span>
+          </div>
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    function renderHourly(hourly) {
+      const container = document.getElementById('hourlyTimeline');
+      container.innerHTML = '';
+
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      let startIndex = 0;
+      for (let i = 0; i < hourly.time.length; i++) {
+        const d = new Date(hourly.time[i]);
+        if (d.getDate() === now.getDate() && d.getHours() === currentHour) {
+          startIndex = i;
+          break;
+        }
+      }
+
+      const count = 18;
+      for (let i = startIndex; i < Math.min(startIndex + count, hourly.time.length); i++) {
+        const d = new Date(hourly.time[i]);
+        const hour = d.getHours();
+        const timeStr = i === startIndex ? 'Now' : `${String(hour).padStart(2, '0')}:00`;
+        const isDaytime = hour >= 7 && hour < 17;
+        const info = getWeatherInfo(hourly.weather_code[i], isDaytime ? 1 : 0);
+        const temp = Math.round(hourly.temperature_2m[i]);
+        const rainProb = hourly.precipitation_probability[i] || 0;
+        const isNearFreezing = temp <= 3;
+
+        const card = document.createElement('div');
+        card.className = `flex-shrink-0 flex flex-col items-center justify-between p-2 rounded-xl border min-w-[66px] transition ${
+          i === startIndex 
+            ? 'bg-sky-500/15 border-sky-400/40 shadow-[0_0_8px_rgba(56,189,248,0.15)]' 
+            : isNearFreezing
+              ? 'glass-tile border-cyan-500/30'
+              : 'glass-tile'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-0.5 leading-none">
+            <span class="text-[9px] font-mono font-semibold ${i === startIndex ? 'text-sky-300' : 'text-slate-400'}">${timeStr}</span>
+            ${isNearFreezing ? '<span class="text-[8px] text-cyan-300">❄️</span>' : ''}
+          </div>
+          <span class="text-base my-0.5">${info.icon}</span>
+          <span class="text-xs font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : 'text-white'} leading-none">${temp}°</span>
+          
+          <div class="w-full text-center mt-1">
+            <span class="text-[9px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
+              ${rainProb}%
+            </span>
+            <div class="h-0.5 w-full bg-slate-800 rounded-full mt-0.5 overflow-hidden">
+              <div class="h-full bg-sky-400 rounded-full" style="width: ${rainProb}%"></div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    });
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    initLocation();
+    setInterval(fetchWeatherData, 15 * 60 * 1000);
+  </script>
+</body>
+</html>

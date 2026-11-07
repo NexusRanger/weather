@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <script>
+    <script>
     tailwind.config = {
       theme: {
         extend: {
@@ -418,6 +418,7 @@
             </div>
 
             <div class="grid grid-cols-2 gap-1.5">
+              <!-- Sunrise -->
               <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg">
                 <span class="text-base">🌅</span>
                 <div>
@@ -426,6 +427,7 @@
                 </div>
               </div>
 
+              <!-- Sunset -->
               <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg">
                 <span class="text-base">🌇</span>
                 <div>
@@ -433,11 +435,33 @@
                   <div id="sunsetTime" class="text-xs font-bold font-mono text-white leading-tight">--:--</div>
                 </div>
               </div>
+
+              <!-- Light At (Practical Torch-Free Twilight) -->
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg" title="Light enough to walk along paths and among trees without a torch">
+                <span class="text-base">💡</span>
+                <div>
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center gap-1">
+                    Light At <span id="lightAtCloudTag" class="text-[8px] text-amber-300 font-mono"></span>
+                  </div>
+                  <div id="lightAtTime" class="text-xs font-bold font-mono text-amber-300 leading-tight">--:--</div>
+                </div>
+              </div>
+
+              <!-- Dark By (Practical Torch-Free Twilight) -->
+              <div class="flex items-center gap-1.5 p-1.5 glass-tile rounded-lg" title="Point where you need a torch to walk under tree canopy / paths">
+                <span class="text-base">🌙</span>
+                <div>
+                  <div class="text-[9px] text-slate-400 leading-none flex items-center gap-1">
+                    Dark By <span id="darkByCloudTag" class="text-[8px] text-indigo-300 font-mono"></span>
+                  </div>
+                  <div id="darkByTime" class="text-xs font-bold font-mono text-indigo-300 leading-tight">--:--</div>
+                </div>
+              </div>
             </div>
 
             <div class="mt-1 flex items-center justify-between text-[9px] text-slate-400 px-0.5 font-mono">
               <span>Daylight: <strong id="daylightLength" class="text-slate-200">--h --m</strong></span>
-              <span>Source: <strong class="text-slate-200">Met UK</strong></span>
+              <span id="cloudLightSummary" class="text-slate-300">Cloud-adjusted</span>
             </div>
           </div>
 
@@ -468,6 +492,24 @@
       </div>
 
     </main>
+    
+    <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC & RIVERS) -->
+    <div id="colLocalInfo" class="flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0">
+      <!-- Traffic Pill -->
+      <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="Live Traffic Flow (A46 / Local Area via TomTom)">
+        <span class="text-xs">🚗</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Traffic:</span>
+        <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
+      </div>
+
+      <!-- River Pill -->
+      <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="UK Environment Agency Live River & Flood Monitoring">
+        <span class="text-xs">🌊</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Rivers:</span>
+        <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
+      </div>
+    </div>
+
 
     <!-- 18-HOUR HOURLY TIMELINE STRIP -->
     <footer id="footerTimeline" class="relative z-10 glass-card rounded-2xl px-2.5 py-1.5 flex-shrink-0">
@@ -490,7 +532,8 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script>
+  <script src="traffic-flood.js"></script>
+    <script>
     let CURRENT_LOCATION = {
       name: 'Nailsworth & Stroud',
       postcode: 'GL5 5HH',
@@ -499,6 +542,7 @@
       desc: '51.70°N, 2.23°W • Elev. 120m'
     };
     const TIMEZONE = 'Europe/London';
+    const TOMTOM_KEY = 'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz';
 
     async function initLocation() {
       const params = new URLSearchParams(window.location.search);
@@ -791,6 +835,9 @@
         if (aqiRes && aqiRes.ok) aqiData = await aqiRes.json();
 
         renderDashboard(data, aqiData);
+        // Fetch local traffic and river data
+        await fetchTrafficData();
+        await fetchFloodData();
         
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -892,6 +939,59 @@
         document.getElementById('sunCountdown').textContent = `Sunset in ${h}h ${m}m`;
       } else {
         document.getElementById('sunCountdown').textContent = `Night mode`;
+      }
+
+      // Calculate Seasonal Astronomical Civil Twilight & Cloud-Adjusted Light At / Dark By
+      try {
+        const startOfYear = new Date(now.getFullYear(), 0, 0);
+        const dayOfYear = Math.floor((now - startOfYear) / (1000 * 60 * 60 * 24));
+        const latRad = (CURRENT_LOCATION.lat * Math.PI) / 180;
+        const declinationDeg = 23.44 * Math.sin(((360 / 365) * (dayOfYear - 81) * Math.PI) / 180);
+        const decRad = (declinationDeg * Math.PI) / 180;
+
+        // Hour angles: h0 = geometric sunrise/sunset (-0.833°), h1 = practical woodland twilight (-8.5°)
+        // Practical twilight is the outdoor threshold where you can walk along paths / trees without a torch.
+        const cosH0 = (Math.sin((-0.833 * Math.PI) / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
+        const cosH1 = (Math.sin((-8.5 * Math.PI) / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
+
+        let baseTwilightMins = 55; // Default UK baseline for -8.5°
+        if (cosH0 >= -1 && cosH0 <= 1 && cosH1 >= -1 && cosH1 <= 1) {
+          const h0 = (Math.acos(cosH0) * 180) / Math.PI;
+          const h1 = (Math.acos(cosH1) * 180) / Math.PI;
+          baseTwilightMins = Math.max(35, Math.min(105, Math.round(4 * (h1 - h0))));
+        }
+
+        // Cloud factor: In the UK, overcast cloud blocks scattering twilight light from the sky.
+        // 0% cloud -> full twilight advantage (e.g. 1h 15m to 1h 25m in summer, ~55m to 1h 05m in winter).
+        // 100% cloud -> drops to ~30% (~18-22m before sunrise / after sunset).
+        const cloudPct = (cur.cloud_cover !== undefined && cur.cloud_cover !== null) ? cur.cloud_cover : 50;
+        const cloudFactor = Math.max(0.28, 1.0 - (cloudPct / 100) * 0.70);
+        const effectiveTwilightMins = Math.max(12, Math.round(baseTwilightMins * cloudFactor));
+
+        const lightAtDate = new Date(sunriseDate.getTime() - effectiveTwilightMins * 60000);
+        const darkByDate = new Date(sunsetDate.getTime() + effectiveTwilightMins * 60000);
+
+        const fmtTime = (d) => {
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          return `${hh}:${mm}`;
+        };
+
+        const lightAtEl = document.getElementById('lightAtTime');
+        const darkByEl = document.getElementById('darkByTime');
+        if (lightAtEl) lightAtEl.textContent = fmtTime(lightAtDate);
+        if (darkByEl) darkByEl.textContent = fmtTime(darkByDate);
+
+        const lightTagEl = document.getElementById('lightAtCloudTag');
+        const darkTagEl = document.getElementById('darkByCloudTag');
+        if (lightTagEl) lightTagEl.textContent = `-${effectiveTwilightMins}m`;
+        if (darkTagEl) darkTagEl.textContent = `+${effectiveTwilightMins}m`;
+
+        const summaryEl = document.getElementById('cloudLightSummary');
+        const cloudLabel = cloudPct >= 80 ? '☁️ Overcast' : cloudPct >= 40 ? '⛅ Patchy' : '☀️ Clear';
+        if (summaryEl) summaryEl.textContent = `${cloudLabel} (${cloudPct}% cloud)`;
+      } catch (err) {
+        console.error('Light calculation error:', err);
       }
 
       evaluateFrost(hourly);
