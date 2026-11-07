@@ -696,8 +696,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
-    const APP_BUILD = 15;
-    const APP_VERSION = '1.3.4';
+    const APP_BUILD = 16;
+    const APP_VERSION = '1.3.5';
 
     async function checkForUpdates() {
       try {
@@ -822,7 +822,35 @@
     }
 
     async function initOrRefreshHistoryMap() {
-      const queries = getHistoryQueries();
+      let queries = getHistoryQueries();
+
+      // Attempt to load shared queries from Google Sheet
+      const endpoint = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
+      try {
+        const res = await fetch(endpoint);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+            const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            json.data.forEach(sq => {
+              const ts = sq.timestamp ? new Date(sq.timestamp).getTime() : Date.now();
+              if (sq.lat && sq.lon && ts >= cutoff) {
+                if (!queries.some(lq => Math.abs(lq.lat - sq.lat) < 0.05 && Math.abs(lq.lon - sq.lon) < 0.05)) {
+                  queries.push({
+                    name: sq.name || 'Location',
+                    postcode: sq.postcode || '',
+                    lat: parseFloat(sq.lat),
+                    lon: parseFloat(sq.lon),
+                    timestamp: ts
+                  });
+                }
+              }
+            });
+            try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
+          }
+        }
+      } catch (_) {}
+
       const countEl = document.getElementById('mapQueryCount');
       if (countEl) countEl.textContent = `${queries.length} location${queries.length === 1 ? '' : 's'}`;
 
