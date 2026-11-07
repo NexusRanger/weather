@@ -12,7 +12,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Cotswolds Ambient Weather &amp; Frost Watch</title>
+  <title>Ambient Weather &amp; Frost Watch</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -608,8 +608,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js"></script>
     <script>
-    const APP_BUILD = 7;
-    const APP_VERSION = '1.2.1';
+    const APP_BUILD = 8;
+    const APP_VERSION = '1.2.2';
 
     async function checkForUpdates() {
       try {
@@ -648,6 +648,20 @@
     const TIMEZONE = 'Europe/London';
     const TOMTOM_KEY = 'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz';
 
+    function saveSavedLocation() {
+      try {
+        localStorage.setItem('ambient_weather_loc', JSON.stringify(CURRENT_LOCATION));
+      } catch (_) {}
+    }
+
+    function loadSavedLocation() {
+      try {
+        const raw = localStorage.getItem('ambient_weather_loc');
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return null;
+    }
+
     async function initLocation() {
       const params = new URLSearchParams(window.location.search);
       const pc = params.get('postcode') || params.get('pc');
@@ -662,6 +676,10 @@
       } else if (loc) {
         await lookupTown(loc);
       } else {
+        const saved = loadSavedLocation();
+        if (saved && saved.lat && saved.lon) {
+          CURRENT_LOCATION = saved;
+        }
         updateLocationHeader();
         fetchWeatherData();
       }
@@ -682,6 +700,7 @@
             lon: r.longitude,
             desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
           };
+          saveSavedLocation();
           updateLocationHeader();
           fetchWeatherData();
           return true;
@@ -724,6 +743,7 @@
               lon: lon,
               desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
             };
+            saveSavedLocation();
             updateLocationHeader();
             fetchWeatherData();
             return true;
@@ -750,6 +770,7 @@
               lon: r.longitude,
               desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
             };
+            saveSavedLocation();
             updateLocationHeader();
             fetchWeatherData();
             return;
@@ -764,6 +785,7 @@
         lon: lon,
         desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
       };
+      saveSavedLocation();
       updateLocationHeader();
       fetchWeatherData();
     }
@@ -880,6 +902,7 @@
       document.getElementById('headerLocationTitle').textContent = CURRENT_LOCATION.name;
       document.getElementById('headerPostcodeBadge').textContent = CURRENT_LOCATION.postcode;
       document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
+      document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
     }
 
     function promptChangePostcode() {

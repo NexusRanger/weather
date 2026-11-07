@@ -1,7 +1,7 @@
 {
-  "name": "Cotswolds Ambient Weather",
+  "name": "Ambient Weather & Frost Watch",
   "short_name": "Weather",
-  "description": "Ambient Weather & Frost Watch Dashboard",
+  "description": "Live ambient weather, frost watch, traffic & rain nowcasting",
   "start_url": "./index.html",
   "display": "fullscreen",
   "orientation": "landscape",
