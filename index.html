@@ -90,6 +90,28 @@
       border: none !important;
     }
     
+        /* Header Location Marquee (Smooth ping-pong scroll for long names) */
+    @keyframes marqueePingPong {
+      0%, 22% {
+        transform: translateX(0);
+      }
+      50%, 72% {
+        transform: translateX(var(--scroll-distance, -40px));
+      }
+      94%, 100% {
+        transform: translateX(0);
+      }
+    }
+    .marquee-scroll {
+      display: inline-block !important;
+      will-change: transform;
+      animation: marqueePingPong var(--scroll-duration, 8s) ease-in-out infinite;
+    }
+    .location-marquee-container.has-fade {
+      mask-image: linear-gradient(to right, black 85%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    }
+
     /* Solar Milestone Highlight Glows */
     .milestone-active-light {
       background: rgba(245, 158, 11, 0.22) !important;
@@ -267,10 +289,12 @@
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
         <div class="flex items-baseline gap-1.5 min-w-0">
-          <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5 cursor-pointer hover:text-sky-300 transition truncate max-w-[200px] sm:max-w-[280px] lg:max-w-[380px]" onclick="openLocationModal()" title="Click to change location">
-            Nailsworth &amp; Stroud
-          </h1>
-          <button onclick="openLocationModal()" title="Change town or UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
+          <div id="locationMarqueeContainer" class="location-marquee-container overflow-hidden whitespace-nowrap relative flex-shrink" style="max-width: min(260px, 28vw);">
+            <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white inline-flex items-center gap-1.5 cursor-pointer hover:text-sky-300 transition whitespace-nowrap" onclick="openLocationModal()" title="Click to change location">
+              Nailsworth &amp; Stroud
+            </h1>
+          </div>
+          <button onclick="openLocationModal()" title="Change town or UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0">
             <span id="headerPostcodeBadge">GL5 5HH</span>
             <span class="text-[8px] text-indigo-400">✏️</span>
           </button>
@@ -853,10 +877,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=27"></script>
+  <script src="traffic-flood.js?v=28"></script>
     <script>
-    const APP_BUILD = 27;
-    const APP_VERSION = '1.4.6';
+    const APP_BUILD = 28;
+    const APP_VERSION = '1.4.7';
 
     async function checkForUpdates() {
       try {
@@ -1613,11 +1637,34 @@
       searchLocationFromModal();
     }
 
+    function checkLocationTitleScroll() {
+      const el = document.getElementById('headerLocationTitle');
+      const container = document.getElementById('locationMarqueeContainer');
+      if (!el || !container) return;
+
+      el.classList.remove('marquee-scroll');
+      el.style.removeProperty('--scroll-distance');
+      el.style.removeProperty('--scroll-duration');
+      container.classList.remove('has-fade');
+
+      setTimeout(() => {
+        const diff = el.scrollWidth - container.clientWidth;
+        if (diff > 4) {
+          el.style.setProperty('--scroll-distance', `-${diff + 8}px`);
+          const duration = Math.max(7, Math.round(diff / 14) + 4);
+          el.style.setProperty('--scroll-duration', `${duration}s`);
+          el.classList.add('marquee-scroll');
+          container.classList.add('has-fade');
+        }
+      }, 80);
+    }
+    window.addEventListener('resize', checkLocationTitleScroll);
     function updateLocationHeader() {
       document.getElementById('headerLocationTitle').textContent = CURRENT_LOCATION.name;
       document.getElementById('headerPostcodeBadge').textContent = CURRENT_LOCATION.postcode;
       document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
+      checkLocationTitleScroll();
     }
 
     function promptChangePostcode() {
