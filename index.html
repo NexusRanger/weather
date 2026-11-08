@@ -112,6 +112,28 @@
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
 
+        /* Stargazing Advice One-Direction Marquee */
+    @keyframes marqueeScrollLeft {
+      0%, 18% {
+        transform: translateX(0);
+      }
+      82% {
+        transform: translateX(var(--advice-scroll-distance, -100px));
+      }
+      82.01%, 100% {
+        transform: translateX(0);
+      }
+    }
+    .stargazing-scroll {
+      display: inline-block !important;
+      will-change: transform;
+      animation: marqueeScrollLeft var(--advice-scroll-duration, 10s) linear infinite;
+    }
+    #stargazingAdviceContainer.has-fade {
+      mask-image: linear-gradient(to right, black 85%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    }
+
     /* Solar Milestone Highlight Glows */
     .milestone-active-light {
       background: rgba(245, 158, 11, 0.22) !important;
@@ -529,9 +551,11 @@
                   <span id="moonPhaseName" class="text-xs font-bold text-white truncate">Full Moon</span>
                   <span id="moonIllumination" class="text-[10px] font-mono text-purple-300">--% lit</span>
                 </div>
-                <p id="stargazingAdvice" class="text-[10px] text-slate-300 truncate mt-0.5">
-                  Tonight: Checking cloud cover...
-                </p>
+                <div class="overflow-hidden whitespace-nowrap relative mt-0.5" id="stargazingAdviceContainer">
+                  <span id="stargazingAdvice" class="text-[10px] text-slate-300 inline-block whitespace-nowrap">
+                    Tonight: Checking cloud cover...
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -703,16 +727,22 @@
         </button>
       </div>
 
-      <!-- Quick Preset Chips -->
+      <!-- Recent & Regional Quick Picks -->
       <div class="mt-3 pt-3 border-t border-white/10">
-        <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-2">Popular / Cotswolds Quick Picks:</div>
-        <div class="flex flex-wrap gap-1.5">
-          <button onclick="selectQuickLocation('GL5 5HH')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Nailsworth</button>
-          <button onclick="selectQuickLocation('Stroud')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Stroud</button>
-          <button onclick="selectQuickLocation('Cirencester')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Cirencester</button>
-          <button onclick="selectQuickLocation('Cheltenham')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Cheltenham</button>
-          <button onclick="selectQuickLocation('Bath')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Bath</button>
-          <button onclick="selectQuickLocation('Bristol')" class="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition">Bristol</button>
+        <!-- Recent searches (if any) -->
+        <div id="recentLocationsContainer" class="hidden mb-2.5">
+          <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1">
+            <span>🕒</span> Recent Locations:
+          </div>
+          <div id="recentLocationChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- Dynamic Nearby / Regional Picks -->
+        <div>
+          <div id="nearbyPicksTitle" class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1">
+            <span>📍</span> Nearby Quick Picks:
+          </div>
+          <div id="nearbyLocationChips" class="flex flex-wrap gap-1.5"></div>
         </div>
       </div>
     </div>
@@ -794,12 +824,12 @@
       </div>
 
       <!-- Modal Body -->
-      <div class="py-4 space-y-4 overflow-y-auto">
+      <div class="py-3 space-y-3 overflow-y-auto">
         <!-- QR Code & Link Card -->
-        <div class="flex flex-col sm:flex-row items-center gap-4 p-3.5 rounded-xl bg-slate-900/70 border border-white/10">
+        <div class="flex flex-col sm:flex-row items-center gap-3.5 p-3 rounded-xl bg-slate-900/70 border border-white/10">
           <!-- QR Code Container -->
-          <div class="flex-shrink-0 p-2.5 bg-white rounded-xl shadow-lg flex items-center justify-center" style="width: 170px; height: 170px;">
-            <div id="shareQrCode" class="w-[150px] h-[150px] flex items-center justify-center"></div>
+          <div class="flex-shrink-0 p-2 bg-white rounded-xl shadow-lg flex items-center justify-center" style="width: 156px; height: 156px;">
+            <div id="shareQrCode" class="w-[140px] h-[140px] flex items-center justify-center"></div>
           </div>
 
           <!-- Link info & actions -->
@@ -811,74 +841,67 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2 mt-3">
-              <button id="copyShareLinkBtn" onclick="copyShareUrl()" class="flex-1 px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0">
+            <div class="flex items-center gap-2 mt-2.5">
+              <button id="copyShareLinkBtn" onclick="copyShareUrl()" class="flex-1 px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0">
                 <span id="copyShareIcon">📋</span>
                 <span id="copyShareLabel">Copy Link</span>
               </button>
-              <button id="nativeShareBtn" onclick="triggerNativeShare()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0" title="Share via phone share menu">
+              <button id="nativeShareBtn" onclick="triggerNativeShare()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0" title="Share via phone share menu">
                 <span>↗ Share</span>
               </button>
             </div>
-            <div class="text-[10px] text-emerald-400 font-mono mt-1.5 flex items-center gap-1">
+            <div class="text-[10px] text-emerald-400 font-mono mt-1 flex items-center gap-1">
               <span>📷</span> Scan with phone camera to open instantly
             </div>
           </div>
         </div>
 
         <!-- How to Use on Every Device -->
-        <div class="space-y-2">
+        <div class="space-y-1.5 pb-1">
           <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider px-0.5">Where can I use this?</div>
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
             <!-- Phone & Tablet -->
-            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
-              <div class="flex items-center gap-1.5 font-bold text-white mb-1">
+            <div class="p-2 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+              <div class="flex items-center gap-1 font-bold text-white mb-0.5 text-[11px]">
                 <span>📱</span> Phone &amp; Tablet
               </div>
-              <p class="text-[11px] text-slate-300 leading-relaxed">
-                Scan the QR code. Tap <strong class="text-sky-300">Share</strong> (Safari) or <strong class="text-sky-300">⋮ Menu</strong> (Chrome) and select <strong class="text-amber-300">Add to Home Screen</strong> to install it as a standalone app.
+              <p class="text-[10px] text-slate-300 leading-snug">
+                Scan QR. Tap <strong class="text-sky-300">Share</strong> (Safari) or <strong class="text-sky-300">⋮ Menu</strong> (Chrome) &amp; select <strong class="text-amber-300">Add to Home Screen</strong>.
               </p>
             </div>
 
             <!-- Smart TV -->
-            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
-              <div class="flex items-center gap-1.5 font-bold text-white mb-1">
+            <div class="p-2 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+              <div class="flex items-center gap-1 font-bold text-white mb-0.5 text-[11px]">
                 <span>📺</span> Smart TV &amp; Shield
               </div>
-              <p class="text-[11px] text-slate-300 leading-relaxed">
-                Open in TV browser (<strong class="text-sky-300">TV Bro</strong>, Samsung, or Silk) and press <strong class="text-amber-300">F</strong> or the fullscreen icon. Auto-refreshes 24/7 with zero screen burn-in.
+              <p class="text-[10px] text-slate-300 leading-snug">
+                Open in TV browser (<strong class="text-sky-300">TV Bro</strong>, Samsung, Silk) &amp; press <strong class="text-amber-300">F</strong>. Auto-refreshes with ambient night dimming.
               </p>
             </div>
 
             <!-- Laptop & PC -->
-            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
-              <div class="flex items-center gap-1.5 font-bold text-white mb-1">
+            <div class="p-2 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+              <div class="flex items-center gap-1 font-bold text-white mb-0.5 text-[11px]">
                 <span>💻</span> Laptop &amp; PC
               </div>
-              <p class="text-[11px] text-slate-300 leading-relaxed">
-                Works in any browser. On Chrome or Edge, click the <strong class="text-amber-300">Install App (➕)</strong> icon in the address bar to run it as a clean desktop window.
+              <p class="text-[10px] text-slate-300 leading-snug">
+                Works in any browser. On Chrome/Edge, click the <strong class="text-amber-300">Install App (➕)</strong> icon in the address bar.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Modal Footer -->
-      <div class="pt-3 border-t border-white/10 flex items-center justify-end gap-2 flex-shrink-0">
-        <button onclick="closeShareModal()" class="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer" tabindex="0">
-          Close
-        </button>
-      </div>
-
     </div>
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=29"></script>
+  <script src="traffic-flood.js?v=30"></script>
     <script>
-    const APP_BUILD = 29;
-    const APP_VERSION = '1.4.8';
+    const APP_BUILD = 30;
+    const APP_VERSION = '1.4.9';
 
     async function checkForUpdates() {
       try {
@@ -1547,13 +1570,14 @@
       if (status) status.textContent = '';
       if (input) {
         input.value = '';
-        setTimeout(() => input.focus(), 100);
+        // Do NOT auto-focus input to avoid triggering on-screen TV keyboard immediately
       }
       if (modal) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         try { history.pushState({ modal: 'locationModal' }, ''); } catch (_) {}
       }
+      renderLocationModalPicks();
     }
 
     function closeLocationModal(pop = true) {
@@ -1626,6 +1650,106 @@
         closeLocationModal();
       } else {
         if (status) status.textContent = `Could not find "${q}". Try another town or UK postcode.`;
+      }
+    }
+
+        const UK_HUBS = [
+      // Cotswolds & West
+      { name: 'Nailsworth', query: 'GL5 5HH', lat: 51.695, lon: -2.222 },
+      { name: 'Stroud', query: 'Stroud', lat: 51.7458, lon: -2.2178 },
+      { name: 'Cirencester', query: 'Cirencester', lat: 51.718, lon: -1.968 },
+      { name: 'Cheltenham', query: 'Cheltenham', lat: 51.899, lon: -2.078 },
+      { name: 'Gloucester', query: 'Gloucester', lat: 51.864, lon: -2.243 },
+      { name: 'Bath', query: 'Bath', lat: 51.381, lon: -2.359 },
+      { name: 'Bristol', query: 'Bristol', lat: 51.454, lon: -2.587 },
+      // London & South
+      { name: 'London', query: 'London', lat: 51.507, lon: -0.127 },
+      { name: 'Oxford', query: 'Oxford', lat: 51.752, lon: -1.257 },
+      { name: 'Brighton', query: 'Brighton', lat: 50.822, lon: -0.137 },
+      { name: 'Southampton', query: 'Southampton', lat: 50.909, lon: -1.404 },
+      // South West
+      { name: 'Exeter', query: 'Exeter', lat: 50.718, lon: -3.533 },
+      { name: 'Plymouth', query: 'Plymouth', lat: 50.375, lon: -4.142 },
+      { name: 'Truro', query: 'Truro', lat: 50.263, lon: -5.051 },
+      // Midlands
+      { name: 'Birmingham', query: 'Birmingham', lat: 52.486, lon: -1.890 },
+      { name: 'Stratford', query: 'Stratford-upon-Avon', lat: 52.191, lon: -1.708 },
+      { name: 'Nottingham', query: 'Nottingham', lat: 52.954, lon: -1.158 },
+      // North
+      { name: 'Manchester', query: 'Manchester', lat: 53.480, lon: -2.242 },
+      { name: 'Leeds', query: 'Leeds', lat: 53.800, lon: -1.549 },
+      { name: 'York', query: 'York', lat: 53.959, lon: -1.087 },
+      { name: 'Keswick (Lakes)', query: 'Keswick', lat: 54.601, lon: -3.137 },
+      { name: 'Newcastle', query: 'Newcastle', lat: 54.978, lon: -1.617 },
+      // Scotland
+      { name: 'Edinburgh', query: 'Edinburgh', lat: 55.953, lon: -3.188 },
+      { name: 'Glasgow', query: 'Glasgow', lat: 55.864, lon: -4.251 },
+      { name: 'Inverness', query: 'Inverness', lat: 57.477, lon: -4.224 },
+      { name: 'Fort William', query: 'Fort William', lat: 56.819, lon: -5.105 },
+      { name: 'Aviemore', query: 'Aviemore', lat: 57.194, lon: -3.829 },
+      { name: 'Aberdeen', query: 'Aberdeen', lat: 57.149, lon: -2.094 },
+      // Wales
+      { name: 'Cardiff', query: 'Cardiff', lat: 51.481, lon: -3.179 },
+      { name: 'Swansea', query: 'Swansea', lat: 51.621, lon: -3.943 },
+      { name: 'Betws-y-Coed', query: 'Betws-y-Coed', lat: 53.092, lon: -3.801 }
+    ];
+
+    function renderLocationModalPicks() {
+      // 1. Render recent searches from ambient_location_queries
+      try {
+        const raw = localStorage.getItem('ambient_location_queries');
+        const queries = raw ? JSON.parse(raw) : [];
+        const recentCont = document.getElementById('recentLocationsContainer');
+        const recentChips = document.getElementById('recentLocationChips');
+        if (recentCont && recentChips) {
+          recentChips.innerHTML = '';
+          const uniqueNames = new Set();
+          const filtered = [];
+          for (const q of queries) {
+            const shortName = q.name.split('&')[0].trim();
+            if (!uniqueNames.has(shortName.toLowerCase()) && shortName.toLowerCase() !== CURRENT_LOCATION.name.split('&')[0].trim().toLowerCase()) {
+              uniqueNames.add(shortName.toLowerCase());
+              filtered.push({ name: shortName, query: q.postcode && q.postcode !== 'GEO' ? q.postcode : q.name });
+              if (filtered.length >= 4) break;
+            }
+          }
+          if (filtered.length > 0) {
+            filtered.forEach(item => {
+              const btn = document.createElement('button');
+              btn.className = 'px-2 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 hover:text-white transition cursor-pointer';
+              btn.textContent = item.name;
+              btn.onclick = () => selectQuickLocation(item.query);
+              recentChips.appendChild(btn);
+            });
+            recentCont.classList.remove('hidden');
+          } else {
+            recentCont.classList.add('hidden');
+          }
+        }
+      } catch (_) {}
+
+      // 2. Render closest UK hubs dynamically based on CURRENT_LOCATION (lat, lon)
+      const nearbyChips = document.getElementById('nearbyLocationChips');
+      if (nearbyChips) {
+        nearbyChips.innerHTML = '';
+        const curLat = (CURRENT_LOCATION && CURRENT_LOCATION.lat) || 51.7;
+        const curLon = (CURRENT_LOCATION && CURRENT_LOCATION.lon) || -2.2;
+        
+        const sorted = [...UK_HUBS].sort((a, b) => {
+          const distA = Math.pow(a.lat - curLat, 2) + Math.pow(a.lon - curLon, 2);
+          const distB = Math.pow(b.lat - curLat, 2) + Math.pow(b.lon - curLon, 2);
+          return distA - distB;
+        });
+
+        const currentNameLower = CURRENT_LOCATION.name.toLowerCase();
+        const picks = sorted.filter(h => !currentNameLower.includes(h.name.toLowerCase())).slice(0, 6);
+        picks.forEach(hub => {
+          const btn = document.createElement('button');
+          btn.className = 'px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition cursor-pointer';
+          btn.textContent = hub.name;
+          btn.onclick = () => selectQuickLocation(hub.query);
+          nearbyChips.appendChild(btn);
+        });
       }
     }
 
@@ -1900,8 +2024,33 @@
       }
 
       document.getElementById('nightSkyScoreBadge').textContent = scoreBadge;
-      document.getElementById('stargazingAdvice').textContent = adviceText;
+      const adviceEl = document.getElementById('stargazingAdvice');
+      if (adviceEl) adviceEl.textContent = adviceText;
+      checkStargazingAdviceScroll();
     }
+
+    function checkStargazingAdviceScroll() {
+      const container = document.getElementById('stargazingAdviceContainer');
+      const textEl = document.getElementById('stargazingAdvice');
+      if (!container || !textEl) return;
+
+      textEl.classList.remove('stargazing-scroll');
+      textEl.style.removeProperty('--advice-scroll-distance');
+      textEl.style.removeProperty('--advice-scroll-duration');
+      container.classList.remove('has-fade');
+
+      setTimeout(() => {
+        const diff = textEl.scrollWidth - container.clientWidth;
+        if (diff > 4) {
+          textEl.style.setProperty('--advice-scroll-distance', `-${diff + 12}px`);
+          const duration = Math.max(8, Math.round(diff / 18) + 4);
+          textEl.style.setProperty('--advice-scroll-duration', `${duration}s`);
+          textEl.classList.add('stargazing-scroll');
+          container.classList.add('has-fade');
+        }
+      }, 80);
+    }
+    window.addEventListener('resize', checkStargazingAdviceScroll);
 
     let rainNowcastSlides = [];
     let currentRainSlideIndex = 0;
@@ -2151,16 +2300,43 @@
         }
       }
 
-      if (tileSub) tileSub.textContent = 'Dry next 3+ hrs';
+      // Dynamically calculate how many consecutive hours stay dry from hourly forecast
+      let dryHours = 0;
+      if (hourly && hourly.time && hourly.precipitation) {
+        const curH = now.getHours();
+        let startIndex = 0;
+        for (let i = 0; i < hourly.time.length; i++) {
+          const d = new Date(hourly.time[i]);
+          if (d.getDate() === now.getDate() && d.getHours() === curH) {
+            startIndex = i;
+            break;
+          }
+        }
+        let count = 0;
+        for (let i = startIndex + 1; i < hourly.time.length; i++) {
+          const p = hourly.precipitation[i] || 0;
+          const prob = (hourly.precipitation_probability && hourly.precipitation_probability[i]) || 0;
+          if (p >= 0.15 || prob >= 35) {
+            break;
+          }
+          count++;
+        }
+        dryHours = count;
+      }
+
+      const dryHoursStr = dryHours >= 24 ? '24+ hrs' : (dryHours >= 2 ? `${dryHours} hrs` : 'next hour');
+      const dryTileSub = dryHours >= 24 ? 'Dry next 24h+' : (dryHours >= 1 ? `Dry next ${dryHours}h` : 'Dry conditions');
+
+      if (tileSub) tileSub.textContent = dryTileSub;
       setRainNowcastSlides(
         [
-          'Dry next 3+ hours',
+          `Dry next ${dryHoursStr}`,
           'No precipitation expected'
         ],
         '95% conf',
         'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 flex-shrink-0 ml-1.5',
         'mt-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden',
-        '☀️'
+        isDay ? '☀️' : '🌙'
       );
     }
 
