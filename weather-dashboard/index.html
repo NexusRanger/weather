@@ -145,8 +145,8 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        /* TV Safe-Area Inset: 10px top, 52px left/right (prevents bezel clipping), 36px bottom (lifts timeline above TV frame) */
-        padding: max(10px, env(safe-area-inset-top)) max(52px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(52px, env(safe-area-inset-left));
+        /* TV Safe-Area Inset: 8px top, 46px left/right (prevents bezel clipping), 16px bottom */
+        padding: max(8px, env(safe-area-inset-top)) max(46px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(46px, env(safe-area-inset-left));
         transition: transform 0.2s ease;
         transform-origin: top center;
       }
@@ -157,6 +157,9 @@
         flex: 1 1 0%;
         min-height: 0;
         margin: 2px 0;
+      }
+      #mainGrid > div {
+        min-height: 0;
       }
     }
 
@@ -260,11 +263,11 @@
   <div id="dashboardRoot">
     
     <!-- HEADER BAR -->
-    <header class="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-white/10 flex-shrink-0">
-      <div class="flex items-center gap-2">
-        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></div>
-        <div class="flex items-baseline gap-2">
-          <h1 id="headerLocationTitle" class="text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5 cursor-pointer hover:text-sky-300 transition" onclick="openLocationModal()" title="Click to change location">
+    <header class="relative z-10 flex flex-nowrap items-center justify-between gap-2 pb-1 border-b border-white/10 flex-shrink-0">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
+        <div class="flex items-baseline gap-1.5 min-w-0">
+          <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center gap-1.5 cursor-pointer hover:text-sky-300 transition truncate max-w-[200px] sm:max-w-[280px] lg:max-w-[380px]" onclick="openLocationModal()" title="Click to change location">
             Nailsworth &amp; Stroud
           </h1>
           <button onclick="openLocationModal()" title="Change town or UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1">
@@ -478,7 +481,7 @@
                   Checking...
                 </div>
               </div>
-              <p id="frostDetail" class="text-[10px] text-slate-300 mt-0.5 leading-tight">
+              <p id="frostDetail" class="text-[10px] text-slate-300 mt-0.5 leading-tight truncate">
                 Analyzing radiative cooling, surface soil temperature, and dew point...
               </p>
             </div>
@@ -603,7 +606,7 @@
     </main>
     
     <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC, RIVERS & SHARE) -->
-    <div id="colLocalInfo" class="flex flex-wrap items-center gap-2.5 my-1 flex-shrink-0" style="min-height: 32px;">
+    <div id="colLocalInfo" class="relative z-20 flex flex-nowrap sm:flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
       <!-- Traffic Pill -->
       <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="Live Traffic Flow (A46 / Local Area via TomTom)">
         <span class="text-xs">🚗</span>
@@ -850,10 +853,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=26"></script>
+  <script src="traffic-flood.js?v=27"></script>
     <script>
-    const APP_BUILD = 26;
-    const APP_VERSION = '1.4.5';
+    const APP_BUILD = 27;
+    const APP_VERSION = '1.4.6';
 
     async function checkForUpdates() {
       try {
@@ -1789,21 +1792,21 @@
         badgeText = "Warm Car 10m Early!";
         badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
         cardBgClass = "bg-rose-950/40 border border-rose-500/30";
-        detail = `Windscreen freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM! Have de-icer & scraper ready.`;
+        detail = `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
       } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
         status = "Frost Likely";
         icon = "🧊";
         badgeText = "Warm Car 10m Early";
         badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
         cardBgClass = "bg-sky-950/40 border border-sky-500/30";
-        detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling will frost windscreens!`;
+        detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
       } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
         status = "Slight Frost Risk";
         icon = "⚠️";
         badgeText = "Patchy Ice";
         badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
         cardBgClass = "bg-amber-950/30 border border-amber-500/20";
-        detail = `Borderline temps (${minAir.toFixed(1)}°C at ${criticalHour} AM). Valley hollows may catch frost.`;
+        detail = `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`;
       }
 
       document.getElementById('frostIcon').textContent = icon;
@@ -2291,7 +2294,7 @@
 
       // Clouds & UV
       document.getElementById('cloudCover').textContent = cur.cloud_cover;
-      document.getElementById('uvIndexBadge').textContent = `Max UV: ${(daily.uv_index_max[0] || 0).toFixed(1)}`;
+      document.getElementById('uvIndexBadge').textContent = `UV ${(daily.uv_index_max[0] || 0).toFixed(1)}`;
 
       // Moon
       const moon = calculateMoonPhase(new Date());
@@ -2406,7 +2409,7 @@
         const hasFrostRisk = min <= 3.5;
 
         const row = document.createElement('div');
-        row.className = `flex items-center justify-between py-1 px-2.5 rounded-lg glass-tile text-xs transition ${hasFrostRisk ? 'border-l-2 border-l-cyan-400' : ''}`;
+        row.className = `flex items-center justify-between py-0.5 px-2 rounded-lg glass-tile text-xs transition ${hasFrostRisk ? 'border-l-2 border-l-cyan-400' : ''}`;
         row.innerHTML = `
           <div class="w-20 flex items-center gap-1">
             <span class="font-bold text-white text-[11px]">${dayName}</span>
