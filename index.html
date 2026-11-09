@@ -846,13 +846,7 @@
         <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
           <span id="timelineTitle">24-Hour Forecast &amp; Rain Probability</span>
-          <div id="timelineModeBadge" class="hidden inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/15 border border-sky-400/35 text-[8px] font-bold font-mono text-sky-200">
-            <span>24H GLANCE</span>
-            <div class="w-16 sm:w-24 h-1.5 rounded-full bg-slate-900/90 overflow-hidden border border-white/10">
-              <div id="timelineCountdownBar" class="h-full bg-gradient-to-r from-sky-400 to-cyan-300 rounded-full" style="width: 100%; transition: width 0.25s linear;"></div>
-            </div>
-            <span id="timelineCountdownSec" class="text-[8px] text-sky-300 w-4 text-right">25s</span>
-          </div>
+          <span id="timelineModeBadge" class="hidden text-[8px] font-bold font-mono px-1.5 py-0.2 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">24H GLANCE (AUTO-RESETS)</span>
         </div>
         <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2.5">
           <span class="text-[8px] text-slate-400 opacity-80 hidden sm:inline">◀ Scroll left for overnight history • Long-press / Click for 24h glance</span>
@@ -1077,10 +1071,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=47"></script>
+  <script src="traffic-flood.js?v=48"></script>
     <script>
-    const APP_BUILD = 47;
-    const APP_VERSION = '1.7.3';
+    const APP_BUILD = 48;
+    const APP_VERSION = '1.7.4';
 
     async function checkForUpdates() {
       try {
@@ -1673,10 +1667,28 @@
       } catch (_) {}
     }
 
+    function clearUrlLocationParams() {
+      try {
+        const url = new URL(window.location.href);
+        let changed = false;
+        ['postcode', 'pc', 'location', 'town', 'q', 'lat', 'lon'].forEach(k => {
+          if (url.searchParams.has(k)) {
+            url.searchParams.delete(k);
+            changed = true;
+          }
+        });
+        if (changed) {
+          window.history.replaceState(window.history.state || {}, '', url);
+        }
+      } catch (_) {}
+    }
+
     function reloadDashboard() {
       const icon = document.getElementById('refreshIcon');
       if (icon) icon.classList.add('animate-spin');
+      saveSavedLocation();
       const url = new URL(window.location.href);
+      ['postcode', 'pc', 'location', 'town', 'q', 'lat', 'lon'].forEach(k => url.searchParams.delete(k));
       url.searchParams.set('v', Date.now().toString());
       window.location.href = url.toString();
     }
@@ -1697,14 +1709,19 @@
     const TOMTOM_KEY = TOMTOM_KEYS[0];
 
     function saveSavedLocation() {
+      const serialized = JSON.stringify(CURRENT_LOCATION);
       try {
-        localStorage.setItem('ambient_weather_loc', JSON.stringify(CURRENT_LOCATION));
+        localStorage.setItem('ambient_weather_loc', serialized);
       } catch (_) {}
+      try {
+        sessionStorage.setItem('ambient_weather_loc', serialized);
+      } catch (_) {}
+      clearUrlLocationParams();
     }
 
     function loadSavedLocation() {
       try {
-        const raw = localStorage.getItem('ambient_weather_loc');
+        const raw = localStorage.getItem('ambient_weather_loc') || sessionStorage.getItem('ambient_weather_loc');
         if (raw) return JSON.parse(raw);
       } catch (_) {}
       return null;
@@ -1724,6 +1741,19 @@
       const lat = params.get('lat');
       const lon = params.get('lon');
 
+      // Priority 1: Always keep the user's saved location across reloads unless an explicit shared URL param was just opened
+      const saved = loadSavedLocation();
+      if (saved && saved.lat && saved.lon && !pc && !loc && !(lat && lon)) {
+        CURRENT_LOCATION = saved;
+        if (saved.name === 'Current Location') {
+          await lookupCoords(saved.lat, saved.lon);
+          return;
+        }
+        updateLocationHeader();
+        fetchWeatherData();
+        return;
+      }
+
       if (lat && lon) {
         await lookupCoords(parseFloat(lat), parseFloat(lon));
       } else if (pc) {
@@ -1731,14 +1761,6 @@
       } else if (loc) {
         await lookupTown(loc);
       } else {
-        const saved = loadSavedLocation();
-        if (saved && saved.lat && saved.lon) {
-          CURRENT_LOCATION = saved;
-          if (saved.name === 'Current Location') {
-            await lookupCoords(saved.lat, saved.lon);
-            return;
-          }
-        }
         updateLocationHeader();
         fetchWeatherData();
       }
@@ -1988,14 +2010,6 @@
         async (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-          const url = new URL(window.location.href);
-          url.searchParams.set('lat', lat.toFixed(4));
-          url.searchParams.set('lon', lon.toFixed(4));
-          url.searchParams.delete('postcode');
-          url.searchParams.delete('town');
-          url.searchParams.delete('q');
-          window.history.pushState({}, '', url);
-
           await lookupCoords(lat, lon);
           if (gpsIcon) gpsIcon.textContent = '📍';
           if (gpsBtn) gpsBtn.textContent = 'Located!';
@@ -2145,9 +2159,7 @@
       if (btn) btn.disabled = false;
 
       if (success) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('q', q);
-        window.history.pushState({}, '', url);
+        clearUrlLocationParams();
         closeLocationModal();
       } else {
         if (status) status.textContent = `Could not find "${q}". Try another city, town or postcode.`;
@@ -3636,53 +3648,28 @@
       const footer = document.getElementById('footerTimeline');
       const title = document.getElementById('timelineTitle');
       const badge = document.getElementById('timelineModeBadge');
-      const bar = document.getElementById('timelineCountdownBar');
-      const secEl = document.getElementById('timelineCountdownSec');
 
       if (hourlyResetTimer) { clearTimeout(hourlyResetTimer); hourlyResetTimer = null; }
-      if (hourlyCountdownInterval) { clearInterval(hourlyCountdownInterval); hourlyCountdownInterval = null; }
 
       if (compressed) {
-        const durationMs = 25000;
-        const startTime = Date.now();
-
-        if (footer) {
-          footer.classList.add('glance-active');
-          footer.blur();
-        }
         if (title) title.textContent = '24-Hour Panoramic Glance';
-        if (badge) {
-          badge.classList.remove('hidden');
-          badge.classList.add('inline-flex');
-        }
-        if (bar) bar.style.width = '100%';
-        if (secEl) secEl.textContent = '25s';
-
+        if (badge) badge.classList.remove('hidden');
         renderHourly(cachedHourlyData);
 
-        // Update the slider bar & seconds counter smoothly every 200ms
-        hourlyCountdownInterval = setInterval(() => {
-          const elapsed = Date.now() - startTime;
-          const remainingMs = Math.max(0, durationMs - elapsed);
-          const pct = Math.max(0, (remainingMs / durationMs) * 100);
-          if (bar) bar.style.width = `${pct.toFixed(1)}%`;
-          if (secEl) secEl.textContent = `${Math.ceil(remainingMs / 1000)}s`;
-        }, 200);
+        // Maintain focus on #footerTimeline so clicking/pressing OK again immediately returns to normal
+        if (footer) footer.focus({ preventScroll: true });
 
-        // Auto-revert back to standard scrolling view after 25 seconds
+        // Auto-revert back to standard scrolling view after 20 seconds
         hourlyResetTimer = setTimeout(() => {
           setHourlyCompressedMode(false);
-        }, durationMs);
+        }, 20000);
       } else {
-        if (footer) {
-          footer.classList.remove('glance-active');
-        }
         if (title) title.textContent = '24-Hour Forecast & Rain Probability';
-        if (badge) {
-          badge.classList.add('hidden');
-          badge.classList.remove('inline-flex');
-        }
+        if (badge) badge.classList.add('hidden');
         renderHourly(cachedHourlyData);
+
+        // Maintain focus on #footerTimeline
+        if (footer) footer.focus({ preventScroll: true });
       }
     }
 
