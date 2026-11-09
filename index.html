@@ -456,7 +456,7 @@
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
         <div class="flex items-center gap-2 min-w-0 flex-nowrap">
           <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink" style="max-width: min(320px, 30vw);" onclick="openLocationModal()" title="Click to change location">
-            <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth &amp; Stroud</span>
+            <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth</span>
           </h1>
           <button id="headerLocationBtn" tabindex="1" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none">
             <span id="headerPostcodeBadge">GL5 5HH</span>
@@ -790,25 +790,20 @@
         </div>
       </div>
 
-      <!-- COLUMN 3: 7-DAY OUTLOOK WITH FROST FLAGS -->
+      <!-- COLUMN 3: 10-DAY OUTLOOK WITH FROST FLAGS -->
       <div id="colSevenDay" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
-          <div>
-            <div class="flex items-center justify-between mb-1">
+          <div class="flex flex-col flex-1 min-h-0">
+            <div class="flex items-center justify-between mb-1 flex-shrink-0">
               <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30">
-                7-Day Forecast &amp; Frost Risk
+                10-Day Forecast &amp; Frost Risk
               </span>
               <span class="text-[9px] text-slate-400 font-mono">Temp / Rain / Frost</span>
             </div>
 
-            <div id="sevenDayList" class="space-y-1 mt-1">
-              <div class="text-xs text-slate-400 text-center py-4">Loading 7-day outlook...</div>
+            <div id="sevenDayList" class="flex-1 flex flex-col justify-between gap-[2px] min-h-0">
+              <div class="text-xs text-slate-400 text-center py-4">Loading 10-day outlook...</div>
             </div>
-          </div>
-
-          <div class="pt-1.5 border-t border-white/10 flex items-center justify-between text-[9px] text-slate-400 font-mono">
-            <span>Auto-refreshes every 15m</span>
-            <span>No Ads • Pure Data</span>
           </div>
         </div>
       </div>
@@ -1077,10 +1072,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=50"></script>
+  <script src="traffic-flood.js?v=51"></script>
     <script>
-    const APP_BUILD = 50;
-    const APP_VERSION = '1.7.6';
+    const APP_BUILD = 51;
+    const APP_VERSION = '1.7.7';
 
     async function checkForUpdates() {
       try {
@@ -1287,7 +1282,7 @@
         };
       }
       return {
-        name: 'Nailsworth & Stroud',
+        name: 'Nailsworth',
         postcode: 'GL5 5HH',
         lat: 51.7032,
         lon: -2.2259,
@@ -1700,8 +1695,13 @@
     }
     const applyAppUpdate = reloadDashboard;
 
+    function shortenPlaceName(name) {
+      if (!name) return '';
+      return String(name).split('&')[0].split(',')[0].trim();
+    }
+
     let CURRENT_LOCATION = {
-      name: 'Nailsworth & Stroud',
+      name: 'Nailsworth',
       postcode: 'GL5 5HH',
       lat: 51.7032,
       lon: -2.2259,
@@ -1715,6 +1715,9 @@
     const TOMTOM_KEY = TOMTOM_KEYS[0];
 
     function saveSavedLocation() {
+      if (CURRENT_LOCATION && CURRENT_LOCATION.name) {
+        CURRENT_LOCATION.name = shortenPlaceName(CURRENT_LOCATION.name);
+      }
       const serialized = JSON.stringify(CURRENT_LOCATION);
       try {
         localStorage.setItem('ambient_weather_loc', serialized);
@@ -1728,7 +1731,13 @@
     function loadSavedLocation() {
       try {
         const raw = localStorage.getItem('ambient_weather_loc') || sessionStorage.getItem('ambient_weather_loc');
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.name) {
+            parsed.name = shortenPlaceName(parsed.name);
+          }
+          return parsed;
+        }
       } catch (_) {}
       return null;
     }
@@ -1780,8 +1789,7 @@
           const json = await res.json();
           const r = json.result;
           const town = r.parish || r.admin_ward || r.admin_district || 'Gloucestershire';
-          const district = r.admin_district || '';
-          const name = (district && town.toLowerCase() !== district.toLowerCase()) ? `${town} & ${district}` : town;
+          const name = shortenPlaceName(town);
           CURRENT_LOCATION = {
             name: name,
             postcode: r.postcode,
@@ -1801,42 +1809,8 @@
       return false;
     }
 
-        function formatMatchedLocationName(match) {
-      const name = match.name || '';
-      const country = match.country || '';
-      const countryCode = (match.country_code || '').toUpperCase();
-      const admin1 = match.admin1 || '';
-      const admin2 = match.admin2 || '';
-
-      // 1. Outside the UK (International)
-      if (countryCode && countryCode !== 'GB') {
-        // US or Canada: City, State (e.g. Miami, Florida)
-        if ((countryCode === 'US' || countryCode === 'CA') && admin1) {
-          return `${name}, ${admin1}`;
-        }
-        // All other international: City, Country (e.g. "Vienna, Austria", "Paris, France", "Tokyo, Japan")
-        if (country) {
-          return `${name}, ${country}`;
-        }
-        if (admin1 && !admin1.toLowerCase().includes(name.toLowerCase())) {
-          return `${name}, ${admin1}`;
-        }
-        return name;
-      }
-
-      // 2. UK Locations
-      const cleanAdmin1 = admin1.replace(/^(State|City) of\s+/i, '').trim();
-      const cleanAdmin2 = admin2.replace(/^(State|City) of\s+/i, '').trim();
-
-      // If district / county is distinct from town name, e.g. "Nailsworth & Gloucestershire"
-      if (cleanAdmin2 && cleanAdmin2.toLowerCase() !== name.toLowerCase()) {
-        return `${name} & ${cleanAdmin2}`;
-      }
-      if (cleanAdmin1 && cleanAdmin1.toLowerCase() !== name.toLowerCase() && cleanAdmin1 !== 'England') {
-        return `${name} & ${cleanAdmin1}`;
-      }
-
-      return name;
+    function formatMatchedLocationName(match) {
+      return shortenPlaceName(match && match.name ? match.name : '');
     }
 
     async function lookupTown(townName) {
@@ -1892,21 +1866,9 @@
             const addr = chosen.address || {};
             const cc = (addr.country_code || '').toUpperCase();
 
-            // Build a clean, informative display name (e.g. "The Stroud Hotel, Stroud" or "Vienna, Austria")
+            // Build a short, clean display name (e.g. "The Stroud Hotel" or "Vienna")
             const primaryName = chosen.name || (chosen.display_name ? chosen.display_name.split(',')[0].trim() : cleanName);
-            const locality = addr.town || addr.city || addr.village || addr.suburb || addr.county || addr.state || '';
-            const country = addr.country || '';
-
-            let displayName = primaryName;
-            if (cc === 'GB') {
-              if (locality && !primaryName.toLowerCase().includes(locality.toLowerCase())) {
-                displayName = `${primaryName}, ${locality}`;
-              } else if (addr.county && !primaryName.toLowerCase().includes(addr.county.toLowerCase())) {
-                displayName = `${primaryName} & ${addr.county}`;
-              }
-            } else if (country && !primaryName.toLowerCase().includes(country.toLowerCase())) {
-              displayName = `${primaryName}, ${country}`;
-            }
+            const displayName = shortenPlaceName(primaryName);
 
             let pc = addr.postcode || '';
             if (cc === 'GB' && !pc) {
@@ -2020,8 +1982,7 @@
           if (pcData.result && pcData.result.length > 0) {
             const r = pcData.result[0];
             const town = r.parish || r.ced || r.admin_ward || r.admin_district || 'Local';
-            const district = r.admin_district || 'Gloucestershire';
-            resolvedName = (district && town.toLowerCase() !== district.toLowerCase()) ? `${town} & ${district}` : town;
+            resolvedName = shortenPlaceName(town);
             resolvedPostcode = r.postcode || '';
           }
         }
@@ -2034,11 +1995,8 @@
           if (bdcRes.ok) {
             const bdc = await bdcRes.json();
             const place = bdc.locality || bdc.city || bdc.principalSubdivision || '';
-            const district = (bdc.localityInfo && bdc.localityInfo.administrative && bdc.localityInfo.administrative.length > 3)
-              ? bdc.localityInfo.administrative[bdc.localityInfo.administrative.length - 2].name
-              : bdc.countryName || '';
             if (place) {
-              resolvedName = district && district !== place ? `${place} & ${district}` : `${place}, ${bdc.countryCode || ''}`;
+              resolvedName = shortenPlaceName(place);
             }
             if (bdc.postcode) resolvedPostcode = bdc.postcode;
           }
@@ -2073,6 +2031,7 @@
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed && parsed.name && typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
+            parsed.name = shortenPlaceName(parsed.name);
             return parsed;
           }
         }
@@ -2491,7 +2450,7 @@
           btn.textContent = hub.name;
           btn.onclick = () => {
             if (hub.lat && hub.lon) {
-              loadLocationDirectly(hub.query, hub.lat, hub.lon, '');
+              loadLocationDirectly(hub.name, hub.lat, hub.lon, '');
             } else {
               selectQuickLocation(hub.query);
             }
@@ -3177,7 +3136,7 @@
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=8&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=11&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -3484,7 +3443,21 @@
       const container = document.getElementById('sevenDayList');
       container.innerHTML = '';
 
-      for (let i = 0; i < 7; i++) {
+      const daysToShow = Math.min(10, (daily && daily.time) ? daily.time.length : 0);
+      if (daysToShow === 0) return;
+
+      // Compute overall 10-day min/max so the horizontal temperature bars align and scale proportionally
+      let periodMin = Infinity;
+      let periodMax = -Infinity;
+      for (let i = 0; i < daysToShow; i++) {
+        const mn = Math.round(daily.temperature_2m_min[i]);
+        const mx = Math.round(daily.temperature_2m_max[i]);
+        if (mn < periodMin) periodMin = mn;
+        if (mx > periodMax) periodMax = mx;
+      }
+      const periodSpan = Math.max(6, periodMax - periodMin);
+
+      for (let i = 0; i < daysToShow; i++) {
         const date = new Date(daily.time[i]);
         const dayName = i === 0 ? 'Today' : date.toLocaleDateString('en-GB', { weekday: 'short' });
         const dateSub = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -3494,27 +3467,24 @@
         const rainProb = daily.precipitation_probability_max[i] || 0;
         const hasFrostRisk = min <= 3.5;
 
-        const row = document.createElement('div');
-        row.className = `flex items-center justify-between py-0.5 px-2 rounded-lg glass-tile text-xs transition ${hasFrostRisk ? 'border-l-2 border-l-cyan-400' : ''}`;
-        row.innerHTML = `
-          <div class="w-20 flex items-center gap-1">
-            <span class="font-bold text-white text-[11px]">${dayName}</span>
-            <span class="text-[9px] text-slate-400 font-mono">${dateSub}</span>
-          </div>
-          
-          <div class="flex items-center gap-1.5">
-            <span class="text-sm">${info.icon}</span>
-            <span class="text-[10px] text-sky-400 font-mono ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
-            ${hasFrostRisk ? '<span class="text-[10px] text-cyan-300 font-bold">❄️</span>' : ''}
-          </div>
+        const leftPct = Math.max(0, Math.min(82, Math.round(((min - periodMin) / periodSpan) * 100)));
+        const rightPct = Math.max(leftPct + 18, Math.min(100, Math.round(((max - periodMin) / periodSpan) * 100)));
+        const widthPct = Math.max(18, rightPct - leftPct);
 
-          <div class="flex items-center gap-1.5 font-mono text-[11px]">
-            <span class="${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'} w-5 text-right">${min}°</span>
-            <div class="w-14 h-1.5 rounded-full bg-slate-800 overflow-hidden relative">
-              <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${Math.max(0, (min / 25) * 100)}%; width: ${Math.max(18, ((max - min) / 20) * 100)}%"></div>
-            </div>
-            <span class="text-white font-bold w-5">${max}°</span>
+        const row = document.createElement('div');
+        row.className = `grid items-center gap-1 py-[2px] px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'}`;
+        row.style.gridTemplateColumns = '38px 40px 22px 30px 16px 24px minmax(34px, 1fr) 24px';
+        row.innerHTML = `
+          <span class="font-bold text-white text-[11px] leading-none truncate">${dayName}</span>
+          <span class="text-[9px] text-slate-400 font-mono tabular-nums leading-none whitespace-nowrap">${dateSub}</span>
+          <span class="flex items-center justify-center text-[13px] leading-none">${info.icon}</span>
+          <span class="text-right text-[10px] text-sky-400 font-mono tabular-nums leading-none ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
+          <span class="flex items-center justify-center text-[10px] text-cyan-300 font-bold leading-none">${hasFrostRisk ? '❄️' : ''}</span>
+          <span class="text-right font-mono tabular-nums text-[10px] leading-none ${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${min}°</span>
+          <div class="w-full h-1.5 rounded-full bg-slate-800/90 overflow-hidden relative">
+            <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${leftPct}%; width: ${widthPct}%"></div>
           </div>
+          <span class="text-right text-white font-bold font-mono tabular-nums text-[11px] leading-none">${max}°</span>
         `;
         container.appendChild(row);
       }
@@ -3615,7 +3585,7 @@
 
     function stepPanoramicDay(delta) {
       if (!isHourlyCompressed) return;
-      const nextOffset = Math.max(-1, Math.min(6, panoramicDayOffset + delta));
+      const nextOffset = Math.max(-1, Math.min(9, panoramicDayOffset + delta));
       if (nextOffset !== panoramicDayOffset) {
         panoramicDayOffset = nextOffset;
         renderHourly(cachedHourlyData);
@@ -3708,7 +3678,7 @@
         const prevBtn = document.getElementById('panoramicPrevBtn');
         const nextBtn = document.getElementById('panoramicNextBtn');
         if (prevBtn) prevBtn.style.opacity = panoramicDayOffset <= -1 ? '0.3' : '1';
-        if (nextBtn) nextBtn.style.opacity = panoramicDayOffset >= 6 ? '0.3' : '1';
+        if (nextBtn) nextBtn.style.opacity = panoramicDayOffset >= 9 ? '0.3' : '1';
 
         for (let i = sliceStart; i < sliceEnd; i++) {
           const d = new Date(hourly.time[i]);
