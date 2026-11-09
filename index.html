@@ -826,21 +826,23 @@
     </div>
 
 
-    <!-- 18-HOUR HOURLY TIMELINE STRIP -->
-    <footer id="footerTimeline" class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0">
+    <!-- 24-HOUR HOURLY TIMELINE STRIP (WITH OVERNIGHT HISTORY & 24H PANORAMIC GLANCE) -->
+    <footer id="footerTimeline" class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer transition-all" title="Click or long-press to glance at the full 24-hour overview">
       <div class="flex items-center justify-between mb-0.5 px-0.5">
-        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-          18-Hour Forecast &amp; Rain Probability
+          <span id="timelineTitle">24-Hour Forecast &amp; Rain Probability</span>
+          <span id="timelineModeBadge" class="hidden text-[8px] font-bold font-mono px-1.5 py-0.2 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 animate-pulse">24H GLANCE (AUTO-RESETS)</span>
         </div>
         <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2.5">
-          <span class="flex items-center gap-1"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp curve</span>
+          <span class="text-[8px] text-slate-400 opacity-80 hidden sm:inline">◀ Scroll left for overnight history • Long-press / Click for 24h glance</span>
+          <span class="flex items-center gap-1"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp</span>
           <span class="flex items-center gap-1"><span class="w-3 h-1.5 rounded-sm bg-sky-400"></span> Rain %</span>
         </div>
       </div>
 
-      <!-- Horizontal Scrollable Strip -->
-      <div id="hourlyTimeline" class="flex gap-1.5 overflow-x-auto pb-0.5">
+      <!-- Horizontal Strip Container -->
+      <div id="hourlyTimeline" class="flex gap-1.5 overflow-x-auto pb-0.5" style="scroll-behavior: smooth;">
         <div class="text-xs text-slate-400 py-1">Loading hourly forecast...</div>
       </div>
     </footer>
@@ -1055,10 +1057,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=43"></script>
+  <script src="traffic-flood.js?v=44"></script>
     <script>
-    const APP_BUILD = 43;
-    const APP_VERSION = '1.6.2';
+    const APP_BUILD = 44;
+    const APP_VERSION = '1.7.0';
 
     async function checkForUpdates() {
       try {
@@ -3056,7 +3058,7 @@
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=2&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -3387,26 +3389,39 @@
       }
     }
 
+    let cachedHourlyData = null;
+    let isHourlyCompressed = false;
+    let hourlyResetTimer = null;
+    let hourlyReturnToNowTimer = null;
+
     function renderHourly(hourly) {
+      if (!hourly || !hourly.time) return;
+      cachedHourlyData = hourly;
+
       const container = document.getElementById('hourlyTimeline');
+      if (!container) return;
       container.innerHTML = '';
 
-      const now = new Date();
-      const currentHour = now.getHours();
-
-      let startIndex = 0;
+      // Find current hour index by comparing timestamps
+      const nowMs = Date.now();
+      let nowIndex = 0;
+      let minDiff = Infinity;
       for (let i = 0; i < hourly.time.length; i++) {
-        const d = new Date(hourly.time[i]);
-        if (d.getDate() === now.getDate() && d.getHours() === currentHour) {
-          startIndex = i;
-          break;
+        const t = new Date(hourly.time[i]).getTime();
+        const diff = Math.abs(t - nowMs);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nowIndex = i;
         }
       }
 
-      const count = 18;
-      const endIndex = Math.min(startIndex + count, hourly.time.length);
+      // Past 8 hours of overnight history + current hour + next 24 hours of forecast
+      const pastCount = 8;
+      const futureCount = 24;
+      const startIndex = Math.max(0, nowIndex - pastCount);
+      const endIndex = Math.min(nowIndex + futureCount + 1, hourly.time.length);
 
-      // Find min & max temperature across the 18 visible hours to scale vertical spark-bars
+      // Temperature bounds for vertical spark bars
       let minTemp = 999;
       let maxTemp = -999;
       for (let i = startIndex; i < endIndex; i++) {
@@ -3416,20 +3431,32 @@
       }
       const tempRange = Math.max(3, maxTemp - minTemp);
 
+      // Container styling depending on mode (compressed 24h glance vs detailed horizontal scroll)
+      if (isHourlyCompressed) {
+        container.className = 'flex gap-1 w-full overflow-hidden pb-0.5';
+      } else {
+        container.className = 'flex gap-1.5 overflow-x-auto pb-0.5';
+      }
+
       for (let i = startIndex; i < endIndex; i++) {
+        // In compressed glance mode, display only the 24 hours starting from Now
+        if (isHourlyCompressed && (i < nowIndex || i >= nowIndex + 24)) {
+          continue;
+        }
+
         const d = new Date(hourly.time[i]);
         const hour = d.getHours();
-        const timeStr = i === startIndex ? 'Now' : `${String(hour).padStart(2, '0')}:00`;
+        const isNow = (i === nowIndex);
+        const isPast = (i < nowIndex);
+        const timeStr = isNow ? 'NOW' : `${String(hour).padStart(2, '0')}:00`;
         const isDaytime = hour >= 7 && hour < 17;
         const info = getWeatherInfo(hourly.weather_code[i], isDaytime ? 1 : 0);
         const temp = Math.round(hourly.temperature_2m[i]);
         const rainProb = hourly.precipitation_probability[i] || 0;
         const isNearFreezing = temp <= 3;
 
-        // Relative height percentage for vertical temperature bar (min 15%, max 100%)
         const tempHeightPct = Math.max(15, Math.min(100, Math.round(15 + ((temp - minTemp) / tempRange) * 85)));
 
-        // Color coding for temperature bar
         let tempColor = 'bg-gradient-to-t from-teal-500 to-sky-400';
         if (temp <= 2) {
           tempColor = 'bg-gradient-to-t from-blue-600 to-cyan-300';
@@ -3442,42 +3469,180 @@
         }
 
         const card = document.createElement('div');
-        card.className = `flex-shrink-0 flex items-stretch py-1 px-1.5 rounded-xl border min-w-[68px] gap-1.5 transition ${
-          i === startIndex 
-            ? 'bg-sky-500/15 border-sky-400/40 shadow-[0_0_8px_rgba(56,189,248,0.15)]' 
-            : isNearFreezing
-              ? 'glass-tile border-cyan-500/30'
-              : 'glass-tile'
-        }`;
+        if (isNow) card.id = 'hourlyNowCard';
 
-        card.innerHTML = `
-          <!-- Left: Vertical Temperature Variation Bar -->
-          <div class="w-1.5 self-stretch flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 py-0.5" title="Temp: ${temp}°C (Day range: ${minTemp}°-${maxTemp}°)">
-            <div class="w-full ${tempColor} rounded-full transition-all" style="height: ${tempHeightPct}%"></div>
-          </div>
-
-          <!-- Right: Hourly Content -->
-          <div class="flex-1 flex flex-col items-center justify-between min-w-0">
-            <div class="flex items-center gap-0.5 leading-none">
-              <span class="text-[9px] font-mono font-semibold ${i === startIndex ? 'text-sky-300' : 'text-slate-400'}">${timeStr}</span>
-              ${isNearFreezing ? '<span class="text-[8px] text-cyan-300">❄️</span>' : ''}
+        if (isHourlyCompressed) {
+          // Ultra-compact 24-hour visual glance layout
+          card.className = `flex-1 min-w-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg border transition-all ${
+            isNow
+              ? 'bg-amber-400/20 border-amber-400/70 shadow-[0_0_10px_rgba(251,191,36,0.35)] ring-1 ring-amber-300'
+              : isNearFreezing
+                ? 'glass-tile border-cyan-500/30'
+                : 'glass-tile border-white/10'
+          }`;
+          card.innerHTML = `
+            <span class="text-[8px] font-mono leading-none ${isNow ? 'font-bold text-amber-300' : 'text-slate-400'}">${hour}h</span>
+            <span class="text-[10px] my-0 leading-none">${info.icon}</span>
+            <div class="w-1.5 h-7 flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 my-0.5" title="${timeStr}: ${temp}°C, Rain ${rainProb}%">
+              <div class="w-full ${tempColor} rounded-full" style="height: ${tempHeightPct}%"></div>
             </div>
-            <span class="text-sm my-0 leading-none">${info.icon}</span>
-            <span class="text-xs font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : 'text-white'} leading-tight">${temp}°</span>
-            
-            <div class="w-full text-center mt-0.5">
-              <span class="text-[8px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
-                ${rainProb}%
-              </span>
-              <div class="h-2 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10">
-                <div class="h-full ${rainProb >= 50 ? 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : rainProb > 0 ? 'bg-sky-400' : 'bg-transparent'} rounded-full transition-all" style="width: ${rainProb}%"></div>
+            <span class="text-[9px] font-bold font-mono ${isNearFreezing ? 'text-cyan-300' : isNow ? 'text-amber-200' : 'text-white'} leading-tight">${temp}°</span>
+            <div class="h-1.5 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10" title="Rain: ${rainProb}%">
+              <div class="h-full ${rainProb >= 50 ? 'bg-sky-400' : rainProb > 0 ? 'bg-sky-500/80' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
+            </div>
+          `;
+        } else {
+          // Standard detailed scrolling card
+          card.className = `flex-shrink-0 flex items-stretch py-1 px-1.5 rounded-xl border min-w-[68px] gap-1.5 transition ${
+            isNow 
+              ? 'bg-gradient-to-b from-amber-400/20 to-sky-500/20 border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.3)] ring-1 ring-amber-400/40' 
+              : isPast
+                ? 'bg-white/5 border-white/5 opacity-70 hover:opacity-100'
+                : isNearFreezing
+                  ? 'glass-tile border-cyan-500/30'
+                  : 'glass-tile'
+          }`;
+
+          card.innerHTML = `
+            <!-- Left: Vertical Temperature Variation Bar -->
+            <div class="w-1.5 self-stretch flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 py-0.5" title="Temp: ${temp}°C (Range: ${minTemp}°-${maxTemp}°)">
+              <div class="w-full ${tempColor} rounded-full transition-all" style="height: ${tempHeightPct}%"></div>
+            </div>
+
+            <!-- Right: Hourly Content -->
+            <div class="flex-1 flex flex-col items-center justify-between min-w-0">
+              <div class="flex items-center gap-0.5 leading-none">
+                <span class="text-[9px] font-mono font-bold ${isNow ? 'text-amber-300' : isPast ? 'text-slate-400 italic' : 'text-slate-300'}">${timeStr}</span>
+                ${isNearFreezing ? '<span class="text-[8px] text-cyan-300">❄️</span>' : ''}
+              </div>
+              <span class="text-sm my-0 leading-none">${info.icon}</span>
+              <span class="text-xs font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : isNow ? 'text-amber-200' : 'text-white'} leading-tight">${temp}°</span>
+              
+              <div class="w-full text-center mt-0.5">
+                <span class="text-[8px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
+                  ${rainProb}%
+                </span>
+                <div class="h-2 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10">
+                  <div class="h-full ${rainProb >= 50 ? 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : rainProb > 0 ? 'bg-sky-400' : 'bg-transparent'} rounded-full transition-all" style="width: ${rainProb}%"></div>
+                </div>
               </div>
             </div>
-          </div>
-        `;
+          `;
+        }
+
         container.appendChild(card);
       }
+
+      // Initial alignment: in normal mode, position "NOW" at the left edge with slight padding
+      if (!isHourlyCompressed) {
+        setTimeout(scrollToNow, 80);
+      }
     }
+
+    function scrollToNow(smooth = true) {
+      const container = document.getElementById('hourlyTimeline');
+      const nowCard = document.getElementById('hourlyNowCard');
+      if (container && nowCard) {
+        const targetLeft = Math.max(0, nowCard.offsetLeft - 6);
+        container.scrollTo({ left: targetLeft, behavior: smooth ? 'smooth' : 'auto' });
+      }
+    }
+
+    function setHourlyCompressedMode(compressed) {
+      isHourlyCompressed = compressed;
+      const title = document.getElementById('timelineTitle');
+      const badge = document.getElementById('timelineModeBadge');
+      if (compressed) {
+        if (title) title.textContent = '24-Hour Panoramic Glance';
+        if (badge) badge.classList.remove('hidden');
+        renderHourly(cachedHourlyData);
+
+        // Auto-revert back to standard scrolling view after 12 seconds
+        if (hourlyResetTimer) clearTimeout(hourlyResetTimer);
+        hourlyResetTimer = setTimeout(() => {
+          setHourlyCompressedMode(false);
+        }, 12000);
+      } else {
+        if (hourlyResetTimer) { clearTimeout(hourlyResetTimer); hourlyResetTimer = null; }
+        if (title) title.textContent = '24-Hour Forecast & Rain Probability';
+        if (badge) badge.classList.add('hidden');
+        renderHourly(cachedHourlyData);
+      }
+    }
+
+    function toggleHourlyCompression() {
+      setHourlyCompressedMode(!isHourlyCompressed);
+    }
+
+    // Attach click and long-press listeners to #footerTimeline
+    (function attachHourlyInteractions() {
+      const footer = document.getElementById('footerTimeline');
+      const container = document.getElementById('hourlyTimeline');
+      if (!footer || !container) return;
+
+      let pressTimer = null;
+      let startX = 0;
+      let startY = 0;
+      let isLongPressed = false;
+
+      // Touch handlers (Tablet / Mobile long-press)
+      footer.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isLongPressed = false;
+        pressTimer = setTimeout(() => {
+          isLongPressed = true;
+          toggleHourlyCompression();
+        }, 550);
+      }, { passive: true });
+
+      footer.addEventListener('touchmove', (e) => {
+        if (!pressTimer) return;
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > 10 || dy > 10) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }, { passive: true });
+
+      footer.addEventListener('touchend', () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }, { passive: true });
+
+      // Click handler (Desktop / TV remote select on header area)
+      footer.addEventListener('click', (e) => {
+        if (isLongPressed) { isLongPressed = false; return; }
+        // Clicking the timeline header toggles 24h panoramic glance
+        if (e.target.closest('#footerTimeline') && !e.target.closest('#hourlyTimeline')) {
+          toggleHourlyCompression();
+        }
+      });
+
+      // Auto-return to "NOW" when scrolled back into overnight history
+      container.addEventListener('scroll', () => {
+        if (isHourlyCompressed) return;
+        const nowCard = document.getElementById('hourlyNowCard');
+        if (!nowCard) return;
+
+        // If user scrolled left into the past
+        if (container.scrollLeft < nowCard.offsetLeft - 30) {
+          if (hourlyReturnToNowTimer) clearTimeout(hourlyReturnToNowTimer);
+          hourlyReturnToNowTimer = setTimeout(() => {
+            scrollToNow(true);
+          }, 4500); // 4.5 seconds to inspect overnight lows before gently gliding back
+        } else {
+          if (hourlyReturnToNowTimer) {
+            clearTimeout(hourlyReturnToNowTimer);
+            hourlyReturnToNowTimer = null;
+          }
+        }
+      }, { passive: true });
+    })();
 
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
