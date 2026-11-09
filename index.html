@@ -1112,10 +1112,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=60"></script>
+  <script src="traffic-flood.js?v=61"></script>
     <script>
-    const APP_BUILD = 60;
-    const APP_VERSION = '1.8.6';
+    const APP_BUILD = 61;
+    const APP_VERSION = '1.8.7';
 
     async function checkForUpdates() {
       try {
@@ -1377,17 +1377,7 @@
 
     function loadLocationFromMap(name, lat, lon, postcode) {
       closeHistoryMapModal();
-      CURRENT_LOCATION = {
-        name: name,
-        postcode: (postcode && postcode !== 'undefined') ? postcode : 'GEO',
-        lat: parseFloat(lat),
-        lon: parseFloat(lon),
-        desc: `${parseFloat(lat).toFixed(2)}°N, ${Math.abs(parseFloat(lon)).toFixed(2)}°W`
-      };
-      saveSavedLocation();
-      recordLocationQuery(CURRENT_LOCATION);
-      updateLocationHeader();
-      fetchWeatherData();
+      applySelectedLocation(name, lat, lon, (postcode && postcode !== 'undefined') ? postcode : 'GEO');
     }
 
     function renderHistoryMarkersAndChips(queries) {
@@ -1434,7 +1424,7 @@
         chipsEl.innerHTML = '';
         sortedQueries.forEach((q, idx) => {
           const key = `${q.lat.toFixed(4)}_${q.lon.toFixed(4)}`;
-          const shortName = q.name.split('&')[0].split(',')[0].trim();
+          const shortName = shortenPlaceName(q.name);
           const distLabel = q.isHome
             ? 'Home'
             : (q.distKm < 10 ? `${q.distKm.toFixed(1)} km` : `${Math.round(q.distKm).toLocaleString()} km`);
@@ -1740,6 +1730,12 @@
       return String(name).split('&')[0].split(',')[0].trim();
     }
 
+    function formatCoordDesc(lat, lon) {
+      const n = Number(lat) || 0;
+      const e = Number(lon) || 0;
+      return `${Math.abs(n).toFixed(2)}°${n >= 0 ? 'N' : 'S'}, ${Math.abs(e).toFixed(2)}°${e >= 0 ? 'E' : 'W'}`;
+    }
+
     let CURRENT_LOCATION = {
       name: 'Nailsworth',
       postcode: 'GL5 5HH',
@@ -1749,7 +1745,49 @@
     };
     let ACTIVE_TIMEZONE = 'Europe/London';
     let ACTIVE_UTC_OFFSET_SECONDS = 0;
-    const TIMEZONE = 'Europe/London';
+
+    // Convert an Open-Meteo local ISO timestamp (e.g. "2026-11-10T05:47") into a true UTC epoch timestamp (ms)
+    // using the active location's UTC offset returned by Open-Meteo.
+    function parseLocationIsoToMs(isoStr) {
+      if (!isoStr) return 0;
+      const sign = ACTIVE_UTC_OFFSET_SECONDS >= 0 ? '+' : '-';
+      const absSec = Math.abs(ACTIVE_UTC_OFFSET_SECONDS);
+      const hh = String(Math.floor(absSec / 3600)).padStart(2, '0');
+      const mm = String(Math.floor((absSec % 3600) / 60)).padStart(2, '0');
+      const tzSuffix = `${sign}${hh}:${mm}`;
+      const hasSeconds = isoStr.length > 16;
+      return new Date(`${isoStr}${hasSeconds ? '' : ':00'}${tzSuffix}`).getTime();
+    }
+
+    // Return a Date object whose local .getFullYear(), .getMonth(), .getDate(), .getHours(), .getMinutes()
+    // match the target location's current wall-clock time so comparisons against Open-Meteo local ISO strings
+    // work accurately in any timezone worldwide.
+    function getLocationWallClockNow(curTimeStr) {
+      if (curTimeStr && curTimeStr.length >= 16) {
+        const d = new Date(curTimeStr);
+        if (!isNaN(d.getTime())) return d;
+      }
+      const browserOffsetMs = -new Date().getTimezoneOffset() * 60000;
+      const locationOffsetMs = (ACTIVE_UTC_OFFSET_SECONDS || 0) * 1000;
+      return new Date(Date.now() - browserOffsetMs + locationOffsetMs);
+    }
+
+    function applySelectedLocation(name, lat, lon, postcode) {
+      const nLat = parseFloat(lat);
+      const nLon = parseFloat(lon);
+      CURRENT_LOCATION = {
+        name: shortenPlaceName(name),
+        postcode: (postcode && postcode !== 'undefined') ? postcode : '',
+        lat: nLat,
+        lon: nLon,
+        desc: formatCoordDesc(nLat, nLon)
+      };
+      saveSavedLocation();
+      recordLocationQuery(CURRENT_LOCATION);
+      updateLocationHeader();
+      fetchWeatherData();
+    }
+
     // Key pool: add additional free TomTom keys here whenever you want to expand quota
     const TOMTOM_KEYS = [
       'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz'
@@ -1803,7 +1841,7 @@
       if (saved && saved.lat && saved.lon && !pc && !loc && !(lat && lon)) {
         CURRENT_LOCATION = saved;
         if (saved.name === 'Current Location') {
-          await lookupCoords(saved.lat, saved.lon);
+          await lookupCoords(saved.lat, saved.lon, false);
           return;
         }
         updateLocationHeader();
@@ -1812,7 +1850,11 @@
       }
 
       if (lat && lon) {
-        await lookupCoords(parseFloat(lat), parseFloat(lon));
+        if (loc) {
+          applySelectedLocation(loc, parseFloat(lat), parseFloat(lon), pc || '');
+        } else {
+          await lookupCoords(parseFloat(lat), parseFloat(lon), false);
+        }
       } else if (pc) {
         await lookupPostcode(pc);
       } else if (loc) {
@@ -1831,18 +1873,7 @@
           const json = await res.json();
           const r = json.result;
           const town = r.parish || r.admin_ward || r.admin_district || 'Gloucestershire';
-          const name = shortenPlaceName(town);
-          CURRENT_LOCATION = {
-            name: name,
-            postcode: r.postcode,
-            lat: r.latitude,
-            lon: r.longitude,
-            desc: `${r.latitude.toFixed(2)}°N, ${Math.abs(r.longitude).toFixed(2)}°W`
-          };
-          saveSavedLocation();
-          recordLocationQuery(CURRENT_LOCATION);
-          updateLocationHeader();
-          fetchWeatherData();
+          applySelectedLocation(town, r.latitude, r.longitude, r.postcode);
           return true;
         }
       } catch (err) {
@@ -1910,7 +1941,6 @@
 
             // Build a short, clean display name (e.g. "The Stroud Hotel" or "Vienna")
             const primaryName = chosen.name || (chosen.display_name ? chosen.display_name.split(',')[0].trim() : cleanName);
-            const displayName = shortenPlaceName(primaryName);
 
             let pc = addr.postcode || '';
             if (cc === 'GB' && !pc) {
@@ -1926,17 +1956,7 @@
               } catch (_) {}
             }
 
-            CURRENT_LOCATION = {
-              name: displayName,
-              postcode: pc,
-              lat: lat,
-              lon: lon,
-              desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
-            };
-            saveSavedLocation();
-            recordLocationQuery(CURRENT_LOCATION);
-            updateLocationHeader();
-            fetchWeatherData();
+            applySelectedLocation(primaryName, lat, lon, pc);
             return true;
           }
         }
@@ -1992,18 +2012,7 @@
             pc = (match.postcodes && match.postcodes[0]) ? match.postcodes[0] : '';
           }
 
-          const displayName = formatMatchedLocationName(match);
-          CURRENT_LOCATION = {
-            name: displayName,
-            postcode: pc,
-            lat: lat,
-            lon: lon,
-            desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
-          };
-          saveSavedLocation();
-          recordLocationQuery(CURRENT_LOCATION);
-          updateLocationHeader();
-          fetchWeatherData();
+          applySelectedLocation(formatMatchedLocationName(match), lat, lon, pc);
           return true;
         }
       } catch (err) {
@@ -2012,7 +2021,7 @@
       return false;
     }
 
-    async function lookupCoords(lat, lon) {
+    async function lookupCoords(lat, lon, saveAsGps = true) {
       let resolvedName = '';
       let resolvedPostcode = '';
 
@@ -2051,20 +2060,12 @@
         resolvedPostcode = 'GPS';
       }
 
-      CURRENT_LOCATION = {
-        name: resolvedName,
-        postcode: resolvedPostcode || 'GPS',
-        lat: lat,
-        lon: lon,
-        desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
-      };
-      try {
-        localStorage.setItem('ambient_last_gps_loc', JSON.stringify(CURRENT_LOCATION));
-      } catch (_) {}
-      saveSavedLocation();
-      recordLocationQuery(CURRENT_LOCATION);
-      updateLocationHeader();
-      fetchWeatherData();
+      applySelectedLocation(resolvedName, lat, lon, resolvedPostcode || 'GPS');
+      if (saveAsGps) {
+        try {
+          localStorage.setItem('ambient_last_gps_loc', JSON.stringify(CURRENT_LOCATION));
+        } catch (_) {}
+      }
     }
 
     function getSavedGpsLocation() {
@@ -2539,17 +2540,7 @@
     }
 
     function loadLocationDirectly(name, lat, lon, postcode) {
-      CURRENT_LOCATION = {
-        name: name,
-        postcode: (postcode && postcode !== 'undefined') ? postcode : '',
-        lat: parseFloat(lat),
-        lon: parseFloat(lon),
-        desc: `${parseFloat(lat).toFixed(2)}°N, ${Math.abs(parseFloat(lon)).toFixed(2)}°W`
-      };
-      saveSavedLocation();
-      recordLocationQuery(CURRENT_LOCATION);
-      updateLocationHeader();
-      fetchWeatherData();
+      applySelectedLocation(name, lat, lon, postcode);
       closeLocationModal();
     }
 
@@ -2565,8 +2556,8 @@
           const uniqueNames = new Set();
           const filtered = [];
           for (const q of queries) {
-            const shortName = q.name.split('&')[0].split(',')[0].trim();
-            const curShort = CURRENT_LOCATION.name.split('&')[0].split(',')[0].trim();
+            const shortName = shortenPlaceName(q.name);
+            const curShort = shortenPlaceName(CURRENT_LOCATION.name);
             if (!uniqueNames.has(shortName.toLowerCase()) && shortName.toLowerCase() !== curShort.toLowerCase()) {
               uniqueNames.add(shortName.toLowerCase());
               const isUkPc = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(q.postcode || '');
@@ -2615,7 +2606,7 @@
         const lastGps = getSavedGpsLocation();
         let gpsShortLower = '';
         if (lastGps) {
-          const gpsShort = lastGps.name.split('&')[0].split(',')[0].trim();
+          const gpsShort = shortenPlaceName(lastGps.name);
           gpsShortLower = gpsShort.toLowerCase();
           const gpsBtn = document.createElement('button');
           gpsBtn.className = 'px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-xs text-emerald-200 hover:text-white font-semibold transition cursor-pointer inline-flex items-center gap-1';
@@ -2677,28 +2668,55 @@
       searchLocationFromModal();
     }
 
-    function checkLocationTitleScroll() {
-      const container = document.getElementById('headerLocationTitle');
-      const textSpan = document.getElementById('headerLocationText');
-      if (!container || !textSpan) return;
+    // Unified marquee overflow scroll helper (shared by Header Title, Windscreen Frost, and Night Sky boxes)
+    function applyMarqueeScroll(containerId, textId, scrollClass, distVar, durVar, minDur, speedDiv, durPad, distPad) {
+      const container = document.getElementById(containerId);
+      const textEl = document.getElementById(textId);
+      if (!container || !textEl) return;
 
-      textSpan.classList.remove('marquee-scroll');
-      textSpan.style.removeProperty('--scroll-distance');
-      textSpan.style.removeProperty('--scroll-duration');
+      if (textEl._marqueeTimer) {
+        clearTimeout(textEl._marqueeTimer);
+        textEl._marqueeTimer = null;
+      }
+
+      textEl.classList.remove(scrollClass);
+      textEl.style.removeProperty(distVar);
+      textEl.style.removeProperty(durVar);
       container.classList.remove('has-fade');
 
-      setTimeout(() => {
-        const diff = textSpan.scrollWidth - container.clientWidth;
+      textEl._marqueeTimer = setTimeout(() => {
+        textEl._marqueeTimer = null;
+        const diff = textEl.scrollWidth - container.clientWidth;
         if (diff > 4) {
-          textSpan.style.setProperty('--scroll-distance', `-${diff + 8}px`);
-          const duration = Math.max(7, Math.round(diff / 14) + 4);
-          textSpan.style.setProperty('--scroll-duration', `${duration}s`);
-          textSpan.classList.add('marquee-scroll');
+          textEl.style.setProperty(distVar, `-${diff + distPad}px`);
+          const duration = Math.max(minDur, Math.round(diff / speedDiv) + durPad);
+          textEl.style.setProperty(durVar, `${duration}s`);
+          textEl.classList.add(scrollClass);
           container.classList.add('has-fade');
         }
       }, 80);
     }
-    window.addEventListener('resize', checkLocationTitleScroll);
+
+    function checkLocationTitleScroll() {
+      applyMarqueeScroll('headerLocationTitle', 'headerLocationText', 'marquee-scroll', '--scroll-distance', '--scroll-duration', 7, 14, 4, 8);
+    }
+    function checkFrostDetailScroll() {
+      applyMarqueeScroll('frostDetailContainer', 'frostDetail', 'frost-scroll', '--frost-scroll-distance', '--frost-scroll-duration', 12, 16, 6, 12);
+    }
+    function checkStargazingAdviceScroll() {
+      applyMarqueeScroll('stargazingAdviceContainer', 'stargazingAdvice', 'stargazing-scroll', '--advice-scroll-distance', '--advice-scroll-duration', 12, 16, 6, 12);
+    }
+
+    let marqueeResizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (marqueeResizeTimer) clearTimeout(marqueeResizeTimer);
+      marqueeResizeTimer = setTimeout(() => {
+        checkLocationTitleScroll();
+        checkFrostDetailScroll();
+        checkStargazingAdviceScroll();
+      }, 100);
+    });
+
     function updateLocationHeader() {
       const textSpan = document.getElementById('headerLocationText');
       if (textSpan) {
@@ -2711,16 +2729,6 @@
       document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
       checkLocationTitleScroll();
-    }
-
-    function promptChangePostcode() {
-      const pc = prompt("Enter a UK postcode (e.g. GL7 1AA, GL5 5HH):", CURRENT_LOCATION.postcode);
-      if (pc && pc.trim() !== "") {
-        const url = new URL(window.location.href);
-        url.searchParams.set('postcode', pc.trim().toUpperCase());
-        window.history.pushState({}, '', url);
-        lookupPostcode(pc.trim());
-      }
     }
 
     let currentScale = 1.0;
@@ -2850,13 +2858,14 @@
     }
 
     function evaluateFrost(hourly) {
-      const now = new Date();
+      const now = getLocationWallClockNow(hourly && hourly._currentLocalTime);
       const currentHour = now.getHours();
 
       const isTomorrow = currentHour >= 9;
-      const targetDate = new Date();
+      const targetDate = new Date(now);
       if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
       const targetDay = targetDate.getDate();
+      const targetMonth = targetDate.getMonth();
 
       let minAir = 999;
       let minSurface = 999;
@@ -2867,7 +2876,7 @@
       for (let i = 0; i < hourly.time.length; i++) {
         const d = new Date(hourly.time[i]);
         const h = d.getHours();
-        if (d.getDate() === targetDay && h >= 4 && h <= 8) {
+        if (d.getDate() === targetDay && d.getMonth() === targetMonth && h >= 4 && h <= 8) {
           if (hourly.temperature_2m[i] < minAir) {
             minAir = hourly.temperature_2m[i];
             criticalHour = h;
@@ -2884,6 +2893,7 @@
         }
       }
 
+      if (minAir === 999) minAir = 8.0;
       if (minSurface === 999) minSurface = minAir;
 
       const isClearSky = minCloud < 45;
@@ -2933,37 +2943,22 @@
       checkFrostDetailScroll();
     }
 
-    function checkFrostDetailScroll() {
-      const container = document.getElementById('frostDetailContainer');
-      const textEl = document.getElementById('frostDetail');
-      if (!container || !textEl) return;
-
-      textEl.classList.remove('frost-scroll');
-      textEl.style.removeProperty('--frost-scroll-distance');
-      textEl.style.removeProperty('--frost-scroll-duration');
-      container.classList.remove('has-fade');
-
-      setTimeout(() => {
-        const diff = textEl.scrollWidth - container.clientWidth;
-        if (diff > 4) {
-          textEl.style.setProperty('--frost-scroll-distance', `-${diff + 12}px`);
-          const duration = Math.max(12, Math.round(diff / 16) + 6);
-          textEl.style.setProperty('--frost-scroll-duration', `${duration}s`);
-          textEl.classList.add('frost-scroll');
-          container.classList.add('has-fade');
-        }
-      }, 80);
-    }
-    window.addEventListener('resize', checkFrostDetailScroll);
-
     function evaluateStargazing(hourly, currentCloud, moon) {
-      const now = new Date();
+      const now = getLocationWallClockNow(hourly && hourly._currentLocalTime);
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
+      const todayDay = now.getDate();
+      const todayMonth = now.getMonth();
+      const tomorrowDay = tomorrow.getDate();
+      const tomorrowMonth = tomorrow.getMonth();
       let nightClouds = [];
 
       for (let i = 0; i < hourly.time.length; i++) {
         const d = new Date(hourly.time[i]);
         const hour = d.getHours();
-        if ((d.getDate() === now.getDate() && hour >= 20) || (d.getDate() === now.getDate() + 1 && hour <= 3)) {
+        const isTonight = (d.getDate() === todayDay && d.getMonth() === todayMonth && hour >= 20);
+        const isEarlyMorning = (d.getDate() === tomorrowDay && d.getMonth() === tomorrowMonth && hour <= 3);
+        if (isTonight || isEarlyMorning) {
           nightClouds.push(hourly.cloud_cover[i]);
         }
       }
@@ -2992,29 +2987,6 @@
       if (adviceEl) adviceEl.textContent = adviceText;
       checkStargazingAdviceScroll();
     }
-
-    function checkStargazingAdviceScroll() {
-      const container = document.getElementById('stargazingAdviceContainer');
-      const textEl = document.getElementById('stargazingAdvice');
-      if (!container || !textEl) return;
-
-      textEl.classList.remove('stargazing-scroll');
-      textEl.style.removeProperty('--advice-scroll-distance');
-      textEl.style.removeProperty('--advice-scroll-duration');
-      container.classList.remove('has-fade');
-
-      setTimeout(() => {
-        const diff = textEl.scrollWidth - container.clientWidth;
-        if (diff > 4) {
-          textEl.style.setProperty('--advice-scroll-distance', `-${diff + 12}px`);
-          const duration = Math.max(12, Math.round(diff / 16) + 6);
-          textEl.style.setProperty('--advice-scroll-duration', `${duration}s`);
-          textEl.classList.add('stargazing-scroll');
-          container.classList.add('has-fade');
-        }
-      }, 80);
-    }
-    window.addEventListener('resize', checkStargazingAdviceScroll);
 
     let rainNowcastSlides = [];
     let currentRainSlideIndex = 0;
@@ -3132,8 +3104,9 @@
 
     function evaluateRainNowcast(cur, minutely_15, hourly) {
       const tileSub = document.getElementById('rainTileNowcast');
-      const now = new Date();
-      const isDay = cur && typeof cur.is_day === 'number' ? cur.is_day === 1 : (now.getHours() >= 7 && now.getHours() < 17);
+      const locNow = getLocationWallClockNow((cur && cur.time) || (hourly && hourly._currentLocalTime));
+      const nowMs = Date.now();
+      const isDay = cur && typeof cur.is_day === 'number' ? cur.is_day === 1 : (locNow.getHours() >= 7 && locNow.getHours() < 17);
       const curPrecip = (cur && typeof cur.precipitation === 'number') ? cur.precipitation : 0;
       const curCode = (cur && typeof cur.weather_code === 'number') ? cur.weather_code : 0;
       const curDetails = getPrecipDetails(curCode, curPrecip, isDay ? 1 : 0);
@@ -3143,17 +3116,19 @@
         const times = minutely_15.time;
         const precips = minutely_15.precipitation;
         const probs = minutely_15.precipitation_probability;
+        const codes = minutely_15.weather_code;
 
         let futureSlots = [];
         for (let i = 0; i < times.length; i++) {
-          const slotDate = new Date(times[i]);
-          const diffMins = Math.round((slotDate.getTime() - now.getTime()) / 60000);
+          const slotMs = parseLocationIsoToMs(times[i]);
+          const diffMins = Math.round((slotMs - nowMs) / 60000);
           if (diffMins >= -5) {
             futureSlots.push({
-              date: slotDate,
+              date: new Date(times[i]),
               mins: Math.max(0, diffMins),
               precip: precips[i] || 0,
-              prob: (probs && probs[i] !== undefined) ? probs[i] : 0
+              prob: (probs && probs[i] !== undefined) ? probs[i] : 0,
+              code: (codes && codes[i] !== undefined) ? codes[i] : curCode
             });
           }
         }
@@ -3201,8 +3176,7 @@
           const conf = Math.max(30, Math.min(95, rainSlot.prob));
           const timeStr = rainSlot.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
           
-          // Check upcoming code or temperature
-          const slotCode = (minutely_15 && minutely_15.weather_code && minutely_15.weather_code[futureSlots.indexOf(rainSlot)]) || curCode;
+          const slotCode = rainSlot.code;
           const slotHour = rainSlot.date.getHours();
           const slotIsDay = slotHour >= 7 && slotHour < 17 ? 1 : 0;
           const slotDetails = getPrecipDetails(slotCode, rainSlot.precip, slotIsDay);
@@ -3267,11 +3241,12 @@
       // Dynamically calculate how many consecutive hours stay dry from hourly forecast
       let dryHours = 0;
       if (hourly && hourly.time && hourly.precipitation) {
-        const curH = now.getHours();
+        const curH = locNow.getHours();
+        const curDay = locNow.getDate();
         let startIndex = 0;
         for (let i = 0; i < hourly.time.length; i++) {
           const d = new Date(hourly.time[i]);
-          if (d.getDate() === now.getDate() && d.getHours() === curH) {
+          if (d.getDate() === curDay && d.getHours() === curH) {
             startIndex = i;
             break;
           }
@@ -3517,7 +3492,7 @@
 
       let pressureDelta = 0;
       if (hourly.surface_pressure && hourly.time) {
-        const nowIso = new Date().toISOString().slice(0, 13);
+        const nowIso = (cur && cur.time) ? cur.time.slice(0, 13) : new Date().toISOString().slice(0, 13);
         let curIdx = hourly.time.findIndex(t => t.startsWith(nowIso));
         if (curIdx === -1) curIdx = 0;
         const pastIdx = Math.max(0, curIdx - 3);
@@ -3642,18 +3617,6 @@
         const dm = Math.floor((secs % 3600) / 60);
         document.getElementById('daylightLength').textContent = `${dh}h ${dm}m`;
       }
-
-      // Convert local ISO string (e.g. "2026-11-10T05:47") into true UTC epoch timestamp
-      // using the location's UTC offset returned directly by Open-Meteo
-      const parseLocationIsoToMs = (isoStr) => {
-        if (!isoStr) return 0;
-        const sign = ACTIVE_UTC_OFFSET_SECONDS >= 0 ? '+' : '-';
-        const absSec = Math.abs(ACTIVE_UTC_OFFSET_SECONDS);
-        const hh = String(Math.floor(absSec / 3600)).padStart(2, '0');
-        const mm = String(Math.floor((absSec % 3600) / 60)).padStart(2, '0');
-        const tzSuffix = `${sign}${hh}:${mm}`;
-        return new Date(`${isoStr}:00${tzSuffix}`).getTime();
-      };
 
       const now = new Date();
       const nowMs = now.getTime();
@@ -3924,7 +3887,7 @@
         const nowMs = Date.now();
         let minDiff = Infinity;
         for (let i = 0; i < hourly.time.length; i++) {
-          const t = new Date(hourly.time[i]).getTime();
+          const t = parseLocationIsoToMs(hourly.time[i]);
           const diff = Math.abs(t - nowMs);
           if (diff < minDiff) {
             minDiff = diff;
@@ -4371,12 +4334,19 @@
         }
       } catch (_) {}
 
-      // Generate current share URL with postcode
+      // Generate current share URL with postcode or coordinates/location
       let shareUrl = window.location.href;
       try {
         const u = new URL(window.location.href);
-        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.postcode) {
-          u.searchParams.set('postcode', CURRENT_LOCATION.postcode);
+        if (typeof CURRENT_LOCATION !== 'undefined') {
+          const pc = CURRENT_LOCATION.postcode || '';
+          if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
+            u.searchParams.set('postcode', pc);
+          } else if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
+            u.searchParams.set('lat', CURRENT_LOCATION.lat);
+            u.searchParams.set('lon', CURRENT_LOCATION.lon);
+            if (CURRENT_LOCATION.name) u.searchParams.set('q', CURRENT_LOCATION.name);
+          }
         }
         shareUrl = u.toString();
       } catch (_) {}
