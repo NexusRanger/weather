@@ -28,13 +28,37 @@ async function fetchTrafficData() {
 
   try {
     const { lat, lon } = CURRENT_LOCATION;
-    // TomTom expects point=latitude,longitude and unit=mph
-    const url = `https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lon}&unit=mph&key=${TOMTOM_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Traffic API HTTP ${res.status}`);
+    // Key rotation pool: supports an array of keys or single fallback
+    const keyPool = (Array.isArray(window.TOMTOM_KEYS) && window.TOMTOM_KEYS.length > 0)
+      ? window.TOMTOM_KEYS
+      : [window.TOMTOM_KEY || 'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz'];
+
+    // Start with a random key from the pool to distribute load evenly
+    let keyIdx = Math.floor(Math.random() * keyPool.length);
+    let data = null;
+    let lastError = null;
+
+    for (let attempts = 0; attempts < keyPool.length; attempts++) {
+      const activeKey = keyPool[keyIdx];
+      const url = `https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lon}&unit=mph&key=${activeKey}`;
+      try {
+        const res = await fetch(url);
+        if (res.status === 429 || res.status === 403) {
+          // Key quota reached or invalid: rotate to next key in pool
+          console.warn(`TomTom key index ${keyIdx} rate-limited (${res.status}), trying next key...`);
+          keyIdx = (keyIdx + 1) % keyPool.length;
+          continue;
+        }
+        if (!res.ok) throw new Error(`Traffic API HTTP ${res.status}`);
+        data = await res.json();
+        break;
+      } catch (err) {
+        lastError = err;
+        keyIdx = (keyIdx + 1) % keyPool.length;
+      }
     }
-    const data = await res.json();
+
+    if (!data) throw lastError || new Error('No traffic data retrieved from key pool');
     const flow = data.flowSegmentData;
     if (!flow) throw new Error('No flow data returned');
 

@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030712">
-  <link rel="manifest" href="manifest.json?v=37">
+  <link rel="manifest" href="manifest.json?v=38">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -1042,10 +1042,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=37"></script>
+  <script src="traffic-flood.js?v=38"></script>
     <script>
-    const APP_BUILD = 37;
-    const APP_VERSION = '1.5.6';
+    const APP_BUILD = 38;
+    const APP_VERSION = '1.5.7';
 
     async function checkForUpdates() {
       try {
@@ -1485,7 +1485,11 @@
       desc: '51.70°N, 2.23°W • Elev. 120m'
     };
     const TIMEZONE = 'Europe/London';
-    const TOMTOM_KEY = 'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz';
+    // Key pool: add additional free TomTom keys here whenever you want to expand quota
+    const TOMTOM_KEYS = [
+      'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz'
+    ];
+    const TOMTOM_KEY = TOMTOM_KEYS[0];
 
     function saveSavedLocation() {
       try {
