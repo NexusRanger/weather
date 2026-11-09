@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030712">
-  <link rel="manifest" href="manifest.json?v=34">
+  <link rel="manifest" href="manifest.json?v=35">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -735,7 +735,7 @@
                 <span class="text-base">💡</span>
                 <div class="flex-1 min-w-0">
                   <div class="text-[9px] text-slate-400 leading-none flex items-center justify-between">
-                    <span class="flex items-center gap-1">Light At <span id="lightAtCloudTag" class="text-[8px] text-amber-300 font-mono"></span></span>
+                    <span class="flex items-center gap-1">First Light <span id="lightAtCloudTag" class="text-[8px] text-amber-300 font-mono"></span></span>
                     <span id="lightAtHighlightBadge" class="hidden text-[8px] font-bold font-mono px-1 rounded bg-amber-400 text-slate-950 animate-pulse"></span>
                   </div>
                   <div id="lightAtTime" class="text-xs font-bold font-mono text-amber-300 leading-tight mt-0.5">--:--</div>
@@ -849,9 +849,9 @@
       </div>
 
       <div class="mt-4">
-        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter UK Postcode or Town Name</label>
+        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter Postcode, Town or City</label>
         <div class="flex gap-2">
-          <input id="locationInput" tabindex="4" type="text" placeholder="e.g. Stroud, Bath, GL5 5HH, Cheltenham" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
+          <input id="locationInput" tabindex="4" type="text" placeholder="e.g. Stroud, GL5 5HH, Vienna, Paris, Bath" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
           <button id="searchLocBtn" tabindex="2" onclick="searchLocationFromModal()" class="tv-focus-amber px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none" onkeydown="handleSearchBtnKeydown(event)">
             Search
           </button>
@@ -957,7 +957,7 @@
             <p class="text-[11px] text-slate-400">Scan QR code or copy link to open on phone, tablet, or TV</p>
           </div>
         </div>
-        <button id="closeShareBtnTop" onclick="closeShareModal()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500/30 border border-white/20 hover:border-rose-400/40 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-sky-500/30 active:scale-95 cursor-pointer" tabindex="0" title="Close Share (Esc / Back)">
+        <button id="closeShareBtnTop" tabindex="1" onclick="closeShareModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('copyShareLinkBtn');if(b){event.preventDefault();b.focus();}}" title="Close Share (Esc / Back)">
           <span>✕ Close</span>
         </button>
       </div>
@@ -981,7 +981,7 @@
             </div>
 
             <div class="flex items-center gap-2 mt-2.5">
-              <button id="copyShareLinkBtn" onclick="copyShareUrl()" class="flex-1 px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0">
+              <button id="copyShareLinkBtn" tabindex="2" onclick="copyShareUrl()" class="tv-focus-amber flex-1 px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 shadow focus:outline-none active:scale-95 cursor-pointer" onkeydown="if(event.key==='ArrowUp'){const b=document.getElementById('closeShareBtnTop');if(b){event.preventDefault();b.focus();}}">
                 <span id="copyShareIcon">📋</span>
                 <span id="copyShareLabel">Copy Link</span>
               </button>
@@ -1037,10 +1037,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=34"></script>
+  <script src="traffic-flood.js?v=35"></script>
     <script>
-    const APP_BUILD = 34;
-    const APP_VERSION = '1.5.3';
+    const APP_BUILD = 35;
+    const APP_VERSION = '1.5.4';
 
     async function checkForUpdates() {
       try {
@@ -1598,43 +1598,81 @@
     }
 
     async function lookupTown(townName) {
-      try {
-        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(townName)}&count=5&language=en&format=json`;
-        const res = await fetch(geoUrl);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.results && data.results.length > 0) {
-            // Prioritize UK results if available
-            const match = data.results.find(r => r.country_code === 'GB') || data.results[0];
-            const lat = match.latitude;
-            const lon = match.longitude;
-            
-            // Reverse postcode lookup for nearest UK postcode
-            let pc = match.country_code || 'UK';
-            try {
-              const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
-              if (pcRes.ok) {
-                const pcData = await pcRes.json();
-                if (pcData.result && pcData.result.length > 0) {
-                  pc = pcData.result[0].postcode;
-                }
-              }
-            } catch (_) {}
+      if (!townName || !townName.trim()) return false;
+      const cleanName = townName.trim();
 
-            const displayName = formatMatchedLocationName(match);
-            CURRENT_LOCATION = {
-              name: displayName,
-              postcode: pc,
-              lat: lat,
-              lon: lon,
-              desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
-            };
-            saveSavedLocation();
-            recordLocationQuery(CURRENT_LOCATION);
-            updateLocationHeader();
-            fetchWeatherData();
-            return true;
+      async function queryGeocoding(qStr) {
+        try {
+          const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(qStr)}&count=10&language=en&format=json`;
+          const res = await fetch(geoUrl);
+          if (res.ok) {
+            const data = await res.json();
+            return data.results || [];
           }
+        } catch (_) {}
+        return [];
+      }
+
+      try {
+        // Step 1: Query exact string
+        let results = await queryGeocoding(cleanName);
+
+        // Step 2: Smart multi-word fallback (e.g. "Vienna Austria", "Paris France")
+        let qualifier = '';
+        if (results.length === 0) {
+          const tokens = cleanName.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+          if (tokens.length >= 2) {
+            const placeToken = tokens[0];
+            qualifier = tokens.slice(1).join(' ').toLowerCase();
+            results = await queryGeocoding(placeToken);
+          }
+        }
+
+        if (results && results.length > 0) {
+          // If a qualifier like "Austria" was in the query, match country/admin
+          let match = null;
+          if (qualifier) {
+            match = results.find(r => {
+              const c = (r.country || '').toLowerCase();
+              const cc = (r.country_code || '').toLowerCase();
+              const a1 = (r.admin1 || '').toLowerCase();
+              return c.includes(qualifier) || cc === qualifier || a1.includes(qualifier);
+            });
+          }
+
+          if (!match) {
+            // Prioritize UK results if available and no specific foreign qualifier was given
+            match = results.find(r => r.country_code === 'GB') || results[0];
+          }
+
+          const lat = match.latitude;
+          const lon = match.longitude;
+
+          // Reverse postcode lookup for nearest UK postcode
+          let pc = match.country_code || 'UK';
+          try {
+            const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
+            if (pcRes.ok) {
+              const pcData = await pcRes.json();
+              if (pcData.result && pcData.result.length > 0) {
+                pc = pcData.result[0].postcode;
+              }
+            }
+          } catch (_) {}
+
+          const displayName = formatMatchedLocationName(match);
+          CURRENT_LOCATION = {
+            name: displayName,
+            postcode: pc,
+            lat: lat,
+            lon: lon,
+            desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
+          };
+          saveSavedLocation();
+          recordLocationQuery(CURRENT_LOCATION);
+          updateLocationHeader();
+          fetchWeatherData();
+          return true;
         }
       } catch (err) {
         console.warn('Town lookup error:', err);
@@ -1877,7 +1915,7 @@
         window.history.pushState({}, '', url);
         closeLocationModal();
       } else {
-        if (status) status.textContent = `Could not find "${q}". Try another town or UK postcode.`;
+        if (status) status.textContent = `Could not find "${q}". Try another city, town or postcode.`;
       }
     }
 
@@ -3170,8 +3208,17 @@
         }
       }
 
-      const closeBtn = document.getElementById('closeShareBtnTop');
-      if (closeBtn) closeBtn.focus();
+      // Clear prior focus so the user clearly sees the Close button light up in amber
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      // TV D-Pad UX: Focus arrives after ~350ms so the modal opens smoothly first,
+      // and then the Close button lights up in warm amber-yellow.
+      setTimeout(() => {
+        const closeBtn = document.getElementById('closeShareBtnTop');
+        if (closeBtn) closeBtn.focus();
+      }, 350);
     }
 
     function renderQrFallback(container, url) {
