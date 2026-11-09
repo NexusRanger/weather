@@ -290,15 +290,18 @@
       display: none !important;
     }
 
-    /* Suppress amber focus highlight on footerTimeline while 24-hour panoramic glance is active */
-    #footerTimeline.glance-active,
-    #footerTimeline.glance-active:focus,
-    #footerTimeline.glance-active:focus-visible {
+    /* Keep footerTimeline clean without yellow background/border when scrolling, tapping, or focusing */
+    #footerTimeline,
+    #footerTimeline:focus,
+    #footerTimeline:focus-visible,
+    #footerTimeline.glance-active {
       outline: none !important;
-      border-color: rgba(255, 255, 255, 0.08) !important;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
       background: rgba(15, 23, 42, 0.65) !important;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
       transform: none !important;
+    }
+    #footerTimeline:focus-visible:not(.glance-active) {
+      border-color: rgba(56, 189, 248, 0.45) !important;
     }
 
     .ambient-glow {
@@ -838,12 +841,18 @@
 
 
     <!-- 24-HOUR HOURLY TIMELINE STRIP (WITH OVERNIGHT HISTORY & 24H PANORAMIC GLANCE) -->
-    <footer id="footerTimeline" tabindex="0" class="tv-focus-amber relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer transition-all focus:outline-none" title="Press OK, click, or long-press to glance at the full 24-hour overview • Use Left/Right to scroll">
+    <footer id="footerTimeline" tabindex="0" class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer focus:outline-none" title="Press OK, click, or long-press to glance at the full 24-hour overview • Use Left/Right to scroll">
       <div class="flex items-center justify-between mb-0.5 px-0.5">
-        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
           <span id="timelineTitle">24-Hour Forecast &amp; Rain Probability</span>
-          <span id="timelineModeBadge" class="hidden text-[8px] font-bold font-mono px-1.5 py-0.2 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 animate-pulse">24H GLANCE (AUTO-RESETS)</span>
+          <div id="timelineModeBadge" class="hidden inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/15 border border-sky-400/35 text-[8px] font-bold font-mono text-sky-200">
+            <span>24H GLANCE</span>
+            <div class="w-16 sm:w-24 h-1.5 rounded-full bg-slate-900/90 overflow-hidden border border-white/10">
+              <div id="timelineCountdownBar" class="h-full bg-gradient-to-r from-sky-400 to-cyan-300 rounded-full" style="width: 100%; transition: width 0.25s linear;"></div>
+            </div>
+            <span id="timelineCountdownSec" class="text-[8px] text-sky-300 w-4 text-right">25s</span>
+          </div>
         </div>
         <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2.5">
           <span class="text-[8px] text-slate-400 opacity-80 hidden sm:inline">◀ Scroll left for overnight history • Long-press / Click for 24h glance</span>
@@ -852,8 +861,8 @@
         </div>
       </div>
 
-      <!-- Horizontal Strip Container -->
-      <div id="hourlyTimeline" class="flex gap-1.5 overflow-x-auto pb-0.5" style="scroll-behavior: smooth;">
+      <!-- Horizontal Strip Container (no CSS scroll-behavior:smooth so touch & remote scrolling never stutter) -->
+      <div id="hourlyTimeline" class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling: touch;">
         <div class="text-xs text-slate-400 py-1">Loading hourly forecast...</div>
       </div>
     </footer>
@@ -1068,10 +1077,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=46"></script>
+  <script src="traffic-flood.js?v=47"></script>
     <script>
-    const APP_BUILD = 46;
-    const APP_VERSION = '1.7.2';
+    const APP_BUILD = 47;
+    const APP_VERSION = '1.7.3';
 
     async function checkForUpdates() {
       try {
@@ -3415,7 +3424,42 @@
     let cachedHourlyData = null;
     let isHourlyCompressed = false;
     let hourlyResetTimer = null;
+    let hourlyCountdownInterval = null;
     let hourlyReturnToNowTimer = null;
+    let hourlyGlideRaf = null;
+    let cachedNowOffsetLeft = 0;
+
+    function cancelHourlyGlide() {
+      if (hourlyGlideRaf) {
+        cancelAnimationFrame(hourlyGlideRaf);
+        hourlyGlideRaf = null;
+      }
+    }
+
+    // Custom smooth scroll with configurable duration (e.g. 1600ms slow, gentle glide back to NOW)
+    function glideScrollTo(container, targetLeft, durationMs = 1600) {
+      cancelHourlyGlide();
+      const startLeft = container.scrollLeft;
+      const delta = targetLeft - startLeft;
+      if (Math.abs(delta) < 2) {
+        container.scrollLeft = targetLeft;
+        return;
+      }
+      const startTime = performance.now();
+      function step(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(1, elapsed / durationMs);
+        // Smooth cubic ease-in-out
+        const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        container.scrollLeft = startLeft + delta * ease;
+        if (t < 1) {
+          hourlyGlideRaf = requestAnimationFrame(step);
+        } else {
+          hourlyGlideRaf = null;
+        }
+      }
+      hourlyGlideRaf = requestAnimationFrame(step);
+    }
 
     function renderHourly(hourly) {
       if (!hourly || !hourly.time) return;
@@ -3423,6 +3467,7 @@
 
       const container = document.getElementById('hourlyTimeline');
       if (!container) return;
+      cancelHourlyGlide();
       container.innerHTML = '';
 
       // Find current hour index in the location's local time (using cur.time prefix if available)
@@ -3477,7 +3522,7 @@
         const hour = d.getHours();
         const isNow = (i === nowIndex);
         const isPast = (i < nowIndex);
-        const timeStr = isNow ? 'NOW' : `${String(hour).padStart(2, '0')}:00`;
+        const timeStr = isNow ? 'Now' : `${String(hour).padStart(2, '0')}:00`;
         const isDaytime = hour >= 7 && hour < 17;
         const info = getWeatherInfo(hourly.weather_code[i], isDaytime ? 1 : 0);
         const temp = Math.round(hourly.temperature_2m[i]);
@@ -3502,7 +3547,7 @@
 
         if (isHourlyCompressed) {
           // Ultra-compact 24-hour visual glance layout (clean, un-highlighted bars for pure visual comparison)
-          card.className = `flex-1 min-w-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg border transition-all ${
+          card.className = `flex-1 min-w-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg border ${
             isNearFreezing
               ? 'glass-tile border-cyan-500/30'
               : 'glass-tile border-white/10'
@@ -3519,10 +3564,10 @@
             </div>
           `;
         } else {
-          // Standard detailed scrolling card
-          card.className = `flex-shrink-0 flex items-stretch py-1 px-1.5 rounded-xl border min-w-[68px] gap-1.5 transition ${
+          // Standard detailed scrolling card (sky-blue tint for Now, no yellow)
+          card.className = `flex-shrink-0 flex items-stretch py-1 px-1.5 rounded-xl border min-w-[68px] gap-1.5 ${
             isNow 
-              ? 'bg-gradient-to-b from-amber-400/20 to-sky-500/20 border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.3)] ring-1 ring-amber-400/40' 
+              ? 'bg-sky-500/15 border-sky-400/50 shadow-[0_0_8px_rgba(56,189,248,0.18)]' 
               : isPast
                 ? 'bg-white/5 border-white/5 opacity-70 hover:opacity-100'
                 : isNearFreezing
@@ -3533,24 +3578,24 @@
           card.innerHTML = `
             <!-- Left: Vertical Temperature Variation Bar -->
             <div class="w-1.5 self-stretch flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 py-0.5" title="Temp: ${temp}°C (Range: ${minTemp}°-${maxTemp}°)">
-              <div class="w-full ${tempColor} rounded-full transition-all" style="height: ${tempHeightPct}%"></div>
+              <div class="w-full ${tempColor} rounded-full" style="height: ${tempHeightPct}%"></div>
             </div>
 
             <!-- Right: Hourly Content -->
             <div class="flex-1 flex flex-col items-center justify-between min-w-0">
               <div class="flex items-center gap-0.5 leading-none">
-                <span class="text-[9px] font-mono font-bold ${isNow ? 'text-amber-300' : isPast ? 'text-slate-400 italic' : 'text-slate-300'}">${timeStr}</span>
+                <span class="text-[9px] font-mono font-bold ${isNow ? 'text-sky-300' : isPast ? 'text-slate-400 italic' : 'text-slate-300'}">${timeStr}</span>
                 ${isNearFreezing ? '<span class="text-[8px] text-cyan-300">❄️</span>' : ''}
               </div>
               <span class="text-sm my-0 leading-none">${info.icon}</span>
-              <span class="text-xs font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : isNow ? 'text-amber-200' : 'text-white'} leading-tight">${temp}°</span>
+              <span class="text-xs font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : 'text-white'} leading-tight">${temp}°</span>
               
               <div class="w-full text-center mt-0.5">
                 <span class="text-[8px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
                   ${rainProb}%
                 </span>
                 <div class="h-2 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10">
-                  <div class="h-full ${rainProb >= 50 ? 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : rainProb > 0 ? 'bg-sky-400' : 'bg-transparent'} rounded-full transition-all" style="width: ${rainProb}%"></div>
+                  <div class="h-full ${rainProb >= 50 ? 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : rainProb > 0 ? 'bg-sky-400' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
                 </div>
               </div>
             </div>
@@ -3560,18 +3605,29 @@
         container.appendChild(card);
       }
 
-      // Initial alignment: in normal mode, position "NOW" at the left edge with slight padding
+      // Initial alignment: in normal mode, position "Now" at the left edge immediately without stutter
       if (!isHourlyCompressed) {
-        setTimeout(scrollToNow, 80);
+        setTimeout(() => {
+          const nowCard = document.getElementById('hourlyNowCard');
+          if (nowCard) {
+            cachedNowOffsetLeft = Math.max(0, nowCard.offsetLeft - 6);
+            container.scrollLeft = cachedNowOffsetLeft;
+          }
+        }, 50);
       }
     }
 
-    function scrollToNow(smooth = true) {
+    function scrollToNow(slowGlide = true) {
       const container = document.getElementById('hourlyTimeline');
       const nowCard = document.getElementById('hourlyNowCard');
       if (container && nowCard) {
-        const targetLeft = Math.max(0, nowCard.offsetLeft - 6);
-        container.scrollTo({ left: targetLeft, behavior: smooth ? 'smooth' : 'auto' });
+        cachedNowOffsetLeft = Math.max(0, nowCard.offsetLeft - 6);
+        if (slowGlide) {
+          // Slow, gentle 1.6-second glide back to Now
+          glideScrollTo(container, cachedNowOffsetLeft, 1600);
+        } else {
+          container.scrollLeft = cachedNowOffsetLeft;
+        }
       }
     }
 
@@ -3580,28 +3636,52 @@
       const footer = document.getElementById('footerTimeline');
       const title = document.getElementById('timelineTitle');
       const badge = document.getElementById('timelineModeBadge');
+      const bar = document.getElementById('timelineCountdownBar');
+      const secEl = document.getElementById('timelineCountdownSec');
+
+      if (hourlyResetTimer) { clearTimeout(hourlyResetTimer); hourlyResetTimer = null; }
+      if (hourlyCountdownInterval) { clearInterval(hourlyCountdownInterval); hourlyCountdownInterval = null; }
+
       if (compressed) {
-        // Immediately drop the amber focus highlight so the 24-hour chart is completely unobstructed
+        const durationMs = 25000;
+        const startTime = Date.now();
+
         if (footer) {
           footer.classList.add('glance-active');
           footer.blur();
         }
         if (title) title.textContent = '24-Hour Panoramic Glance';
-        if (badge) badge.classList.remove('hidden');
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.classList.add('inline-flex');
+        }
+        if (bar) bar.style.width = '100%';
+        if (secEl) secEl.textContent = '25s';
+
         renderHourly(cachedHourlyData);
 
+        // Update the slider bar & seconds counter smoothly every 200ms
+        hourlyCountdownInterval = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const remainingMs = Math.max(0, durationMs - elapsed);
+          const pct = Math.max(0, (remainingMs / durationMs) * 100);
+          if (bar) bar.style.width = `${pct.toFixed(1)}%`;
+          if (secEl) secEl.textContent = `${Math.ceil(remainingMs / 1000)}s`;
+        }, 200);
+
         // Auto-revert back to standard scrolling view after 25 seconds
-        if (hourlyResetTimer) clearTimeout(hourlyResetTimer);
         hourlyResetTimer = setTimeout(() => {
           setHourlyCompressedMode(false);
-        }, 25000);
+        }, durationMs);
       } else {
-        if (hourlyResetTimer) { clearTimeout(hourlyResetTimer); hourlyResetTimer = null; }
         if (footer) {
           footer.classList.remove('glance-active');
         }
         if (title) title.textContent = '24-Hour Forecast & Rain Probability';
-        if (badge) badge.classList.add('hidden');
+        if (badge) {
+          badge.classList.add('hidden');
+          badge.classList.remove('inline-flex');
+        }
         renderHourly(cachedHourlyData);
       }
     }
@@ -3623,6 +3703,7 @@
 
       // Touch handlers (Tablet / Mobile long-press)
       footer.addEventListener('touchstart', (e) => {
+        cancelHourlyGlide();
         if (e.touches.length !== 1) return;
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
@@ -3654,6 +3735,7 @@
       let pointerDownX = 0;
       let pointerMoved = false;
       footer.addEventListener('pointerdown', (e) => {
+        cancelHourlyGlide();
         pointerDownX = e.clientX || 0;
         pointerMoved = false;
       }, { passive: true });
@@ -3672,32 +3754,35 @@
 
       // TV Remote Keyboard handler on #footerTimeline:
       // - Enter / OK / Space toggles the 24-Hour Panoramic Glance
-      // - ArrowLeft / ArrowRight scrolls the hourly timeline backward (into 8h overnight history) or forward
+      // - ArrowLeft / ArrowRight glides the hourly timeline backward (into 8h overnight history) or forward without stutter
       footer.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13) {
           e.preventDefault();
           toggleHourlyCompression();
         } else if (e.key === 'ArrowLeft' && !isHourlyCompressed) {
           e.preventDefault();
-          container.scrollBy({ left: -220, behavior: 'smooth' });
+          glideScrollTo(container, Math.max(0, container.scrollLeft - 220), 260);
         } else if (e.key === 'ArrowRight' && !isHourlyCompressed) {
           e.preventDefault();
-          container.scrollBy({ left: 220, behavior: 'smooth' });
+          const maxScroll = container.scrollWidth - container.clientWidth;
+          glideScrollTo(container, Math.min(maxScroll, container.scrollLeft + 220), 260);
         }
       });
 
-      // Auto-return to "NOW" when scrolled back into overnight history
+      // Auto-return to "Now" when scrolled back into overnight history
       container.addEventListener('scroll', () => {
         if (isHourlyCompressed) return;
-        const nowCard = document.getElementById('hourlyNowCard');
-        if (!nowCard) return;
+        if (!cachedNowOffsetLeft) {
+          const nowCard = document.getElementById('hourlyNowCard');
+          if (nowCard) cachedNowOffsetLeft = Math.max(0, nowCard.offsetLeft - 6);
+        }
 
         // If user scrolled left into the past
-        if (container.scrollLeft < nowCard.offsetLeft - 30) {
+        if (container.scrollLeft < cachedNowOffsetLeft - 25) {
           if (hourlyReturnToNowTimer) clearTimeout(hourlyReturnToNowTimer);
           hourlyReturnToNowTimer = setTimeout(() => {
             scrollToNow(true);
-          }, 4500); // 4.5 seconds to inspect overnight lows before gently gliding back
+          }, 4500); // 4.5 seconds to inspect overnight lows before slowly gliding back (1.6s glide)
         } else {
           if (hourlyReturnToNowTimer) {
             clearTimeout(hourlyReturnToNowTimer);
