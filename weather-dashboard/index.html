@@ -827,7 +827,7 @@
 
 
     <!-- 24-HOUR HOURLY TIMELINE STRIP (WITH OVERNIGHT HISTORY & 24H PANORAMIC GLANCE) -->
-    <footer id="footerTimeline" class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer transition-all" title="Click or long-press to glance at the full 24-hour overview">
+    <footer id="footerTimeline" tabindex="0" class="tv-focus-amber relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer transition-all focus:outline-none" title="Press OK, click, or long-press to glance at the full 24-hour overview • Use Left/Right to scroll">
       <div class="flex items-center justify-between mb-0.5 px-0.5">
         <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
@@ -1057,10 +1057,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=44"></script>
+  <script src="traffic-flood.js?v=45"></script>
     <script>
-    const APP_BUILD = 44;
-    const APP_VERSION = '1.7.0';
+    const APP_BUILD = 45;
+    const APP_VERSION = '1.7.1';
 
     async function checkForUpdates() {
       try {
@@ -3058,7 +3058,7 @@
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=2&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=8&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -3091,8 +3091,20 @@
 
     function renderDashboard(data, aqiData) {
       const cur = data.current;
-      const daily = data.daily;
+      const rawDaily = data.daily;
+      const todayDateStr = (cur && cur.time) ? cur.time.slice(0, 10) : new Date().toISOString().slice(0, 10);
+      let todayIdx = (rawDaily && rawDaily.time) ? rawDaily.time.findIndex(t => t === todayDateStr) : 0;
+      if (todayIdx < 0) todayIdx = (rawDaily && rawDaily.time && rawDaily.time.length > 7) ? 1 : 0;
+      const daily = {};
+      if (rawDaily) {
+        for (const k of Object.keys(rawDaily)) {
+          daily[k] = Array.isArray(rawDaily[k]) ? rawDaily[k].slice(todayIdx) : rawDaily[k];
+        }
+      }
       const hourly = data.hourly;
+      if (hourly && cur && cur.time) {
+        hourly._currentLocalTime = cur.time;
+      }
 
       const isDay = cur.is_day === 1;
       const weatherInfo = getWeatherInfo(cur.weather_code, isDay);
@@ -3402,16 +3414,22 @@
       if (!container) return;
       container.innerHTML = '';
 
-      // Find current hour index by comparing timestamps
-      const nowMs = Date.now();
-      let nowIndex = 0;
-      let minDiff = Infinity;
-      for (let i = 0; i < hourly.time.length; i++) {
-        const t = new Date(hourly.time[i]).getTime();
-        const diff = Math.abs(t - nowMs);
-        if (diff < minDiff) {
-          minDiff = diff;
-          nowIndex = i;
+      // Find current hour index in the location's local time (using cur.time prefix if available)
+      let nowIndex = -1;
+      if (hourly._currentLocalTime) {
+        const prefix = hourly._currentLocalTime.slice(0, 13);
+        nowIndex = hourly.time.findIndex(t => t.startsWith(prefix));
+      }
+      if (nowIndex < 0) {
+        const nowMs = Date.now();
+        let minDiff = Infinity;
+        for (let i = 0; i < hourly.time.length; i++) {
+          const t = new Date(hourly.time[i]).getTime();
+          const diff = Math.abs(t - nowMs);
+          if (diff < minDiff) {
+            minDiff = diff;
+            nowIndex = i;
+          }
         }
       }
 
@@ -3614,12 +3632,39 @@
         }
       }, { passive: true });
 
-      // Click handler (Desktop / TV remote select on header area)
+      // Pointer drag tracking so mouse/touch dragging doesn't accidentally trigger click
+      let pointerDownX = 0;
+      let pointerMoved = false;
+      footer.addEventListener('pointerdown', (e) => {
+        pointerDownX = e.clientX || 0;
+        pointerMoved = false;
+      }, { passive: true });
+      footer.addEventListener('pointermove', (e) => {
+        if (Math.abs((e.clientX || 0) - pointerDownX) > 12) {
+          pointerMoved = true;
+        }
+      }, { passive: true });
+
+      // Click handler (TV pointer / Desktop / Mobile tap anywhere on the timeline panel)
       footer.addEventListener('click', (e) => {
         if (isLongPressed) { isLongPressed = false; return; }
-        // Clicking the timeline header toggles 24h panoramic glance
-        if (e.target.closest('#footerTimeline') && !e.target.closest('#hourlyTimeline')) {
+        if (pointerMoved) { pointerMoved = false; return; }
+        toggleHourlyCompression();
+      });
+
+      // TV Remote Keyboard handler on #footerTimeline:
+      // - Enter / OK / Space toggles the 24-Hour Panoramic Glance
+      // - ArrowLeft / ArrowRight scrolls the hourly timeline backward (into 8h overnight history) or forward
+      footer.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13) {
+          e.preventDefault();
           toggleHourlyCompression();
+        } else if (e.key === 'ArrowLeft' && !isHourlyCompressed) {
+          e.preventDefault();
+          container.scrollBy({ left: -220, behavior: 'smooth' });
+        } else if (e.key === 'ArrowRight' && !isHourlyCompressed) {
+          e.preventDefault();
+          container.scrollBy({ left: 220, behavior: 'smooth' });
         }
       });
 
