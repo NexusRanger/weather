@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030712">
-  <link rel="manifest" href="manifest.json?v=38">
+  <link rel="manifest" href="manifest.json?v=39">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -422,10 +422,10 @@
 
   <!-- AUTO-UPDATE NOTIFICATION BANNER -->
   <div id="updateBanner" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden">
-    <button onclick="applyAppUpdate()" class="px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-sky-600 to-indigo-600 hover:from-indigo-500 hover:to-sky-500 text-white text-xs font-semibold shadow-[0_0_20px_rgba(99,102,241,0.6)] border border-white/20 flex items-center gap-2.5 transition transform hover:scale-105 active:scale-95 animate-pulse">
+    <button id="applyUpdateBtn" onclick="applyAppUpdate()" class="tv-focus-amber px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-sky-600 to-indigo-600 hover:from-indigo-500 hover:to-sky-500 text-white text-xs font-semibold shadow-[0_0_20px_rgba(99,102,241,0.6)] border border-white/20 flex items-center gap-2.5 transition transform hover:scale-105 active:scale-95 animate-pulse focus:outline-none" title="Press Enter / OK to reload with new update">
       <span class="text-sm">✨</span>
       <span id="updateBannerText">New dashboard update ready</span>
-      <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-normal">Tap to reload</span>
+      <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-normal">Press OK to reload</span>
     </button>
   </div>
 
@@ -439,7 +439,7 @@
           <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink" style="max-width: min(320px, 30vw);" onclick="openLocationModal()" title="Click to change location">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth &amp; Stroud</span>
           </h1>
-          <button onclick="openLocationModal()" title="Change town or UK postcode" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+          <button id="headerLocationBtn" tabindex="1" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none">
             <span id="headerPostcodeBadge">GL5 5HH</span>
             <span class="text-[8px] text-indigo-400">✏️</span>
           </button>
@@ -557,11 +557,13 @@
             <div id="windTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Wind</span>
-                <div class="flex items-center gap-1">
-                  <svg id="windArrowIcon" class="w-2.5 h-2.5 text-sky-400 transition-transform duration-700" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
-                  </svg>
-                  <span id="windCompass" class="text-sky-400 font-mono font-bold">--</span>
+                <div class="flex items-center gap-1.5">
+                  <div class="w-4 h-4 rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center flex-shrink-0 shadow-sm" title="Wind flow compass">
+                    <svg id="windArrowIcon" class="w-2.5 h-2.5 text-sky-300 transition-transform duration-700" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                    </svg>
+                  </div>
+                  <span id="windCompass" class="text-sky-300 font-mono font-bold text-xs">--</span>
                 </div>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
@@ -1042,10 +1044,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=38"></script>
+  <script src="traffic-flood.js?v=39"></script>
     <script>
-    const APP_BUILD = 38;
-    const APP_VERSION = '1.5.7';
+    const APP_BUILD = 39;
+    const APP_VERSION = '1.5.8';
 
     async function checkForUpdates() {
       try {
@@ -1060,6 +1062,12 @@
             }
             if (banner) {
               banner.classList.remove('hidden');
+              // TV Remote UX: Immediately highlight the update banner button with amber glow
+              // so the user can simply press OK on their TV remote to update!
+              setTimeout(() => {
+                const btn = document.getElementById('applyUpdateBtn');
+                if (btn) btn.focus();
+              }, 250);
             }
           }
         }
@@ -2839,7 +2847,7 @@
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=${TIMEZONE}&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -3050,11 +3058,11 @@
         document.getElementById('daylightLength').textContent = `${dh}h ${dm}m`;
       }
 
-      const now = new Date();
+      const targetLocalNow = cur.time ? new Date(cur.time) : new Date();
       const sunsetDate = new Date(daily.sunset[0]);
       const sunriseDate = new Date(daily.sunrise[0]);
-      if (now < sunsetDate && now > sunriseDate) {
-        const diffMins = Math.round((sunsetDate - now) / 60000);
+      if (cur.is_day && targetLocalNow < sunsetDate && targetLocalNow > sunriseDate) {
+        const diffMins = Math.round((sunsetDate - targetLocalNow) / 60000);
         const h = Math.floor(diffMins / 60);
         const m = diffMins % 60;
         document.getElementById('sunCountdown').textContent = `Sunset in ${h}h ${m}m`;
@@ -3471,6 +3479,14 @@
 
     checkForUpdates();
     setInterval(checkForUpdates, 3 * 60 * 1000);
+
+    // TV Remote UX: Focus the top bar Location button on startup so focus starts cleanly at the top
+    setTimeout(() => {
+      const topBtn = document.getElementById('headerLocationBtn');
+      if (topBtn && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)')) {
+        topBtn.focus();
+      }
+    }, 400);
   </script>
 </body>
 </html>
