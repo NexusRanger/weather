@@ -1074,10 +1074,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=53"></script>
+  <script src="traffic-flood.js?v=54"></script>
     <script>
-    const APP_BUILD = 53;
-    const APP_VERSION = '1.7.9';
+    const APP_BUILD = 54;
+    const APP_VERSION = '1.8.0';
 
     async function checkForUpdates() {
       try {
@@ -2117,6 +2117,8 @@
     let locLastInputAt = 0;
     let locPrefixToStrip = '';
     let locSettleTimer = null;
+    let locActivatedAt = 0;
+    let locInitialQSwallowed = false;
 
     function resetSmartLocationInputState() {
       locSettledValue = '';
@@ -2132,8 +2134,16 @@
       const input = document.getElementById('locationInput');
       if (!input) return;
 
+      // Record when focus or a click enters the typing box so only an immediate (< 1.2s) first 'q' is ignored
+      input.addEventListener('focus', () => {
+        locActivatedAt = Date.now();
+        locInitialQSwallowed = false;
+      });
+
       // If the user clicks back into the search box after an earlier entry/voice search settled, start fresh
       input.addEventListener('mousedown', () => {
+        locActivatedAt = Date.now();
+        locInitialQSwallowed = false;
         if (locSettledValue && (Date.now() - locLastInputAt > 700)) {
           input.value = '';
           resetSmartLocationInputState();
@@ -2141,6 +2151,8 @@
       });
 
       input.addEventListener('click', () => {
+        locActivatedAt = Date.now();
+        locInitialQSwallowed = false;
         if (locSettledValue && (Date.now() - locLastInputAt > 700)) {
           input.value = '';
           resetSmartLocationInputState();
@@ -2159,8 +2171,9 @@
           locPrefixToStrip = '';
           locSettledValue = '';
         }
-        if (input.value.trim().toLowerCase() === 'q') {
+        if (!locInitialQSwallowed && (Date.now() - locActivatedAt <= 1200) && input.value.trim().toLowerCase() === 'q') {
           input.value = '';
+          locInitialQSwallowed = true;
           resetSmartLocationInputState();
         }
       });
@@ -2169,12 +2182,12 @@
         const now = Date.now();
         const elapsed = now - locLastInputAt;
 
-        // Detect a new microphone dictation or accidental 'q' after a pause when text is already in the box
+        // Detect a new microphone dictation or accidental 'q' within 1.2s of activating the box when text is already present
         if (!locPrefixToStrip && locSettledValue && elapsed > 850 && input.value.startsWith(locSettledValue)) {
           const added = input.value.slice(locSettledValue.length);
-          if (added.trim().toLowerCase() === 'q') {
-            // Accidental 'q' when clicking back into the box to start a new search: clear everything fresh
+          if (!locInitialQSwallowed && (now - locActivatedAt <= 1200) && added.trim().toLowerCase() === 'q') {
             input.value = '';
+            locInitialQSwallowed = true;
             resetSmartLocationInputState();
             return;
           }
@@ -2190,9 +2203,11 @@
           locSettledValue = '';
         }
 
-        // Spot and immediately delete a standalone 'q' (from clicking OK to activate the search box on TV/tablet keyboards)
-        if (input.value.trim().toLowerCase() === 'q') {
+        // Only ignore a standalone 'q' if it arrives within 1.2s of focusing/clicking the box (and only once per focus)
+        // Any subsequent 'q' (or a 'q' typed after 1.2s) is accepted normally!
+        if (!locInitialQSwallowed && (now - locActivatedAt <= 1200) && input.value.trim().toLowerCase() === 'q') {
           input.value = '';
+          locInitialQSwallowed = true;
           resetSmartLocationInputState();
           return;
         }
@@ -2203,11 +2218,6 @@
           if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
             input.value = input.value.slice(locPrefixToStrip.length).trimStart();
             locPrefixToStrip = '';
-          }
-          if (input.value.trim().toLowerCase() === 'q') {
-            input.value = '';
-            resetSmartLocationInputState();
-            return;
           }
           locSettledValue = input.value;
         }, 850);
@@ -2265,7 +2275,7 @@
         input.value = input.value.slice(locPrefixToStrip.length).trimStart();
         locPrefixToStrip = '';
       }
-      if (!input.value.trim() || input.value.trim().toLowerCase() === 'q') {
+      if (!input.value.trim()) {
         input.value = '';
         return;
       }
