@@ -1074,10 +1074,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=54"></script>
+  <script src="traffic-flood.js?v=55"></script>
     <script>
-    const APP_BUILD = 54;
-    const APP_VERSION = '1.8.0';
+    const APP_BUILD = 55;
+    const APP_VERSION = '1.8.1';
 
     async function checkForUpdates() {
       try {
@@ -2130,9 +2130,41 @@
       }
     }
 
+    function isSpokenContinuation(prevText, addedText) {
+      const p = (prevText || '').trim();
+      const a = (addedText || '').trim();
+      if (!p || !a) return false;
+
+      // 1. UK Postcode continuation: e.g. "GL5" + "5HH", "GL" + "5 5HH", "GL5 5" + "HH"
+      const combinedCompact = (p + a).replace(/[\s-]+/g, '');
+      if (/^[A-Z]{1,2}[0-9][A-Z0-9]?([0-9][A-Z]{0,2})?$/i.test(combinedCompact)) {
+        return true;
+      }
+      // If added part starts with a digit or is a 2-3 char inward postcode code like "5HH"
+      if (/^[0-9]/.test(a) || /^[0-9][A-Z]{2}$/i.test(a)) {
+        return true;
+      }
+
+      // 2. Multi-word place name continuation: e.g. "Newcastle" + "upon Tyne", "The" + "Stroud Hotel", "Stroud" + "Hotel"
+      const prevWords = p.toLowerCase().split(/\s+/);
+      const lastPrevWord = prevWords[prevWords.length - 1];
+      if (['the', 'st', 'saint', 'new', 'old', 'north', 'south', 'east', 'west', 'great', 'little', 'upper', 'lower', 'high', 'royal', 'fort', 'port', 'mount', 'isle', 'upon', 'on', 'under', 'in', 'by', 'le', 'la', 'de', 'of', 'and', 'super', 'next', 'cum'].includes(lastPrevWord)) {
+        return true;
+      }
+
+      const firstAddedWord = a.toLowerCase().split(/\s+/)[0];
+      if (['upon', 'on', 'under', 'in', 'by', 'le', 'la', 'de', 'the', 'of', 'and', 'super', 'next', 'cum', 'hotel', 'inn', 'pub', 'arms', 'house', 'hall', 'manor', 'lodge', 'park', 'station', 'castle', 'beach', 'bay', 'valley', 'hill', 'hills', 'wells', 'spa', 'bridge', 'cross', 'green', 'common', 'heath', 'wood', 'forest', 'airport', 'tyne', 'avon', 'wye', 'severn', 'thames', 'trent', 'ouse', 'mersey', 'cotswold', 'cotswolds', 'gloucestershire'].includes(firstAddedWord)) {
+        return true;
+      }
+
+      return false;
+    }
+
     (function initSmartLocationInput() {
       const input = document.getElementById('locationInput');
       if (!input) return;
+
+      const VOICE_PAUSE_RESET_MS = 3500;
 
       // Record when focus or a click enters the typing box so only an immediate (< 1.2s) first 'q' is ignored
       input.addEventListener('focus', () => {
@@ -2144,7 +2176,7 @@
       input.addEventListener('mousedown', () => {
         locActivatedAt = Date.now();
         locInitialQSwallowed = false;
-        if (locSettledValue && (Date.now() - locLastInputAt > 700)) {
+        if (locSettledValue && (Date.now() - locLastInputAt > 1800)) {
           input.value = '';
           resetSmartLocationInputState();
         }
@@ -2153,23 +2185,28 @@
       input.addEventListener('click', () => {
         locActivatedAt = Date.now();
         locInitialQSwallowed = false;
-        if (locSettledValue && (Date.now() - locLastInputAt > 700)) {
+        if (locSettledValue && (Date.now() - locLastInputAt > 1800)) {
           input.value = '';
           resetSmartLocationInputState();
         }
       });
 
       input.addEventListener('compositionstart', () => {
-        if (locSettledValue && (Date.now() - locLastInputAt > 800)) {
+        if (locSettledValue && (Date.now() - locLastInputAt > VOICE_PAUSE_RESET_MS)) {
           locPrefixToStrip = locSettledValue;
         }
       });
 
       input.addEventListener('compositionend', () => {
         if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
-          input.value = input.value.slice(locPrefixToStrip.length).trimStart();
-          locPrefixToStrip = '';
-          locSettledValue = '';
+          const added = input.value.slice(locPrefixToStrip.length);
+          if (isSpokenContinuation(locPrefixToStrip, added)) {
+            locPrefixToStrip = '';
+          } else {
+            input.value = added.trimStart();
+            locPrefixToStrip = '';
+            locSettledValue = '';
+          }
         }
         if (!locInitialQSwallowed && (Date.now() - locActivatedAt <= 1200) && input.value.trim().toLowerCase() === 'q') {
           input.value = '';
@@ -2182,8 +2219,8 @@
         const now = Date.now();
         const elapsed = now - locLastInputAt;
 
-        // Detect a new microphone dictation or accidental 'q' within 1.2s of activating the box when text is already present
-        if (!locPrefixToStrip && locSettledValue && elapsed > 850 && input.value.startsWith(locSettledValue)) {
+        // Detect a new microphone dictation or accidental 'q' when text is already present
+        if (!locPrefixToStrip && locSettledValue && input.value.startsWith(locSettledValue)) {
           const added = input.value.slice(locSettledValue.length);
           if (!locInitialQSwallowed && (now - locActivatedAt <= 1200) && added.trim().toLowerCase() === 'q') {
             input.value = '';
@@ -2191,16 +2228,24 @@
             resetSmartLocationInputState();
             return;
           }
-          if (added.length >= 2 || e.isComposing || e.inputType === 'insertCompositionText' || e.inputType === 'insertFromPaste') {
-            locPrefixToStrip = locSettledValue;
+          // Only treat as a brand-new microphone search if > 3.5s has passed AND it's not a postcode/place continuation
+          if (elapsed > VOICE_PAUSE_RESET_MS && !isSpokenContinuation(locSettledValue, added)) {
+            if (added.length >= 2 || e.isComposing || e.inputType === 'insertCompositionText' || e.inputType === 'insertFromPaste') {
+              locPrefixToStrip = locSettledValue;
+            }
           }
         }
 
-        // Strip previous search prefix when a new microphone dictation arrives
+        // Strip previous search prefix when a new microphone dictation arrives (unless it's a postcode/place continuation)
         if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip) && !e.isComposing) {
-          input.value = input.value.slice(locPrefixToStrip.length).trimStart();
-          locPrefixToStrip = '';
-          locSettledValue = '';
+          const added = input.value.slice(locPrefixToStrip.length);
+          if (isSpokenContinuation(locPrefixToStrip, added)) {
+            locPrefixToStrip = '';
+          } else {
+            input.value = added.trimStart();
+            locPrefixToStrip = '';
+            locSettledValue = '';
+          }
         }
 
         // Only ignore a standalone 'q' if it arrives within 1.2s of focusing/clicking the box (and only once per focus)
@@ -2216,11 +2261,14 @@
         if (locSettleTimer) clearTimeout(locSettleTimer);
         locSettleTimer = setTimeout(() => {
           if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
-            input.value = input.value.slice(locPrefixToStrip.length).trimStart();
+            const added = input.value.slice(locPrefixToStrip.length);
+            if (!isSpokenContinuation(locPrefixToStrip, added)) {
+              input.value = added.trimStart();
+            }
             locPrefixToStrip = '';
           }
           locSettledValue = input.value;
-        }, 850);
+        }, VOICE_PAUSE_RESET_MS);
       });
     })();
 
@@ -2311,17 +2359,18 @@
       if (status) status.textContent = 'Searching location...';
       if (btn) btn.disabled = true;
 
-      const isPostcode = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(q);
+      const compactPostcode = q.replace(/[\s-]+/g, '');
+      const isPostcode = /^[A-Z]{1,2}[0-9][A-Z0-9]?[0-9][A-Z]{2}$/i.test(compactPostcode);
       let success = false;
 
       if (isPostcode) {
-        success = await lookupPostcode(q);
+        success = await lookupPostcode(compactPostcode);
       }
       if (!success) {
         success = await lookupTown(q);
       }
       if (!success && !isPostcode) {
-        success = await lookupPostcode(q);
+        success = await lookupPostcode(compactPostcode);
       }
 
       if (btn) btn.disabled = false;
