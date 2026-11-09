@@ -290,6 +290,17 @@
       display: none !important;
     }
 
+    /* Suppress amber focus highlight on footerTimeline while 24-hour panoramic glance is active */
+    #footerTimeline.glance-active,
+    #footerTimeline.glance-active:focus,
+    #footerTimeline.glance-active:focus-visible {
+      outline: none !important;
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
+      background: rgba(15, 23, 42, 0.65) !important;
+      transform: none !important;
+    }
+
     .ambient-glow {
       position: fixed;
       top: -15%;
@@ -1057,10 +1068,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=45"></script>
+  <script src="traffic-flood.js?v=46"></script>
     <script>
-    const APP_BUILD = 45;
-    const APP_VERSION = '1.7.1';
+    const APP_BUILD = 46;
+    const APP_VERSION = '1.7.2';
 
     async function checkForUpdates() {
       try {
@@ -3490,21 +3501,19 @@
         if (isNow) card.id = 'hourlyNowCard';
 
         if (isHourlyCompressed) {
-          // Ultra-compact 24-hour visual glance layout
+          // Ultra-compact 24-hour visual glance layout (clean, un-highlighted bars for pure visual comparison)
           card.className = `flex-1 min-w-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg border transition-all ${
-            isNow
-              ? 'bg-amber-400/20 border-amber-400/70 shadow-[0_0_10px_rgba(251,191,36,0.35)] ring-1 ring-amber-300'
-              : isNearFreezing
-                ? 'glass-tile border-cyan-500/30'
-                : 'glass-tile border-white/10'
+            isNearFreezing
+              ? 'glass-tile border-cyan-500/30'
+              : 'glass-tile border-white/10'
           }`;
           card.innerHTML = `
-            <span class="text-[8px] font-mono leading-none ${isNow ? 'font-bold text-amber-300' : 'text-slate-400'}">${hour}h</span>
+            <span class="text-[8px] font-mono leading-none text-slate-400">${hour}h</span>
             <span class="text-[10px] my-0 leading-none">${info.icon}</span>
             <div class="w-1.5 h-7 flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 my-0.5" title="${timeStr}: ${temp}°C, Rain ${rainProb}%">
               <div class="w-full ${tempColor} rounded-full" style="height: ${tempHeightPct}%"></div>
             </div>
-            <span class="text-[9px] font-bold font-mono ${isNearFreezing ? 'text-cyan-300' : isNow ? 'text-amber-200' : 'text-white'} leading-tight">${temp}°</span>
+            <span class="text-[9px] font-bold font-mono ${isNearFreezing ? 'text-cyan-300' : 'text-white'} leading-tight">${temp}°</span>
             <div class="h-1.5 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10" title="Rain: ${rainProb}%">
               <div class="h-full ${rainProb >= 50 ? 'bg-sky-400' : rainProb > 0 ? 'bg-sky-500/80' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
             </div>
@@ -3568,20 +3577,29 @@
 
     function setHourlyCompressedMode(compressed) {
       isHourlyCompressed = compressed;
+      const footer = document.getElementById('footerTimeline');
       const title = document.getElementById('timelineTitle');
       const badge = document.getElementById('timelineModeBadge');
       if (compressed) {
+        // Immediately drop the amber focus highlight so the 24-hour chart is completely unobstructed
+        if (footer) {
+          footer.classList.add('glance-active');
+          footer.blur();
+        }
         if (title) title.textContent = '24-Hour Panoramic Glance';
         if (badge) badge.classList.remove('hidden');
         renderHourly(cachedHourlyData);
 
-        // Auto-revert back to standard scrolling view after 12 seconds
+        // Auto-revert back to standard scrolling view after 25 seconds
         if (hourlyResetTimer) clearTimeout(hourlyResetTimer);
         hourlyResetTimer = setTimeout(() => {
           setHourlyCompressedMode(false);
-        }, 12000);
+        }, 25000);
       } else {
         if (hourlyResetTimer) { clearTimeout(hourlyResetTimer); hourlyResetTimer = null; }
+        if (footer) {
+          footer.classList.remove('glance-active');
+        }
         if (title) title.textContent = '24-Hour Forecast & Rain Probability';
         if (badge) badge.classList.add('hidden');
         renderHourly(cachedHourlyData);
