@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030712">
-  <link rel="manifest" href="manifest.json?v=35">
+  <link rel="manifest" href="manifest.json?v=36">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -557,7 +557,12 @@
             <div id="windTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Wind</span>
-                <span id="windCompass" class="text-sky-400 font-mono font-bold">--</span>
+                <div class="flex items-center gap-1">
+                  <svg id="windArrowIcon" class="w-2.5 h-2.5 text-sky-400 transition-transform duration-700" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                  </svg>
+                  <span id="windCompass" class="text-sky-400 font-mono font-bold">--</span>
+                </div>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
                 <span id="windSpeed" class="text-sm font-bold font-mono text-white leading-none">--</span>
@@ -1026,7 +1031,7 @@
                 <span>💻</span> Laptop &amp; PC
               </div>
               <p class="text-[10px] text-slate-300 leading-snug">
-                Works in any browser. On Chrome/Edge, click the <strong class="text-amber-300">Install App (➕)</strong> icon in the address bar.
+                Works in any modern browser. Bookmark with <strong class="text-sky-300">Ctrl+D</strong> (or <strong class="text-sky-300">Cmd+D</strong>), or install as a desktop window via browser menu (<strong class="text-amber-300">Save and share</strong>).
               </p>
             </div>
           </div>
@@ -1037,10 +1042,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=35"></script>
+  <script src="traffic-flood.js?v=36"></script>
     <script>
-    const APP_BUILD = 35;
-    const APP_VERSION = '1.5.4';
+    const APP_BUILD = 36;
+    const APP_VERSION = '1.5.5';
 
     async function checkForUpdates() {
       try {
@@ -1649,16 +1654,21 @@
           const lon = match.longitude;
 
           // Reverse postcode lookup for nearest UK postcode
-          let pc = match.country_code || 'UK';
-          try {
-            const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
-            if (pcRes.ok) {
-              const pcData = await pcRes.json();
-              if (pcData.result && pcData.result.length > 0) {
-                pc = pcData.result[0].postcode;
+          let pc = '';
+          if (match.country_code === 'GB') {
+            pc = 'UK';
+            try {
+              const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
+              if (pcRes.ok) {
+                const pcData = await pcRes.json();
+                if (pcData.result && pcData.result.length > 0) {
+                  pc = pcData.result[0].postcode;
+                }
               }
-            }
-          } catch (_) {}
+            } catch (_) {}
+          } else {
+            pc = (match.postcodes && match.postcodes[0]) ? match.postcodes[0] : '';
+          }
 
           const displayName = formatMatchedLocationName(match);
           CURRENT_LOCATION = {
@@ -1960,6 +1970,45 @@
       { name: 'Betws-y-Coed', query: 'Betws-y-Coed', lat: 53.092, lon: -3.801 }
     ];
 
+    const EUROPE_HUBS = [
+      // Central Europe & Nearby to Vienna
+      { name: 'Vienna', query: 'Vienna, Austria', lat: 48.208, lon: 16.372 },
+      { name: 'Bratislava', query: 'Bratislava, Slovakia', lat: 48.148, lon: 17.107 },
+      { name: 'Brno', query: 'Brno, Czechia', lat: 49.195, lon: 16.608 },
+      { name: 'Graz', query: 'Graz, Austria', lat: 47.070, lon: 15.439 },
+      { name: 'Linz', query: 'Linz, Austria', lat: 48.306, lon: 14.286 },
+      { name: 'Salzburg', query: 'Salzburg, Austria', lat: 47.809, lon: 13.055 },
+      { name: 'Budapest', query: 'Budapest, Hungary', lat: 47.497, lon: 19.040 },
+      { name: 'Prague', query: 'Prague, Czechia', lat: 50.075, lon: 14.437 },
+      { name: 'Munich', query: 'Munich, Germany', lat: 48.135, lon: 11.582 },
+      { name: 'Innsbruck', query: 'Innsbruck, Austria', lat: 47.269, lon: 11.404 },
+      { name: 'Zurich', query: 'Zurich, Switzerland', lat: 47.376, lon: 8.541 },
+      { name: 'Milan', query: 'Milan, Italy', lat: 45.464, lon: 9.190 },
+      { name: 'Venice', query: 'Venice, Italy', lat: 45.440, lon: 12.315 },
+      { name: 'Frankfurt', query: 'Frankfurt, Germany', lat: 50.110, lon: 8.682 },
+      { name: 'Berlin', query: 'Berlin, Germany', lat: 52.520, lon: 13.405 },
+      { name: 'Paris', query: 'Paris, France', lat: 48.856, lon: 2.352 },
+      { name: 'Amsterdam', query: 'Amsterdam, Netherlands', lat: 52.367, lon: 4.904 },
+      { name: 'Brussels', query: 'Brussels, Belgium', lat: 50.850, lon: 4.351 }
+    ];
+
+    const ALL_REGIONAL_HUBS = [...UK_HUBS, ...EUROPE_HUBS];
+
+    function loadLocationDirectly(name, lat, lon, postcode) {
+      CURRENT_LOCATION = {
+        name: name,
+        postcode: (postcode && postcode !== 'undefined') ? postcode : '',
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+        desc: `${parseFloat(lat).toFixed(2)}°N, ${Math.abs(parseFloat(lon)).toFixed(2)}°W`
+      };
+      saveSavedLocation();
+      recordLocationQuery(CURRENT_LOCATION);
+      updateLocationHeader();
+      fetchWeatherData();
+      closeLocationModal();
+    }
+
     function renderLocationModalPicks() {
       // 1. Render recent searches from ambient_location_queries
       try {
@@ -1972,10 +2021,19 @@
           const uniqueNames = new Set();
           const filtered = [];
           for (const q of queries) {
-            const shortName = q.name.split('&')[0].trim();
-            if (!uniqueNames.has(shortName.toLowerCase()) && shortName.toLowerCase() !== CURRENT_LOCATION.name.split('&')[0].trim().toLowerCase()) {
+            const shortName = q.name.split('&')[0].split(',')[0].trim();
+            const curShort = CURRENT_LOCATION.name.split('&')[0].split(',')[0].trim();
+            if (!uniqueNames.has(shortName.toLowerCase()) && shortName.toLowerCase() !== curShort.toLowerCase()) {
               uniqueNames.add(shortName.toLowerCase());
-              filtered.push({ name: shortName, query: q.postcode && q.postcode !== 'GEO' ? q.postcode : q.name });
+              const isUkPc = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(q.postcode || '');
+              filtered.push({
+                displayName: shortName,
+                fullName: q.name,
+                query: isUkPc ? q.postcode : q.name,
+                lat: q.lat,
+                lon: q.lon,
+                postcode: q.postcode
+              });
               if (filtered.length >= 4) break;
             }
           }
@@ -1983,8 +2041,14 @@
             filtered.forEach(item => {
               const btn = document.createElement('button');
               btn.className = 'px-2 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 hover:text-white transition cursor-pointer';
-              btn.textContent = item.name;
-              btn.onclick = () => selectQuickLocation(item.query);
+              btn.textContent = item.displayName;
+              btn.onclick = () => {
+                if (item.lat && item.lon) {
+                  loadLocationDirectly(item.fullName, item.lat, item.lon, item.postcode);
+                } else {
+                  selectQuickLocation(item.query);
+                }
+              };
               recentChips.appendChild(btn);
             });
             recentCont.classList.remove('hidden');
@@ -1994,14 +2058,23 @@
         }
       } catch (_) {}
 
-      // 2. Render closest UK hubs dynamically based on CURRENT_LOCATION (lat, lon)
+      // 2. Render closest regional hubs dynamically based on CURRENT_LOCATION (lat, lon)
       const nearbyChips = document.getElementById('nearbyLocationChips');
+      const nearbyTitle = document.getElementById('nearbyPicksTitle');
       if (nearbyChips) {
         nearbyChips.innerHTML = '';
         const curLat = (CURRENT_LOCATION && CURRENT_LOCATION.lat) || 51.7;
         const curLon = (CURRENT_LOCATION && CURRENT_LOCATION.lon) || -2.2;
         
-        const sorted = [...UK_HUBS].sort((a, b) => {
+        // Choose between UK hubs or full Europe/World list
+        const isFarFromUk = Math.pow(curLat - 52.0, 2) + Math.pow(curLon - (-1.5), 2) > 25.0; // > ~500km from UK center
+        const candidateHubs = isFarFromUk ? ALL_REGIONAL_HUBS : UK_HUBS;
+
+        if (nearbyTitle) {
+          nearbyTitle.innerHTML = isFarFromUk ? '<span>📍</span> Nearby Regional Quick Picks:' : '<span>📍</span> Nearby Quick Picks:';
+        }
+
+        const sorted = [...candidateHubs].sort((a, b) => {
           const distA = Math.pow(a.lat - curLat, 2) + Math.pow(a.lon - curLon, 2);
           const distB = Math.pow(b.lat - curLat, 2) + Math.pow(b.lon - curLon, 2);
           return distA - distB;
@@ -2013,7 +2086,13 @@
           const btn = document.createElement('button');
           btn.className = 'px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition cursor-pointer';
           btn.textContent = hub.name;
-          btn.onclick = () => selectQuickLocation(hub.query);
+          btn.onclick = () => {
+            if (hub.lat && hub.lon) {
+              loadLocationDirectly(hub.query, hub.lat, hub.lon, '');
+            } else {
+              selectQuickLocation(hub.query);
+            }
+          };
           nearbyChips.appendChild(btn);
         });
       }
@@ -2751,8 +2830,17 @@
       // Wind
       const windSpeedVal = Math.round(cur.wind_speed_10m || 0);
       document.getElementById('windSpeed').textContent = windSpeedVal;
-      document.getElementById('windCompass').textContent = degToCompass(cur.wind_direction_10m);
+      const compassStr = degToCompass(cur.wind_direction_10m);
+      document.getElementById('windCompass').textContent = compassStr;
       document.getElementById('windGust').textContent = `Gusts: ${Math.round(cur.wind_gusts_10m)} mph`;
+
+      // Wind compass arrow pointing in direction of wind flow
+      const windArrow = document.getElementById('windArrowIcon');
+      if (windArrow && typeof cur.wind_direction_10m === 'number') {
+        const flowAngle = (cur.wind_direction_10m + 180) % 360;
+        windArrow.style.transform = `rotate(${flowAngle}deg)`;
+        windArrow.setAttribute('title', `Wind from ${cur.wind_direction_10m}° (${compassStr}) towards ${flowAngle}°`);
+      }
 
       // Wind warning highlights (Orange > 10 mph, Red > 25 mph)
       const windTile = document.getElementById('windTile');
@@ -2839,8 +2927,6 @@
           aqiTile.classList.remove('aqi-warning-amber', 'aqi-warning-red');
           if (aqi > 60) {
             aqiTile.classList.add('aqi-warning-red');
-          } else if (aqi > 40) {
-            aqiTile.classList.add('aqi-warning-amber');
           }
         }
       }
