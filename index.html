@@ -458,6 +458,9 @@
         height: auto !important;
         padding: 14px !important;
       }
+      #colLocalInfo .glass-card {
+        padding: 6px 10px !important;
+      }
       .tv-only {
         display: none !important;
       }
@@ -856,7 +859,7 @@
     </main>
     
     <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC, RIVERS & SHARE) -->
-    <div id="colLocalInfo" class="relative z-20 flex flex-nowrap sm:flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
+    <div id="colLocalInfo" class="relative z-20 flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
       <!-- Traffic Pill -->
       <div id="trafficPill" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm transition-all" title="Live Traffic Flow (A46 / Local Area via TomTom)">
         <span class="text-xs">🚗</span>
@@ -1116,10 +1119,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=65"></script>
+  <script src="traffic-flood.js?v=66"></script>
     <script>
-    const APP_BUILD = 65;
-    const APP_VERSION = '1.9.1';
+    const APP_BUILD = 66;
+    const APP_VERSION = '1.9.2';
 
     async function checkForUpdates() {
       try {
