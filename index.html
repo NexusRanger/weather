@@ -1116,10 +1116,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=64"></script>
+  <script src="traffic-flood.js?v=65"></script>
     <script>
-    const APP_BUILD = 64;
-    const APP_VERSION = '1.9.0';
+    const APP_BUILD = 65;
+    const APP_VERSION = '1.9.1';
 
     async function checkForUpdates() {
       try {
@@ -2164,29 +2164,68 @@
     let locSettleTimer = null;
     let locActivatedAt = 0;
     let locInitialQSwallowed = false;
+    let locLastPhrase = '';
+    let locLastPhraseAt = 0;
+    let locLastOutwardCode = '';
+    let locLastOutwardAt = 0;
 
     function resetSmartLocationInputState() {
       locSettledValue = '';
       locLastInputAt = 0;
       locPrefixToStrip = '';
+      locLastPhrase = '';
+      locLastPhraseAt = 0;
+      locLastOutwardCode = '';
+      locLastOutwardAt = 0;
       if (locSettleTimer) {
         clearTimeout(locSettleTimer);
         locSettleTimer = null;
       }
     }
 
+    // Speech-to-text often hears "H" ("aitch") as "8" ("eight") after a digit (e.g. "GL5 5HH" -> "GL5 588" or "588").
+    // Because a UK postcode ALWAYS ends with 1 digit + 2 letters (never digits at the end), normalize phonetic
+    // digit/letter swaps in the inward code automatically.
+    function normalizeSpokenUkPostcode(raw) {
+      if (!raw) return raw;
+      const trimmed = raw.trim();
+      const compact = trimmed.replace(/[\s-]+/g, '').toUpperCase();
+      if (compact.length < 5 || compact.length > 7) return raw;
+      if (!/^[A-Z]{1,2}[0-9]/.test(compact)) return raw;
+      if (/^[A-Z]+$/.test(compact)) return raw;
+
+      const outLen = compact.length - 3;
+      const outward = compact.slice(0, outLen);
+      let inDigit = compact.slice(outLen, outLen + 1);
+      let inLetters = compact.slice(outLen + 1);
+
+      if (!/^[A-Z]{1,2}[0-9][A-Z0-9]?$/.test(outward)) return raw;
+
+      const letterToDigit = { O: '0', I: '1', L: '1', Z: '2', S: '5', B: '8', H: '8' };
+      if (letterToDigit[inDigit]) inDigit = letterToDigit[inDigit];
+      if (!/^[0-9]$/.test(inDigit)) return raw;
+
+      const digitToLetter = { '8': 'H', '0': 'O', '1': 'I', '5': 'S', '2': 'Z', '4': 'A', '6': 'G' };
+      inLetters = inLetters.split('').map(ch => digitToLetter[ch] || ch).join('');
+      if (!/^[A-Z]{2}$/.test(inLetters)) return raw;
+
+      return `${outward} ${inDigit}${inLetters}`;
+    }
+
     function isSpokenContinuation(prevText, addedText) {
       const p = (prevText || '').trim();
       const a = (addedText || '').trim();
       if (!p || !a) return false;
+      if (p.toLowerCase() === a.toLowerCase()) return false;
 
-      // 1. UK Postcode continuation: e.g. "GL5" + "5HH", "GL" + "5 5HH", "GL5 5" + "HH"
-      const combinedCompact = (p + a).replace(/[\s-]+/g, '');
+      // 1. UK Postcode continuation: e.g. "GL5" + "5HH" or "GL5" + "588", "GL" + "5 5HH", "GL5 5" + "HH"
+      const combinedNormalized = normalizeSpokenUkPostcode(`${p} ${a}`);
+      const combinedCompact = combinedNormalized.replace(/[\s-]+/g, '');
       if (/^[A-Z]{1,2}[0-9][A-Z0-9]?([0-9][A-Z]{0,2})?$/i.test(combinedCompact)) {
         return true;
       }
-      // If added part starts with a digit or is a 2-3 char inward postcode code like "5HH"
-      if (/^[0-9]/.test(a) || /^[0-9][A-Z]{2}$/i.test(a)) {
+      // If added part starts with a digit or is a 2-3 char inward postcode code like "5HH" or "588"
+      if (/^[0-9]/.test(a) || /^[0-9][A-Z0-9]{2}$/i.test(a.replace(/[\s-]+/g, ''))) {
         return true;
       }
 
@@ -2257,12 +2296,18 @@
           input.value = '';
           locInitialQSwallowed = true;
           resetSmartLocationInputState();
+          return;
+        }
+        const normalized = normalizeSpokenUkPostcode(input.value);
+        if (normalized !== input.value) {
+          input.value = normalized;
         }
       });
 
       input.addEventListener('input', (e) => {
         const now = Date.now();
         const elapsed = now - locLastInputAt;
+        const isDeletion = e && (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward');
 
         // Detect a new microphone dictation or accidental 'q' when text is already present
         if (!locPrefixToStrip && locSettledValue && input.value.startsWith(locSettledValue)) {
@@ -2294,12 +2339,50 @@
         }
 
         // Only ignore a standalone 'q' if it arrives within 1.2s of focusing/clicking the box (and only once per focus)
-        // Any subsequent 'q' (or a 'q' typed after 1.2s) is accepted normally!
         if (!locInitialQSwallowed && (now - locActivatedAt <= 1200) && input.value.trim().toLowerCase() === 'q') {
           input.value = '';
           locInitialQSwallowed = true;
           resetSmartLocationInputState();
           return;
+        }
+
+        // If the voice recognizer OVERWROTE the first half of a spoken postcode/place after a pause
+        // (e.g. first wrote "GL5", then overwrote the box with "588" or "5HH"), stitch them back together!
+        const curTrim = input.value.trim();
+        if (!isDeletion && curTrim) {
+          const curCompact = curTrim.replace(/[\s-]+/g, '');
+          // If current value is a 3-char inward code like "588" or "5HH" and we recently saw an outward code like "GL5"
+          if (locLastOutwardCode && (now - locLastOutwardAt <= 8000) && /^[0-9][A-Z0-9]{2}$/i.test(curCompact)) {
+            input.value = `${locLastOutwardCode} ${curTrim}`;
+          } else if (
+            locLastPhrase &&
+            (now - locLastPhraseAt <= 4500) &&
+            !curTrim.toLowerCase().startsWith(locLastPhrase.toLowerCase()) &&
+            !locLastPhrase.toLowerCase().startsWith(curTrim.toLowerCase()) &&
+            isSpokenContinuation(locLastPhrase, curTrim)
+          ) {
+            input.value = `${locLastPhrase} ${curTrim}`;
+          }
+        }
+
+        // Normalize spoken UK postcodes where trailing letters were heard as numbers (e.g. "GL5 588" -> "GL5 5HH")
+        if (!isDeletion && input.value.trim()) {
+          const normalized = normalizeSpokenUkPostcode(input.value);
+          if (normalized !== input.value) {
+            input.value = normalized;
+          }
+        }
+
+        // Track outward postcode prefix (e.g. "GL5") and last non-empty phrase for pause-stitching
+        const afterTrim = input.value.trim();
+        if (afterTrim) {
+          locLastPhrase = afterTrim;
+          locLastPhraseAt = now;
+          const afterCompact = afterTrim.replace(/[\s-]+/g, '').toUpperCase();
+          if (/^[A-Z]{1,2}[0-9][A-Z0-9]?$/.test(afterCompact)) {
+            locLastOutwardCode = afterCompact;
+            locLastOutwardAt = now;
+          }
         }
 
         locLastInputAt = now;
@@ -2311,6 +2394,10 @@
               input.value = added.trimStart();
             }
             locPrefixToStrip = '';
+          }
+          const normalized = normalizeSpokenUkPostcode(input.value);
+          if (normalized !== input.value) {
+            input.value = normalized;
           }
           locSettledValue = input.value;
         }, VOICE_PAUSE_RESET_MS);
@@ -2373,7 +2460,12 @@
         return;
       }
 
-      const q = input.value.trim();
+      let q = input.value.trim();
+      if (locLastOutwardCode && /^[0-9][A-Z0-9]{2}$/i.test(q.replace(/[\s-]+/g, ''))) {
+        q = `${locLastOutwardCode} ${q}`;
+      }
+      q = normalizeSpokenUkPostcode(q);
+      input.value = q;
 
       // Check for secret map unlock password
       if (q.toLowerCase() === 'showmethemap') {
