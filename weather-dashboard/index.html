@@ -837,8 +837,8 @@
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div class="flex flex-col flex-1 min-h-0">
             <div class="flex items-center mb-1 flex-shrink-0">
-              <span class="px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap">
-                10-Day Forecast &amp; Frost Risk
+              <span id="tenDayForecastTitle" class="px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap">
+                10-Day Forecast
               </span>
             </div>
 
@@ -1112,10 +1112,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=59"></script>
+  <script src="traffic-flood.js?v=60"></script>
     <script>
-    const APP_BUILD = 59;
-    const APP_VERSION = '1.8.5';
+    const APP_BUILD = 60;
+    const APP_VERSION = '1.8.6';
 
     async function checkForUpdates() {
       try {
@@ -3744,13 +3744,22 @@
       // Compute overall 10-day min/max so the horizontal temperature bars align and scale proportionally
       let periodMin = Infinity;
       let periodMax = -Infinity;
+      let hasAnyFrostRisk = false;
+
       for (let i = 0; i < daysToShow; i++) {
         const mn = Math.round(daily.temperature_2m_min[i]);
         const mx = Math.round(daily.temperature_2m_max[i]);
         if (mn < periodMin) periodMin = mn;
         if (mx > periodMax) periodMax = mx;
+        if (mn <= 5) hasAnyFrostRisk = true;
       }
       const periodSpan = Math.max(6, periodMax - periodMin);
+
+      // Dynamic panel title: only include "& Frost Risk" if any day drops to 5°C or below
+      const titleEl = document.getElementById('tenDayForecastTitle');
+      if (titleEl) {
+        titleEl.textContent = hasAnyFrostRisk ? '10-Day Forecast & Frost Risk' : '10-Day Forecast';
+      }
 
       for (let i = 0; i < daysToShow; i++) {
         const date = new Date(daily.time[i]);
@@ -3761,6 +3770,14 @@
         const min = Math.round(daily.temperature_2m_min[i]);
         const rainProb = daily.precipitation_probability_max[i] || 0;
         const hasFrostRisk = min <= 3.5;
+
+        // Max temperature color coding: orange (amber) at 25°C+, red (rose) at 30°C+
+        let maxColorClass = 'text-white font-bold';
+        if (max >= 30) {
+          maxColorClass = 'text-rose-400 font-extrabold';
+        } else if (max >= 25) {
+          maxColorClass = 'text-amber-400 font-extrabold';
+        }
 
         const leftPct = Math.max(0, Math.min(82, Math.round(((min - periodMin) / periodSpan) * 100)));
         const rightPct = Math.max(leftPct + 18, Math.min(100, Math.round(((max - periodMin) / periodSpan) * 100)));
@@ -3779,7 +3796,7 @@
           <div class="w-full h-1.5 rounded-full bg-slate-800/90 overflow-hidden relative">
             <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${leftPct}%; width: ${widthPct}%"></div>
           </div>
-          <span class="text-right text-white font-bold font-mono tabular-nums text-[11px] leading-none">${max}°</span>
+          <span class="text-right font-mono tabular-nums text-[11px] leading-none ${maxColorClass}">${max}°</span>
         `;
         container.appendChild(row);
       }
