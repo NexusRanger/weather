@@ -1119,10 +1119,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=66"></script>
+  <script src="traffic-flood.js?v=67"></script>
     <script>
-    const APP_BUILD = 66;
-    const APP_VERSION = '1.9.2';
+    const APP_BUILD = 67;
+    const APP_VERSION = '1.9.3';
 
     async function checkForUpdates() {
       try {
@@ -4085,6 +4085,8 @@
       }
     }
 
+    let panoramicSlideTimer = null;
+
     function resetPanoramicAutoTimer() {
       if (hourlyResetTimer) clearTimeout(hourlyResetTimer);
       hourlyResetTimer = setTimeout(() => {
@@ -4092,24 +4094,41 @@
       }, 20000);
     }
 
-    function stepPanoramicDay(delta) {
+    function stepPanoramicDay(delta, startDragPx = 0) {
       if (!isHourlyCompressed) return;
       const nextOffset = Math.max(-1, Math.min(9, panoramicDayOffset + delta));
       if (nextOffset !== panoramicDayOffset) {
+        const dir = nextOffset > panoramicDayOffset ? 1 : -1;
         panoramicDayOffset = nextOffset;
-        renderHourly(cachedHourlyData);
+        renderHourly(cachedHourlyData, dir, startDragPx);
+      } else {
+        // At boundary (-1 or +9): spring current row gently back to center
+        const container = document.getElementById('hourlyTimeline');
+        const activeRow = container ? container.querySelector('.panoramic-day-row') : null;
+        if (activeRow) {
+          if (startDragPx === 0) {
+            activeRow.style.transition = 'none';
+            activeRow.style.transform = `translateX(${delta > 0 ? -18 : 18}px)`;
+            void activeRow.offsetWidth;
+          }
+          activeRow.style.transition = 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)';
+          activeRow.style.transform = 'translateX(0px)';
+        }
       }
       resetPanoramicAutoTimer();
     }
 
-    function renderHourly(hourly) {
+    function renderHourly(hourly, slideDirection = 0, startDragPx = 0) {
       if (!hourly || !hourly.time) return;
       cachedHourlyData = hourly;
 
       const container = document.getElementById('hourlyTimeline');
       if (!container) return;
       cancelHourlyGlide();
-      container.innerHTML = '';
+      if (panoramicSlideTimer) {
+        clearTimeout(panoramicSlideTimer);
+        panoramicSlideTimer = null;
+      }
 
       // Find current hour index in the location's local time (using cur.time prefix if available)
       let nowIndex = -1;
@@ -4131,7 +4150,8 @@
       }
 
       if (isHourlyCompressed) {
-        container.className = 'flex gap-1 w-full overflow-hidden pb-0.5';
+        const oldRow = (slideDirection !== 0) ? container.querySelector('.panoramic-day-row:last-child, .panoramic-day-row') : null;
+        container.className = 'w-full overflow-hidden pb-0.5 relative';
 
         // Determine the 24-hour slice to display based on panoramicDayOffset
         let sliceStart = nowIndex;
@@ -4167,8 +4187,6 @@
 
         const sliceEnd = Math.min(sliceStart + 24, hourly.time.length);
 
-        // Scale vertical temperature spark-bars across a consistent multi-day range (or at least 12° span)
-        // so day-to-day temperature shifts and cold snaps are immediately obvious!
         let minTemp = 999;
         let maxTemp = -999;
         for (let i = sliceStart; i < sliceEnd; i++) {
@@ -4183,11 +4201,23 @@
         const labelEl = document.getElementById('panoramicDayLabel');
         if (labelEl) {
           labelEl.textContent = `${dayLabelText} • ▲${dayHigh}° ▼${dayLow}°`;
+          if (slideDirection !== 0) {
+            labelEl.style.transition = 'none';
+            labelEl.style.transform = `translateX(${slideDirection > 0 ? 18 : -18}px)`;
+            labelEl.style.opacity = '0.35';
+            void labelEl.offsetWidth;
+            labelEl.style.transition = 'transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease-out';
+            labelEl.style.transform = 'translateX(0px)';
+            labelEl.style.opacity = '1';
+          }
         }
         const prevBtn = document.getElementById('panoramicPrevBtn');
         const nextBtn = document.getElementById('panoramicNextBtn');
         if (prevBtn) prevBtn.style.opacity = panoramicDayOffset <= -1 ? '0.3' : '1';
         if (nextBtn) nextBtn.style.opacity = panoramicDayOffset >= 9 ? '0.3' : '1';
+
+        const newRow = document.createElement('div');
+        newRow.className = 'panoramic-day-row flex gap-1 w-full flex-shrink-0';
 
         for (let i = sliceStart; i < sliceEnd; i++) {
           const d = new Date(hourly.time[i]);
@@ -4229,10 +4259,53 @@
               <div class="h-full ${rainProb >= 50 ? 'bg-sky-400' : rainProb > 0 ? 'bg-sky-500/80' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
             </div>
           `;
-          container.appendChild(card);
+          newRow.appendChild(card);
+        }
+
+        // Side-by-side horizontal carousel scroll between outgoing day and incoming day
+        if (oldRow && slideDirection !== 0) {
+          oldRow.style.transition = 'none';
+          oldRow.style.transform = 'none';
+          const track = document.createElement('div');
+          track.className = 'flex w-full';
+          track.style.gap = '14px';
+          track.style.willChange = 'transform';
+
+          if (slideDirection > 0) {
+            track.appendChild(oldRow);
+            track.appendChild(newRow);
+            container.innerHTML = '';
+            container.appendChild(track);
+            track.style.transform = `translateX(${startDragPx}px)`;
+            void track.offsetWidth;
+            track.style.transition = 'transform 380ms cubic-bezier(0.22, 1, 0.36, 1)';
+            track.style.transform = 'translateX(calc(-100% - 14px))';
+          } else {
+            track.appendChild(newRow);
+            track.appendChild(oldRow);
+            container.innerHTML = '';
+            container.appendChild(track);
+            track.style.transform = `translateX(calc(-100% - 14px + ${startDragPx}px))`;
+            void track.offsetWidth;
+            track.style.transition = 'transform 380ms cubic-bezier(0.22, 1, 0.36, 1)';
+            track.style.transform = 'translateX(0px)';
+          }
+
+          panoramicSlideTimer = setTimeout(() => {
+            panoramicSlideTimer = null;
+            if (isHourlyCompressed && container.contains(track)) {
+              container.innerHTML = '';
+              container.appendChild(newRow);
+            }
+          }, 390);
+        } else {
+          container.innerHTML = '';
+          container.appendChild(newRow);
         }
         return;
       }
+
+      container.innerHTML = '';
 
       // NORMAL SCROLLING VIEW: Past 8 hours of overnight history + current hour + next 24 hours of forecast
       container.className = 'flex gap-1.5 overflow-x-auto pb-0.5';
@@ -4410,12 +4483,21 @@
       }, { passive: true });
 
       footer.addEventListener('touchmove', (e) => {
-        if (!pressTimer) return;
-        const dx = Math.abs(e.touches[0].clientX - startX);
+        if (!e.touches || e.touches.length !== 1) return;
+        const rawDx = e.touches[0].clientX - startX;
+        const dx = Math.abs(rawDx);
         const dy = Math.abs(e.touches[0].clientY - startY);
-        if (dx > 10 || dy > 10) {
+        if (pressTimer && (dx > 10 || dy > 10)) {
           clearTimeout(pressTimer);
           pressTimer = null;
+        }
+        // Live visual drag feedback while sliding finger sideways in Panoramic mode
+        if (isHourlyCompressed && dx > 8 && dx > dy) {
+          const activeRow = container.querySelector('.panoramic-day-row');
+          if (activeRow) {
+            activeRow.style.transition = 'none';
+            activeRow.style.transform = `translateX(${Math.round(rawDx * 0.45)}px)`;
+          }
         }
       }, { passive: true });
 
@@ -4424,13 +4506,20 @@
           clearTimeout(pressTimer);
           pressTimer = null;
         }
-        // In 24h Panoramic mode, swiping left/right steps forward/backward through upcoming days!
+        // In 24h Panoramic mode, swiping left/right steps forward/backward through upcoming days with smooth scroll!
         if (isHourlyCompressed && e.changedTouches && e.changedTouches.length === 1) {
           const dx = e.changedTouches[0].clientX - startX;
           const dy = Math.abs(e.changedTouches[0].clientY - startY);
-          if (Math.abs(dx) > 40 && dy < 60) {
-            if (dx < 0) stepPanoramicDay(1);
-            else stepPanoramicDay(-1);
+          const dragPx = Math.round(dx * 0.45);
+          if (Math.abs(dx) > 38 && dy < 70) {
+            if (dx < 0) stepPanoramicDay(1, dragPx);
+            else stepPanoramicDay(-1, dragPx);
+          } else {
+            const activeRow = container.querySelector('.panoramic-day-row');
+            if (activeRow) {
+              activeRow.style.transition = 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)';
+              activeRow.style.transform = 'translateX(0px)';
+            }
           }
         }
       }, { passive: true });
