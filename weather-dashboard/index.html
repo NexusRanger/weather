@@ -573,23 +573,27 @@
           <div class="grid grid-cols-2 gap-1 mt-1 pt-1 border-t border-white/10 flex-1 min-h-0">
             
             <!-- Wind -->
-            <div id="windTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
-                <span>Wind</span>
-                <div class="flex items-center gap-1.5">
-                  <div class="w-4 h-4 rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center flex-shrink-0 shadow-sm" title="Wind flow compass">
-                    <svg id="windArrowIcon" class="w-2.5 h-2.5 text-sky-300 transition-transform duration-700" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
-                    </svg>
-                  </div>
-                  <span id="windCompass" class="text-sky-300 font-mono font-bold text-xs">--</span>
+            <div id="windTile" class="glass-tile rounded-lg p-1.5 flex items-stretch justify-between gap-1.5 transition-all">
+              <div class="flex flex-col justify-between min-w-0 flex-1">
+                <div class="text-[10px] text-slate-400 leading-none">Wind</div>
+                <div class="flex items-baseline gap-1 my-0.5">
+                  <span id="windSpeed" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                  <span class="text-[9px] text-slate-400">mph</span>
+                </div>
+                <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
+              </div>
+              <div class="flex flex-col items-center justify-between flex-shrink-0 pl-1">
+                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[11px] leading-none">--</span>
+                <div class="w-8 h-8 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_8px_rgba(56,189,248,0.2)] mt-0.5" title="Wind flow compass">
+                  <span class="absolute top-0.5 text-[6px] font-mono font-bold text-sky-300/75 leading-none">N</span>
+                  <span class="absolute bottom-0.5 w-0.5 h-1 bg-white/25 rounded-full"></span>
+                  <span class="absolute left-0.5 w-1 h-0.5 bg-white/25 rounded-full"></span>
+                  <span class="absolute right-0.5 w-1 h-0.5 bg-white/25 rounded-full"></span>
+                  <svg id="windArrowIcon" class="w-4 h-4 text-sky-300 transition-transform duration-700 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                  </svg>
                 </div>
               </div>
-              <div class="flex items-baseline gap-1 my-0.5">
-                <span id="windSpeed" class="text-sm font-bold font-mono text-white leading-none">--</span>
-                <span class="text-[9px] text-slate-400">mph</span>
-              </div>
-              <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
             </div>
 
             <!-- Barometer -->
@@ -794,11 +798,10 @@
       <div id="colSevenDay" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div class="flex flex-col flex-1 min-h-0">
-            <div class="flex items-center justify-between mb-1 flex-shrink-0">
-              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30">
+            <div class="flex items-center mb-1 flex-shrink-0">
+              <span class="px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap">
                 10-Day Forecast &amp; Frost Risk
               </span>
-              <span class="text-[9px] text-slate-400 font-mono">Temp / Rain / Frost</span>
             </div>
 
             <div id="sevenDayList" class="flex-1 flex flex-col justify-between gap-[2px] min-h-0">
@@ -837,22 +840,21 @@
 
     <!-- 24-HOUR HOURLY TIMELINE STRIP (WITH OVERNIGHT HISTORY & MULTI-DAY 24H PANORAMIC GLANCE) -->
     <footer id="footerTimeline" tabindex="0" class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer focus:outline-none" title="Press OK, click, or long-press for 24-hour panoramic view • Use Left/Right to scroll or step through days">
-      <div class="flex items-center justify-between mb-0.5 px-0.5">
-        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-          <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
-          <span id="timelineTitle">24-Hour Forecast &amp; Rain Probability</span>
+      <div class="flex items-center justify-between gap-2 mb-0.5 px-0.5">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2 whitespace-nowrap flex-shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-sky-400 flex-shrink-0"></span>
+          <span id="timelineTitle" class="whitespace-nowrap">24-Hour Forecast &amp; Rain Probability</span>
           <!-- Multi-Day Panoramic Controls (shown in 24h Glance mode) -->
-          <div id="panoramicDayNav" class="hidden items-center gap-1">
+          <div id="panoramicDayNav" class="hidden items-center gap-1 whitespace-nowrap">
             <button id="panoramicPrevBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(-1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Previous 24h Day (Left Arrow)">◀</button>
-            <span id="panoramicDayLabel" class="text-[9px] font-bold font-mono px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/35">Next 24 Hours</span>
+            <span id="panoramicDayLabel" class="text-[9px] font-bold font-mono px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/35 whitespace-nowrap">Next 24 Hours</span>
             <button id="panoramicNextBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Next 24h Day (Right Arrow)">▶</button>
-            <span class="text-[8px] font-mono text-slate-400 ml-1 hidden md:inline">◀ ▶ Step Days • Auto-resets</span>
           </div>
         </div>
-        <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2.5">
-          <span id="timelineHintText" class="text-[8px] text-slate-400 opacity-80 hidden sm:inline">◀ Scroll left for overnight history • Click / OK for 24h glance</span>
-          <span class="flex items-center gap-1"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp</span>
-          <span class="flex items-center gap-1"><span class="w-3 h-1.5 rounded-sm bg-sky-400"></span> Rain %</span>
+        <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2.5 whitespace-nowrap">
+          <span id="timelineHintText" class="text-[8px] text-slate-400 opacity-85 hidden sm:inline-flex flex-col items-end leading-tight text-right whitespace-nowrap">◀ Scroll left for overnight history • Click / OK for 24h glance</span>
+          <span class="flex items-center gap-1 whitespace-nowrap"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp</span>
+          <span class="flex items-center gap-1 whitespace-nowrap"><span class="w-3 h-1.5 rounded-sm bg-sky-400"></span> Rain %</span>
         </div>
       </div>
 
@@ -1072,10 +1074,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=51"></script>
+  <script src="traffic-flood.js?v=52"></script>
     <script>
-    const APP_BUILD = 51;
-    const APP_VERSION = '1.7.7';
+    const APP_BUILD = 52;
+    const APP_VERSION = '1.7.8';
 
     async function checkForUpdates() {
       try {
@@ -3847,7 +3849,9 @@
           dayNav.classList.remove('hidden');
           dayNav.classList.add('inline-flex');
         }
-        if (hintText) hintText.textContent = '◀ ▶ Step through upcoming days • Click / OK to exit';
+        if (hintText) {
+          hintText.innerHTML = '<span>◀ ▶ Step through upcoming days</span><span class="text-slate-500">Click / OK to exit • Auto-resets</span>';
+        }
         renderHourly(cachedHourlyData);
 
         // Maintain focus on #footerTimeline so clicking/pressing OK or Left/Right works immediately
@@ -3861,7 +3865,9 @@
           dayNav.classList.add('hidden');
           dayNav.classList.remove('inline-flex');
         }
-        if (hintText) hintText.textContent = '◀ Scroll left for overnight history • Click / OK for 24h glance';
+        if (hintText) {
+          hintText.textContent = '◀ Scroll left for overnight history • Click / OK for 24h glance';
+        }
         renderHourly(cachedHourlyData);
 
         if (footer) footer.focus({ preventScroll: true });
