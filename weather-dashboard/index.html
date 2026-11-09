@@ -1112,10 +1112,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=58"></script>
+  <script src="traffic-flood.js?v=59"></script>
     <script>
-    const APP_BUILD = 58;
-    const APP_VERSION = '1.8.4';
+    const APP_BUILD = 59;
+    const APP_VERSION = '1.8.5';
 
     async function checkForUpdates() {
       try {
@@ -1747,6 +1747,8 @@
       lon: -2.2259,
       desc: '51.70°N, 2.23°W • Elev. 120m'
     };
+    let ACTIVE_TIMEZONE = 'Europe/London';
+    let ACTIVE_UTC_OFFSET_SECONDS = 0;
     const TIMEZONE = 'Europe/London';
     // Key pool: add additional free TomTom keys here whenever you want to expand quota
     const TOMTOM_KEYS = [
@@ -2815,13 +2817,34 @@
 
     function updateClock() {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
+      let hours = String(now.getHours()).padStart(2, '0');
+      let minutes = String(now.getMinutes()).padStart(2, '0');
+      let seconds = String(now.getSeconds()).padStart(2, '0');
+      let dateText = now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+      if (ACTIVE_TIMEZONE) {
+        try {
+          const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: ACTIVE_TIMEZONE,
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false
+          }).formatToParts(now);
+          const p = {};
+          parts.forEach(part => { p[part.type] = part.value; });
+          if (p.hour && p.minute && p.second) {
+            hours = p.hour;
+            minutes = p.minute;
+            seconds = p.second;
+          }
+          dateText = now.toLocaleDateString('en-GB', {
+            weekday: 'short', day: 'numeric', month: 'short',
+            timeZone: ACTIVE_TIMEZONE
+          });
+        } catch (_) {}
+      }
 
       document.getElementById('clockTime').innerHTML = `${hours}:${minutes}<span class="text-xs text-slate-400">:${seconds}</span>`;
-      const options = { weekday: 'short', day: 'numeric', month: 'short' };
-      document.getElementById('clockDate').textContent = now.toLocaleDateString('en-GB', options);
+      document.getElementById('clockDate').textContent = dateText;
       
       checkSolarMilestoneHighlights();
     }
@@ -3401,6 +3424,13 @@
         if (!weatherRes.ok) throw new Error('Weather API error: ' + weatherRes.status);
         const data = await weatherRes.json();
         
+        if (data && data.timezone) {
+          ACTIVE_TIMEZONE = data.timezone;
+        }
+        if (data && typeof data.utc_offset_seconds === 'number') {
+          ACTIVE_UTC_OFFSET_SECONDS = data.utc_offset_seconds;
+        }
+
         let aqiData = null;
         if (aqiRes && aqiRes.ok) aqiData = await aqiRes.json();
 
@@ -3600,7 +3630,7 @@
       document.getElementById('moonPhaseName').textContent = moon.name;
       document.getElementById('moonIllumination').textContent = `${moon.illumination}% lit`;
 
-      // Sun
+      // Sun & Solar Milestones (Calculate in target location local time & universal UTC epoch)
       const sunriseStr = daily.sunrise[0].split('T')[1];
       const sunsetStr = daily.sunset[0].split('T')[1];
       document.getElementById('sunriseTime').textContent = sunriseStr;
@@ -3613,12 +3643,25 @@
         document.getElementById('daylightLength').textContent = `${dh}h ${dm}m`;
       }
 
+      // Convert local ISO string (e.g. "2026-11-10T05:47") into true UTC epoch timestamp
+      // using the location's UTC offset returned directly by Open-Meteo
+      const parseLocationIsoToMs = (isoStr) => {
+        if (!isoStr) return 0;
+        const sign = ACTIVE_UTC_OFFSET_SECONDS >= 0 ? '+' : '-';
+        const absSec = Math.abs(ACTIVE_UTC_OFFSET_SECONDS);
+        const hh = String(Math.floor(absSec / 3600)).padStart(2, '0');
+        const mm = String(Math.floor((absSec % 3600) / 60)).padStart(2, '0');
+        const tzSuffix = `${sign}${hh}:${mm}`;
+        return new Date(`${isoStr}:00${tzSuffix}`).getTime();
+      };
+
       const now = new Date();
-      const targetLocalNow = cur.time ? new Date(cur.time) : now;
-      const sunsetDate = new Date(daily.sunset[0]);
-      const sunriseDate = new Date(daily.sunrise[0]);
-      if (cur.is_day && targetLocalNow < sunsetDate && targetLocalNow > sunriseDate) {
-        const diffMins = Math.round((sunsetDate - targetLocalNow) / 60000);
+      const nowMs = now.getTime();
+      const sunsetMs = parseLocationIsoToMs(daily.sunset[0]);
+      const sunriseMs = parseLocationIsoToMs(daily.sunrise[0]);
+
+      if (cur.is_day && nowMs < sunsetMs && nowMs > sunriseMs) {
+        const diffMins = Math.round((sunsetMs - nowMs) / 60000);
         const h = Math.floor(diffMins / 60);
         const m = diffMins % 60;
         document.getElementById('sunCountdown').textContent = `Sunset in ${h}h ${m}m`;
@@ -3628,6 +3671,7 @@
 
       // Calculate Seasonal Astronomical Civil Twilight & Cloud-Adjusted Light At / Dark By
       try {
+        const targetLocalNow = cur.time ? new Date(cur.time) : now;
         const startOfYear = new Date(targetLocalNow.getFullYear(), 0, 0);
         const dayOfYear = Math.floor((targetLocalNow - startOfYear) / (1000 * 60 * 60 * 24));
         const latRad = (CURRENT_LOCATION.lat * Math.PI) / 180;
@@ -3635,7 +3679,6 @@
         const decRad = (declinationDeg * Math.PI) / 180;
 
         // Hour angles: h0 = geometric sunrise/sunset (-0.833°), h1 = practical woodland twilight (-8.5°)
-        // Practical twilight is the outdoor threshold where you can walk along paths / trees without a torch.
         const cosH0 = (Math.sin((-0.833 * Math.PI) / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
         const cosH1 = (Math.sin((-8.5 * Math.PI) / 180) - Math.sin(latRad) * Math.sin(decRad)) / (Math.cos(latRad) * Math.cos(decRad));
 
@@ -3646,26 +3689,24 @@
           baseTwilightMins = Math.max(35, Math.min(105, Math.round(4 * (h1 - h0))));
         }
 
-        // Cloud factor: In the UK, overcast cloud blocks scattering twilight light from the sky.
-        // 0% cloud -> full twilight advantage (e.g. 1h 15m to 1h 25m in summer, ~55m to 1h 05m in winter).
-        // 100% cloud -> drops to ~30% (~18-22m before sunrise / after sunset).
         const cloudPct = (cur.cloud_cover !== undefined && cur.cloud_cover !== null) ? cur.cloud_cover : 50;
         const cloudFactor = Math.max(0.28, 1.0 - (cloudPct / 100) * 0.70);
         const effectiveTwilightMins = Math.max(12, Math.round(baseTwilightMins * cloudFactor));
 
-        const lightAtDate = new Date(sunriseDate.getTime() - effectiveTwilightMins * 60000);
-        const darkByDate = new Date(sunsetDate.getTime() + effectiveTwilightMins * 60000);
+        const lightAtMs = sunriseMs - effectiveTwilightMins * 60000;
+        const darkByMs = sunsetMs + effectiveTwilightMins * 60000;
 
-        const fmtTime = (d) => {
-          const hh = String(d.getHours()).padStart(2, '0');
-          const mm = String(d.getMinutes()).padStart(2, '0');
-          return `${hh}:${mm}`;
+        const fmtTimeFromMs = (ms) => {
+          return new Date(ms).toLocaleTimeString('en-GB', {
+            hour: '2-digit', minute: '2-digit', hour12: false,
+            timeZone: ACTIVE_TIMEZONE
+          });
         };
 
         const lightAtEl = document.getElementById('lightAtTime');
         const darkByEl = document.getElementById('darkByTime');
-        if (lightAtEl) lightAtEl.textContent = fmtTime(lightAtDate);
-        if (darkByEl) darkByEl.textContent = fmtTime(darkByDate);
+        if (lightAtEl) lightAtEl.textContent = fmtTimeFromMs(lightAtMs);
+        if (darkByEl) darkByEl.textContent = fmtTimeFromMs(darkByMs);
 
         const lightTagEl = document.getElementById('lightAtCloudTag');
         const darkTagEl = document.getElementById('darkByCloudTag');
@@ -3677,10 +3718,10 @@
         if (summaryEl) summaryEl.textContent = `${cloudLabel} (${cloudPct}% cloud)`;
 
         solarMilestones = {
-          lightAt: lightAtDate,
-          sunrise: sunriseDate,
-          sunset: sunsetDate,
-          darkBy: darkByDate
+          lightAt: new Date(lightAtMs),
+          sunrise: new Date(sunriseMs),
+          sunset: new Date(sunsetMs),
+          darkBy: new Date(darkByMs)
         };
         checkSolarMilestoneHighlights();
       } catch (err) {
