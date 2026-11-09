@@ -144,6 +144,38 @@
       will-change: transform;
       animation: marqueeScrollLeft var(--advice-scroll-duration, 10s) linear infinite;
     }
+    @keyframes marqueeScrollLeftFrost {
+      0%, 20% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      65% {
+        transform: translateX(var(--frost-scroll-distance, -100px));
+        opacity: 1;
+      }
+      86% {
+        transform: translateX(var(--frost-scroll-distance, -100px));
+        opacity: 1;
+      }
+      92% {
+        transform: translateX(var(--frost-scroll-distance, -100px));
+        opacity: 0;
+      }
+      94% {
+        transform: translateX(0);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .frost-scroll {
+      display: inline-block !important;
+      will-change: transform;
+      animation: marqueeScrollLeftFrost var(--frost-scroll-duration, 11s) linear infinite;
+      animation-delay: 5.5s; /* Staggered phase offset so windscreen & night sky never scroll together */
+    }
     #stargazingAdviceContainer.has-fade,
     #frostDetailContainer.has-fade {
       mask-image: linear-gradient(to right, black 85%, transparent 100%);
@@ -1080,10 +1112,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=57"></script>
+  <script src="traffic-flood.js?v=58"></script>
     <script>
-    const APP_BUILD = 57;
-    const APP_VERSION = '1.8.3';
+    const APP_BUILD = 58;
+    const APP_VERSION = '1.8.4';
 
     async function checkForUpdates() {
       try {
@@ -2883,18 +2915,18 @@
       const textEl = document.getElementById('frostDetail');
       if (!container || !textEl) return;
 
-      textEl.classList.remove('stargazing-scroll');
-      textEl.style.removeProperty('--advice-scroll-distance');
-      textEl.style.removeProperty('--advice-scroll-duration');
+      textEl.classList.remove('frost-scroll');
+      textEl.style.removeProperty('--frost-scroll-distance');
+      textEl.style.removeProperty('--frost-scroll-duration');
       container.classList.remove('has-fade');
 
       setTimeout(() => {
         const diff = textEl.scrollWidth - container.clientWidth;
         if (diff > 4) {
-          textEl.style.setProperty('--advice-scroll-distance', `-${diff + 12}px`);
+          textEl.style.setProperty('--frost-scroll-distance', `-${diff + 12}px`);
           const duration = Math.max(12, Math.round(diff / 16) + 6);
-          textEl.style.setProperty('--advice-scroll-duration', `${duration}s`);
-          textEl.classList.add('stargazing-scroll');
+          textEl.style.setProperty('--frost-scroll-duration', `${duration}s`);
+          textEl.classList.add('frost-scroll');
           container.classList.add('has-fade');
         }
       }, 80);
