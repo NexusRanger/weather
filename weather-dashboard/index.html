@@ -285,6 +285,11 @@
       transform: scale(1.02);
     }
 
+    /* Hide Leaflet bottom-right attribution & flag link completely */
+    .leaflet-control-attribution {
+      display: none !important;
+    }
+
     .ambient-glow {
       position: fixed;
       top: -15%;
@@ -448,7 +453,7 @@
             <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
           </button>
           <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline flex-shrink-0 whitespace-nowrap">51.70°N, 2.23°W</span>
-          <button onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0" aria-label="Location History Map">
+          <button id="headerGlobeBtn" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="tv-focus-amber p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none" aria-label="Location History Map">
             <svg class="w-4 h-4 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
               <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
@@ -919,8 +924,8 @@
         </div>
         <div class="flex items-center gap-2">
           <!-- Prominent TV-focusable Close Button -->
-          <button id="closeMapBtnTop" onclick="closeHistoryMapModal()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500/30 border border-white/20 hover:border-rose-400/40 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:bg-sky-500/30 active:scale-95 cursor-pointer" tabindex="0" title="Close Map (Back / Esc)">
-            <span class="text-sm">✕</span>
+          <button id="closeMapBtnTop" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white text-xs font-semibold border border-white/15 focus:outline-none transition-all flex items-center gap-1.5 cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             <span>Close</span>
           </button>
         </div>
@@ -937,7 +942,7 @@
           <!-- Chips injected dynamically -->
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button onclick="closeHistoryMapModal()" class="px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition focus:outline-none focus:ring-2 focus:ring-white flex items-center gap-1" tabindex="0">
+          <button id="closeMapBtnBottom" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition focus:outline-none flex items-center gap-1 cursor-pointer" tabindex="0">
             ✕ Close
           </button>
         </div>
@@ -1044,10 +1049,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=41"></script>
+  <script src="traffic-flood.js?v=42"></script>
     <script>
-    const APP_BUILD = 41;
-    const APP_VERSION = '1.6.0';
+    const APP_BUILD = 42;
+    const APP_VERSION = '1.6.1';
 
     async function checkForUpdates() {
       try {
@@ -1176,22 +1181,40 @@
       if (!modal) return;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-      try { history.pushState({ modal: 'historyMap' }, ''); } catch (_) {}
+      try {
+        if (!history.state || history.state.modal !== 'historyMap') {
+          history.pushState({ modal: 'historyMap' }, '');
+        }
+      } catch (_) {}
+
+      // Clear prior focus so the user clearly sees the Close button light up in amber
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      initOrRefreshHistoryMap();
+
+      // TV D-Pad UX: Focus arrives after ~350ms so the modal opens smoothly first,
+      // and then the Close button lights up in warm amber-yellow.
       setTimeout(() => {
         const btn = document.getElementById('closeMapBtnTop');
         if (btn) btn.focus();
-      }, 150);
-      initOrRefreshHistoryMap();
+      }, 350);
     }
 
     function closeHistoryMapModal(pop = true) {
       const modal = document.getElementById('historyMapModal');
-      if (!modal) return;
+      if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.add('hidden');
       modal.classList.remove('flex');
       if (pop && history.state && history.state.modal === 'historyMap') {
         try { history.back(); } catch (_) {}
       }
+      // Return focus cleanly to the top bar Location button
+      setTimeout(() => {
+        const topBtn = document.getElementById('headerLocationBtn');
+        if (topBtn) topBtn.focus();
+      }, 100);
     }
 
     function clearHistoryQueries() {
@@ -1379,18 +1402,22 @@
 
         historyLeafletMap = L.map('historyLeafletMap', {
           zoomControl: true,
-          attributionControl: true,
-          keyboard: false,  // Prevent Leaflet from trapping TV D-pad navigation
+          attributionControl: false, // Remove bottom-right Leaflet link & Ukrainian flag
+          keyboard: false,           // Prevent Leaflet from trapping TV D-pad navigation
           boxZoom: false
         }).setView([40, -10], 2);
 
         // Remove Leaflet map container from D-pad tab order so navigation doesn't get trapped
         const mapCanvasEl = historyLeafletMap.getContainer();
-        if (mapCanvasEl) mapCanvasEl.setAttribute('tabindex', '-1');
+        if (mapCanvasEl) {
+          mapCanvasEl.setAttribute('tabindex', '-1');
+          mapCanvasEl.addEventListener('keydown', handleGlobalBack, true);
+          mapCanvasEl.addEventListener('keyup', handleGlobalBack, true);
+        }
 
         // Dark Canvas Base layer (No API key required)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '&copy; Esri, DeLorme, NAVTEQ',
+          attribution: '',
           maxZoom: 16
         }).addTo(historyLeafletMap);
 
@@ -1912,7 +1939,7 @@
         }
         input.value = '';
         setTimeout(() => {
-          closeLocationModal();
+          closeLocationModal(false);
           openHistoryMapModal();
         }, 800);
         return;
@@ -3318,6 +3345,10 @@
       if (mapModal && !mapModal.classList.contains('hidden')) {
         closeHistoryMapModal(false);
       }
+      const shareModal = document.getElementById('shareModal');
+      if (shareModal && !shareModal.classList.contains('hidden')) {
+        closeShareModal(false);
+      }
       const locModal = document.getElementById('locationModal');
       if (locModal && !locModal.classList.contains('hidden')) {
         closeLocationModal(false);
@@ -3352,11 +3383,16 @@
       );
     }
 
-        function openShareModal() {
+    function openShareModal() {
       const modal = document.getElementById('shareModal');
       if (!modal) return;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      try {
+        if (!history.state || history.state.modal !== 'shareModal') {
+          history.pushState({ modal: 'shareModal' }, '');
+        }
+      } catch (_) {}
 
       // Generate current share URL with postcode
       let shareUrl = window.location.href;
@@ -3424,11 +3460,14 @@
       container.appendChild(img);
     }
 
-    function closeShareModal() {
+    function closeShareModal(pop = true) {
       const modal = document.getElementById('shareModal');
-      if (!modal) return;
+      if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.add('hidden');
       modal.classList.remove('flex');
+      if (pop && history.state && history.state.modal === 'shareModal') {
+        try { history.back(); } catch (_) {}
+      }
     }
 
     async function copyShareUrl() {
@@ -3502,9 +3541,11 @@
       }
     }
 
-    // Capture phase listeners (runs before Leaflet or any child can swallow the key)
+    // Capture phase listeners on both keydown and keyup (runs before Leaflet or any child can swallow the key)
     window.addEventListener('keydown', handleGlobalBack, true);
     document.addEventListener('keydown', handleGlobalBack, true);
+    window.addEventListener('keyup', handleGlobalBack, true);
+    document.addEventListener('keyup', handleGlobalBack, true);
 
     updateClock();
     setInterval(updateClock, 1000);
