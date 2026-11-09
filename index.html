@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030712">
-  <link rel="manifest" href="manifest.json?v=31">
+  <link rel="manifest" href="manifest.json?v=32">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -147,6 +147,67 @@
     #stargazingAdviceContainer.has-fade {
       mask-image: linear-gradient(to right, black 85%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    }
+
+    /* TV Focus Warm Amber Glow (Matching main page milestone highlight) */
+    .tv-focus-amber:focus,
+    .tv-focus-amber:focus-visible {
+      outline: none !important;
+      border-color: #fbbf24 !important;
+      background-color: rgba(245, 158, 11, 0.28) !important;
+      box-shadow: 0 0 0 2px #fbbf24, 0 0 16px rgba(251, 191, 36, 0.55) !important;
+      color: #ffffff !important;
+      transform: scale(1.02);
+      transition: all 0.2s ease-out;
+    }
+
+    /* Wind Speed Warning Highlights */
+    .wind-warning-amber {
+      border: 1.5px solid #f59e0b !important;
+      background: rgba(245, 158, 11, 0.18) !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35) !important;
+    }
+    .wind-warning-red {
+      border: 1.5px solid #f43f5e !important;
+      background: rgba(244, 63, 94, 0.22) !important;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.45) !important;
+    }
+
+    /* Rain Today Wet Highlight */
+    .rain-today-wet {
+      border: 1.5px solid #38bdf8 !important;
+      background: rgba(56, 189, 248, 0.16) !important;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.35) !important;
+    }
+
+    /* Frost Warning Glowing Pulses */
+    @keyframes frostGlowPulse {
+      0%, 100% {
+        border-color: rgba(56, 189, 248, 0.45);
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+      }
+      50% {
+        border-color: rgba(147, 197, 253, 0.95);
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+      }
+    }
+    .frost-alert-pulse {
+      animation: frostGlowPulse 2.4s ease-in-out infinite;
+      border: 1.5px solid #38bdf8 !important;
+    }
+    @keyframes frostRosePulse {
+      0%, 100% {
+        border-color: rgba(244, 63, 94, 0.45);
+        box-shadow: 0 0 8px rgba(244, 63, 94, 0.2);
+      }
+      50% {
+        border-color: rgba(251, 113, 133, 0.95);
+        box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
+      }
+    }
+    .frost-alert-rose-pulse {
+      animation: frostRosePulse 2.4s ease-in-out infinite;
+      border: 1.5px solid #f43f5e !important;
     }
 
     /* Solar Milestone Highlight Glows */
@@ -444,7 +505,7 @@
           <div class="grid grid-cols-2 gap-1 mt-1 pt-1 border-t border-white/10 flex-1 min-h-0">
             
             <!-- Wind -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
+            <div id="windTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Wind</span>
                 <span id="windCompass" class="text-sky-400 font-mono font-bold">--</span>
@@ -496,7 +557,7 @@
             </div>
 
             <!-- Rain Today -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
+            <div id="rainTodayTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Rain Today</span>
                 <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono">--%</span>
@@ -732,7 +793,7 @@
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <span>📍</span> Set Location (Postcode, Town or GPS)
         </h3>
-        <button id="closeLocationBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="closeLocationModal()" title="Close (or Esc/Back)" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white text-xs font-semibold border border-white/15 focus:ring-2 focus:ring-sky-400 focus:bg-white/20 focus:outline-none transition flex items-center gap-1.5">
+        <button id="closeLocationBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="closeLocationModal()" title="Close (or Esc/Back)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white text-xs font-semibold border border-white/15 focus:outline-none transition-all flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           <span>Close</span>
         </button>
@@ -742,7 +803,7 @@
         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter UK Postcode or Town Name</label>
         <div class="flex gap-2">
           <input id="locationInput" tabindex="4" type="text" placeholder="e.g. Stroud, Bath, GL5 5HH, Cheltenham" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
-          <button id="searchLocBtn" tabindex="2" onclick="searchLocationFromModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:ring-2 focus:ring-sky-400 focus:outline-none" onkeydown="handleSearchBtnKeydown(event)">
+          <button id="searchLocBtn" tabindex="2" onclick="searchLocationFromModal()" class="tv-focus-amber px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none" onkeydown="handleSearchBtnKeydown(event)">
             Search
           </button>
         </div>
@@ -751,7 +812,7 @@
 
       <!-- Quick GPS Button -->
       <div class="mt-3 pt-3 border-t border-white/10">
-        <button id="gpsModalBtn" tabindex="3" onclick="detectCurrentLocation(); closeLocationModal();" class="w-full py-2 px-3 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/30 font-semibold text-xs transition flex items-center justify-center gap-2 focus:ring-2 focus:ring-sky-400 focus:outline-none" onkeydown="handleGpsBtnKeydown(event)">
+        <button id="gpsModalBtn" tabindex="3" onclick="detectCurrentLocation(); closeLocationModal();" class="tv-focus-amber w-full py-2 px-3 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/30 font-semibold text-xs transition flex items-center justify-center gap-2 focus:outline-none" onkeydown="handleGpsBtnKeydown(event)">
           <span>📍</span> Use My Current Location (GPS)
         </button>
       </div>
@@ -927,10 +988,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=31"></script>
+  <script src="traffic-flood.js?v=32"></script>
     <script>
-    const APP_BUILD = 31;
-    const APP_VERSION = '1.5.0';
+    const APP_BUILD = 32;
+    const APP_VERSION = '1.5.1';
 
     async function checkForUpdates() {
       try {
@@ -1643,14 +1704,19 @@
       }
       renderLocationModalPicks();
 
-      // TV D-Pad UX: Focus directly on the Close button so the on-screen keyboard does not pop up,
-      // and pressing Down naturally moves to Search, then GPS, without entering the text box unless pressing Left.
+      // Clear prior focus so the user clearly sees the Close button light up
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      // TV D-Pad UX: Focus arrives after ~350ms (about a third of a second) so the modal opens
+      // smoothly, and the Close button prominently highlights in warm amber-yellow so you know where you are.
       setTimeout(() => {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) {
           closeBtn.focus();
         }
-      }, 50);
+      }, 350);
     }
 
     function closeLocationModal(pop = true) {
@@ -2039,14 +2105,14 @@
         icon = "❄️";
         badgeText = "Warm Car 10m Early!";
         badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
-        cardBgClass = "bg-rose-950/40 border border-rose-500/30";
+        cardBgClass = "bg-rose-950/40 border border-rose-500/50 frost-alert-rose-pulse";
         detail = `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
       } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
         status = "Frost Likely";
         icon = "🧊";
         badgeText = "Warm Car 10m Early";
         badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
-        cardBgClass = "bg-sky-950/40 border border-sky-500/30";
+        cardBgClass = "bg-sky-950/40 border border-sky-400/80 frost-alert-pulse";
         detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
       } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
         status = "Slight Frost Risk";
@@ -2556,9 +2622,21 @@
       evaluateRainNowcast(cur, data.minutely_15, hourly);
       
       // Wind
-      document.getElementById('windSpeed').textContent = Math.round(cur.wind_speed_10m);
+      const windSpeedVal = Math.round(cur.wind_speed_10m || 0);
+      document.getElementById('windSpeed').textContent = windSpeedVal;
       document.getElementById('windCompass').textContent = degToCompass(cur.wind_direction_10m);
       document.getElementById('windGust').textContent = `Gusts: ${Math.round(cur.wind_gusts_10m)} mph`;
+
+      // Wind warning highlights (Orange > 10 mph, Red > 25 mph)
+      const windTile = document.getElementById('windTile');
+      if (windTile) {
+        windTile.classList.remove('wind-warning-amber', 'wind-warning-red');
+        if (windSpeedVal > 25) {
+          windTile.classList.add('wind-warning-red');
+        } else if (windSpeedVal > 10) {
+          windTile.classList.add('wind-warning-amber');
+        }
+      }
 
       // Barometer
       document.getElementById('barometer').textContent = Math.round(cur.surface_pressure);
@@ -2589,8 +2667,22 @@
       }
 
       // Rain
-      document.getElementById('precipToday').textContent = (daily.precipitation_sum[0] || 0.0).toFixed(1);
-      document.getElementById('precipProbToday').textContent = `${daily.precipitation_probability_max[0] || 0}%`;
+      const rainMmToday = daily.precipitation_sum && daily.precipitation_sum[0] ? Number(daily.precipitation_sum[0]) : 0.0;
+      const rainProbToday = daily.precipitation_probability_max && daily.precipitation_probability_max[0] ? Number(daily.precipitation_probability_max[0]) : 0;
+      document.getElementById('precipToday').textContent = rainMmToday.toFixed(1);
+      document.getElementById('precipProbToday').textContent = `${rainProbToday}%`;
+
+      // Rain Today highlight (blue border if rain shown / forecast today, unmarked if dry)
+      const rainTile = document.getElementById('rainTodayTile');
+      const isRainingNow = cur.precipitation && cur.precipitation > 0;
+      const hasRainToday = (rainMmToday > 0) || isRainingNow || (rainProbToday >= 20);
+      if (rainTile) {
+        if (hasRainToday) {
+          rainTile.classList.add('rain-today-wet');
+        } else {
+          rainTile.classList.remove('rain-today-wet');
+        }
+      }
 
       // Clouds & UV
       document.getElementById('cloudCover').textContent = cur.cloud_cover;
