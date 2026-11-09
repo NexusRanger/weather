@@ -703,11 +703,11 @@
       <div id="colFrost" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           
-          <!-- 1. CAR & MORNING FROST PREDICTOR -->
+          <!-- 1. CAR, FROST, OUTDOOR & SUN/HEAT PREDICTOR (AUTO-SEASONAL) -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
-                <span id="frostIcon">🚗</span> Car &amp; Frost Watch
+              <span id="frostSectionPill" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
+                <span id="frostIcon">🚗</span> <span id="frostSectionTitle">Car &amp; Frost Watch</span>
               </span>
               <span id="frostTimeWindow" class="text-[9px] font-mono text-slate-400 truncate">
                 Tomorrow (05-08 AM)
@@ -717,7 +717,7 @@
             <div id="frostCardBg" class="p-2 rounded-xl bg-slate-900/60 border border-white/10 transition-colors">
               <div class="flex items-center justify-between">
                 <div>
-                  <div class="text-[9px] uppercase tracking-wider font-semibold text-slate-400 leading-none">Windscreen Condition</div>
+                  <div id="frostSubLabel" class="text-[9px] uppercase tracking-wider font-semibold text-slate-400 leading-none">Windscreen Condition</div>
                   <div id="frostStatus" class="text-sm font-bold text-white flex items-center gap-1 mt-0.5">
                     Calculating frost...
                   </div>
@@ -1116,10 +1116,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=63"></script>
+  <script src="traffic-flood.js?v=64"></script>
     <script>
-    const APP_BUILD = 63;
-    const APP_VERSION = '1.8.9';
+    const APP_BUILD = 64;
+    const APP_VERSION = '1.9.0';
 
     async function checkForUpdates() {
       try {
@@ -2913,7 +2913,7 @@
       checkSolarMilestoneHighlights();
     }
 
-    function evaluateFrost(hourly) {
+    function evaluateFrost(hourly, cur, daily) {
       const now = getLocationWallClockNow(hourly && hourly._currentLocalTime);
       const currentHour = now.getHours();
 
@@ -2949,16 +2949,23 @@
         }
       }
 
-      if (minAir === 999) minAir = 8.0;
+      if (minAir === 999) minAir = (daily && daily.temperature_2m_min && daily.temperature_2m_min[0] !== undefined) ? daily.temperature_2m_min[0] : 8.0;
       if (minSurface === 999) minSurface = minAir;
 
       const isClearSky = minCloud < 45;
       const radiativeOffset = isClearSky ? 2.5 : 0.8;
       const estimatedGlassTemp = Math.min(minSurface, minAir - radiativeOffset);
 
-      const timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : "This Morning (05-08 AM)";
-      document.getElementById('frostTimeWindow').textContent = timeLabel;
+      const todayMax = (daily && daily.temperature_2m_max && daily.temperature_2m_max[0] !== undefined) ? Math.round(daily.temperature_2m_max[0]) : Math.round((cur && cur.temperature_2m) || 15);
+      const maxUv = (daily && daily.uv_index_max && daily.uv_index_max[0] !== undefined) ? Number(daily.uv_index_max[0]) : 0;
+      const rainProbToday = (daily && daily.precipitation_probability_max && daily.precipitation_probability_max[0] !== undefined) ? Number(daily.precipitation_probability_max[0]) : 0;
+      const windSpeed = Math.round((cur && cur.wind_speed_10m) || 0);
+      const humidity = Math.round((cur && cur.relative_humidity_2m) || 70);
 
+      let sectionTitle = "Car & Frost Watch";
+      let pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1";
+      let subLabel = "Windscreen Condition";
+      let timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : "This Morning (05-08 AM)";
       let status = "Frost-Free";
       let badgeText = "Glass Clear";
       let badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
@@ -2966,29 +2973,99 @@
       let icon = "🚗";
       let detail = `Air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`;
 
-      if (estimatedGlassTemp <= -0.5 || minAir <= 0.5 || minSurface <= 0.0) {
-        status = "Heavy Frost Alert";
-        icon = "❄️";
-        badgeText = "Warm Car 10m Early!";
-        badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
-        cardBgClass = "bg-rose-950/40 border border-rose-500/50 frost-alert-rose-pulse";
-        detail = `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
-      } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
-        status = "Frost Likely";
-        icon = "🧊";
-        badgeText = "Warm Car 10m Early";
-        badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
-        cardBgClass = "bg-sky-950/40 border border-sky-400/80 frost-alert-pulse";
-        detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
-      } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
-        status = "Slight Frost Risk";
-        icon = "⚠️";
-        badgeText = "Patchy Ice";
-        badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
-        cardBgClass = "bg-amber-950/30 border border-amber-500/20";
-        detail = `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`;
+      // MODE 1: Cold / Frost Watch (when morning air <= 5.5°C or glass temp <= 4.0°C)
+      if (minAir <= 5.5 || estimatedGlassTemp <= 4.0) {
+        if (estimatedGlassTemp <= -0.5 || minAir <= 0.5 || minSurface <= 0.0) {
+          status = "Heavy Frost Alert";
+          icon = "❄️";
+          badgeText = "Warm Car 10m Early!";
+          badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
+          cardBgClass = "bg-rose-950/40 border border-rose-500/50 frost-alert-rose-pulse";
+          detail = `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
+        } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
+          status = "Frost Likely";
+          icon = "🧊";
+          badgeText = "Warm Car 10m Early";
+          badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
+          cardBgClass = "bg-sky-950/40 border border-sky-400/80 frost-alert-pulse";
+          detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
+        } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
+          status = "Slight Frost Risk";
+          icon = "⚠️";
+          badgeText = "Patchy Ice";
+          badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
+          cardBgClass = "bg-amber-950/30 border border-amber-500/20";
+          detail = `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`;
+        }
+      }
+      // MODE 2: Warm / Hot / High UV Watch (Summer or warm climates like Australia: peak >= 21°C or UV >= 6)
+      else if (todayMax >= 21 || maxUv >= 6.0) {
+        sectionTitle = "Sun & Car Heat Watch";
+        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1";
+        subLabel = "Cabin & Sun Exposure";
+        timeLabel = `Peak ${todayMax}°C • UV ${maxUv.toFixed(1)}`;
+
+        if (todayMax >= 29 || (todayMax >= 25 && maxUv >= 7.0)) {
+          icon = "🔥";
+          status = "Hot Car & High UV";
+          badgeText = "Cabin 45°C+ Risk!";
+          badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 font-bold";
+          cardBgClass = "bg-rose-950/35 border border-rose-500/40";
+          detail = `High of ${todayMax}°C & UV ${maxUv.toFixed(1)}. Parked cars overheat rapidly in sun — seek shade & SPF.`;
+        } else if (todayMax >= 23 || maxUv >= 6.0) {
+          icon = "☀️";
+          status = "Warm Cabin & UV";
+          badgeText = "Shade & SPF 30+";
+          badgeClass = "bg-amber-500/25 text-amber-200 border border-amber-400/40 font-bold";
+          cardBgClass = "bg-amber-950/30 border border-amber-500/25";
+          detail = `High of ${todayMax}°C (UV ${maxUv.toFixed(1)}). Car cabin warms quickly in sun; sunglasses & sunscreen advised.`;
+        } else {
+          icon = "🕶️";
+          status = "Warm & Pleasant";
+          badgeText = "Comfortable";
+          badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = `Warm high of ${todayMax}°C with moderate UV (${maxUv.toFixed(1)}). Pleasant for driving & outdoors.`;
+        }
+      }
+      // MODE 3: Mild / Spring & Autumn Outdoor & Driving Watch (min > 5.5°C and max < 21°C)
+      else {
+        sectionTitle = "Outdoor & Driving";
+        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1";
+        subLabel = "Road & Outdoor Comfort";
+        timeLabel = `Low ${Math.round(minAir)}°C • High ${todayMax}°C`;
+
+        if (rainProbToday >= 55 || windSpeed >= 22) {
+          icon = "🌦️";
+          status = "Wet / Breezy Roads";
+          badgeText = windSpeed >= 22 ? `Gusty (${windSpeed} mph)` : `${rainProbToday}% Rain Risk`;
+          badgeClass = "bg-sky-500/25 text-sky-200 border border-sky-400/40 font-bold";
+          cardBgClass = "bg-sky-950/30 border border-sky-500/30";
+          detail = `Frost-free (${Math.round(minAir)}°C low). Watch for surface spray & ${windSpeed} mph breeze on open roads.`;
+        } else if (humidity >= 86 && windSpeed < 10) {
+          icon = "🌫️";
+          status = "Mild & Damp Air";
+          badgeText = "Dew / Mist Risk";
+          badgeClass = "bg-sky-500/20 text-sky-300 border border-sky-400/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = `Frost-free (${Math.round(minAir)}°C low), ${humidity}% humidity. Morning dew on glass; demister may be needed.`;
+        } else {
+          icon = "🌿";
+          status = "Good Outdoor Day";
+          badgeText = "Clear Glass & Roads";
+          badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = `Mild (${Math.round(minAir)}°C low, ${todayMax}°C high) with ${windSpeed} mph breeze. Clear glass & good walking weather.`;
+        }
       }
 
+      const pillEl = document.getElementById('frostSectionPill');
+      if (pillEl) pillEl.className = pillClass;
+      const titleEl = document.getElementById('frostSectionTitle');
+      if (titleEl) titleEl.textContent = sectionTitle;
+      const subLabelEl = document.getElementById('frostSubLabel');
+      if (subLabelEl) subLabelEl.textContent = subLabel;
+      document.getElementById('frostTimeWindow').textContent = timeLabel;
       document.getElementById('frostIcon').textContent = icon;
       document.getElementById('frostStatus').innerHTML = status;
       document.getElementById('frostBadge').textContent = badgeText;
@@ -3753,7 +3830,7 @@
         console.error('Light calculation error:', err);
       }
 
-      evaluateFrost(hourly);
+      evaluateFrost(hourly, cur, daily);
       evaluateStargazing(hourly, cur.cloud_cover, moon);
       renderSevenDay(daily, hourly);
       renderHourly(hourly);
