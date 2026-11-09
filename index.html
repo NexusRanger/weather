@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030712">
-  <link rel="manifest" href="manifest.json?v=36">
+  <link rel="manifest" href="manifest.json?v=37">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -1042,10 +1042,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=36"></script>
+  <script src="traffic-flood.js?v=37"></script>
     <script>
-    const APP_BUILD = 36;
-    const APP_VERSION = '1.5.5';
+    const APP_BUILD = 37;
+    const APP_VERSION = '1.5.6';
 
     async function checkForUpdates() {
       try {
@@ -1992,7 +1992,57 @@
       { name: 'Brussels', query: 'Brussels, Belgium', lat: 50.850, lon: 4.351 }
     ];
 
-    const ALL_REGIONAL_HUBS = [...UK_HUBS, ...EUROPE_HUBS];
+    const AUSTRALIA_HUBS = [
+      // Australia & New Zealand (Sydney regional hubs)
+      { name: 'Sydney', query: 'Sydney, Australia', lat: -33.868, lon: 151.209 },
+      { name: 'Wollongong', query: 'Wollongong, Australia', lat: -34.427, lon: 150.893 },
+      { name: 'Newcastle', query: 'Newcastle, Australia', lat: -32.928, lon: 151.781 },
+      { name: 'Canberra', query: 'Canberra, Australia', lat: -35.280, lon: 149.130 },
+      { name: 'Melbourne', query: 'Melbourne, Australia', lat: -37.813, lon: 144.963 },
+      { name: 'Gold Coast', query: 'Gold Coast, Australia', lat: -28.016, lon: 153.400 },
+      { name: 'Brisbane', query: 'Brisbane, Australia', lat: -27.469, lon: 153.025 },
+      { name: 'Adelaide', query: 'Adelaide, Australia', lat: -34.928, lon: 138.600 },
+      { name: 'Perth', query: 'Perth, Australia', lat: -31.950, lon: 115.860 },
+      { name: 'Hobart', query: 'Hobart, Australia', lat: -42.882, lon: 147.327 },
+      { name: 'Auckland', query: 'Auckland, New Zealand', lat: -36.848, lon: 174.763 }
+    ];
+
+    const US_WORLD_HUBS = [
+      // North America & Global Hubs
+      { name: 'New York', query: 'New York, United States', lat: 40.712, lon: -74.006 },
+      { name: 'Boston', query: 'Boston, United States', lat: 42.360, lon: -71.058 },
+      { name: 'Philadelphia', query: 'Philadelphia, United States', lat: 39.952, lon: -75.165 },
+      { name: 'Washington DC', query: 'Washington, United States', lat: 38.907, lon: -77.036 },
+      { name: 'Chicago', query: 'Chicago, United States', lat: 41.878, lon: -87.629 },
+      { name: 'Miami', query: 'Miami, United States', lat: 25.761, lon: -80.191 },
+      { name: 'Los Angeles', query: 'Los Angeles, United States', lat: 34.052, lon: -118.243 },
+      { name: 'San Francisco', query: 'San Francisco, United States', lat: 37.774, lon: -122.419 },
+      { name: 'Seattle', query: 'Seattle, United States', lat: 47.606, lon: -122.332 },
+      { name: 'Toronto', query: 'Toronto, Canada', lat: 43.653, lon: -79.383 },
+      { name: 'Vancouver', query: 'Vancouver, Canada', lat: 49.282, lon: -123.120 },
+      { name: 'Tokyo', query: 'Tokyo, Japan', lat: 35.676, lon: 139.650 }
+    ];
+
+    const POPULAR_GLOBAL_HUBS = [
+      { name: 'London', query: 'London, United Kingdom', lat: 51.507, lon: -0.127 },
+      { name: 'Paris', query: 'Paris, France', lat: 48.856, lon: 2.352 },
+      { name: 'New York', query: 'New York, United States', lat: 40.712, lon: -74.006 },
+      { name: 'Tokyo', query: 'Tokyo, Japan', lat: 35.676, lon: 139.650 },
+      { name: 'Sydney', query: 'Sydney, Australia', lat: -33.868, lon: 151.209 },
+      { name: 'Vienna', query: 'Vienna, Austria', lat: 48.208, lon: 16.372 }
+    ];
+
+    const ALL_REGIONAL_HUBS = [...UK_HUBS, ...EUROPE_HUBS, ...AUSTRALIA_HUBS, ...US_WORLD_HUBS];
+
+    function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return 2 * R * Math.asin(Math.sqrt(a));
+    }
 
     function loadLocationDirectly(name, lat, lon, postcode) {
       CURRENT_LOCATION = {
@@ -2058,30 +2108,41 @@
         }
       } catch (_) {}
 
-      // 2. Render closest regional hubs dynamically based on CURRENT_LOCATION (lat, lon)
+      // 2. Render genuinely nearby regional hubs dynamically based on CURRENT_LOCATION (lat, lon)
       const nearbyChips = document.getElementById('nearbyLocationChips');
       const nearbyTitle = document.getElementById('nearbyPicksTitle');
       if (nearbyChips) {
         nearbyChips.innerHTML = '';
         const curLat = (CURRENT_LOCATION && CURRENT_LOCATION.lat) || 51.7;
         const curLon = (CURRENT_LOCATION && CURRENT_LOCATION.lon) || -2.2;
-        
-        // Choose between UK hubs or full Europe/World list
-        const isFarFromUk = Math.pow(curLat - 52.0, 2) + Math.pow(curLon - (-1.5), 2) > 25.0; // > ~500km from UK center
-        const candidateHubs = isFarFromUk ? ALL_REGIONAL_HUBS : UK_HUBS;
+        const currentNameLower = CURRENT_LOCATION.name.toLowerCase();
 
-        if (nearbyTitle) {
-          nearbyTitle.innerHTML = isFarFromUk ? '<span>📍</span> Nearby Regional Quick Picks:' : '<span>📍</span> Nearby Quick Picks:';
+        // Calculate true geographic distance (km) to all known hubs
+        const hubsWithDist = ALL_REGIONAL_HUBS
+          .filter(h => !currentNameLower.includes(h.name.toLowerCase()))
+          .map(h => ({
+            ...h,
+            distKm: calculateHaversineKm(curLat, curLon, h.lat, h.lon)
+          }))
+          .sort((a, b) => a.distKm - b.distKm);
+
+        // Filter hubs within genuine regional distance (<= 850 km)
+        let picks = hubsWithDist.filter(h => h.distKm <= 850).slice(0, 6);
+
+        if (picks.length > 0) {
+          // Genuinely nearby cities exist
+          const isUk = curLat >= 49.8 && curLat <= 60.5 && curLon >= -8.5 && curLon <= 2.0;
+          if (nearbyTitle) {
+            nearbyTitle.innerHTML = isUk ? '<span>📍</span> Nearby UK Quick Picks:' : '<span>📍</span> Nearby Regional Quick Picks:';
+          }
+        } else {
+          // If in a remote or far-off location with no regional hubs within 850 km, show top global capitals
+          picks = POPULAR_GLOBAL_HUBS.filter(h => !currentNameLower.includes(h.name.toLowerCase())).slice(0, 6);
+          if (nearbyTitle) {
+            nearbyTitle.innerHTML = '<span>🌐</span> Popular Global Quick Picks:';
+          }
         }
 
-        const sorted = [...candidateHubs].sort((a, b) => {
-          const distA = Math.pow(a.lat - curLat, 2) + Math.pow(a.lon - curLon, 2);
-          const distB = Math.pow(b.lat - curLat, 2) + Math.pow(b.lon - curLon, 2);
-          return distA - distB;
-        });
-
-        const currentNameLower = CURRENT_LOCATION.name.toLowerCase();
-        const picks = sorted.filter(h => !currentNameLower.includes(h.name.toLowerCase())).slice(0, 6);
         picks.forEach(hub => {
           const btn = document.createElement('button');
           btn.className = 'px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition cursor-pointer';
