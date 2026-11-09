@@ -144,7 +144,8 @@
       will-change: transform;
       animation: marqueeScrollLeft var(--advice-scroll-duration, 10s) linear infinite;
     }
-    #stargazingAdviceContainer.has-fade {
+    #stargazingAdviceContainer.has-fade,
+    #frostDetailContainer.has-fade {
       mask-image: linear-gradient(to right, black 85%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
@@ -693,9 +694,11 @@
                   Checking...
                 </div>
               </div>
-              <p id="frostDetail" class="text-[10px] text-slate-300 mt-0.5 leading-tight truncate">
-                Analyzing radiative cooling, surface soil temperature, and dew point...
-              </p>
+              <div class="overflow-hidden whitespace-nowrap relative mt-0.5" id="frostDetailContainer">
+                <span id="frostDetail" class="text-[10px] text-slate-300 inline-block whitespace-nowrap">
+                  Analyzing radiative cooling, surface soil temperature, and dew point...
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1077,10 +1080,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=56"></script>
+  <script src="traffic-flood.js?v=57"></script>
     <script>
-    const APP_BUILD = 56;
-    const APP_VERSION = '1.8.2';
+    const APP_BUILD = 57;
+    const APP_VERSION = '1.8.3';
 
     async function checkForUpdates() {
       try {
@@ -2870,8 +2873,33 @@
       document.getElementById('frostBadge').textContent = badgeText;
       document.getElementById('frostBadge').className = `text-[9px] font-mono px-1.5 py-0.5 rounded-lg ${badgeClass}`;
       document.getElementById('frostCardBg').className = `p-2 rounded-xl transition-colors ${cardBgClass}`;
-      document.getElementById('frostDetail').textContent = detail;
+      const detailEl = document.getElementById('frostDetail');
+      if (detailEl) detailEl.textContent = detail;
+      checkFrostDetailScroll();
     }
+
+    function checkFrostDetailScroll() {
+      const container = document.getElementById('frostDetailContainer');
+      const textEl = document.getElementById('frostDetail');
+      if (!container || !textEl) return;
+
+      textEl.classList.remove('stargazing-scroll');
+      textEl.style.removeProperty('--advice-scroll-distance');
+      textEl.style.removeProperty('--advice-scroll-duration');
+      container.classList.remove('has-fade');
+
+      setTimeout(() => {
+        const diff = textEl.scrollWidth - container.clientWidth;
+        if (diff > 4) {
+          textEl.style.setProperty('--advice-scroll-distance', `-${diff + 12}px`);
+          const duration = Math.max(12, Math.round(diff / 16) + 6);
+          textEl.style.setProperty('--advice-scroll-duration', `${duration}s`);
+          textEl.classList.add('stargazing-scroll');
+          container.classList.add('has-fade');
+        }
+      }, 80);
+    }
+    window.addEventListener('resize', checkFrostDetailScroll);
 
     function evaluateStargazing(hourly, currentCloud, moon) {
       const now = new Date();
