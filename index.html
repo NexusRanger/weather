@@ -1077,10 +1077,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=49"></script>
+  <script src="traffic-flood.js?v=50"></script>
     <script>
-    const APP_BUILD = 49;
-    const APP_VERSION = '1.7.5';
+    const APP_BUILD = 50;
+    const APP_VERSION = '1.7.6';
 
     async function checkForUpdates() {
       try {
@@ -1855,30 +1855,111 @@
         return [];
       }
 
+      async function queryNominatim(qStr) {
+        try {
+          const nomUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(qStr)}&format=json&addressdetails=1&limit=8&accept-language=en`;
+          const res = await fetch(nomUrl);
+          if (res.ok) {
+            const data = await res.json();
+            return Array.isArray(data) ? data : [];
+          }
+        } catch (_) {}
+        return [];
+      }
+
       try {
-        // Step 1: Query exact string
+        // Step 1: Query Open-Meteo for exact town/city string
         let results = await queryGeocoding(cleanName);
 
-        // Step 2: Smart multi-word fallback (e.g. "Vienna Austria", "Paris France")
+        // Step 2: If Open-Meteo has no match for the full phrase (e.g. "The Stroud Hotel", "Stroud Hotel",
+        // "Vienna Austria", or any landmark, pub, street, or multi-word address), query OpenStreetMap Nominatim!
+        if (results.length === 0) {
+          const nomResults = await queryNominatim(cleanName);
+          if (nomResults.length > 0) {
+            // Prefer UK result unless the user's query explicitly mentions a non-UK country/place
+            const qLower = cleanName.toLowerCase();
+            let chosen = nomResults.find(r => {
+              const cc = (r.address && r.address.country_code || '').toLowerCase();
+              const country = (r.address && r.address.country || '').toLowerCase();
+              return cc !== 'gb' && country && qLower.includes(country);
+            });
+            if (!chosen) {
+              chosen = nomResults.find(r => (r.address && r.address.country_code || '').toLowerCase() === 'gb') || nomResults[0];
+            }
+
+            const lat = parseFloat(chosen.lat);
+            const lon = parseFloat(chosen.lon);
+            const addr = chosen.address || {};
+            const cc = (addr.country_code || '').toUpperCase();
+
+            // Build a clean, informative display name (e.g. "The Stroud Hotel, Stroud" or "Vienna, Austria")
+            const primaryName = chosen.name || (chosen.display_name ? chosen.display_name.split(',')[0].trim() : cleanName);
+            const locality = addr.town || addr.city || addr.village || addr.suburb || addr.county || addr.state || '';
+            const country = addr.country || '';
+
+            let displayName = primaryName;
+            if (cc === 'GB') {
+              if (locality && !primaryName.toLowerCase().includes(locality.toLowerCase())) {
+                displayName = `${primaryName}, ${locality}`;
+              } else if (addr.county && !primaryName.toLowerCase().includes(addr.county.toLowerCase())) {
+                displayName = `${primaryName} & ${addr.county}`;
+              }
+            } else if (country && !primaryName.toLowerCase().includes(country.toLowerCase())) {
+              displayName = `${primaryName}, ${country}`;
+            }
+
+            let pc = addr.postcode || '';
+            if (cc === 'GB' && !pc) {
+              pc = 'UK';
+              try {
+                const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
+                if (pcRes.ok) {
+                  const pcData = await pcRes.json();
+                  if (pcData.result && pcData.result.length > 0) {
+                    pc = pcData.result[0].postcode;
+                  }
+                }
+              } catch (_) {}
+            }
+
+            CURRENT_LOCATION = {
+              name: displayName,
+              postcode: pc,
+              lat: lat,
+              lon: lon,
+              desc: `${lat.toFixed(2)}°N, ${Math.abs(lon).toFixed(2)}°W`
+            };
+            saveSavedLocation();
+            recordLocationQuery(CURRENT_LOCATION);
+            updateLocationHeader();
+            fetchWeatherData();
+            return true;
+          }
+        }
+
+        // Step 3: Stopword-safe multi-word fallback for Open-Meteo if Nominatim is unreachable
+        // Never search bare stopwords like "The" or "Hotel" (which caused "The" -> "The Bronx, New York"!)
         let qualifier = '';
         if (results.length === 0) {
-          const tokens = cleanName.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
-          if (tokens.length >= 2) {
-            const placeToken = tokens[0];
-            qualifier = tokens.slice(1).join(' ').toLowerCase();
+          const stopWords = new Set(['the', 'hotel', 'inn', 'pub', 'arms', 'lodge', 'house', 'manor', 'hall', 'park', 'road', 'street', 'lane', 'close', 'way', 'near', 'in', 'at', 'of', 'and']);
+          const rawTokens = cleanName.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+          const meaningfulTokens = rawTokens.filter(t => !stopWords.has(t.toLowerCase()));
+          if (meaningfulTokens.length >= 1) {
+            const placeToken = meaningfulTokens[0];
+            qualifier = meaningfulTokens.slice(1).join(' ').toLowerCase();
             results = await queryGeocoding(placeToken);
           }
         }
 
         if (results && results.length > 0) {
-          // If a qualifier like "Austria" was in the query, match country/admin
           let match = null;
           if (qualifier) {
             match = results.find(r => {
               const c = (r.country || '').toLowerCase();
               const cc = (r.country_code || '').toLowerCase();
               const a1 = (r.admin1 || '').toLowerCase();
-              return c.includes(qualifier) || cc === qualifier || a1.includes(qualifier);
+              const a2 = (r.admin2 || '').toLowerCase();
+              return c.includes(qualifier) || cc === qualifier || a1.includes(qualifier) || a2.includes(qualifier);
             });
           }
 
