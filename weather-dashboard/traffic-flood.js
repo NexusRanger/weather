@@ -42,20 +42,31 @@ async function fetchTrafficData() {
     const delayPct = freeFlowSpeed > 0 ? Math.round(((freeFlowSpeed - currentSpeed) / freeFlowSpeed) * 100) : 0;
     const isMajorRoad = ['FRC0', 'FRC1', 'FRC2', 'FRC3'].includes(frc);
 
+    const trafficPill = document.getElementById('trafficPill');
+    if (trafficPill) {
+      trafficPill.classList.remove('traffic-alert-amber-pulse', 'traffic-alert-red-pulse');
+    }
+
     if (roadClosure) {
       if (currentSpeed >= 15) {
         card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Works (${currentSpeed} mph)</span>`;
+        if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
       } else if (currentSpeed > 0) {
         card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Slow (${currentSpeed} mph)</span>`;
+        if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
       } else if (!isMajorRoad) {
         card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1">⚠️ Local Restriction</span>`;
+        if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
       } else {
         card.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1">⛔ Road Closed</span>`;
+        if (trafficPill) trafficPill.classList.add('traffic-alert-red-pulse');
       }
     } else if (delayPct >= 40 && currentSpeed < 15) {
       card.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span> Heavy Delays (${currentSpeed} mph)</span>`;
+      if (trafficPill) trafficPill.classList.add('traffic-alert-red-pulse');
     } else if (delayPct >= 20) {
       card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Moderate (${currentSpeed} mph)</span>`;
+      if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
     } else {
       card.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Flowing (${currentSpeed} mph)</span>`;
     }
@@ -93,9 +104,21 @@ async function fetchFloodData() {
     } catch (_) {}
 
     // 2.3 General status check
+    const riverPill = document.getElementById('riverPill');
+    if (riverPill) {
+      riverPill.classList.remove('river-alert-amber-pulse', 'river-alert-red-pulse');
+    }
+
     if (alerts.length > 0) {
-      card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span>⚠️</span> ${alerts.length} Alert${alerts.length > 1 ? 's' : ''}</span>`;
-      card.className = "text-xs font-bold text-amber-300";
+      const isSevere = alerts.some(a => {
+        const s = (a.severity || a.severityLevel || '').toString().toLowerCase();
+        return s.includes('severe') || s.includes('danger') || s.includes('warning');
+      });
+      card.innerHTML = `<span class="${isSevere ? 'text-rose-300' : 'text-amber-300'} font-bold flex items-center gap-1"><span>⚠️</span> ${alerts.length} Alert${alerts.length > 1 ? 's' : ''}</span>`;
+      card.className = `text-xs font-bold ${isSevere ? 'text-rose-300' : 'text-amber-300'}`;
+      if (riverPill) {
+        riverPill.classList.add(isSevere ? 'river-alert-red-pulse' : 'river-alert-amber-pulse');
+      }
     } else {
       card.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Normal</span>`;
       card.className = "text-xs font-bold text-emerald-400";

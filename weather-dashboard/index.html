@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#030712">
-  <link rel="manifest" href="manifest.json?v=32">
+  <link rel="manifest" href="manifest.json?v=33">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -208,6 +208,55 @@
     .frost-alert-rose-pulse {
       animation: frostRosePulse 2.4s ease-in-out infinite;
       border: 1.5px solid #f43f5e !important;
+    }
+
+    /* Local Status Strip Alert Glowing Pulses */
+    @keyframes amberAlertPulse {
+      0%, 100% {
+        border-color: rgba(245, 158, 11, 0.45);
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
+      }
+      50% {
+        border-color: rgba(251, 191, 36, 0.95);
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.5);
+      }
+    }
+    .traffic-alert-amber-pulse,
+    .river-alert-amber-pulse {
+      animation: amberAlertPulse 2.2s ease-in-out infinite;
+      border: 1.5px solid #f59e0b !important;
+      background: rgba(245, 158, 11, 0.16) !important;
+    }
+
+    @keyframes redAlertPulse {
+      0%, 100% {
+        border-color: rgba(244, 63, 94, 0.45);
+        box-shadow: 0 0 8px rgba(244, 63, 94, 0.2);
+      }
+      50% {
+        border-color: rgba(251, 113, 133, 0.95);
+        box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
+      }
+    }
+    .traffic-alert-red-pulse,
+    .river-alert-red-pulse {
+      animation: redAlertPulse 2.0s ease-in-out infinite;
+      border: 1.5px solid #f43f5e !important;
+      background: rgba(244, 63, 94, 0.18) !important;
+    }
+
+    /* Atmospheric & Environmental Warning Highlights */
+    .aqi-warning-amber,
+    .uv-warning-amber,
+    .barometer-warning-amber {
+      border: 1.5px solid #f59e0b !important;
+      background: rgba(245, 158, 11, 0.18) !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35) !important;
+    }
+    .aqi-warning-red {
+      border: 1.5px solid #f43f5e !important;
+      background: rgba(244, 63, 94, 0.22) !important;
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.45) !important;
     }
 
     /* Solar Milestone Highlight Glows */
@@ -518,7 +567,7 @@
             </div>
 
             <!-- Barometer -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
+            <div id="barometerTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Barometer</span>
                 <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400">Steady</span>
@@ -544,7 +593,7 @@
             </div>
 
             <!-- Air Quality (AQI) -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
+            <div id="aqiTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Air Quality</span>
                 <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300">Good</span>
@@ -570,7 +619,7 @@
             </div>
 
             <!-- Cloud & UV -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
+            <div id="cloudUvTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Cloud &amp; UV</span>
                 <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400">UV: --</span>
@@ -743,14 +792,14 @@
     <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC, RIVERS & SHARE) -->
     <div id="colLocalInfo" class="relative z-20 flex flex-nowrap sm:flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
       <!-- Traffic Pill -->
-      <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="Live Traffic Flow (A46 / Local Area via TomTom)">
+      <div id="trafficPill" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm transition-all" title="Live Traffic Flow (A46 / Local Area via TomTom)">
         <span class="text-xs">🚗</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Traffic:</span>
         <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
       </div>
 
       <!-- River Pill -->
-      <div class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm" title="UK Environment Agency Live River & Flood Monitoring">
+      <div id="riverPill" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm transition-all" title="UK Environment Agency Live River & Flood Monitoring">
         <span class="text-xs">🌊</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Rivers:</span>
         <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
@@ -988,10 +1037,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=32"></script>
+  <script src="traffic-flood.js?v=33"></script>
     <script>
-    const APP_BUILD = 32;
-    const APP_VERSION = '1.5.1';
+    const APP_BUILD = 33;
+    const APP_VERSION = '1.5.2';
 
     async function checkForUpdates() {
       try {
@@ -2568,7 +2617,7 @@
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=${TIMEZONE}&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=${TIMEZONE}&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -2638,14 +2687,57 @@
         }
       }
 
-      // Barometer
-      document.getElementById('barometer').textContent = Math.round(cur.surface_pressure);
+      // Barometer & Pressure Trend Calculation
+      const currentPressure = cur.surface_pressure;
+      document.getElementById('barometer').textContent = Math.round(currentPressure);
+
+      let pressureDelta = 0;
+      if (hourly.surface_pressure && hourly.time) {
+        const nowIso = new Date().toISOString().slice(0, 13);
+        let curIdx = hourly.time.findIndex(t => t.startsWith(nowIso));
+        if (curIdx === -1) curIdx = 0;
+        const pastIdx = Math.max(0, curIdx - 3);
+        const pastPressure = hourly.surface_pressure[pastIdx];
+        if (pastPressure) {
+          pressureDelta = currentPressure - pastPressure;
+        }
+      }
+
+      const trendEl = document.getElementById('pressureTrend');
+      const baroTile = document.getElementById('barometerTile');
+      if (trendEl) {
+        if (pressureDelta <= -2.0) {
+          trendEl.textContent = 'Falling fast ⚠️';
+          trendEl.className = 'text-[9px] font-mono text-amber-300 font-bold';
+        } else if (pressureDelta <= -0.8) {
+          trendEl.textContent = 'Falling';
+          trendEl.className = 'text-[9px] font-mono text-sky-300';
+        } else if (pressureDelta >= 2.0) {
+          trendEl.textContent = 'Rising fast';
+          trendEl.className = 'text-[9px] font-mono text-emerald-300 font-bold';
+        } else if (pressureDelta >= 0.8) {
+          trendEl.textContent = 'Rising';
+          trendEl.className = 'text-[9px] font-mono text-sky-300';
+        } else {
+          trendEl.textContent = 'Steady';
+          trendEl.className = 'text-[9px] font-mono text-emerald-400';
+        }
+      }
+
+      if (baroTile) {
+        if (pressureDelta <= -2.0 || (currentPressure < 990 && pressureDelta < 0)) {
+          baroTile.classList.add('barometer-warning-amber');
+        } else {
+          baroTile.classList.remove('barometer-warning-amber');
+        }
+      }
 
       // Humidity & Dew
       document.getElementById('humidity').textContent = cur.relative_humidity_2m;
       document.getElementById('dewPoint').textContent = `Dew ${Math.round(cur.dew_point_2m)}°`;
 
       // Air Quality
+      const aqiTile = document.getElementById('aqiTile');
       if (aqiData && aqiData.current) {
         const aqi = aqiData.current.european_aqi;
         document.getElementById('aqiVal').textContent = aqi;
@@ -2663,6 +2755,15 @@
         } else {
           aqiBadge.textContent = 'Poor';
           aqiBadge.className = 'text-[9px] font-bold px-1 rounded bg-rose-500/20 text-rose-300';
+        }
+
+        if (aqiTile) {
+          aqiTile.classList.remove('aqi-warning-amber', 'aqi-warning-red');
+          if (aqi > 60) {
+            aqiTile.classList.add('aqi-warning-red');
+          } else if (aqi > 40) {
+            aqiTile.classList.add('aqi-warning-amber');
+          }
         }
       }
 
@@ -2686,7 +2787,20 @@
 
       // Clouds & UV
       document.getElementById('cloudCover').textContent = cur.cloud_cover;
-      document.getElementById('uvIndexBadge').textContent = `UV ${(daily.uv_index_max[0] || 0).toFixed(1)}`;
+      const maxUvVal = daily.uv_index_max && daily.uv_index_max[0] ? daily.uv_index_max[0] : 0;
+      const uvBadge = document.getElementById('uvIndexBadge');
+      uvBadge.textContent = `UV ${maxUvVal.toFixed(1)}`;
+
+      const uvTile = document.getElementById('cloudUvTile');
+      if (uvTile) {
+        uvTile.classList.remove('uv-warning-amber');
+        if (maxUvVal >= 6.0) {
+          uvTile.classList.add('uv-warning-amber');
+          uvBadge.className = 'text-[9px] font-mono text-amber-300 font-bold';
+        } else {
+          uvBadge.className = 'text-[9px] font-mono text-amber-400';
+        }
+      }
 
       // Moon
       const moon = calculateMoonPhase(new Date());
