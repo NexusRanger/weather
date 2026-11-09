@@ -780,7 +780,10 @@
                     <span class="flex items-center gap-1">Dark By <span id="darkByCloudTag" class="text-[8px] text-indigo-300 font-mono"></span></span>
                     <span id="darkByHighlightBadge" class="hidden text-[8px] font-bold font-mono px-1 rounded bg-indigo-300 text-slate-950 animate-pulse"></span>
                   </div>
-                  <div id="darkByTime" class="text-xs font-bold font-mono text-indigo-300 leading-tight mt-0.5">--:--</div>
+                  <div class="flex items-baseline gap-1 mt-0.5">
+                    <span id="darkByTime" class="text-xs font-bold font-mono text-indigo-300 leading-tight">--:--</span>
+                    <span id="darkByCountdown" class="text-[9px] font-mono text-indigo-200/80 leading-none"></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1074,10 +1077,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=55"></script>
+  <script src="traffic-flood.js?v=56"></script>
     <script>
-    const APP_BUILD = 55;
-    const APP_VERSION = '1.8.1';
+    const APP_BUILD = 56;
+    const APP_VERSION = '1.8.2';
 
     async function checkForUpdates() {
       try {
@@ -3297,6 +3300,26 @@
         } else {
           tileDark.className = baseClass;
           if (darkBadge) darkBadge.classList.add('hidden');
+        }
+      }
+
+      // Update Dark By countdown in brackets: e.g. "(in 45m)" or "(in 12m)"
+      const darkCountdownEl = document.getElementById('darkByCountdown');
+      if (darkCountdownEl) {
+        const diffMs = darkMs - nowMs;
+        if (diffMs > 0) {
+          const diffMins = Math.round(diffMs / 60000);
+          if (diffMins >= 60) {
+            const h = Math.floor(diffMins / 60);
+            const m = diffMins % 60;
+            darkCountdownEl.textContent = m > 0 ? `(in ${h}h ${m}m)` : `(in ${h}h)`;
+          } else {
+            darkCountdownEl.textContent = `(in ${Math.max(1, diffMins)}m)`;
+          }
+        } else if (nowMs < (darkMs + 45 * 60000)) {
+          darkCountdownEl.textContent = `(now)`;
+        } else {
+          darkCountdownEl.textContent = '';
         }
       }
     }
