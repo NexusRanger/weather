@@ -1074,10 +1074,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=52"></script>
+  <script src="traffic-flood.js?v=53"></script>
     <script>
-    const APP_BUILD = 52;
-    const APP_VERSION = '1.7.8';
+    const APP_BUILD = 53;
+    const APP_VERSION = '1.7.9';
 
     async function checkForUpdates() {
       try {
@@ -2113,11 +2113,113 @@
       }
     }
 
+    let locSettledValue = '';
+    let locLastInputAt = 0;
+    let locPrefixToStrip = '';
+    let locSettleTimer = null;
+
+    function resetSmartLocationInputState() {
+      locSettledValue = '';
+      locLastInputAt = 0;
+      locPrefixToStrip = '';
+      if (locSettleTimer) {
+        clearTimeout(locSettleTimer);
+        locSettleTimer = null;
+      }
+    }
+
+    (function initSmartLocationInput() {
+      const input = document.getElementById('locationInput');
+      if (!input) return;
+
+      // If the user clicks back into the search box after an earlier entry/voice search settled, start fresh
+      input.addEventListener('mousedown', () => {
+        if (locSettledValue && (Date.now() - locLastInputAt > 700)) {
+          input.value = '';
+          resetSmartLocationInputState();
+        }
+      });
+
+      input.addEventListener('click', () => {
+        if (locSettledValue && (Date.now() - locLastInputAt > 700)) {
+          input.value = '';
+          resetSmartLocationInputState();
+        }
+      });
+
+      input.addEventListener('compositionstart', () => {
+        if (locSettledValue && (Date.now() - locLastInputAt > 800)) {
+          locPrefixToStrip = locSettledValue;
+        }
+      });
+
+      input.addEventListener('compositionend', () => {
+        if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
+          input.value = input.value.slice(locPrefixToStrip.length).trimStart();
+          locPrefixToStrip = '';
+          locSettledValue = '';
+        }
+        if (input.value.trim().toLowerCase() === 'q') {
+          input.value = '';
+          resetSmartLocationInputState();
+        }
+      });
+
+      input.addEventListener('input', (e) => {
+        const now = Date.now();
+        const elapsed = now - locLastInputAt;
+
+        // Detect a new microphone dictation or accidental 'q' after a pause when text is already in the box
+        if (!locPrefixToStrip && locSettledValue && elapsed > 850 && input.value.startsWith(locSettledValue)) {
+          const added = input.value.slice(locSettledValue.length);
+          if (added.trim().toLowerCase() === 'q') {
+            // Accidental 'q' when clicking back into the box to start a new search: clear everything fresh
+            input.value = '';
+            resetSmartLocationInputState();
+            return;
+          }
+          if (added.length >= 2 || e.isComposing || e.inputType === 'insertCompositionText' || e.inputType === 'insertFromPaste') {
+            locPrefixToStrip = locSettledValue;
+          }
+        }
+
+        // Strip previous search prefix when a new microphone dictation arrives
+        if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip) && !e.isComposing) {
+          input.value = input.value.slice(locPrefixToStrip.length).trimStart();
+          locPrefixToStrip = '';
+          locSettledValue = '';
+        }
+
+        // Spot and immediately delete a standalone 'q' (from clicking OK to activate the search box on TV/tablet keyboards)
+        if (input.value.trim().toLowerCase() === 'q') {
+          input.value = '';
+          resetSmartLocationInputState();
+          return;
+        }
+
+        locLastInputAt = now;
+        if (locSettleTimer) clearTimeout(locSettleTimer);
+        locSettleTimer = setTimeout(() => {
+          if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
+            input.value = input.value.slice(locPrefixToStrip.length).trimStart();
+            locPrefixToStrip = '';
+          }
+          if (input.value.trim().toLowerCase() === 'q') {
+            input.value = '';
+            resetSmartLocationInputState();
+            return;
+          }
+          locSettledValue = input.value;
+        }, 850);
+      });
+    })();
+
     function openLocationModal() {
       const modal = document.getElementById('locationModal');
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
       if (status) status.textContent = '';
+      resetSmartLocationInputState();
       if (input) {
         input.value = '';
       }
@@ -2158,7 +2260,15 @@
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
       const btn = document.getElementById('searchLocBtn');
-      if (!input || !input.value.trim()) return;
+      if (!input) return;
+      if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
+        input.value = input.value.slice(locPrefixToStrip.length).trimStart();
+        locPrefixToStrip = '';
+      }
+      if (!input.value.trim() || input.value.trim().toLowerCase() === 'q') {
+        input.value = '';
+        return;
+      }
 
       const q = input.value.trim();
 
