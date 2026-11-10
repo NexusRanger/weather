@@ -229,6 +229,22 @@
       font-weight: 800 !important;
     }
 
+    /* Feels Like Cold Alert: Blue-to-White text with Counter-Phase Red Glow */
+    @keyframes feelsLikeCounterPulse {
+      0%, 100% {
+        color: #38bdf8;
+        text-shadow: 0 0 3px rgba(239, 68, 68, 0.2);
+      }
+      50% {
+        color: #ffffff;
+        text-shadow: 0 0 8px rgba(239, 68, 68, 0.95), 0 0 18px rgba(239, 68, 68, 0.8), 0 0 28px rgba(220, 38, 38, 0.65);
+      }
+    }
+    .cold-feels-pulse {
+      animation: feelsLikeCounterPulse 2.4s ease-in-out infinite !important;
+      font-weight: 700 !important;
+    }
+
     /* Frost Warning Glowing Pulses */
     @keyframes frostGlowPulse {
       0%, 100% {
@@ -1216,10 +1232,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=79"></script>
+  <script src="traffic-flood.js?v=80"></script>
     <script>
-    const APP_BUILD = 79;
-    const APP_VERSION = '1.9.15';
+    const APP_BUILD = 80;
+    const APP_VERSION = '1.9.16';
 
     async function checkForUpdates() {
       try {
@@ -4053,8 +4069,10 @@
       if (feelsLikeEl) {
         feelsLikeEl.textContent = `Feels like ${roundedFeelsLike}°C`;
         if (roundedFeelsLike <= 5) {
-          feelsLikeEl.classList.add('cold-temp-pulse');
+          feelsLikeEl.classList.add('cold-feels-pulse');
+          feelsLikeEl.classList.remove('cold-temp-pulse');
         } else {
+          feelsLikeEl.classList.remove('cold-feels-pulse');
           feelsLikeEl.classList.remove('cold-temp-pulse');
         }
       }
