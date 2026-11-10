@@ -1216,10 +1216,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=75"></script>
+  <script src="traffic-flood.js?v=76"></script>
     <script>
-    const APP_BUILD = 75;
-    const APP_VERSION = '1.9.11';
+    const APP_BUILD = 76;
+    const APP_VERSION = '1.9.12';
 
     async function checkForUpdates() {
       try {
@@ -3973,7 +3973,7 @@
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=11&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=11&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -4346,6 +4346,9 @@
         const min = Math.round(daily.temperature_2m_min[i]);
         const rainProb = daily.precipitation_probability_max[i] || 0;
         const hasFrostRisk = min <= 3.5;
+        const windMax = (daily.wind_speed_10m_max && daily.wind_speed_10m_max[i] != null) ? Math.round(daily.wind_speed_10m_max[i]) : 0;
+        const gustMax = (daily.wind_gusts_10m_max && daily.wind_gusts_10m_max[i] != null) ? Math.round(daily.wind_gusts_10m_max[i]) : windMax;
+        const windDot = getWindDot(windMax, gustMax);
 
         // Max temperature color coding: orange (amber) at 25°C+, red (rose) at 30°C+
         let maxColorClass = 'text-white font-bold';
@@ -4361,11 +4364,12 @@
 
         const row = document.createElement('div');
         row.className = `grid items-center gap-1 py-[2px] px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'}`;
-        row.style.gridTemplateColumns = '38px 40px 22px 30px 16px 24px minmax(34px, 1fr) 24px';
+        row.style.gridTemplateColumns = '38px 40px 20px 10px 28px 14px 22px minmax(30px, 1fr) 24px';
         row.innerHTML = `
           <span class="font-bold text-white text-[11px] leading-none truncate">${dayName}</span>
           <span class="text-[9px] text-slate-400 font-mono tabular-nums leading-none whitespace-nowrap">${dateSub}</span>
           <span class="flex items-center justify-center text-[13px] leading-none">${info.icon}</span>
+          <span class="flex items-center justify-center cursor-help leading-none" title="${windDot.title}">${windDot.html}</span>
           <span class="text-right text-[10px] text-sky-400 font-mono tabular-nums leading-none ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
           <span class="flex items-center justify-center text-[10px] text-cyan-300 font-bold leading-none">${hasFrostRisk ? '❄️' : ''}</span>
           <span class="text-right font-mono tabular-nums text-[10px] leading-none ${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${min}°</span>
@@ -4535,6 +4539,43 @@
           color: 'text-rose-400',
           html: '<span class="inline-block w-full max-w-[20px] h-1 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.9)] animate-pulse" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Warning)"></span>',
           title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe / Gale warning)'
+        };
+      }
+    }
+
+    function getWindDot(speed, gust) {
+      const s = Math.round(speed || 0);
+      const g = Math.round(gust || s);
+      const maxW = Math.max(s, g);
+      if (maxW < 8) {
+        return {
+          level: 'Calm',
+          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-500/70" title="Max wind: ' + s + ' mph (Calm)"></span>',
+          title: 'Max wind: ' + s + ' mph (Calm)'
+        };
+      } else if (maxW < 15) {
+        return {
+          level: 'Gentle Breeze',
+          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.6)]" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Gentle Breeze)"></span>',
+          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Gentle breeze)'
+        };
+      } else if (maxW < 25) {
+        return {
+          level: 'Moderate',
+          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.5)]" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)"></span>',
+          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate breeze)'
+        };
+      } else if (maxW < 35) {
+        return {
+          level: 'Brisk / Strong',
+          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.7)]" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Brisk / Strong Wind)"></span>',
+          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Brisk / Strong wind)'
+        };
+      } else {
+        return {
+          level: 'Severe',
+          html: '<span class="inline-block w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.9)] animate-pulse" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Gale Alert)"></span>',
+          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe / Gale warning)'
         };
       }
     }
