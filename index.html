@@ -596,7 +596,7 @@
               <div class="flex items-baseline gap-2">
                 <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
                 <div>
-                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
+                  <div id="feelsLike" class="text-xs font-medium"><span class="text-emerald-400 font-semibold">Feels like</span> <span id="feelsLikeVal" class="text-slate-200 font-mono">--°C</span></div>
                   <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
                 </div>
               </div>
@@ -1215,10 +1215,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=72"></script>
+  <script src="traffic-flood.js?v=73"></script>
     <script>
-    const APP_BUILD = 72;
-    const APP_VERSION = '1.9.8';
+    const APP_BUILD = 73;
+    const APP_VERSION = '1.9.9';
 
     async function checkForUpdates() {
       try {
@@ -4050,12 +4050,18 @@
       }
 
       if (feelsLikeEl) {
-        feelsLikeEl.textContent = `Feels like ${roundedFeelsLike}°C`;
+        feelsLikeEl.classList.remove('cold-temp-pulse');
+      }
+
+      if (feelsLikeValEl) {
+        feelsLikeValEl.textContent = `${roundedFeelsLike}°C`;
         if (roundedFeelsLike <= 5) {
-          feelsLikeEl.classList.add('cold-temp-pulse');
+          feelsLikeValEl.classList.add('cold-temp-pulse');
         } else {
-          feelsLikeEl.classList.remove('cold-temp-pulse');
+          feelsLikeValEl.classList.remove('cold-temp-pulse');
         }
+      } else if (feelsLikeEl) {
+        feelsLikeEl.innerHTML = `<span class="text-emerald-400 font-semibold">Feels like</span> <span id="feelsLikeVal" class="${roundedFeelsLike <= 5 ? 'cold-temp-pulse text-slate-200 font-mono' : 'text-slate-200 font-mono'}">${roundedFeelsLike}°C</span>`;
       }
 
       document.getElementById('todayRange').textContent = `▲ ${Math.round(daily.temperature_2m_max[0])}°  ▼ ${Math.round(daily.temperature_2m_min[0])}°`;
