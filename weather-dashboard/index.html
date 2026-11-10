@@ -923,6 +923,7 @@
           <span id="timelineHintText" class="text-[8px] text-slate-400 opacity-85 hidden sm:inline-flex flex-col items-end leading-tight text-right whitespace-nowrap">◀ Scroll left for overnight history • Click / OK for 24h glance</span>
           <span class="flex items-center gap-1 whitespace-nowrap"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp</span>
           <span class="flex items-center gap-1 whitespace-nowrap"><span class="w-3 h-1.5 rounded-sm bg-sky-400"></span> Rain %</span>
+          <span class="hidden md:inline-flex items-center gap-1 whitespace-nowrap"><span class="inline-flex items-center gap-0.5"><span class="w-1 h-1 rounded-full bg-emerald-400"></span><span class="w-2 h-1 rounded-full bg-amber-400"></span></span> Wind</span>
         </div>
       </div>
 
@@ -1215,10 +1216,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=74"></script>
+  <script src="traffic-flood.js?v=75"></script>
     <script>
-    const APP_BUILD = 74;
-    const APP_VERSION = '1.9.10';
+    const APP_BUILD = 75;
+    const APP_VERSION = '1.9.11';
 
     async function checkForUpdates() {
       try {
@@ -3972,7 +3973,7 @@
 
       try {
         const cacheBust = new Date().getTime();
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=11&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=11&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
         const [weatherRes, aqiRes] = await Promise.all([
@@ -4496,6 +4497,48 @@
       resetPanoramicAutoTimer();
     }
 
+    function getWindIntensityBadge(speed, gust) {
+      const s = Math.round(speed || 0);
+      const g = Math.round(gust || s);
+      const maxW = Math.max(s, g);
+      if (maxW < 8) {
+        return {
+          level: 'Calm',
+          color: 'text-slate-400',
+          html: '<span class="inline-block w-1.5 h-1 rounded-full bg-slate-500/70" title="Wind: ' + s + ' mph (Calm)"></span>',
+          title: 'Wind: ' + s + ' mph (Calm breeze)'
+        };
+      } else if (maxW < 15) {
+        return {
+          level: 'Breeze',
+          color: 'text-emerald-400',
+          html: '<span class="inline-block w-2.5 h-1 rounded-full bg-emerald-400" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Gentle Breeze)"></span>',
+          title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Gentle breeze)'
+        };
+      } else if (maxW < 25) {
+        return {
+          level: 'Brisk',
+          color: 'text-amber-400',
+          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Brisk)"><span class="w-1 h-1 rounded-full bg-amber-400"></span><span class="w-2.5 h-1 rounded-full bg-amber-400"></span></span>',
+          title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Brisk / Fresh)'
+        };
+      } else if (maxW < 35) {
+        return {
+          level: 'Strong',
+          color: 'text-orange-400',
+          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong Wind)"><span class="w-2 h-1 rounded-full bg-orange-400"></span><span class="w-2 h-1 rounded-full bg-orange-400"></span></span>',
+          title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong / Gusty)'
+        };
+      } else {
+        return {
+          level: 'Severe',
+          color: 'text-rose-400',
+          html: '<span class="inline-block w-full max-w-[20px] h-1 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.9)] animate-pulse" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Warning)"></span>',
+          title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe / Gale warning)'
+        };
+      }
+    }
+
     function renderHourly(hourly, slideDirection = 0, startDragPx = 0) {
       if (!hourly || !hourly.time) return;
       cachedHourlyData = hourly;
@@ -4606,6 +4649,9 @@
           const temp = Math.round(hourly.temperature_2m[i]);
           const rainProb = hourly.precipitation_probability[i] || 0;
           const isNearFreezing = temp <= 3;
+          const windSpeed = (hourly.wind_speed_10m && hourly.wind_speed_10m[i] != null) ? Math.round(hourly.wind_speed_10m[i]) : 0;
+          const windGust = (hourly.wind_gusts_10m && hourly.wind_gusts_10m[i] != null) ? Math.round(hourly.wind_gusts_10m[i]) : windSpeed;
+          const windBadge = getWindIntensityBadge(windSpeed, windGust);
 
           const tempHeightPct = Math.max(15, Math.min(100, Math.round(15 + ((temp - minTemp) / tempRange) * 85)));
 
@@ -4629,11 +4675,14 @@
           card.innerHTML = `
             <span class="text-[8px] font-mono leading-none text-slate-400">${hour}h</span>
             <span class="text-[10px] my-0 leading-none">${info.icon}</span>
-            <div class="w-1.5 h-7 flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 my-0.5" title="${timeStr}: ${temp}°C, Rain ${rainProb}%">
+            <div class="w-1.5 h-6 flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 my-0.5" title="${timeStr}: ${temp}°C, Rain ${rainProb}%">
               <div class="w-full ${tempColor} rounded-full" style="height: ${tempHeightPct}%"></div>
             </div>
             <span class="text-[9px] font-bold font-mono ${isNearFreezing ? 'text-cyan-300' : 'text-white'} leading-tight">${temp}°</span>
-            <div class="h-1.5 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10" title="Rain: ${rainProb}%">
+            <div class="w-full flex items-center justify-center h-2 my-0.5 cursor-help" title="${windBadge.title}">
+              ${windBadge.html}
+            </div>
+            <div class="h-1.5 w-full bg-slate-800/90 rounded-full overflow-hidden border border-white/10" title="Rain: ${rainProb}%">
               <div class="h-full ${rainProb >= 50 ? 'bg-sky-400' : rainProb > 0 ? 'bg-sky-500/80' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
             </div>
           `;
@@ -4712,6 +4761,9 @@
         const temp = Math.round(hourly.temperature_2m[i]);
         const rainProb = hourly.precipitation_probability[i] || 0;
         const isNearFreezing = temp <= 3;
+        const windSpeed = (hourly.wind_speed_10m && hourly.wind_speed_10m[i] != null) ? Math.round(hourly.wind_speed_10m[i]) : 0;
+        const windGust = (hourly.wind_gusts_10m && hourly.wind_gusts_10m[i] != null) ? Math.round(hourly.wind_gusts_10m[i]) : windSpeed;
+        const windBadge = getWindIntensityBadge(windSpeed, windGust);
 
         const tempHeightPct = Math.max(15, Math.min(100, Math.round(15 + ((temp - minTemp) / tempRange) * 85)));
 
@@ -4754,6 +4806,11 @@
             <span class="text-sm my-0 leading-none">${info.icon}</span>
             <span class="text-xs font-bold font-mono ${isNearFreezing ? 'text-cyan-200' : 'text-white'} leading-tight">${temp}°</span>
             
+            <div class="flex items-center justify-center gap-1 my-0.5 cursor-help" title="${windBadge.title}">
+              ${windBadge.html}
+              <span class="text-[8px] font-mono text-slate-400 leading-none">${windSpeed}m</span>
+            </div>
+
             <div class="w-full text-center mt-0.5">
               <span class="text-[8px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
                 ${rainProb}%
