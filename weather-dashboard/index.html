@@ -596,7 +596,7 @@
               <div class="flex items-baseline gap-2">
                 <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
                 <div>
-                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like <span id="feelsLikeVal">--°C</span></div>
+                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
                   <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
                 </div>
               </div>
@@ -1215,10 +1215,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=69"></script>
+  <script src="traffic-flood.js?v=70"></script>
     <script>
-    const APP_BUILD = 69;
-    const APP_VERSION = '1.9.5';
+    const APP_BUILD = 70;
+    const APP_VERSION = '1.9.6';
 
     async function checkForUpdates() {
       try {
@@ -4049,14 +4049,7 @@
         }
       }
 
-      if (feelsLikeValEl) {
-        feelsLikeValEl.textContent = `${roundedFeelsLike}°C`;
-        if (roundedFeelsLike <= 5) {
-          feelsLikeValEl.classList.add('cold-temp-pulse');
-        } else {
-          feelsLikeValEl.classList.remove('cold-temp-pulse');
-        }
-      } else if (feelsLikeEl) {
+      if (feelsLikeEl) {
         feelsLikeEl.textContent = `Feels like ${roundedFeelsLike}°C`;
         if (roundedFeelsLike <= 5) {
           feelsLikeEl.classList.add('cold-temp-pulse');
