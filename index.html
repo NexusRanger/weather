@@ -595,9 +595,9 @@
             <div class="mt-1 flex items-center justify-between">
               <div class="flex items-baseline gap-2">
                 <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
-                <div class="flex flex-col justify-center">
-                  <div id="feelsLike" class="text-sm sm:text-base font-semibold text-slate-300 leading-tight">Feels like --°C</div>
-                  <div id="todayRange" class="text-xs font-mono text-slate-400 leading-tight mt-0.5">▲ --°  ▼ --°</div>
+                <div>
+                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
+                  <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
                 </div>
               </div>
               <div class="text-right flex items-center gap-1.5">
@@ -629,7 +629,7 @@
               <div class="flex flex-col justify-between min-w-0 flex-1">
                 <div class="text-[10px] text-slate-400 leading-none">Wind</div>
                 <div class="flex items-baseline gap-1 my-0.5">
-                  <span id="windSpeed" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                  <span id="windSpeed" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
                   <span class="text-[9px] text-slate-400">mph</span>
                 </div>
                 <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
@@ -655,7 +655,7 @@
                 <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400">Steady</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
-                <span id="barometer" class="text-sm font-bold font-mono text-white leading-none">----</span>
+                <span id="barometer" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">----</span>
                 <span class="text-[9px] text-slate-400">hPa</span>
               </div>
               <div class="text-[9px] text-slate-500 leading-none">Surface pressure</div>
@@ -668,7 +668,7 @@
                 <span id="dewPoint" class="text-[9px] font-mono text-slate-300">Dew --°</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
-                <span id="humidity" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                <span id="humidity" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
                 <span class="text-[9px] text-slate-400">%</span>
               </div>
               <div class="text-[9px] text-slate-500 leading-none">Moisture level</div>
@@ -681,7 +681,7 @@
                 <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300">Good</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
-                <span id="aqiVal" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                <span id="aqiVal" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
                 <span class="text-[9px] text-slate-400">AQI</span>
               </div>
               <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
@@ -694,7 +694,7 @@
                 <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono">--%</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
-                <span id="precipToday" class="text-sm font-bold font-mono text-white leading-none">0.0</span>
+                <span id="precipToday" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">0.0</span>
                 <span class="text-[9px] text-slate-400">mm</span>
               </div>
               <div id="rainTileNowcast" class="text-[9px] text-slate-400 leading-none truncate">Accumulated</div>
@@ -707,7 +707,7 @@
                 <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400">UV: --</span>
               </div>
               <div class="flex items-baseline gap-1 my-0.5">
-                <span id="cloudCover" class="text-sm font-bold font-mono text-white leading-none">--</span>
+                <span id="cloudCover" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
                 <span class="text-[9px] text-slate-400">%</span>
               </div>
               <div class="text-[9px] text-slate-500 leading-none">Sky cover</div>
@@ -1215,10 +1215,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=71"></script>
+  <script src="traffic-flood.js?v=72"></script>
     <script>
-    const APP_BUILD = 71;
-    const APP_VERSION = '1.9.7';
+    const APP_BUILD = 72;
+    const APP_VERSION = '1.9.8';
 
     async function checkForUpdates() {
       try {
