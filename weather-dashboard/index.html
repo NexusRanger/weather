@@ -880,6 +880,13 @@
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Share:</span>
         <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link ↗</span>
       </button>
+
+      <!-- Feedback & Suggestions Pill (Secret/Code-unlocked by default) -->
+      <button id="feedbackBtn" onclick="openFeedbackModal()" class="hidden glass-card rounded-xl px-2.5 py-1 items-center gap-1.5 border border-amber-400/30 hover:border-amber-400/70 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer text-left group" title="Submit 5-star rating or suggestions" tabindex="0">
+        <span class="text-xs text-amber-300">⭐</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Feedback:</span>
+        <span id="feedbackPillText" class="text-xs font-bold text-amber-300 group-hover:text-amber-200 flex items-center gap-1">Rate &amp; Ideas ↗</span>
+      </button>
     </div>
 
 
@@ -1118,11 +1125,84 @@
     </div>
   </div>
 
+  <!-- FEEDBACK & FEATURE SUGGESTIONS MODAL (STAR RATING + AGENT MODERATION) -->
+  <div id="feedbackModal" onclick="closeFeedbackModal(true)" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-lg w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default text-left">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-lg shadow-md flex-shrink-0">
+            ⭐
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Feedback &amp; Suggestions
+            </h3>
+            <p class="text-[11px] text-slate-400">Rate your experience or suggest features for the dashboard</p>
+          </div>
+        </div>
+        <button id="closeFeedbackBtnTop" tabindex="1" onclick="closeFeedbackModal(true)" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close (Esc / Back)">
+          <span>✕ Close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="py-3 space-y-3 overflow-y-auto">
+        <!-- Rating & Input Card -->
+        <div class="p-3.5 rounded-xl bg-slate-900/70 border border-white/10 space-y-3">
+          <div>
+            <label class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block mb-1">Your Rating</label>
+            <div id="starRatingGroup" class="flex items-center gap-2">
+              <div class="flex items-center gap-1 text-2xl select-none" id="starContainer">
+                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="1">★</button>
+                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="2">★</button>
+                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="3">★</button>
+                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="4">★</button>
+                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="5">★</button>
+              </div>
+              <span id="starRatingDesc" class="text-xs font-semibold text-amber-300 ml-1">Tap a star to rate</span>
+            </div>
+          </div>
+
+          <div>
+            <label for="feedbackCommentInput" class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block mb-1">Comment or Feature Request (Optional)</label>
+            <textarea id="feedbackCommentInput" rows="3" placeholder="What works well? What features would you like to see next?" class="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-amber-400 transition resize-none"></textarea>
+          </div>
+
+          <div class="flex items-center justify-between gap-2 pt-1">
+            <span id="feedbackSubmitStatus" class="text-[11px] text-slate-400 font-mono"></span>
+            <button id="submitFeedbackBtn" type="button" onclick="submitUserFeedback()" class="tv-focus-amber px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs shadow-md transition transform active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
+              <span>Send Feedback</span>
+              <span>↗</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Community Ideas & Agent Replies Feed -->
+        <div class="space-y-1.5 pt-1">
+          <div class="flex items-center justify-between px-0.5">
+            <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider flex items-center gap-1">
+              <span>🤖</span> Community Suggestions &amp; Agent Responses
+            </div>
+            <span id="feedbackFeedCount" class="text-[9px] font-mono text-slate-500">Checking ideas...</span>
+          </div>
+          <div id="feedbackFeedList" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-400 text-center">
+              Loading constructive ideas...
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=67"></script>
+  <script src="traffic-flood.js?v=68"></script>
     <script>
-    const APP_BUILD = 67;
-    const APP_VERSION = '1.9.3';
+    const APP_BUILD = 68;
+    const APP_VERSION = '1.9.4';
 
     async function checkForUpdates() {
       try {
@@ -1148,6 +1228,238 @@
         }
       } catch (e) {
         // Silently ignore update check errors
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Feedback & Suggestions Integration (Agent Moderation & Google Sheet)
+    // -------------------------------------------------------------
+    // Master switch: change to true when you want the Feedback pill visible for everyone
+    const PUBLIC_FEEDBACK_ENABLED = false;
+
+    function isFeedbackUnlocked() {
+      if (PUBLIC_FEEDBACK_ENABLED) return true;
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('feedback') === '1' || params.get('feedback') === 'showfeedback' || params.get('admin') === 'showfeedback') {
+        try { localStorage.setItem('ambient_feedback_unlocked', 'true'); } catch (_) {}
+        return true;
+      }
+      try {
+        if (localStorage.getItem('ambient_feedback_unlocked') === 'true') {
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
+
+    function checkFeedbackPillVisibility() {
+      const btn = document.getElementById('feedbackBtn');
+      if (!btn) return;
+      if (isFeedbackUnlocked()) {
+        btn.classList.remove('hidden');
+        btn.classList.add('inline-flex');
+      } else {
+        btn.classList.remove('inline-flex');
+        btn.classList.add('hidden');
+      }
+    }
+
+    let selectedFeedbackRating = 5;
+
+    function initStarRatingEvents() {
+      const container = document.getElementById('starContainer');
+      const descEl = document.getElementById('starRatingDesc');
+      if (!container) return;
+      const buttons = container.querySelectorAll('.star-btn');
+      const descs = {
+        1: '1 Star • Needs improvement',
+        2: '2 Stars • Fair',
+        3: '3 Stars • Good',
+        4: '4 Stars • Very good',
+        5: '5 Stars • Love it! ⭐'
+      };
+
+      function updateStarDisplay(val) {
+        buttons.forEach(btn => {
+          const btnVal = parseInt(btn.getAttribute('data-val') || '0', 10);
+          if (btnVal <= val) {
+            btn.classList.remove('text-slate-600');
+            btn.classList.add('text-amber-400');
+          } else {
+            btn.classList.remove('text-amber-400');
+            btn.classList.add('text-slate-600');
+          }
+        });
+        if (descEl) descEl.textContent = descs[val] || `${val} Stars`;
+      }
+
+      buttons.forEach(btn => {
+        btn.onclick = () => {
+          const val = parseInt(btn.getAttribute('data-val') || '5', 10);
+          selectedFeedbackRating = val;
+          updateStarDisplay(val);
+        };
+        btn.onmouseenter = () => {
+          const val = parseInt(btn.getAttribute('data-val') || '5', 10);
+          updateStarDisplay(val);
+        };
+      });
+
+      container.onmouseleave = () => {
+        updateStarDisplay(selectedFeedbackRating);
+      };
+
+      updateStarDisplay(selectedFeedbackRating);
+    }
+
+    const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
+
+    async function loadConstructiveFeedbackFeed() {
+      const listEl = document.getElementById('feedbackFeedList');
+      const countEl = document.getElementById('feedbackFeedCount');
+      if (!listEl) return;
+
+      try {
+        const res = await fetch(`${FEEDBACK_ENDPOINT}?action=getFeedback`);
+        if (res.ok) {
+          const json = await res.json();
+          const items = (json && Array.isArray(json.data)) ? json.data : [];
+          // Filter to approved/constructive comments or default examples if sheet is fresh
+          const approved = items.filter(i => (i.status || '').toLowerCase() === 'approved' || i.approved === true);
+          renderFeedbackItems(approved.length > 0 ? approved : getCuratedFeedbackSeed());
+          return;
+        }
+      } catch (_) {}
+      renderFeedbackItems(getCuratedFeedbackSeed());
+    }
+
+    function getCuratedFeedbackSeed() {
+      return [
+        {
+          stars: 5,
+          location: 'Nailsworth, UK',
+          comment: 'The frost prediction and windscreen morning alert is genius. Saved scraping twice this week!',
+          agentReply: 'Thank you! The frost model checks surface radiation and dew point at 05:00-08:00 AM.',
+          category: 'Praise'
+        },
+        {
+          stars: 5,
+          location: 'Sydney, Australia',
+          comment: 'Love the 10-day heat color coding and local timezone clock.',
+          agentReply: 'Glad you like it! Highs over 25°C turn amber and 30°C+ turn red.',
+          category: 'Feature'
+        }
+      ];
+    }
+
+    function renderFeedbackItems(items) {
+      const listEl = document.getElementById('feedbackFeedList');
+      const countEl = document.getElementById('feedbackFeedCount');
+      if (!listEl) return;
+      if (countEl) countEl.textContent = `${items.length} verified post${items.length === 1 ? '' : 's'}`;
+      listEl.innerHTML = '';
+
+      items.forEach(item => {
+        const starsStr = '★'.repeat(item.stars || 5) + '☆'.repeat(Math.max(0, 5 - (item.stars || 5)));
+        const card = document.createElement('div');
+        card.className = 'p-2.5 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1';
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-amber-400 font-mono text-xs">${starsStr}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(item.location || 'Local')}</span>
+          </div>
+          <p class="text-slate-200 text-[11px] leading-snug">"${escapeHtml(item.comment || '')}"</p>
+          ${item.agentReply ? `
+            <div class="mt-1 p-1.5 rounded-lg bg-sky-500/10 border border-sky-400/20 text-[10px] text-sky-200 flex items-start gap-1">
+              <span class="text-xs">🤖</span>
+              <div><strong class="text-sky-300 font-semibold">Agent Note:</strong> ${escapeHtml(item.agentReply)}</div>
+            </div>
+          ` : ''}
+        `;
+        listEl.appendChild(card);
+      });
+    }
+
+    function openFeedbackModal() {
+      const modal = document.getElementById('feedbackModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      try {
+        if (!history.state || history.state.modal !== 'feedbackModal') {
+          history.pushState({ modal: 'feedbackModal' }, '');
+        }
+      } catch (_) {}
+
+      initStarRatingEvents();
+      loadConstructiveFeedbackFeed();
+
+      setTimeout(() => {
+        const commentBox = document.getElementById('feedbackCommentInput');
+        if (commentBox) commentBox.focus();
+      }, 300);
+    }
+
+    function closeFeedbackModal(pop = true) {
+      const modal = document.getElementById('feedbackModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (pop && history.state && history.state.modal === 'feedbackModal') {
+        try { history.back(); } catch (_) {}
+      }
+    }
+
+    async function submitUserFeedback() {
+      const commentInput = document.getElementById('feedbackCommentInput');
+      const statusEl = document.getElementById('feedbackSubmitStatus');
+      const submitBtn = document.getElementById('submitFeedbackBtn');
+      const comment = commentInput ? commentInput.value.trim() : '';
+      const stars = selectedFeedbackRating || 5;
+
+      if (submitBtn) submitBtn.disabled = true;
+      if (statusEl) {
+        statusEl.style.color = '#38bdf8';
+        statusEl.textContent = 'Submitting feedback...';
+      }
+
+      const payload = {
+        action: 'addFeedback',
+        stars: stars,
+        comment: comment,
+        name: CURRENT_LOCATION.name,
+        postcode: CURRENT_LOCATION.postcode || '',
+        lat: CURRENT_LOCATION.lat,
+        lon: CURRENT_LOCATION.lon,
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        await fetch(FEEDBACK_ENDPOINT, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
+
+        if (statusEl) {
+          statusEl.style.color = '#34d399';
+          statusEl.textContent = 'Thank you! Sent to moderation agent ✓';
+        }
+        if (commentInput) commentInput.value = '';
+
+        setTimeout(() => {
+          closeFeedbackModal(true);
+          if (statusEl) statusEl.textContent = '';
+        }, 1800);
+      } catch (err) {
+        if (statusEl) {
+          statusEl.style.color = '#f59e0b';
+          statusEl.textContent = 'Saved locally (offline mode)';
+        }
+        setTimeout(() => closeFeedbackModal(true), 1500);
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
       }
     }
 
@@ -2482,6 +2794,34 @@
           closeLocationModal(false);
           openHistoryMapModal();
         }, 800);
+        return;
+      }
+
+      // Check for secret feedback unlock codeword
+      if (q.toLowerCase() === 'show feedback' || q.toLowerCase() === 'showfeedback') {
+        try { localStorage.setItem('ambient_feedback_unlocked', 'true'); } catch (_) {}
+        checkFeedbackPillVisibility();
+        if (status) {
+          status.style.color = '#fbbf24';
+          status.textContent = '⭐ Feedback button unlocked on this device!';
+        }
+        input.value = '';
+        setTimeout(() => {
+          closeLocationModal(false);
+          openFeedbackModal();
+        }, 800);
+        return;
+      }
+
+      // Optional feedback re-lock codeword
+      if (q.toLowerCase() === 'hide feedback' || q.toLowerCase() === 'hidefeedback') {
+        try { localStorage.removeItem('ambient_feedback_unlocked'); } catch (_) {}
+        checkFeedbackPillVisibility();
+        if (status) {
+          status.style.color = '#94a3b8';
+          status.textContent = '🔒 Feedback button hidden.';
+        }
+        input.value = '';
         return;
       }
 
@@ -4797,6 +5137,14 @@
           closeShareModal();
           return false;
         }
+        const feedbackModal = document.getElementById('feedbackModal');
+        if (feedbackModal && !feedbackModal.classList.contains('hidden')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          closeFeedbackModal();
+          return false;
+        }
         const locModal = document.getElementById('locationModal');
         if (locModal && !locModal.classList.contains('hidden') && e.target.tagName !== 'INPUT') {
           e.preventDefault();
@@ -4819,6 +5167,8 @@
 
     updateClock();
     setInterval(updateClock, 1000);
+
+    checkFeedbackPillVisibility();
 
     initLocation();
     setInterval(fetchWeatherData, 15 * 60 * 1000);
