@@ -860,8 +860,8 @@
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div class="flex flex-col flex-1 min-h-0">
             <div class="flex items-center mb-1 flex-shrink-0">
-              <span id="tenDayForecastTitle" class="px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap">
-                10-Day Forecast
+              <span id="tenDayForecastTitle" class="px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5">
+                10-Day Forecast &amp; Frost Risk &amp; Wind Speed <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.7)]" title="Wind speed dot"></span>
               </span>
             </div>
 
@@ -1216,10 +1216,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=76"></script>
+  <script src="traffic-flood.js?v=77"></script>
     <script>
-    const APP_BUILD = 76;
-    const APP_VERSION = '1.9.12';
+    const APP_BUILD = 77;
+    const APP_VERSION = '1.9.13';
 
     async function checkForUpdates() {
       try {
@@ -4331,10 +4331,11 @@
       }
       const periodSpan = Math.max(6, periodMax - periodMin);
 
-      // Dynamic panel title: only include "& Frost Risk" if any day drops to 5°C or below
+      // Dynamic panel title: include Frost Risk if any day drops to 5°C or below, plus Wind Speed and sample indicator dot
       const titleEl = document.getElementById('tenDayForecastTitle');
       if (titleEl) {
-        titleEl.textContent = hasAnyFrostRisk ? '10-Day Forecast & Frost Risk' : '10-Day Forecast';
+        const frostText = hasAnyFrostRisk ? ' &amp; Frost Risk' : '';
+        titleEl.innerHTML = `10-Day Forecast${frostText} &amp; Wind Speed <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.7)] align-middle ml-0.5" title="Wind speed dot: gray (calm), blue (gentle), green (moderate), amber (brisk), red (severe)"></span>`;
       }
 
       for (let i = 0; i < daysToShow; i++) {
