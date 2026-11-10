@@ -581,7 +581,7 @@
 
       <!-- COLUMN 1: HERO WEATHER & 6 METRIC TILES -->
       <div id="colWeather" class="h-full flex flex-col min-w-0">
-        <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
+        <div class="glass-card rounded-2xl p-2 sm:p-2.5 flex flex-col justify-between h-full overflow-hidden">
           
           <!-- Current Temp & Condition -->
           <div>
@@ -592,56 +592,56 @@
               <span id="lastUpdated" class="text-[9px] font-mono text-slate-400">Syncing...</span>
             </div>
 
-            <div class="mt-1 flex items-center justify-between">
+            <div class="mt-0.5 flex items-center justify-between">
               <div class="flex items-baseline gap-2">
-                <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
+                <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono leading-none">--°</span>
                 <div>
                   <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
                   <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
                 </div>
               </div>
               <div class="text-right flex items-center gap-1.5">
-                <div id="weatherIconLg" class="text-3xl">☁️</div>
+                <div id="weatherIconLg" class="text-2xl sm:text-3xl leading-none">☁️</div>
                 <div class="text-left">
                   <div id="weatherDesc" class="text-sm font-bold text-white capitalize leading-tight">Overcast</div>
-                  <div id="weatherSubDesc" class="text-[9px] text-slate-400">Calm valley air</div>
+                  <div id="weatherSubDesc" class="text-[9px] text-slate-400 leading-tight">Calm valley air</div>
                 </div>
               </div>
             </div>
 
             <!-- LIVE RAIN NOWCAST BANNER (Animated Ticker) -->
-            <div id="rainNowcastBanner" class="mt-1 px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden" title="15-minute high-resolution rain nowcasting" style="min-height: 28px;">
+            <div id="rainNowcastBanner" class="mt-0.5 px-2 py-0.5 rounded-lg bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden" title="15-minute high-resolution rain nowcasting" style="min-height: 24px;">
               <div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden pr-1">
-                <span id="rainNowcastIcon" class="text-sm flex-shrink-0">☔</span>
-                <div class="overflow-hidden flex-1 relative" style="height: 18px;">
-                  <div id="rainNowcastText" class="font-semibold text-sky-200 text-[11px] whitespace-nowrap" style="transition: opacity 0.3s ease, transform 0.3s ease;">Checking rain radar...</div>
+                <span id="rainNowcastIcon" class="text-xs flex-shrink-0">☔</span>
+                <div class="overflow-hidden flex-1 relative" style="height: 16px;">
+                  <div id="rainNowcastText" class="font-semibold text-sky-200 text-[10px] sm:text-[11px] whitespace-nowrap leading-tight" style="transition: opacity 0.3s ease, transform 0.3s ease;">Checking rain radar...</div>
                 </div>
               </div>
-              <span id="rainNowcastBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0 ml-1.5">--% conf</span>
+              <span id="rainNowcastBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0 ml-1.5">--% conf</span>
             </div>
           </div>
 
           <!-- 6 Dense Tiles (2 cols x 3 rows) -->
-          <div class="grid grid-cols-2 gap-1 mt-1 pt-1 border-t border-white/10 flex-1 min-h-0">
+          <div class="grid grid-cols-2 gap-1 mt-0.5 pt-0.5 border-t border-white/10 flex-1 min-h-0">
             
             <!-- Wind -->
-            <div id="windTile" class="glass-tile rounded-lg p-1.5 flex items-stretch justify-between gap-1.5 transition-all">
+            <div id="windTile" class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1 transition-all">
               <div class="flex flex-col justify-between min-w-0 flex-1">
                 <div class="text-[10px] text-slate-400 leading-none">Wind</div>
-                <div class="flex items-baseline gap-1 my-0.5">
+                <div class="flex items-baseline gap-1 my-[1px]">
                   <span id="windSpeed" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                  <span class="text-[9px] text-slate-400">mph</span>
+                  <span class="text-[9px] text-slate-400 leading-none">mph</span>
                 </div>
                 <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
               </div>
               <div class="flex flex-col items-center justify-between flex-shrink-0 pl-1">
-                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[11px] leading-none">--</span>
-                <div class="w-8 h-8 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_8px_rgba(56,189,248,0.2)] mt-0.5" title="Wind flow compass">
-                  <span class="absolute top-0.5 text-[6px] font-mono font-bold text-sky-300/75 leading-none">N</span>
-                  <span class="absolute bottom-0.5 w-0.5 h-1 bg-white/25 rounded-full"></span>
-                  <span class="absolute left-0.5 w-1 h-0.5 bg-white/25 rounded-full"></span>
-                  <span class="absolute right-0.5 w-1 h-0.5 bg-white/25 rounded-full"></span>
-                  <svg id="windArrowIcon" class="w-4 h-4 text-sky-300 transition-transform duration-700 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]" viewBox="0 0 24 24" fill="currentColor">
+                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[10px] leading-none">--</span>
+                <div class="w-6 h-6 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_6px_rgba(56,189,248,0.2)] mt-0.5" title="Wind flow compass">
+                  <span class="absolute top-0.5 text-[5px] font-mono font-bold text-sky-300/75 leading-none">N</span>
+                  <span class="absolute bottom-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
+                  <span class="absolute left-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
+                  <span class="absolute right-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
+                  <svg id="windArrowIcon" class="w-3 h-3 text-sky-300 transition-transform duration-700 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                   </svg>
                 </div>
@@ -649,65 +649,71 @@
             </div>
 
             <!-- Barometer -->
-            <div id="barometerTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
+            <div id="barometerTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Barometer</span>
-                <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400">Steady</span>
+                <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400 leading-none">Steady</span>
               </div>
-              <div class="flex items-baseline gap-1 my-0.5">
+              <div class="flex items-baseline gap-1 my-[1px]">
                 <span id="barometer" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">----</span>
-                <span class="text-[9px] text-slate-400">hPa</span>
+                <span class="text-[9px] text-slate-400 leading-none">hPa</span>
               </div>
               <div class="text-[9px] text-slate-500 leading-none">Surface pressure</div>
             </div>
 
             <!-- Humidity & Dew -->
-            <div class="glass-tile rounded-lg p-1.5 flex flex-col justify-between">
+            <div class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Humidity</span>
-                <span id="dewPoint" class="text-[9px] font-mono text-slate-300">Dew --°</span>
+                <span id="dewPoint" class="text-[9px] font-mono text-slate-300 leading-none">Dew --°</span>
               </div>
-              <div class="flex items-baseline gap-1 my-0.5">
+              <div class="flex items-baseline gap-1 my-[1px]">
                 <span id="humidity" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                <span class="text-[9px] text-slate-400">%</span>
+                <span class="text-[9px] text-slate-400 leading-none">%</span>
               </div>
               <div class="text-[9px] text-slate-500 leading-none">Moisture level</div>
             </div>
 
             <!-- Air Quality (AQI) -->
-            <div id="aqiTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
+            <div id="aqiTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Air Quality</span>
-                <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300">Good</span>
+                <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300 leading-none">Good</span>
               </div>
-              <div class="flex items-baseline gap-1 my-0.5">
+              <div class="flex items-baseline gap-1 my-[1px]">
                 <span id="aqiVal" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                <span class="text-[9px] text-slate-400">AQI</span>
+                <span class="text-[9px] text-slate-400 leading-none">AQI</span>
               </div>
               <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
             </div>
 
             <!-- Rain Today -->
-            <div id="rainTodayTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
+            <div id="rainTodayTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Rain Today</span>
-                <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono">--%</span>
+                <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono leading-none">--%</span>
               </div>
-              <div class="flex items-baseline gap-1 my-0.5">
+              <div class="flex items-baseline gap-1 my-[1px]">
                 <span id="precipToday" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">0.0</span>
-                <span class="text-[9px] text-slate-400">mm</span>
+                <span class="text-[9px] text-slate-400 leading-none">mm</span>
               </div>
               <div id="rainTileNowcast" class="text-[9px] text-slate-400 leading-none truncate">Accumulated</div>
             </div>
 
             <!-- Cloud & UV -->
-            <div id="cloudUvTile" class="glass-tile rounded-lg p-1.5 flex flex-col justify-between transition-all">
+            <div id="cloudUvTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between text-[10px] text-slate-400 leading-none">
                 <span>Cloud &amp; UV</span>
-                <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400">UV: --</span>
+                <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400 leading-none">UV: --</span>
               </div>
-              <div class="flex items-baseline gap-1 my-0.5">
+              <div class="flex items-baseline gap-1 my-[1px]">
                 <span id="cloudCover" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
+                <span class="text-[9px] text-slate-400 leading-none">%</span>
+              </div>
+              <div class="text-[9px] text-slate-500 leading-none">Sky cover</div>
+            </div>
+
+          </div>
                 <span class="text-[9px] text-slate-400">%</span>
               </div>
               <div class="text-[9px] text-slate-500 leading-none">Sky cover</div>
@@ -860,8 +866,8 @@
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div class="flex flex-col flex-1 min-h-0">
             <div class="flex items-center mb-1 flex-shrink-0">
-              <span id="tenDayForecastTitle" class="px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5">
-                10-Day Forecast &amp; Frost Risk &amp; Wind Speed <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.7)]" title="Wind speed dot"></span>
+              <span id="tenDayForecastTitle" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5">
+                10-Day Forecast &bull; Frost &amp; Wind <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.7)]" title="Wind speed dot"></span>
               </span>
             </div>
 
@@ -1216,10 +1222,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=77"></script>
+  <script src="traffic-flood.js?v=78"></script>
     <script>
-    const APP_BUILD = 77;
-    const APP_VERSION = '1.9.13';
+    const APP_BUILD = 78;
+    const APP_VERSION = '1.9.14';
 
     async function checkForUpdates() {
       try {
@@ -4331,11 +4337,11 @@
       }
       const periodSpan = Math.max(6, periodMax - periodMin);
 
-      // Dynamic panel title: include Frost Risk if any day drops to 5°C or below, plus Wind Speed and sample indicator dot
+      // Dynamic panel title: include Frost & Wind with sample wind dot
       const titleEl = document.getElementById('tenDayForecastTitle');
       if (titleEl) {
-        const frostText = hasAnyFrostRisk ? ' &amp; Frost Risk' : '';
-        titleEl.innerHTML = `10-Day Forecast${frostText} &amp; Wind Speed <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.7)] align-middle ml-0.5" title="Wind speed dot: gray (calm), blue (gentle), green (moderate), amber (brisk), red (severe)"></span>`;
+        const subFeatures = hasAnyFrostRisk ? 'Frost &amp; Wind' : 'Wind';
+        titleEl.innerHTML = `10-Day Forecast &bull; ${subFeatures} <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_4px_rgba(56,189,248,0.7)] align-middle ml-0.5" title="Wind speed dot: gray (calm), blue (gentle), green (moderate), amber (brisk), red (severe)"></span>`;
       }
 
       for (let i = 0; i < daysToShow; i++) {
