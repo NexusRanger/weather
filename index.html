@@ -213,6 +213,22 @@
       box-shadow: 0 0 14px rgba(56, 189, 248, 0.35) !important;
     }
 
+    /* Cold Temperature Blue Pulse Alert (5°C or lower) */
+    @keyframes coldBluePulse {
+      0%, 100% {
+        color: #67e8f9;
+        text-shadow: 0 0 6px rgba(56, 189, 248, 0.45);
+      }
+      50% {
+        color: #e0f2fe;
+        text-shadow: 0 0 16px rgba(56, 189, 248, 0.95), 0 0 24px rgba(14, 165, 233, 0.7);
+      }
+    }
+    .cold-temp-pulse {
+      animation: coldBluePulse 2.2s ease-in-out infinite !important;
+      font-weight: 800 !important;
+    }
+
     /* Frost Warning Glowing Pulses */
     @keyframes frostGlowPulse {
       0%, 100% {
@@ -580,7 +596,7 @@
               <div class="flex items-baseline gap-2">
                 <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
                 <div>
-                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
+                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like <span id="feelsLikeVal">--°C</span></div>
                   <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
                 </div>
               </div>
@@ -1199,10 +1215,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=68"></script>
+  <script src="traffic-flood.js?v=69"></script>
     <script>
-    const APP_BUILD = 68;
-    const APP_VERSION = '1.9.4';
+    const APP_BUILD = 69;
+    const APP_VERSION = '1.9.5';
 
     async function checkForUpdates() {
       try {
@@ -4018,8 +4034,37 @@
       if (glow) glow.className = isDay ? 'ambient-glow' : 'ambient-glow ambient-glow-night';
 
       // Hero
-      document.getElementById('currentTemp').textContent = `${Math.round(cur.temperature_2m)}°`;
-      document.getElementById('feelsLike').textContent = `Feels like ${Math.round(cur.apparent_temperature)}°C`;
+      const roundedCurTemp = Math.round(cur.temperature_2m);
+      const roundedFeelsLike = Math.round(cur.apparent_temperature);
+      const currentTempEl = document.getElementById('currentTemp');
+      const feelsLikeValEl = document.getElementById('feelsLikeVal');
+      const feelsLikeEl = document.getElementById('feelsLike');
+
+      if (currentTempEl) {
+        currentTempEl.textContent = `${roundedCurTemp}°`;
+        if (roundedCurTemp <= 5) {
+          currentTempEl.classList.add('cold-temp-pulse');
+        } else {
+          currentTempEl.classList.remove('cold-temp-pulse');
+        }
+      }
+
+      if (feelsLikeValEl) {
+        feelsLikeValEl.textContent = `${roundedFeelsLike}°C`;
+        if (roundedFeelsLike <= 5) {
+          feelsLikeValEl.classList.add('cold-temp-pulse');
+        } else {
+          feelsLikeValEl.classList.remove('cold-temp-pulse');
+        }
+      } else if (feelsLikeEl) {
+        feelsLikeEl.textContent = `Feels like ${roundedFeelsLike}°C`;
+        if (roundedFeelsLike <= 5) {
+          feelsLikeEl.classList.add('cold-temp-pulse');
+        } else {
+          feelsLikeEl.classList.remove('cold-temp-pulse');
+        }
+      }
+
       document.getElementById('todayRange').textContent = `▲ ${Math.round(daily.temperature_2m_max[0])}°  ▼ ${Math.round(daily.temperature_2m_min[0])}°`;
       
       document.getElementById('weatherIconLg').textContent = weatherInfo.icon;
