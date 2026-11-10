@@ -595,9 +595,9 @@
             <div class="mt-1 flex items-center justify-between">
               <div class="flex items-baseline gap-2">
                 <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono">--°</span>
-                <div>
-                  <div id="feelsLike" class="text-xs font-medium text-slate-300">Feels like --°C</div>
-                  <div id="todayRange" class="text-[10px] font-mono text-slate-400">▲ --°  ▼ --°</div>
+                <div class="flex flex-col justify-center">
+                  <div id="feelsLike" class="text-sm sm:text-base font-semibold text-slate-300 leading-tight">Feels like --°C</div>
+                  <div id="todayRange" class="text-xs font-mono text-slate-400 leading-tight mt-0.5">▲ --°  ▼ --°</div>
                 </div>
               </div>
               <div class="text-right flex items-center gap-1.5">
@@ -1215,10 +1215,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=70"></script>
+  <script src="traffic-flood.js?v=71"></script>
     <script>
-    const APP_BUILD = 70;
-    const APP_VERSION = '1.9.6';
+    const APP_BUILD = 71;
+    const APP_VERSION = '1.9.7';
 
     async function checkForUpdates() {
       try {
