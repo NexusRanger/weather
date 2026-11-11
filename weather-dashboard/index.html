@@ -403,7 +403,7 @@
       display: none !important;
     }
 
-    /* Keep footerTimeline clean without yellow background/border when scrolling, tapping, or focusing */
+    /* Single clean amber TV focus indicator for bottom timeline panel */
     #footerTimeline,
     #footerTimeline:focus,
     #footerTimeline:focus-visible,
@@ -413,8 +413,15 @@
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
       transform: none !important;
     }
-    #footerTimeline:focus-visible:not(.glance-active) {
-      border-color: rgba(56, 189, 248, 0.45) !important;
+    #footerTimeline:focus-visible:not(.glance-active),
+    #footerTimeline:focus:not(.glance-active) {
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 0 1.5px #fbbf24, 0 8px 32px 0 rgba(0, 0, 0, 0.35), 0 0 16px rgba(251, 191, 36, 0.45) !important;
+    }
+    #hourlyTimeline,
+    #hourlyTimeline:focus,
+    #hourlyTimeline:focus-visible {
+      outline: none !important;
     }
 
     .ambient-glow {
@@ -574,16 +581,16 @@
           <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink" style="max-width: min(320px, 30vw);" onclick="openLocationModal()" title="Click to change location">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth</span>
           </h1>
-          <button id="headerLocationBtn" tabindex="1" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none">
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none">
             <span id="headerPostcodeBadge">GL5 5HH</span>
             <span class="text-[8px] text-indigo-400">✏️</span>
           </button>
-          <button onclick="detectCurrentLocation()" title="Use Current GPS Location" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+          <button tabindex="-1" onclick="detectCurrentLocation()" title="Use Current GPS Location" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
             <span id="gpsButtonIcon">📍</span>
             <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
           </button>
           <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline flex-shrink-0 whitespace-nowrap">51.70°N, 2.23°W</span>
-          <button id="headerGlobeBtn" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="tv-focus-amber p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none" aria-label="Location History Map">
+          <button id="headerGlobeBtn" tabindex="0" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="tv-focus-amber p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none" aria-label="Location History Map">
             <svg class="w-4 h-4 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
               <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
@@ -607,7 +614,7 @@
 
         <!-- TV Zoom / Scale Selector (hidden on mobile portrait) -->
         <div class="tv-only flex items-center gap-0.5 bg-black/40 rounded-lg p-0.5 border border-white/10 text-xs">
-          <button onclick="adjustScale(-0.05)" title="Zoom Out / Shrink layout" class="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center">
+          <button tabindex="-1" onclick="adjustScale(-0.05)" title="Zoom Out / Shrink layout" class="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7"></circle>
               <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
@@ -615,7 +622,7 @@
             </svg>
           </button>
           <span id="scaleLabel" class="text-[10px] font-mono px-1 text-slate-400">100%</span>
-          <button onclick="adjustScale(0.05)" title="Zoom In / Enlarge layout" class="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center">
+          <button tabindex="-1" onclick="adjustScale(0.05)" title="Zoom In / Enlarge layout" class="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7"></circle>
               <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
@@ -626,12 +633,12 @@
         </div>
 
         <div class="flex items-center gap-1">
-          <button onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="tv-only p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition">
+          <button tabindex="-1" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="tv-only p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
             </svg>
           </button>
-          <button onclick="reloadDashboard()" title="Reload Dashboard (Full Page & Data Refresh)" class="p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition group">
+          <button tabindex="-1" onclick="reloadDashboard()" title="Reload Dashboard (Full Page & Data Refresh)" class="p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition group">
             <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
@@ -948,12 +955,13 @@
         <span class="text-[10px] text-slate-500 group-hover:text-emerald-300 transition-colors ml-0.5">ℹ️</span>
       </button>
 
-      <!-- River Pill -->
-      <div id="riverPill" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm transition-all" title="UK Environment Agency Live River & Flood Monitoring">
+      <!-- River Pill Button -->
+      <button id="riverPill" onclick="openRiverModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="UK Environment Agency Live River &amp; Flood Monitoring (Click to View)" tabindex="0">
         <span class="text-xs">🌊</span>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Rivers:</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Rivers:</span>
         <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
-      </div>
+        <span class="text-[10px] text-slate-500 group-hover:text-cyan-300 transition-colors ml-0.5">ℹ️</span>
+      </button>
 
       <!-- Radar Modal Pill -->
       <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
@@ -999,8 +1007,8 @@
         </div>
       </div>
 
-      <!-- Horizontal Strip Container (GPU-accelerated layer, zero CSS scroll-behavior fighting) -->
-      <div id="hourlyTimeline" class="flex gap-1.5 overflow-x-auto pb-0.5" style="-webkit-overflow-scrolling: touch; will-change: scroll-position; transform: translateZ(0);">
+      <!-- Horizontal Strip Container (GPU-accelerated layer, zero CSS scroll-behavior fighting, single footer focus stop) -->
+      <div id="hourlyTimeline" tabindex="-1" class="flex gap-1.5 overflow-x-auto pb-0.5 focus:outline-none" style="-webkit-overflow-scrolling: touch; will-change: scroll-position; transform: translateZ(0); outline: none;">
         <div class="text-xs text-slate-400 py-1">Loading hourly forecast...</div>
       </div>
     </footer>
@@ -1368,6 +1376,93 @@
     </div>
   </div>
 
+  <!-- RIVER & FLOOD TELEMETRY MODAL -->
+  <div id="riverModal" onclick="closeRiverModal()" onmousemove="resetRiverAutoCloseTimer()" onkeydown="resetRiverAutoCloseTimer()" ontouchstart="resetRiverAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-5 text-left cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-4 sm:p-5 max-w-lg w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-600 to-sky-700 flex items-center justify-center text-lg shadow-md flex-shrink-0">
+            🌊
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                Live River &amp; Catchment
+              </h3>
+              <span id="riverLocationLabel" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">Local Catchment</span>
+              <span id="riverCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 20s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="riverCountdownSecs">20s</span></span>
+            </div>
+            <p class="text-[11px] text-slate-400">UK Environment Agency live monitoring stations &amp; flood alerts</p>
+          </div>
+        </div>
+
+        <button id="closeRiverBtnTop" tabindex="1" onclick="closeRiverModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close River Info (Esc / Back)">
+          <span>✕ Close <span id="riverBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(20s)</span></span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="py-3 space-y-3 overflow-y-auto">
+        <!-- Status Banner -->
+        <div id="riverStatusBanner" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center gap-3">
+          <span id="riverStatusIcon" class="text-2xl">🟢</span>
+          <div class="flex-1 min-w-0">
+            <div id="riverStatusHeadline" class="text-xs font-bold text-emerald-300 uppercase tracking-wide">Normal River Levels</div>
+            <p id="riverStatusExplanation" class="text-[11px] text-slate-300 leading-snug mt-0.5">Waterways within 8 km are flowing within typical seasonal bounds. No active flood alerts reported by the Environment Agency.</p>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <!-- Primary Telemetry Station -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Nearest Station</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="riverStationVal" class="text-base font-bold text-white truncate">Local Station</span>
+            </div>
+            <span id="riverStationSubtext" class="text-[10px] text-slate-400 block truncate">EA Telemetry Station</span>
+          </div>
+
+          <!-- Monitored Waterway -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Monitored River</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="riverNameVal" class="text-base font-bold text-cyan-300 truncate">Local Waterways</span>
+            </div>
+            <span id="riverCatchmentSubtext" class="text-[10px] text-slate-400 block truncate">Catchment channel</span>
+          </div>
+
+          <!-- Typical Seasonal Range -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Typical Stage Range</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="riverRangeVal" class="text-base font-bold font-mono text-emerald-400">Seasonal Bounds</span>
+            </div>
+            <span class="text-[10px] text-slate-400 block truncate">Environment Agency standard band</span>
+          </div>
+
+          <!-- Active Flood Alerts -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Active Alerts</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="riverAlertsVal" class="text-base font-bold font-mono text-emerald-400">0 Active</span>
+            </div>
+            <span id="riverAlertsSubtext" class="text-[10px] text-slate-400 block truncate">Within 10 km radius</span>
+          </div>
+        </div>
+
+        <!-- Network Coverage & Source Note -->
+        <div class="p-2.5 rounded-xl bg-slate-900/50 border border-white/10 flex items-center justify-between text-[11px] text-slate-400">
+          <span id="riverStationCountText">10 monitoring stations active across catchment</span>
+          <span class="text-[10px] font-mono text-cyan-400/80">Gov.uk EA Telemetry</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- WEATHER RADAR MODAL (CLEAN NATIVE LEAFLET + RAINVIEWER) -->
   <div id="radarModal" onclick="closeRadarModal()" onmousemove="resetRadarAutoCloseTimer()" onkeydown="resetRadarAutoCloseTimer()" ontouchstart="resetRadarAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-5 max-w-5xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[850px] cursor-default">
@@ -1455,10 +1550,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=91"></script>
+  <script src="traffic-flood.js?v=92"></script>
     <script>
-    const APP_BUILD = 91;
-    const APP_VERSION = '1.9.27';
+    const APP_BUILD = 92;
+    const APP_VERSION = '1.9.28';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1482,7 +1577,7 @@
       if (!updateBtn) return;
 
       // Do not redirect if any modal is currently visible
-      const modalOpen = document.querySelector('#locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #radarModal:not(.hidden), #trafficModal:not(.hidden)');
+      const modalOpen = document.querySelector('#locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #radarModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden)');
       if (modalOpen) return;
 
       if (document.activeElement === updateBtn) {
@@ -1507,7 +1602,7 @@
       if (e.key !== 'ArrowUp') return;
 
       const openModal = document.querySelector(
-        '#trafficModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
       );
       if (!openModal) return;
 
@@ -1524,6 +1619,81 @@
       e.preventDefault();
       topCloseBtn.focus();
     }, true);
+
+    // D-Pad Page Flow: Natural, logical navigation between Header <-> Status Strip <-> Bottom Panel
+    window.addEventListener('keydown', function handleMainPageDpadNavigation(e) {
+      // Ignore if any modal is open
+      const modalOpen = document.querySelector(
+        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+      );
+      if (modalOpen) return;
+
+      const active = document.activeElement;
+      const pills = [
+        document.getElementById('trafficPill'),
+        document.getElementById('riverPill'),
+        document.getElementById('radarBtn'),
+        document.getElementById('shareBtn'),
+        document.getElementById('feedbackBtn')
+      ].filter(el => el && !el.classList.contains('hidden'));
+
+      const footer = document.getElementById('footerTimeline');
+      const locBtn = document.getElementById('headerLocationBtn');
+      const globeBtn = document.getElementById('headerGlobeBtn');
+
+      if (e.key === 'ArrowDown') {
+        // From header down to status strip pills
+        if (active === locBtn || active === globeBtn) {
+          e.preventDefault();
+          const target = pills[0] || footer;
+          if (target) target.focus();
+        }
+        // From status strip pills down to the single bottom panel
+        else if (pills.includes(active)) {
+          e.preventDefault();
+          if (footer) footer.focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        // From bottom panel up to status strip pills
+        if (active === footer) {
+          e.preventDefault();
+          const target = pills[0] || locBtn;
+          if (target) target.focus();
+        }
+        // From status strip pills up to header location button (or update banner if visible)
+        else if (pills.includes(active)) {
+          const banner = document.getElementById('updateBanner');
+          const updateBtn = document.getElementById('applyUpdateBtn');
+          if (banner && !banner.classList.contains('hidden') && updateBtn) {
+            e.preventDefault();
+            updateBtn.focus();
+          } else if (locBtn) {
+            e.preventDefault();
+            locBtn.focus();
+          }
+        }
+      } else if (e.key === 'ArrowLeft') {
+        // Horizontal navigation inside status strip
+        const idx = pills.indexOf(active);
+        if (idx > 0) {
+          e.preventDefault();
+          pills[idx - 1].focus();
+        } else if (active === globeBtn && locBtn) {
+          e.preventDefault();
+          locBtn.focus();
+        }
+      } else if (e.key === 'ArrowRight') {
+        // Horizontal navigation inside status strip
+        const idx = pills.indexOf(active);
+        if (idx >= 0 && idx < pills.length - 1) {
+          e.preventDefault();
+          pills[idx + 1].focus();
+        } else if (active === locBtn && globeBtn) {
+          e.preventDefault();
+          globeBtn.focus();
+        }
+      }
+    });
 
     async function checkForUpdates() {
       try {
@@ -6078,8 +6248,179 @@
       restorePreModalFocus('trafficPill');
     }
 
+    /* RIVER & FLOOD TELEMETRY MODAL CONTROLLERS (Zero extra API calls) */
+    let riverAutoCloseTimer = null;
+    let riverAutoCloseSecs = 20;
+
+    function resetRiverAutoCloseTimer() {
+      if (riverAutoCloseTimer) {
+        clearInterval(riverAutoCloseTimer);
+        riverAutoCloseTimer = null;
+      }
+      riverAutoCloseSecs = 20;
+      updateRiverCountdownDisplay();
+      riverAutoCloseTimer = setInterval(() => {
+        riverAutoCloseSecs--;
+        updateRiverCountdownDisplay();
+        if (riverAutoCloseSecs <= 0) {
+          stopRiverAutoCloseTimer();
+          closeRiverModal();
+        }
+      }, 1000);
+    }
+
+    function updateRiverCountdownDisplay() {
+      const secsEl = document.getElementById('riverCountdownSecs');
+      if (secsEl) secsEl.textContent = `${riverAutoCloseSecs}s`;
+      const btnEl = document.getElementById('riverBtnCountdown');
+      if (btnEl) btnEl.textContent = `(${riverAutoCloseSecs}s)`;
+    }
+
+    function stopRiverAutoCloseTimer() {
+      if (riverAutoCloseTimer) {
+        clearInterval(riverAutoCloseTimer);
+        riverAutoCloseTimer = null;
+      }
+      riverAutoCloseSecs = 20;
+      updateRiverCountdownDisplay();
+    }
+
+    function openRiverModal() {
+      const modal = document.getElementById('riverModal');
+      if (!modal) return;
+      savePreModalFocus('riverPill');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      try {
+        if (!history.state || history.state.modal !== 'riverModal') {
+          history.pushState({ modal: 'riverModal' }, '');
+        }
+      } catch (_) {}
+
+      // Clear prior focus so the user clearly sees the Close button light up in amber
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      // Populate data from memory (zero extra API calls!)
+      populateRiverModalData();
+
+      // Start 20s auto-revert timer
+      resetRiverAutoCloseTimer();
+
+      // Standardized 1.2s (1200ms) delay to prominently highlight the Close button
+      setTimeout(() => {
+        const closeBtn = document.getElementById('closeRiverBtnTop');
+        if (closeBtn) closeBtn.focus();
+      }, 1200);
+    }
+
+    function populateRiverModalData() {
+      const locLabel = document.getElementById('riverLocationLabel');
+      const d = window.CACHED_FLOOD_DATA || {
+        statusLabel: 'Normal River Levels',
+        statusIcon: '🟢',
+        statusColor: 'text-emerald-400',
+        statusDesc: 'Waterways within 8 km are flowing within typical seasonal bounds. No active flood alerts reported by the Environment Agency.',
+        alertCount: 0,
+        isSevere: false,
+        stationName: (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.name) ? CURRENT_LOCATION.name : 'Local Station',
+        riverName: 'Local Waterways',
+        town: (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.name) ? CURRENT_LOCATION.name : '',
+        catchment: 'Local Catchment',
+        typicalLow: null,
+        typicalHigh: null,
+        stationCount: 10
+      };
+
+      if (locLabel) {
+        locLabel.textContent = d.catchment || ((typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.name) ? `${CURRENT_LOCATION.name} Catchment` : 'Local Catchment');
+      }
+
+      const banner = document.getElementById('riverStatusBanner');
+      const icon = document.getElementById('riverStatusIcon');
+      const headline = document.getElementById('riverStatusHeadline');
+      const explanation = document.getElementById('riverStatusExplanation');
+
+      if (headline) {
+        headline.textContent = d.statusLabel;
+        headline.className = `text-xs font-bold uppercase tracking-wide ${d.statusColor}`;
+      }
+      if (explanation) explanation.textContent = d.statusDesc;
+
+      if (banner && icon) {
+        if (d.isSevere) {
+          banner.className = 'p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 flex items-center gap-3';
+          icon.textContent = '🚨';
+        } else if (d.alertCount > 0) {
+          banner.className = 'p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 flex items-center gap-3';
+          icon.textContent = '🟡';
+        } else {
+          banner.className = 'p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center gap-3';
+          icon.textContent = '🟢';
+        }
+      }
+
+      const stationEl = document.getElementById('riverStationVal');
+      if (stationEl) {
+        stationEl.textContent = d.stationName + (d.town ? `, ${d.town}` : '');
+      }
+
+      const riverEl = document.getElementById('riverNameVal');
+      if (riverEl) riverEl.textContent = d.riverName;
+
+      const catchmentSub = document.getElementById('riverCatchmentSubtext');
+      if (catchmentSub) catchmentSub.textContent = `${d.catchment} channel`;
+
+      const rangeEl = document.getElementById('riverRangeVal');
+      if (rangeEl) {
+        if (d.typicalLow != null && d.typicalHigh != null) {
+          rangeEl.textContent = `${d.typicalLow.toFixed(2)} – ${d.typicalHigh.toFixed(2)} m`;
+        } else {
+          rangeEl.textContent = 'Seasonal Bounds';
+        }
+      }
+
+      const alertsEl = document.getElementById('riverAlertsVal');
+      if (alertsEl) {
+        if (d.alertCount > 0) {
+          alertsEl.textContent = `${d.alertCount} Active Alert${d.alertCount > 1 ? 's' : ''}`;
+          alertsEl.className = 'text-base font-bold font-mono ' + (d.isSevere ? 'text-rose-400' : 'text-amber-300');
+        } else {
+          alertsEl.textContent = '0 Active';
+          alertsEl.className = 'text-base font-bold font-mono text-emerald-400';
+        }
+      }
+
+      const countText = document.getElementById('riverStationCountText');
+      if (countText) {
+        countText.textContent = `${d.stationCount || 10} telemetry stations monitored across catchment`;
+      }
+    }
+
+    function closeRiverModal(pop = true) {
+      stopRiverAutoCloseTimer();
+      const modal = document.getElementById('riverModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (pop && history.state && history.state.modal === 'riverModal') {
+        try { history.back(); } catch (_) {}
+      }
+      restorePreModalFocus('riverPill');
+    }
+
     function handleGlobalBack(e) {
       if (isTvBackKey(e)) {
+        const riverModal = document.getElementById('riverModal');
+        if (riverModal && !riverModal.classList.contains('hidden')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          closeRiverModal();
+          return false;
+        }
         const trafficModal = document.getElementById('trafficModal');
         if (trafficModal && !trafficModal.classList.contains('hidden')) {
           e.preventDefault();

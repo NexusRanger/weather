@@ -194,8 +194,8 @@ async function fetchFloodData() {
   try {
     const { lat, lon } = CURRENT_LOCATION;
 
-    // 2.1 Get nearest stations (within 8 km radius)
-    const stationsUrl = `https://environment.data.gov.uk/flood-monitoring/id/stations?lat=${lat}&long=${lon}&dist=8&parameter=level`;
+    // 2.1 Get nearest stations with full metadata (within 8 km radius)
+    const stationsUrl = `https://environment.data.gov.uk/flood-monitoring/id/stations?lat=${lat}&long=${lon}&dist=8&parameter=level&_view=full`;
     let stationsData = null;
     try {
       stationsData = await fetchWithProxy(stationsUrl);
@@ -209,17 +209,48 @@ async function fetchFloodData() {
       alerts = alertsData.items || [];
     } catch (_) {}
 
-    // 2.3 General status check
+    // 2.3 General status check & in-memory cache population (zero extra API calls!)
     const riverPill = document.getElementById('riverPill');
     if (riverPill) {
       riverPill.classList.remove('river-alert-amber-pulse', 'river-alert-red-pulse');
     }
 
+    const items = (stationsData && stationsData.items) ? stationsData.items : [];
+    const primaryStation = items.length > 0 ? items[0] : null;
+    const stage = (primaryStation && primaryStation.stageScale) ? primaryStation.stageScale : {};
+
+    const isSevere = alerts.length > 0 && alerts.some(a => {
+      const s = (a.severity || a.severityLevel || '').toString().toLowerCase();
+      return s.includes('severe') || s.includes('danger') || s.includes('warning');
+    });
+
+    // Populate in-memory flood data cache for instant #riverModal opening
+    window.CACHED_FLOOD_DATA = {
+      timestamp: Date.now(),
+      statusLabel: alerts.length > 0 ? (isSevere ? 'Severe Flood Warning' : 'Flood Alert Active') : 'Normal River Levels',
+      statusIcon: alerts.length > 0 ? (isSevere ? '🚨' : '🟡') : '🟢',
+      statusColor: alerts.length > 0 ? (isSevere ? 'text-rose-400' : 'text-amber-300') : 'text-emerald-400',
+      statusDesc: alerts.length > 0 
+        ? `${alerts.length} active flood alert${alerts.length > 1 ? 's' : ''} reported within 10 km. Low-lying land, fields, or footpaths may be affected.`
+        : 'All monitored waterways within 8 km are flowing within typical seasonal bounds. No flood alerts reported by the Environment Agency.',
+      alertCount: alerts.length,
+      isSevere: isSevere,
+      stationName: (primaryStation && primaryStation.label) ? primaryStation.label : 'Local Station',
+      riverName: (primaryStation && primaryStation.riverName) ? primaryStation.riverName : 'Local Waterways',
+      town: (primaryStation && primaryStation.town) ? primaryStation.town : (typeof CURRENT_LOCATION !== 'undefined' ? CURRENT_LOCATION.name : ''),
+      catchment: (primaryStation && primaryStation.catchmentName) ? primaryStation.catchmentName : 'Local Catchment',
+      typicalLow: (typeof stage.typicalRangeLow === 'number') ? stage.typicalRangeLow : null,
+      typicalHigh: (typeof stage.typicalRangeHigh === 'number') ? stage.typicalRangeHigh : null,
+      stationCount: items.length,
+      alerts: alerts.slice(0, 3).map(a => ({
+        severity: a.severity || a.severityLevel || 'Alert',
+        description: a.description || a.message || (a.floodArea && a.floodArea.label) || 'Local flood alert',
+        river: (a.floodArea && a.floodArea.riverOrSea) || '',
+        area: (a.floodArea && a.floodArea.label) || a.eaAreaName || 'Local Catchment'
+      }))
+    };
+
     if (alerts.length > 0) {
-      const isSevere = alerts.some(a => {
-        const s = (a.severity || a.severityLevel || '').toString().toLowerCase();
-        return s.includes('severe') || s.includes('danger') || s.includes('warning');
-      });
       card.innerHTML = `<span class="${isSevere ? 'text-rose-300' : 'text-amber-300'} font-bold flex items-center gap-1"><span>⚠️</span> ${alerts.length} Alert${alerts.length > 1 ? 's' : ''}</span>`;
       card.className = `text-xs font-bold ${isSevere ? 'text-rose-300' : 'text-amber-300'}`;
       if (riverPill) {
