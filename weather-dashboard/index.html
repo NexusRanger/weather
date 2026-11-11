@@ -1166,11 +1166,11 @@
   </div>
 
   <!-- 30-DAY LOCATION HISTORY WORLD MAP MODAL -->
-  <div id="historyMapModal" onclick="closeHistoryMapModal()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 md:p-6 text-left cursor-pointer">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
+  <div id="historyMapModal" onclick="closeHistoryMapModal()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-5 text-left cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
       
       <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+      <div class="flex items-center justify-between pb-2.5 border-b border-white/10 flex-shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="w-6 h-6 rounded-full overflow-hidden shadow-[0_0_10px_rgba(56,189,248,0.35)] flex-shrink-0">
             <svg class="w-full h-full" viewBox="0 0 24 24" fill="none">
@@ -1197,8 +1197,8 @@
       </div>
 
       <!-- Leaflet Map Container -->
-      <div class="my-3 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950" style="height: 58vh; min-height: 380px;">
-        <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 380px;"></div>
+      <div class="flex-1 min-h-0 my-2.5 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
+        <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
         <!-- Subtle Center Target Reticle for Tablet/Touch Auto-Popup -->
         <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
           <div class="w-7 h-7 rounded-full border border-sky-400/25 flex items-center justify-center shadow-[0_0_8px_rgba(56,189,248,0.15)]">
@@ -1653,10 +1653,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=101"></script>
+  <script src="traffic-flood.js?v=102"></script>
     <script>
-    const APP_BUILD = 101;
-    const APP_VERSION = '1.9.37';
+    const APP_BUILD = 102;
+    const APP_VERSION = '1.9.38';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
