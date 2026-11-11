@@ -94,15 +94,20 @@
     }
     .leaflet-tile,
     .leaflet-tile-container img,
-    .leaflet-container img.leaflet-tile {
-      border-radius: 0 !important;
+    .leaflet-container img.leaflet-tile,
+    #radarLeafletMap img,
+    #historyMapLeaflet img {
+      border-radius: 0px !important;
+      -webkit-border-radius: 0px !important;
       border: none !important;
       box-shadow: none !important;
+      -webkit-box-shadow: none !important;
       margin: 0 !important;
       padding: 0 !important;
       max-width: none !important;
       max-height: none !important;
-      outline: 1px solid transparent !important;
+      outline: none !important;
+      background: transparent !important;
       transform-style: flat !important;
       -webkit-transform-style: flat !important;
       image-rendering: -webkit-optimize-contrast;
@@ -1550,13 +1555,19 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Reset View Button -->
-          <button id="radarRecenterBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}" onclick="recenterRadarMap()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Reset Map View (Zoom &amp; Location)">
-            <span>🎯</span> Reset
+          <!-- Reset Zoom Button -->
+          <button id="radarResetZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}else if(event.key==='ArrowRight'){const l=document.getElementById('radarLockZoomBtn');if(l){event.preventDefault();l.focus();}}" onclick="resetRadarZoomAndCenter()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Reset Map to Default Zoom (Level 9)">
+            <span>🔄</span> Reset Zoom
+          </button>
+
+          <!-- Lock Zoom Button -->
+          <button id="radarLockZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const r=document.getElementById('radarResetZoomBtn');if(r){event.preventDefault();r.focus();}}else if(event.key==='ArrowRight'){const c=document.getElementById('closeRadarBtnTop');if(c){event.preventDefault();c.focus();}}" onclick="toggleRadarLockZoom()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Lock current zoom level for all future visits">
+            <span id="radarLockZoomIcon">🔓</span>
+            <span id="radarLockZoomText">Lock Zoom</span>
           </button>
 
           <!-- Close Button with visible 20s countdown -->
-          <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const r=document.getElementById('radarRecenterBtn')||document.querySelector('#radarModal .leaflet-control-zoom-in');if(r){event.preventDefault();r.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
+          <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const l=document.getElementById('radarLockZoomBtn')||document.getElementById('radarResetZoomBtn');if(l){event.preventDefault();l.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
             <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(20s)</span></span>
           </button>
         </div>
@@ -1614,10 +1625,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=94"></script>
+  <script src="traffic-flood.js?v=95"></script>
     <script>
-    const APP_BUILD = 94;
-    const APP_VERSION = '1.9.30';
+    const APP_BUILD = 95;
+    const APP_VERSION = '1.9.31';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1683,8 +1694,11 @@
       const topCloseBtn = openModal.querySelector('button[id^="close"][id$="Top"]');
       if (!topCloseBtn) return;
 
-      // If already on the Close button, lock focus on it
-      if (document.activeElement === topCloseBtn) {
+      // If already on the Close button or top radar control buttons, lock focus / prevent jumping
+      if (
+        document.activeElement === topCloseBtn ||
+        (document.activeElement && (document.activeElement.id === 'radarResetZoomBtn' || document.activeElement.id === 'radarLockZoomBtn'))
+      ) {
         e.preventDefault();
         return;
       }
@@ -1714,6 +1728,21 @@
         '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
       );
       if (modalOpen) return;
+
+      const isDpadArrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+      if (!isDpadArrow) return;
+
+      // TV Remote UX: Any D-Pad push while in dormant state wakes up and illuminates
+      // the active focus on the location button without navigating away, waiting for next push!
+      if (document.body.classList.contains('focus-dormant') || !document.activeElement || document.activeElement === document.body) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.body.classList.remove('focus-dormant');
+        const locBtn = document.getElementById('headerLocationBtn');
+        if (locBtn) locBtn.focus({ preventScroll: true });
+        resetMainPageFocusActivity();
+        return;
+      }
 
       const active = document.activeElement;
       const headerBtns = getHeaderNavButtons();
@@ -1801,8 +1830,9 @@
         );
         if (!modalOpen) {
           document.body.classList.add('focus-dormant');
-          if (document.activeElement && document.activeElement.blur) {
-            document.activeElement.blur();
+          const locBtn = document.getElementById('headerLocationBtn');
+          if (locBtn) {
+            locBtn.focus({ preventScroll: true });
           }
         }
       }, 10000);
@@ -5993,6 +6023,7 @@
         const container = document.getElementById('radarLeafletMap');
         if (!container) return;
 
+        const targetZoom = getRadarTargetZoom();
         radarLeafletMap = L.map('radarLeafletMap', {
           zoomControl: true,
           attributionControl: false, // Absolutely zero links or watermark flags
@@ -6001,7 +6032,7 @@
           zoomSnap: 1,        // Strictly snap to whole integer zoom levels to eliminate TV subpixel tile gaps
           zoomDelta: 1,
           fadeAnimation: false // Avoid GPU texture tearing / ghost tiles on older TV processors
-        }).setView([lat, lon], RADAR_DEFAULT_ZOOM);
+        }).setView([lat, lon], targetZoom);
 
         // Remove Leaflet map container from D-pad tab order and attach global back handler
         const radarCanvasEl = radarLeafletMap.getContainer();
@@ -6010,6 +6041,17 @@
           radarCanvasEl.addEventListener('keydown', handleGlobalBack, true);
           radarCanvasEl.addEventListener('keyup', handleGlobalBack, true);
         }
+
+        // Keep locked zoom preference synchronized if user zooms while lock is active
+        radarLeafletMap.on('zoomend', () => {
+          try {
+            const saved = localStorage.getItem('radar_locked_zoom');
+            if (saved !== null) {
+              localStorage.setItem('radar_locked_zoom', radarLeafletMap.getZoom().toString());
+              updateRadarLockZoomBtn();
+            }
+          } catch (_) {}
+        });
 
         // Setup Leaflet zoom buttons for TV remote D-Pad navigation
         setTimeout(() => {
@@ -6027,7 +6069,7 @@
                 if (zoomOut) zoomOut.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                const target = document.getElementById('radarRecenterBtn') || document.getElementById('closeRadarBtnTop');
+                const target = document.getElementById('radarResetZoomBtn') || document.getElementById('closeRadarBtnTop');
                 if (target) target.focus();
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -6045,7 +6087,7 @@
                 if (zoomIn) zoomIn.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                const target = document.getElementById('radarRecenterBtn') || document.getElementById('closeRadarBtnTop');
+                const target = document.getElementById('radarResetZoomBtn') || document.getElementById('closeRadarBtnTop');
                 if (target) target.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
@@ -6082,11 +6124,13 @@
 
         radarLocationMarker = L.marker([lat, lon], { icon: beaconIcon }).addTo(radarLeafletMap);
       } else {
-        radarLeafletMap.setView([lat, lon], RADAR_DEFAULT_ZOOM);
+        const targetZoom = getRadarTargetZoom();
+        radarLeafletMap.setView([lat, lon], targetZoom);
         if (radarLocationMarker) {
           radarLocationMarker.setLatLng([lat, lon]);
         }
       }
+      updateRadarLockZoomBtn();
 
       // Invalidate size to ensure crisp rendering after modal display transition
       [50, 150, 300].forEach(delay => {
@@ -6216,8 +6260,65 @@
       showRadarFrame(currentRadarIdx + delta);
     }
 
-    function recenterRadarMap() {
+    function getRadarTargetZoom() {
+      try {
+        const saved = localStorage.getItem('radar_locked_zoom');
+        if (saved !== null) {
+          const z = parseInt(saved, 10);
+          if (!isNaN(z) && z >= 4 && z <= 16) return z;
+        }
+      } catch (_) {}
+      return RADAR_DEFAULT_ZOOM;
+    }
+
+    function updateRadarLockZoomBtn() {
+      const icon = document.getElementById('radarLockZoomIcon');
+      const text = document.getElementById('radarLockZoomText');
+      const btn = document.getElementById('radarLockZoomBtn');
+      if (!btn) return;
+      let saved = null;
+      try {
+        saved = localStorage.getItem('radar_locked_zoom');
+      } catch (_) {}
+      if (saved !== null) {
+        if (icon) icon.textContent = '🔒';
+        if (text) text.textContent = `Locked (z${saved})`;
+        btn.classList.add('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
+        btn.classList.remove('bg-white/10', 'border-white/15', 'text-white');
+        btn.title = `Zoom locked at level ${saved}. Click to unlock.`;
+      } else {
+        if (icon) icon.textContent = '🔓';
+        if (text) text.textContent = 'Lock Zoom';
+        btn.classList.remove('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
+        btn.classList.add('bg-white/10', 'border-white/15', 'text-white');
+        btn.title = 'Lock current zoom level for all future visits';
+      }
+    }
+
+    function toggleRadarLockZoom() {
       resetRadarAutoCloseTimer();
+      const currentZ = radarLeafletMap ? radarLeafletMap.getZoom() : RADAR_DEFAULT_ZOOM;
+      let isCurrentlyLocked = false;
+      try {
+        isCurrentlyLocked = localStorage.getItem('radar_locked_zoom') !== null;
+      } catch (_) {}
+
+      try {
+        if (isCurrentlyLocked && parseInt(localStorage.getItem('radar_locked_zoom'), 10) === currentZ) {
+          localStorage.removeItem('radar_locked_zoom');
+        } else {
+          localStorage.setItem('radar_locked_zoom', currentZ.toString());
+        }
+      } catch (_) {}
+      updateRadarLockZoomBtn();
+    }
+
+    function resetRadarZoomAndCenter() {
+      resetRadarAutoCloseTimer();
+      try {
+        localStorage.removeItem('radar_locked_zoom');
+      } catch (_) {}
+      updateRadarLockZoomBtn();
       if (radarLeafletMap) {
         const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
         const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
@@ -6284,6 +6385,7 @@
       }
 
       initOrRefreshRadarMap();
+      updateRadarLockZoomBtn();
       resetRadarAutoCloseTimer();
 
       // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
@@ -6724,13 +6826,14 @@
     checkForUpdates();
     setInterval(checkForUpdates, 3 * 60 * 1000);
 
-    // TV Remote UX: Focus the top bar Location button on startup so focus starts cleanly at the top
+    // TV Remote UX: Default focus on location button on startup in dormant state (highlights on first D-pad touch)
     setTimeout(() => {
+      document.body.classList.add('focus-dormant');
       const topBtn = document.getElementById('headerLocationBtn');
       if (topBtn && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)') && !document.querySelector('#radarModal:not(.hidden)') && !document.querySelector('#trafficModal:not(.hidden)')) {
-        topBtn.focus();
+        topBtn.focus({ preventScroll: true });
       }
-    }, 400);
+    }, 300);
   </script>
 </body>
 </html>
