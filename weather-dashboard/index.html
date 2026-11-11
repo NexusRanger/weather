@@ -474,6 +474,9 @@
       box-shadow: 0 0 10px rgba(251, 191, 36, 0.5) !important;
       color: #fbbf24 !important;
     }
+    #radarLeafletMap.radar-zoom-locked .leaflet-control-zoom {
+      display: none !important;
+    }
 
     /* Location Map: Long thin luminous pointer connecting popup to map pin without obscuring neighborhood */
     .history-map-tall-popup .leaflet-popup-content-wrapper {
@@ -1582,9 +1585,9 @@
 
         <div class="flex items-center gap-2">
           <!-- Lock / Unlock & Reset Zoom Button -->
-          <button id="radarLockZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}else if(event.key==='ArrowRight'){const c=document.getElementById('closeRadarBtnTop');if(c){event.preventDefault();c.focus();}}" onclick="toggleRadarLockZoom()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Zoom unlocked. Click to lock current zoom level.">
+          <button id="radarLockZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');event.preventDefault();if(z && z.offsetParent!==null){z.focus();}}else if(event.key==='ArrowRight'){const c=document.getElementById('closeRadarBtnTop');if(c){event.preventDefault();c.focus();}}" onclick="toggleRadarLockZoom()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Zoom Unlocked. Click to lock current zoom level.">
             <span id="radarLockZoomIcon">🔓</span>
-            <span id="radarLockZoomText">Unlocked</span>
+            <span id="radarLockZoomText">Zoom Unlocked</span>
           </button>
 
           <!-- Close Button with visible 30s countdown -->
@@ -1646,10 +1649,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=99"></script>
+  <script src="traffic-flood.js?v=100"></script>
     <script>
-    const APP_BUILD = 99;
-    const APP_VERSION = '1.9.35';
+    const APP_BUILD = 100;
+    const APP_VERSION = '1.9.36';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3544,7 +3547,7 @@
             closeBtn.focus();
           }
         }
-      }, 5000);
+      }, 20000);
     }
 
     function stopLocationIdleExitFocusTimer() {
@@ -6766,23 +6769,43 @@
       const icon = document.getElementById('radarLockZoomIcon');
       const text = document.getElementById('radarLockZoomText');
       const btn = document.getElementById('radarLockZoomBtn');
-      if (!btn) return;
+      const mapEl = document.getElementById('radarLeafletMap');
       let saved = null;
       try {
         saved = localStorage.getItem('radar_locked_zoom');
       } catch (_) {}
-      if (saved !== null) {
+      const isLocked = saved !== null;
+
+      if (mapEl) {
+        mapEl.classList.toggle('radar-zoom-locked', isLocked);
+      }
+      if (radarLeafletMap) {
+        try {
+          if (isLocked) {
+            if (radarLeafletMap.touchZoom) radarLeafletMap.touchZoom.disable();
+            if (radarLeafletMap.doubleClickZoom) radarLeafletMap.doubleClickZoom.disable();
+            if (radarLeafletMap.scrollWheelZoom) radarLeafletMap.scrollWheelZoom.disable();
+          } else {
+            if (radarLeafletMap.touchZoom) radarLeafletMap.touchZoom.enable();
+            if (radarLeafletMap.doubleClickZoom) radarLeafletMap.doubleClickZoom.enable();
+            if (radarLeafletMap.scrollWheelZoom) radarLeafletMap.scrollWheelZoom.enable();
+          }
+        } catch (_) {}
+      }
+
+      if (!btn) return;
+      if (isLocked) {
         if (icon) icon.textContent = '🔒';
-        if (text) text.textContent = 'Locked';
+        if (text) text.textContent = 'Zoom Locked';
         btn.classList.add('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
         btn.classList.remove('bg-white/10', 'border-white/15', 'text-white');
-        btn.title = 'Zoom locked. Click to unlock & reset zoom.';
+        btn.title = 'Zoom Locked. Click to unlock & reset zoom.';
       } else {
         if (icon) icon.textContent = '🔓';
-        if (text) text.textContent = 'Unlocked';
+        if (text) text.textContent = 'Zoom Unlocked';
         btn.classList.remove('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
         btn.classList.add('bg-white/10', 'border-white/15', 'text-white');
-        btn.title = 'Zoom unlocked. Click to lock current zoom level.';
+        btn.title = 'Zoom Unlocked. Click to lock current zoom level.';
       }
     }
 
@@ -6809,7 +6832,7 @@
       updateRadarLockZoomBtn();
     }
 
-    // 30-Second Auto-Revert Countdown + 5-Second Idle-to-Exit Focus for Radar
+    // 30-Second Auto-Revert Countdown + 20-Second Idle-to-Exit Focus for Radar
     let radarAutoCloseSecs = 30;
     let radarAutoCloseTimer = null;
     let radarIdleExitTimer = null;
@@ -6825,7 +6848,7 @@
         if (modal && !modal.classList.contains('hidden') && closeBtn && document.activeElement !== closeBtn) {
           closeBtn.focus();
         }
-      }, 5000);
+      }, 20000);
     }
 
     function stopRadarIdleExitFocusTimer() {
