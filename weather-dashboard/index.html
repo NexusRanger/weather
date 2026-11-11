@@ -1334,10 +1334,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=84"></script>
+  <script src="traffic-flood.js?v=85"></script>
     <script>
-    const APP_BUILD = 84;
-    const APP_VERSION = '1.9.20';
+    const APP_BUILD = 85;
+    const APP_VERSION = '1.9.21';
 
     async function checkForUpdates() {
       try {
@@ -5405,9 +5405,15 @@
           boxZoom: false
         }).setView([lat, lon], RADAR_DEFAULT_ZOOM);
 
-        // Dark Canvas Base layer (Zero links, clean dark map)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          subdomains: 'abcd',
+        // Dark Canvas Base layer (No API key required, zero watermark)
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '',
+          maxZoom: 16
+        }).addTo(radarLeafletMap);
+
+        // Dark Labels overlay (Town names, roads)
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '',
           maxZoom: 16
         }).addTo(radarLeafletMap);
 
@@ -5460,6 +5466,7 @@
           const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
             opacity: 0,
             zIndex: 100 + i,
+            maxNativeZoom: 7, // RainViewer free tier max native zoom is 7; smoothly upscales for zoom 8-16
             maxZoom: 16
           });
           layer.addTo(radarLeafletMap);
