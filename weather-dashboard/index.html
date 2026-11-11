@@ -941,7 +941,7 @@
     <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC, RIVERS & SHARE) -->
     <div id="colLocalInfo" class="relative z-20 flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
       <!-- Traffic Pill Button -->
-      <button id="trafficPill" onclick="openTrafficModal()" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer text-left group" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
+      <button id="trafficPill" onclick="openTrafficModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
         <span class="text-xs">🚗</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Traffic:</span>
         <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
@@ -956,21 +956,21 @@
       </div>
 
       <!-- Radar Modal Pill -->
-      <button id="radarBtn" onclick="openRadarModal()" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer text-left group" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
+      <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
         <span class="text-xs">🛰️</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Radar:</span>
         <span class="text-xs font-bold text-cyan-300 group-hover:text-cyan-200 flex items-center gap-1">Live Map ↗</span>
       </button>
 
       <!-- Share Dashboard Pill -->
-      <button id="shareBtn" onclick="openShareModal()" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer text-left group" title="Share this dashboard or scan QR code" tabindex="0">
+      <button id="shareBtn" onclick="openShareModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Share this dashboard or scan QR code" tabindex="0">
         <span class="text-xs">📲</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Share:</span>
         <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link ↗</span>
       </button>
 
       <!-- Feedback & Suggestions Pill (Secret/Code-unlocked by default) -->
-      <button id="feedbackBtn" onclick="openFeedbackModal()" class="hidden glass-card rounded-xl px-2.5 py-1 items-center gap-1.5 border border-amber-400/30 hover:border-amber-400/70 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer text-left group" title="Submit 5-star rating or suggestions" tabindex="0">
+      <button id="feedbackBtn" onclick="openFeedbackModal()" class="tv-focus-amber hidden glass-card rounded-xl px-2.5 py-1 items-center gap-1.5 border border-amber-400/30 hover:border-amber-400/70 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Submit 5-star rating or suggestions" tabindex="0">
         <span class="text-xs text-amber-300">⭐</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Feedback:</span>
         <span id="feedbackPillText" class="text-xs font-bold text-amber-300 group-hover:text-amber-200 flex items-center gap-1">Rate &amp; Ideas ↗</span>
@@ -986,9 +986,9 @@
           <span id="timelineTitle" class="whitespace-nowrap">24-Hour Forecast &amp; Rain Probability</span>
           <!-- Multi-Day Panoramic Controls (shown in 24h Glance mode) -->
           <div id="panoramicDayNav" class="hidden items-center gap-1 whitespace-nowrap">
-            <button id="panoramicPrevBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(-1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Previous 24h Day (Left Arrow)">◀</button>
-            <span id="panoramicDayLabel" class="text-[9px] font-bold font-mono px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/35 whitespace-nowrap">Next 24 Hours</span>
-            <button id="panoramicNextBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Next 24h Day (Right Arrow)">▶</button>
+            <button id="panoramicPrevBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(-1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Previous Day (Yesterday / Left Arrow)">◀</button>
+            <span id="panoramicDayLabel" class="text-[9px] font-bold font-mono px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/35 whitespace-nowrap">Today (24h)</span>
+            <button id="panoramicNextBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Next Day (Tomorrow / Right Arrow)">▶</button>
           </div>
         </div>
         <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2.5 whitespace-nowrap">
@@ -1365,12 +1365,6 @@
         </div>
       </div>
 
-      <!-- Modal Footer -->
-      <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-2 border-t border-white/10 flex-shrink-0">
-        <span class="text-emerald-400">✓ Cached feed (zero extra API requests)</span>
-        <span class="text-slate-500">Auto-reverts in 20s • Press <strong class="text-slate-300">Esc</strong> to close</span>
-      </div>
-
     </div>
   </div>
 
@@ -1390,7 +1384,7 @@
                 Live Precipitation Radar
               </h3>
               <span id="radarLocationLabel" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">Local Area</span>
-              <span id="radarCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 30s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="radarCountdownSecs">30s</span></span>
+              <span id="radarCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 20s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="radarCountdownSecs">20s</span></span>
             </div>
             <p class="text-[11px] text-slate-400">Clean local radar loop • Zoomed &amp; link-free</p>
           </div>
@@ -1402,9 +1396,9 @@
             <span>🎯</span> Re-center
           </button>
 
-          <!-- Close Button with visible 30s countdown -->
+          <!-- Close Button with visible 20s countdown -->
           <button id="closeRadarBtnTop" tabindex="1" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
-            <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
+            <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(20s)</span></span>
           </button>
         </div>
       </div>
@@ -1426,7 +1420,7 @@
               <span id="radarTimeLabel" class="text-cyan-300 font-bold">Loading...</span>
               <span id="radarRelativeLabel" class="text-slate-400">Live</span>
             </div>
-            <input id="radarScrubber" type="range" min="0" max="12" step="1" value="12" oninput="onRadarScrub(this.value)" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+            <input id="radarScrubber" tabindex="-1" type="range" min="0" max="12" step="1" value="12" oninput="onRadarScrub(this.value)" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none">
           </div>
 
           <!-- Frame Steppers -->
@@ -1454,17 +1448,17 @@
           <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ffff00]"></span> Heavy</span>
           <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ff0000]"></span> Severe</span>
         </div>
-        <span class="text-slate-500">Auto-reverts after 30s • Interaction resets timer • Press <strong class="text-slate-300">Esc</strong> to close</span>
+        <span class="text-slate-500">Auto-reverts after 20s • Interaction resets timer • Press <strong class="text-slate-300">Esc</strong> to close</span>
       </div>
 
     </div>
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=90"></script>
+  <script src="traffic-flood.js?v=91"></script>
     <script>
-    const APP_BUILD = 90;
-    const APP_VERSION = '1.9.26';
+    const APP_BUILD = 91;
+    const APP_VERSION = '1.9.27';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1506,6 +1500,29 @@
         e.preventDefault();
         updateBtn.focus();
       }
+    }, true);
+
+    // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
+    window.addEventListener('keydown', function handleModalUpToClose(e) {
+      if (e.key !== 'ArrowUp') return;
+
+      const openModal = document.querySelector(
+        '#trafficModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+      );
+      if (!openModal) return;
+
+      const topCloseBtn = openModal.querySelector('button[id^="close"][id$="Top"]');
+      if (!topCloseBtn) return;
+
+      // If already on the Close button, lock focus on it
+      if (document.activeElement === topCloseBtn) {
+        e.preventDefault();
+        return;
+      }
+
+      // Jump directly to the top Close button without needing sideways presses!
+      e.preventDefault();
+      topCloseBtn.focus();
     }, true);
 
     async function checkForUpdates() {
@@ -4944,36 +4961,35 @@
         const oldRow = (slideDirection !== 0) ? container.querySelector('.panoramic-day-row:last-child, .panoramic-day-row') : null;
         container.className = 'w-full overflow-hidden pb-0.5 relative';
 
-        // Determine the 24-hour slice to display based on panoramicDayOffset
-        let sliceStart = nowIndex;
-        let dayLabelText = 'Next 24 Hours';
+        // Determine the whole 24-hour day slice (00:00 - 23:00) based on panoramicDayOffset
+        const nowIso = hourly.time[nowIndex] || hourly.time[0];
+        const todayDateStr = nowIso.slice(0, 10);
+        const baseDate = new Date(`${todayDateStr}T12:00:00`);
+        baseDate.setDate(baseDate.getDate() + panoramicDayOffset);
+        const yyyy = baseDate.getFullYear();
+        const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(baseDate.getDate()).padStart(2, '0');
+        const targetDateStr = `${yyyy}-${mm}-${dd}`;
+        const targetMidnightPrefix = `${targetDateStr}T00:00`;
 
-        if (panoramicDayOffset === -1) {
-          sliceStart = Math.max(0, nowIndex - 24);
-          dayLabelText = 'Past 24 Hours (History)';
-        } else if (panoramicDayOffset === 0) {
-          sliceStart = nowIndex;
-          dayLabelText = 'Next 24 Hours';
-        } else {
-          // Find midnight (00:00) of the target upcoming day (Now's date + panoramicDayOffset days)
-          const baseDate = new Date(hourly.time[nowIndex]);
-          baseDate.setHours(0, 0, 0, 0);
-          baseDate.setDate(baseDate.getDate() + panoramicDayOffset);
-          const yyyy = baseDate.getFullYear();
-          const mm = String(baseDate.getMonth() + 1).padStart(2, '0');
-          const dd = String(baseDate.getDate()).padStart(2, '0');
-          const targetMidnightPrefix = `${yyyy}-${mm}-${dd}T00:00`;
-          const foundIdx = hourly.time.findIndex(t => t.startsWith(targetMidnightPrefix));
-          if (foundIdx >= 0) {
-            sliceStart = foundIdx;
+        let sliceStart = hourly.time.findIndex(t => t.startsWith(targetMidnightPrefix));
+        if (sliceStart < 0) {
+          if (panoramicDayOffset <= -1) {
+            sliceStart = 0;
           } else {
-            sliceStart = Math.min(hourly.time.length - 24, nowIndex + panoramicDayOffset * 24);
+            sliceStart = Math.max(0, hourly.time.length - 24);
           }
-          const dObj = new Date(hourly.time[sliceStart]);
-          const dayStr = panoramicDayOffset === 1
-            ? 'Tomorrow'
-            : dObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-          dayLabelText = `${dayStr} (00:00–23:00)`;
+        }
+
+        let dayLabelText = 'Today';
+        if (panoramicDayOffset === 0) {
+          dayLabelText = 'Today';
+        } else if (panoramicDayOffset === -1) {
+          dayLabelText = 'Yesterday';
+        } else if (panoramicDayOffset === 1) {
+          dayLabelText = 'Tomorrow';
+        } else {
+          dayLabelText = baseDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
         }
 
         const sliceEnd = Math.min(sliceStart + 24, hourly.time.length);
@@ -4991,7 +5007,7 @@
 
         const labelEl = document.getElementById('panoramicDayLabel');
         if (labelEl) {
-          labelEl.textContent = `${dayLabelText} • ▲${dayHigh}° ▼${dayLow}°`;
+          labelEl.textContent = `${dayLabelText} (24h) • ▲${dayHigh}° ▼${dayLow}°`;
           if (slideDirection !== 0) {
             labelEl.style.transition = 'none';
             labelEl.style.transform = `translateX(${slideDirection > 0 ? 18 : -18}px)`;
@@ -5014,6 +5030,9 @@
           const d = new Date(hourly.time[i]);
           const hour = d.getHours();
           const timeStr = `${String(hour).padStart(2, '0')}:00`;
+          const isNow = (panoramicDayOffset === 0 && i === nowIndex);
+          const isMidday = (hour === 12);
+          const isPastHour = (panoramicDayOffset === 0 && i < nowIndex);
           const isDaytime = hour >= 7 && hour < 17;
           const info = getWeatherInfo(hourly.weather_code[i], isDaytime ? 1 : 0);
           const temp = Math.round(hourly.temperature_2m[i]);
@@ -5036,14 +5055,21 @@
             tempColor = 'bg-gradient-to-t from-amber-400 to-rose-400';
           }
 
+          let cardBorderBg = isNearFreezing ? 'glass-tile border-cyan-500/30' : 'glass-tile border-white/10';
+          let timeBadgeHtml = `<span class="text-[8px] font-mono leading-none ${isPastHour ? 'text-slate-500' : 'text-slate-400'}">${hour}h</span>`;
+
+          if (isNow) {
+            cardBorderBg = 'bg-sky-500/20 border-cyan-400 shadow-[0_0_10px_rgba(56,189,248,0.35)] ring-1 ring-cyan-400';
+            timeBadgeHtml = `<span class="text-[7.5px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-cyan-400 text-slate-950 uppercase tracking-tight leading-none shadow-[0_0_6px_rgba(6,182,212,0.8)]" title="Current Hour (Now)">Now</span>`;
+          } else if (isMidday) {
+            cardBorderBg = 'glass-tile border-amber-400/40 bg-amber-400/10 shadow-[0_0_6px_rgba(251,191,36,0.15)]';
+            timeBadgeHtml = `<span class="text-[7.5px] font-mono font-bold px-1 py-0.2 rounded bg-amber-400/25 text-amber-300 border border-amber-400/35 leading-none" title="Midday / Noon (12:00)">12h ☀️</span>`;
+          }
+
           const card = document.createElement('div');
-          card.className = `flex-1 min-w-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg border ${
-            isNearFreezing
-              ? 'glass-tile border-cyan-500/30'
-              : 'glass-tile border-white/10'
-          }`;
+          card.className = `flex-1 min-w-0 flex flex-col items-center justify-between py-1 px-0.5 rounded-lg border ${cardBorderBg} ${isPastHour ? 'opacity-75' : ''}`;
           card.innerHTML = `
-            <span class="text-[8px] font-mono leading-none text-slate-400">${hour}h</span>
+            ${timeBadgeHtml}
             <span class="text-[10px] my-0 leading-none">${info.icon}</span>
             <div class="w-1.5 h-6 flex flex-col justify-end bg-slate-800/80 rounded-full overflow-hidden border border-white/5 my-0.5" title="${timeStr}: ${temp}°C, Rain ${rainProb}%">
               <div class="w-full ${tempColor} rounded-full" style="height: ${tempHeightPct}%"></div>
@@ -5235,7 +5261,7 @@
           dayNav.classList.add('inline-flex');
         }
         if (hintText) {
-          hintText.innerHTML = '<span>◀ ▶ Step through upcoming days</span><span class="text-slate-500">Click / OK to exit • Auto-resets</span>';
+          hintText.innerHTML = '<span>◀ Yesterday • Tomorrow ▶</span><span class="text-slate-500">Click / OK to exit • Auto-resets</span>';
         }
         renderHourly(cachedHourlyData);
 
@@ -5451,6 +5477,8 @@
         code === 227 ||                 // Media Rewind / Back
         code === 10182 ||               // Sony Bravia TV Guide / Back
         key === 'escape' ||
+        key === 'esc' ||
+        e.code === 'Escape' ||
         key === 'xfe89' ||
         key === 'backspace' ||
         key === 'back' ||
@@ -5602,7 +5630,7 @@
     let radarIsPlaying = true;
     let radarAnimTimer = null;
     let radarLocationMarker = null;
-    const RADAR_DEFAULT_ZOOM = 10; // Slightly zoomed in on local town & immediate surrounding area
+    const RADAR_DEFAULT_ZOOM = 9; // Slightly zoomed out to view wider surrounding region
 
     async function initOrRefreshRadarMap() {
       const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
@@ -5621,6 +5649,14 @@
           zoomDelta: 1,
           fadeAnimation: false // Avoid GPU texture tearing / ghost tiles on older TV processors
         }).setView([lat, lon], RADAR_DEFAULT_ZOOM);
+
+        // Remove Leaflet map container from D-pad tab order and attach global back handler
+        const radarCanvasEl = radarLeafletMap.getContainer();
+        if (radarCanvasEl) {
+          radarCanvasEl.setAttribute('tabindex', '-1');
+          radarCanvasEl.addEventListener('keydown', handleGlobalBack, true);
+          radarCanvasEl.addEventListener('keyup', handleGlobalBack, true);
+        }
 
         // Dark Canvas Base layer (No API key required, zero watermark)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
@@ -5788,12 +5824,12 @@
       }
     }
 
-    // 30-Second Auto-Revert Countdown for Radar
-    let radarAutoCloseSecs = 30;
+    // 20-Second Auto-Revert Countdown for Radar
+    let radarAutoCloseSecs = 20;
     let radarAutoCloseTimer = null;
 
     function resetRadarAutoCloseTimer() {
-      radarAutoCloseSecs = 30;
+      radarAutoCloseSecs = 20;
       updateRadarCountdownDisplay();
       if (radarAutoCloseTimer) clearInterval(radarAutoCloseTimer);
       radarAutoCloseTimer = setInterval(() => {
@@ -5819,7 +5855,7 @@
         clearInterval(radarAutoCloseTimer);
         radarAutoCloseTimer = null;
       }
-      radarAutoCloseSecs = 30;
+      radarAutoCloseSecs = 20;
       updateRadarCountdownDisplay();
     }
 
