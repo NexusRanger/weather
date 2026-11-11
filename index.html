@@ -1106,14 +1106,14 @@
   </div>
 
   <!-- LOCATION SEARCH MODAL -->
-  <div id="locationModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="glass-card rounded-2xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto border border-white/15 shadow-2xl relative text-left">
+  <div id="locationModal" onclick="closeLocationModal()" onmousemove="onLocationModalActivity()" onkeydown="onLocationModalActivity()" oninput="onLocationModalActivity()" ontouchstart="onLocationModalActivity()" onpointerdown="onLocationModalActivity()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4 cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto border border-white/15 shadow-2xl relative text-left cursor-default">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <span>📍</span> Set Location (Postcode, Town or GPS)
         </h3>
         <button id="closeLocationBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer">
-          <span>✕ Close</span>
+          <span>✕ Close <span id="locationBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
         </button>
       </div>
 
@@ -1153,25 +1153,6 @@
             <span>📍</span> Nearby Quick Picks:
           </div>
           <div id="nearbyLocationChips" class="flex flex-wrap gap-1.5"></div>
-        </div>
-      </div>
-
-      <!-- Location Preferences List (Custom search mappings & disambiguation) -->
-      <div class="mt-3 pt-2.5 border-t border-white/10">
-        <button id="locPrefsToggleBtn" tabindex="0" onclick="toggleLocationPrefsDrawer()" onkeydown="handleLocPrefsToggleKeydown(event)" class="tv-focus-amber w-full py-1.5 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 hover:text-white font-medium transition flex items-center justify-between cursor-pointer focus:outline-none">
-          <span class="flex items-center gap-1.5"><span>⭐</span> Location Preferences <span id="locPrefsCountBadge" class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">2</span></span>
-          <span id="locPrefsChevron" class="text-[10px] text-slate-400">▼</span>
-        </button>
-        <div id="locPrefsDrawer" class="hidden mt-2 space-y-2">
-          <div id="locPrefsList" class="space-y-1 max-h-36 overflow-y-auto pr-0.5"></div>
-          <div class="pt-1.5 border-t border-white/10">
-            <div class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold mb-1">Add Custom Preference</div>
-            <div class="flex flex-wrap gap-1.5">
-              <input id="prefAliasInput" type="text" placeholder="Search (e.g. gl55hh)" class="flex-1 min-w-[100px] bg-black/50 border border-white/15 rounded-lg px-2 py-1 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-amber-400">
-              <input id="prefNameInput" type="text" placeholder="Show as (e.g. Dunkirk Mills)" class="flex-1 min-w-[115px] bg-black/50 border border-white/15 rounded-lg px-2 py-1 text-[11px] text-white placeholder-slate-500 focus:outline-none focus:border-amber-400">
-              <button id="prefAddBtn" onclick="addCustomLocationPreference()" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-[11px] font-semibold text-amber-200 hover:text-white transition cursor-pointer focus:outline-none">+ Add</button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1578,7 +1559,7 @@
   </div>
 
   <!-- WEATHER RADAR MODAL (CLEAN NATIVE LEAFLET + RAINVIEWER) -->
-  <div id="radarModal" onclick="closeRadarModal()" onmousemove="resetRadarAutoCloseTimer()" onkeydown="resetRadarAutoCloseTimer()" ontouchstart="resetRadarAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
+  <div id="radarModal" onclick="closeRadarModal()" onmousemove="resetRadarAutoCloseTimer()" onkeydown="resetRadarAutoCloseTimer()" ontouchstart="resetRadarAutoCloseTimer()" onpointerdown="resetRadarAutoCloseTimer()" onwheel="resetRadarAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-5 max-w-5xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[850px] cursor-default">
       
       <!-- Modal Header -->
@@ -1593,7 +1574,7 @@
                 Live Precipitation Radar
               </h3>
               <span id="radarLocationLabel" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">Local Area</span>
-              <span id="radarCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 20s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="radarCountdownSecs">20s</span></span>
+              <span id="radarCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 30s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="radarCountdownSecs">30s</span></span>
             </div>
             <p class="text-[11px] text-slate-400">Clean local radar loop • Zoomed &amp; link-free</p>
           </div>
@@ -1606,9 +1587,9 @@
             <span id="radarLockZoomText">Unlocked</span>
           </button>
 
-          <!-- Close Button with visible 20s countdown -->
+          <!-- Close Button with visible 30s countdown -->
           <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const l=document.getElementById('radarLockZoomBtn');if(l){event.preventDefault();l.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
-            <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(20s)</span></span>
+            <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
           </button>
         </div>
       </div>
@@ -1658,17 +1639,17 @@
           <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ffff00]"></span> Heavy</span>
           <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ff0000]"></span> Severe</span>
         </div>
-        <span class="text-slate-500">Auto-reverts after 20s • Interaction resets timer • Press <strong class="text-slate-300">Esc</strong> to close</span>
+        <span class="text-slate-500">Auto-reverts after 30s • Interaction resets timer • Press <strong class="text-slate-300">Esc</strong> to close</span>
       </div>
 
     </div>
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=98"></script>
+  <script src="traffic-flood.js?v=99"></script>
     <script>
-    const APP_BUILD = 98;
-    const APP_VERSION = '1.9.34';
+    const APP_BUILD = 99;
+    const APP_VERSION = '1.9.35';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -2942,21 +2923,18 @@
     }
 
     // =========================================================================
-    // LOCATION PREFERENCES LIST
-    // Maps preferred search terms/postcodes to custom display names & coordinates.
-    // Built-in defaults below can be extended anytime; custom rules persist in localStorage.
+    // LOCATION PREFERENCES LIST (Silent search mappings & disambiguation)
+    // Checked automatically whenever loading or searching for a location.
     // =========================================================================
-    const DEFAULT_LOCATION_PREFERENCES = [
+    const LOCATION_PREFERENCES = [
       {
-        id: 'pref_dunkirk_mills',
-        aliases: ['gl55hh', 'gl5 5hh', 'dunkirk mills'],
+        aliases: ['gl55hh', 'gl5 5hh', 'dunkirk mills', 'dunkirk mill'],
         name: 'Dunkirk Mills',
         postcode: 'GL5 5HH',
         lat: 51.7032,
         lon: -2.2266
       },
       {
-        id: 'pref_sydney_au',
         aliases: ['sydney', 'sydney australia', 'sydney, australia', 'sydney nsw'],
         name: 'Sydney',
         postcode: 'Australia',
@@ -2964,27 +2942,6 @@
         lon: 151.2093
       }
     ];
-
-    function getCustomLocationPreferences() {
-      try {
-        const raw = localStorage.getItem('ambient_location_preferences');
-        if (raw) {
-          const arr = JSON.parse(raw);
-          if (Array.isArray(arr)) return arr;
-        }
-      } catch (_) {}
-      return [];
-    }
-
-    function saveCustomLocationPreferences(prefs) {
-      try {
-        localStorage.setItem('ambient_location_preferences', JSON.stringify(prefs || []));
-      } catch (_) {}
-    }
-
-    function getAllLocationPreferences() {
-      return [...getCustomLocationPreferences(), ...DEFAULT_LOCATION_PREFERENCES];
-    }
 
     function normalizePreferenceKey(str) {
       return String(str || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -2999,8 +2956,7 @@
       const qCompact = compactPreferenceKey(query);
       if (!qNorm) return null;
 
-      const allPrefs = getAllLocationPreferences();
-      return allPrefs.find(pref => {
+      return LOCATION_PREFERENCES.find(pref => {
         const aliases = Array.isArray(pref.aliases) ? pref.aliases : [];
         return aliases.some(alias => {
           const aNorm = normalizePreferenceKey(alias);
@@ -3017,180 +2973,6 @@
         return true;
       }
       return false;
-    }
-
-    function toggleLocationPrefsDrawer() {
-      const drawer = document.getElementById('locPrefsDrawer');
-      const chevron = document.getElementById('locPrefsChevron');
-      if (!drawer) return;
-      const isHidden = drawer.classList.contains('hidden');
-      if (isHidden) {
-        drawer.classList.remove('hidden');
-        if (chevron) chevron.textContent = '▲';
-        renderLocationPreferencesList();
-      } else {
-        drawer.classList.add('hidden');
-        if (chevron) chevron.textContent = '▼';
-      }
-    }
-
-    function handleLocPrefsToggleKeydown(e) {
-      if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        const nearbyBtns = Array.from(document.querySelectorAll('#nearbyLocationChips button'));
-        const recentBtns = Array.from(document.querySelectorAll('#recentLocationChips button'));
-        const target = nearbyBtns[0] || recentBtns[0] || document.getElementById('gpsModalBtn');
-        if (target) target.focus();
-      } else if (e.key === 'ArrowDown') {
-        const drawer = document.getElementById('locPrefsDrawer');
-        if (drawer && !drawer.classList.contains('hidden')) {
-          const firstPref = drawer.querySelector('button');
-          if (firstPref) { e.preventDefault(); firstPref.focus(); }
-        }
-      }
-    }
-
-    function renderLocationPreferencesList() {
-      const allPrefs = getAllLocationPreferences();
-      const countBadge = document.getElementById('locPrefsCountBadge');
-      if (countBadge) countBadge.textContent = String(allPrefs.length);
-
-      const listEl = document.getElementById('locPrefsList');
-      if (!listEl) return;
-      listEl.innerHTML = '';
-
-      allPrefs.forEach(pref => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between gap-2 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px]';
-
-        const loadBtn = document.createElement('button');
-        loadBtn.className = 'tv-focus-amber flex-1 text-left flex items-center justify-between gap-2 text-slate-200 hover:text-white rounded px-1 py-0.5 cursor-pointer focus:outline-none truncate';
-        loadBtn.tabIndex = 0;
-        const primaryAlias = (pref.aliases && pref.aliases[0]) ? pref.aliases[0] : pref.name;
-        const pcBadge = pref.postcode ? `<span class="text-[10px] text-amber-300/90 font-mono ml-1">(${escapeHtml(pref.postcode)})</span>` : '';
-        loadBtn.innerHTML = `<span class="truncate"><span class="text-slate-400 font-mono">"${escapeHtml(primaryAlias)}"</span> → <strong class="text-white">${escapeHtml(pref.name)}</strong>${pcBadge}</span>`;
-        loadBtn.onclick = () => {
-          applyLocationPreference(pref);
-          closeLocationModal();
-        };
-        row.appendChild(loadBtn);
-
-        if (pref.isCustom) {
-          const delBtn = document.createElement('button');
-          delBtn.className = 'tv-focus-amber px-1.5 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 hover:text-white text-[10px] font-bold cursor-pointer focus:outline-none flex-shrink-0';
-          delBtn.textContent = '✕';
-          delBtn.title = 'Remove custom preference';
-          delBtn.onclick = () => removeCustomLocationPreference(pref.id);
-          row.appendChild(delBtn);
-        } else {
-          const presetTag = document.createElement('span');
-          presetTag.className = 'text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300/80 border border-amber-400/20 flex-shrink-0';
-          presetTag.textContent = 'Preset';
-          row.appendChild(presetTag);
-        }
-
-        listEl.appendChild(row);
-      });
-    }
-
-    function removeCustomLocationPreference(prefId) {
-      const updated = getCustomLocationPreferences().filter(p => p.id !== prefId);
-      saveCustomLocationPreferences(updated);
-      renderLocationPreferencesList();
-    }
-
-    async function addCustomLocationPreference() {
-      const aliasInput = document.getElementById('prefAliasInput');
-      const nameInput = document.getElementById('prefNameInput');
-      const status = document.getElementById('locationSearchStatus');
-      if (!aliasInput || !nameInput) return;
-
-      const rawAlias = aliasInput.value.trim();
-      const rawName = nameInput.value.trim();
-      if (!rawAlias || !rawName) {
-        if (status) {
-          status.style.color = '#fbbf24';
-          status.textContent = 'Enter both a search term and a display name.';
-        }
-        return;
-      }
-
-      if (status) {
-        status.style.color = '#94a3b8';
-        status.textContent = `Resolving "${rawAlias}"...`;
-      }
-
-      let resolvedLat = null;
-      let resolvedLon = null;
-      let resolvedPostcode = '';
-      const compact = rawAlias.replace(/[\s-]+/g, '');
-      const isUkPc = /^[A-Z]{1,2}[0-9][A-Z0-9]?[0-9][A-Z]{2}$/i.test(compact);
-
-      try {
-        if (isUkPc) {
-          const res = await fetch(`https://api.postcodes.io/postcodes/${compact}`);
-          if (res.ok) {
-            const json = await res.json();
-            if (json && json.result) {
-              resolvedLat = json.result.latitude;
-              resolvedLon = json.result.longitude;
-              resolvedPostcode = json.result.postcode || compact.toUpperCase();
-            }
-          }
-        }
-        if (resolvedLat === null) {
-          const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawAlias)}&count=5&language=en&format=json`);
-          if (geoRes.ok) {
-            const geoJson = await geoRes.json();
-            const results = geoJson.results || [];
-            const match = results.find(r => r.country_code === 'GB') || results[0];
-            if (match) {
-              resolvedLat = match.latitude;
-              resolvedLon = match.longitude;
-              resolvedPostcode = match.country || match.country_code || '';
-            }
-          }
-        }
-      } catch (_) {}
-
-      // Fallback: if alias matches current active location, bind to its coordinates
-      if (resolvedLat === null && typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION) {
-        const curNameNorm = normalizePreferenceKey(CURRENT_LOCATION.name);
-        const curPcCompact = compactPreferenceKey(CURRENT_LOCATION.postcode);
-        if (curNameNorm === normalizePreferenceKey(rawAlias) || (curPcCompact && curPcCompact === compactPreferenceKey(rawAlias))) {
-          resolvedLat = CURRENT_LOCATION.lat;
-          resolvedLon = CURRENT_LOCATION.lon;
-          resolvedPostcode = CURRENT_LOCATION.postcode || '';
-        }
-      }
-
-      if (resolvedLat === null || resolvedLon === null) {
-        if (status) {
-          status.style.color = '#fb7185';
-          status.textContent = `Could not resolve coordinates for "${rawAlias}".`;
-        }
-        return;
-      }
-
-      const custom = getCustomLocationPreferences();
-      const newPref = {
-        id: 'custom_' + Date.now(),
-        aliases: [rawAlias.toLowerCase()],
-        name: rawName,
-        postcode: resolvedPostcode,
-        lat: resolvedLat,
-        lon: resolvedLon,
-        isCustom: true
-      };
-      custom.unshift(newPref);
-      saveCustomLocationPreferences(custom);
-      aliasInput.value = '';
-      nameInput.value = '';
-      renderLocationPreferencesList();
-      if (status) {
-        status.style.color = '#34d399';
-        status.textContent = `Saved preference: "${rawAlias}" → ${rawName}`;
-      }
     }
 
     async function lookupPostcode(postcode) {
@@ -3488,7 +3270,7 @@
         const searchBtn = document.getElementById('searchLocBtn');
         if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
       } else if (e.key === 'ArrowDown') {
-        const firstPick = document.querySelector('#recentLocationChips button, #nearbyLocationChips button, #locPrefsToggleBtn');
+        const firstPick = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
         if (firstPick) { e.preventDefault(); firstPick.focus(); }
       }
     }
@@ -3739,6 +3521,71 @@
       });
     })();
 
+    let locationAutoCloseSecs = 30;
+    let locationAutoCloseTimer = null;
+    let locationIdleExitTimer = null;
+
+    function updateLocationCountdownDisplay() {
+      const btnTimerEl = document.getElementById('locationBtnCountdown');
+      if (btnTimerEl) btnTimerEl.textContent = `(${locationAutoCloseSecs}s)`;
+    }
+
+    function resetLocationIdleExitFocusTimer() {
+      if (locationIdleExitTimer) {
+        clearTimeout(locationIdleExitTimer);
+        locationIdleExitTimer = null;
+      }
+      locationIdleExitTimer = setTimeout(() => {
+        const modal = document.getElementById('locationModal');
+        const closeBtn = document.getElementById('closeLocationBtnTop');
+        if (modal && !modal.classList.contains('hidden') && closeBtn) {
+          if (typeof hideRecentDeleteBar === 'function') hideRecentDeleteBar();
+          if (document.activeElement !== closeBtn) {
+            closeBtn.focus();
+          }
+        }
+      }, 5000);
+    }
+
+    function stopLocationIdleExitFocusTimer() {
+      if (locationIdleExitTimer) {
+        clearTimeout(locationIdleExitTimer);
+        locationIdleExitTimer = null;
+      }
+    }
+
+    function resetLocationAutoCloseTimer() {
+      locationAutoCloseSecs = 30;
+      updateLocationCountdownDisplay();
+      if (locationAutoCloseTimer) clearInterval(locationAutoCloseTimer);
+      locationAutoCloseTimer = setInterval(() => {
+        locationAutoCloseSecs--;
+        updateLocationCountdownDisplay();
+        if (locationAutoCloseSecs <= 0) {
+          clearInterval(locationAutoCloseTimer);
+          locationAutoCloseTimer = null;
+          closeLocationModal();
+        }
+      }, 1000);
+    }
+
+    function onLocationModalActivity() {
+      const modal = document.getElementById('locationModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      resetLocationAutoCloseTimer();
+      resetLocationIdleExitFocusTimer();
+    }
+
+    function stopLocationAutoCloseTimer() {
+      stopLocationIdleExitFocusTimer();
+      if (locationAutoCloseTimer) {
+        clearInterval(locationAutoCloseTimer);
+        locationAutoCloseTimer = null;
+      }
+      locationAutoCloseSecs = 30;
+      updateLocationCountdownDisplay();
+    }
+
     function openLocationModal() {
       const modal = document.getElementById('locationModal');
       const input = document.getElementById('locationInput');
@@ -3752,10 +3599,6 @@
       if (input) {
         input.value = '';
       }
-      const drawer = document.getElementById('locPrefsDrawer');
-      const chevron = document.getElementById('locPrefsChevron');
-      if (drawer) drawer.classList.add('hidden');
-      if (chevron) chevron.textContent = '▼';
       const delBar = document.getElementById('recentDeleteBar');
       if (delBar) {
         delBar.classList.add('hidden');
@@ -3768,7 +3611,8 @@
         try { history.pushState({ modal: 'locationModal' }, ''); } catch (_) {}
       }
       renderLocationModalPicks();
-      renderLocationPreferencesList();
+      resetLocationAutoCloseTimer();
+      resetLocationIdleExitFocusTimer();
 
       // Clear prior focus so the user clearly sees the Close button light up
       if (document.activeElement && document.activeElement.blur) {
@@ -3787,6 +3631,7 @@
     }
 
     function closeLocationModal(pop = true) {
+      stopLocationAutoCloseTimer();
       const modal = document.getElementById('locationModal');
       if (modal) {
         modal.classList.add('hidden');
@@ -4236,7 +4081,7 @@
                   if (e.key === 'ArrowRight') { e.preventDefault(); keepBtn.focus(); }
                   else if (e.key === 'ArrowUp') { e.preventDefault(); btn.focus(); }
                   else if (e.key === 'ArrowDown') {
-                    const nextRow = document.querySelector('#nearbyLocationChips button, #locPrefsToggleBtn');
+                    const nextRow = document.querySelector('#nearbyLocationChips button');
                     if (nextRow) { e.preventDefault(); nextRow.focus(); }
                   } else if (e.key === 'Escape') {
                     e.preventDefault();
@@ -4256,7 +4101,7 @@
                   if (e.key === 'ArrowLeft') { e.preventDefault(); delBtn.focus(); }
                   else if (e.key === 'ArrowUp') { e.preventDefault(); btn.focus(); }
                   else if (e.key === 'ArrowDown') {
-                    const nextRow = document.querySelector('#nearbyLocationChips button, #locPrefsToggleBtn');
+                    const nextRow = document.querySelector('#nearbyLocationChips button');
                     if (nextRow) { e.preventDefault(); nextRow.focus(); }
                   } else if (e.key === 'Escape') {
                     e.preventDefault();
@@ -4351,7 +4196,7 @@
                 btn,
                 recentChips,
                 () => document.getElementById('gpsModalBtn'),
-                () => document.querySelector('#nearbyLocationChips button, #locPrefsToggleBtn')
+                () => document.querySelector('#nearbyLocationChips button')
               );
 
               recentChips.appendChild(btn);
@@ -4390,7 +4235,7 @@
             gpsBtn,
             nearbyChips,
             () => document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn'),
-            () => document.getElementById('locPrefsToggleBtn')
+            null
           );
           nearbyChips.appendChild(gpsBtn);
         }
@@ -4439,7 +4284,7 @@
             btn,
             nearbyChips,
             () => document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn'),
-            () => document.getElementById('locPrefsToggleBtn')
+            null
           );
           nearbyChips.appendChild(btn);
         });
@@ -6685,7 +6530,10 @@
           radarCanvasEl.addEventListener('keyup', handleGlobalBack, true);
         }
 
-        // Keep locked zoom preference synchronized if user zooms while lock is active
+        // Keep locked zoom preference synchronized & reset idle timers on user map drag/zoom
+        radarLeafletMap.on('dragstart zoomstart', () => {
+          resetRadarAutoCloseTimer();
+        });
         radarLeafletMap.on('zoomend', () => {
           try {
             const saved = localStorage.getItem('radar_locked_zoom');
@@ -6961,12 +6809,36 @@
       updateRadarLockZoomBtn();
     }
 
-    // 20-Second Auto-Revert Countdown for Radar
-    let radarAutoCloseSecs = 20;
+    // 30-Second Auto-Revert Countdown + 5-Second Idle-to-Exit Focus for Radar
+    let radarAutoCloseSecs = 30;
     let radarAutoCloseTimer = null;
+    let radarIdleExitTimer = null;
+
+    function resetRadarIdleExitFocusTimer() {
+      if (radarIdleExitTimer) {
+        clearTimeout(radarIdleExitTimer);
+        radarIdleExitTimer = null;
+      }
+      radarIdleExitTimer = setTimeout(() => {
+        const modal = document.getElementById('radarModal');
+        const closeBtn = document.getElementById('closeRadarBtnTop');
+        if (modal && !modal.classList.contains('hidden') && closeBtn && document.activeElement !== closeBtn) {
+          closeBtn.focus();
+        }
+      }, 5000);
+    }
+
+    function stopRadarIdleExitFocusTimer() {
+      if (radarIdleExitTimer) {
+        clearTimeout(radarIdleExitTimer);
+        radarIdleExitTimer = null;
+      }
+    }
 
     function resetRadarAutoCloseTimer() {
-      radarAutoCloseSecs = 20;
+      const modal = document.getElementById('radarModal');
+      if (modal && modal.classList.contains('hidden')) return;
+      radarAutoCloseSecs = 30;
       updateRadarCountdownDisplay();
       if (radarAutoCloseTimer) clearInterval(radarAutoCloseTimer);
       radarAutoCloseTimer = setInterval(() => {
@@ -6978,6 +6850,7 @@
           closeRadarModal();
         }
       }, 1000);
+      resetRadarIdleExitFocusTimer();
     }
 
     function updateRadarCountdownDisplay() {
@@ -6988,11 +6861,12 @@
     }
 
     function stopRadarAutoCloseTimer() {
+      stopRadarIdleExitFocusTimer();
       if (radarAutoCloseTimer) {
         clearInterval(radarAutoCloseTimer);
         radarAutoCloseTimer = null;
       }
-      radarAutoCloseSecs = 20;
+      radarAutoCloseSecs = 30;
       updateRadarCountdownDisplay();
     }
 
@@ -7024,10 +6898,13 @@
       resetRadarAutoCloseTimer();
 
       // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
-      // and then the Close button prominently highlights in warm amber-yellow.
+      // and then the Close button prominently highlights unless user already focused inside modal.
       setTimeout(() => {
         const closeBtn = document.getElementById('closeRadarBtnTop');
-        if (closeBtn) closeBtn.focus();
+        const activeInModal = modal && document.activeElement && modal.contains(document.activeElement);
+        if (closeBtn && modal && !modal.classList.contains('hidden') && !activeInModal) {
+          closeBtn.focus();
+        }
       }, 1200);
     }
 
