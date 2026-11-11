@@ -235,15 +235,26 @@
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
 
-    /* TV Focus Warm Amber Glow (Matching main page milestone highlight) */
+    /* Suppress native browser/TV white focus rings globally */
+    button:focus,
+    button:focus-visible,
+    a:focus,
+    a:focus-visible,
     .tv-focus-amber:focus,
     .tv-focus-amber:focus-visible {
       outline: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+
+    /* TV Focus Warm Amber Glow (Uniform, crisp border across all focusable elements) */
+    body:not(.focus-dormant) .tv-focus-amber:focus,
+    body:not(.focus-dormant) .tv-focus-amber:focus-visible {
+      outline: none !important;
+      animation: none !important;
       border-color: #fbbf24 !important;
-      background-color: rgba(245, 158, 11, 0.28) !important;
-      box-shadow: 0 0 0 2px #fbbf24, 0 0 16px rgba(251, 191, 36, 0.55) !important;
-      color: #ffffff !important;
-      transform: scale(1.02);
+      background-color: rgba(245, 158, 11, 0.20) !important;
+      box-shadow: 0 0 0 0.75px #fbbf24, 0 0 11px rgba(251, 191, 36, 0.42) !important;
+      transform: scale(1.015);
       transition: all 0.2s ease-out;
     }
 
@@ -329,6 +340,22 @@
     }
 
     /* Local Status Strip Alert Glowing Pulses */
+    @keyframes orangeTrafficPulse {
+      0%, 100% {
+        border-color: rgba(234, 88, 12, 0.6);
+        box-shadow: 0 0 7px rgba(249, 115, 22, 0.25);
+      }
+      50% {
+        border-color: rgba(249, 115, 22, 0.98);
+        box-shadow: 0 0 14px rgba(249, 115, 22, 0.52);
+      }
+    }
+    .traffic-alert-amber-pulse {
+      animation: orangeTrafficPulse 2.2s ease-in-out infinite;
+      border: 1.5px solid #f97316 !important;
+      background: rgba(234, 88, 12, 0.2) !important;
+    }
+
     @keyframes amberAlertPulse {
       0%, 100% {
         border-color: rgba(245, 158, 11, 0.45);
@@ -339,7 +366,6 @@
         box-shadow: 0 0 16px rgba(251, 191, 36, 0.5);
       }
     }
-    .traffic-alert-amber-pulse,
     .river-alert-amber-pulse {
       animation: amberAlertPulse 2.2s ease-in-out infinite;
       border: 1.5px solid #f59e0b !important;
@@ -418,10 +444,10 @@
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
       transform: none !important;
     }
-    #footerTimeline:focus-visible:not(.glance-active),
-    #footerTimeline:focus:not(.glance-active) {
+    body:not(.focus-dormant) #footerTimeline:focus-visible:not(.glance-active),
+    body:not(.focus-dormant) #footerTimeline:focus:not(.glance-active) {
       border-color: #fbbf24 !important;
-      box-shadow: 0 0 0 1.5px #fbbf24, 0 8px 32px 0 rgba(0, 0, 0, 0.35), 0 0 16px rgba(251, 191, 36, 0.45) !important;
+      box-shadow: 0 0 0 0.75px #fbbf24, 0 8px 32px 0 rgba(0, 0, 0, 0.35), 0 0 11px rgba(251, 191, 36, 0.38) !important;
     }
     #hourlyTimeline,
     #hourlyTimeline:focus,
@@ -435,8 +461,6 @@
     body.focus-dormant #footerTimeline:focus,
     body.focus-dormant #footerTimeline:focus-visible {
       outline: none !important;
-      border-color: rgba(255, 255, 255, 0.1) !important;
-      background-color: transparent !important;
       box-shadow: none !important;
       transform: none !important;
     }
@@ -445,9 +469,9 @@
     .leaflet-control-zoom a:focus,
     .leaflet-control-zoom a:focus-visible {
       outline: none !important;
-      border: 2px solid #fbbf24 !important;
-      background-color: rgba(245, 158, 11, 0.45) !important;
-      box-shadow: 0 0 16px rgba(251, 191, 36, 0.7) !important;
+      border: 1.5px solid #fbbf24 !important;
+      background-color: rgba(245, 158, 11, 0.32) !important;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.5) !important;
       color: #fbbf24 !important;
     }
 
@@ -1555,19 +1579,14 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Reset Zoom Button -->
-          <button id="radarResetZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}else if(event.key==='ArrowRight'){const l=document.getElementById('radarLockZoomBtn');if(l){event.preventDefault();l.focus();}}" onclick="resetRadarZoomAndCenter()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Reset Map to Default Zoom (Level 9)">
-            <span>🔄</span> Reset Zoom
-          </button>
-
-          <!-- Lock Zoom Button -->
-          <button id="radarLockZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const r=document.getElementById('radarResetZoomBtn');if(r){event.preventDefault();r.focus();}}else if(event.key==='ArrowRight'){const c=document.getElementById('closeRadarBtnTop');if(c){event.preventDefault();c.focus();}}" onclick="toggleRadarLockZoom()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Lock current zoom level for all future visits">
+          <!-- Lock / Unlock & Reset Zoom Button -->
+          <button id="radarLockZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}else if(event.key==='ArrowRight'){const c=document.getElementById('closeRadarBtnTop');if(c){event.preventDefault();c.focus();}}" onclick="toggleRadarLockZoom()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Lock current zoom level (click when locked to unlock &amp; reset)">
             <span id="radarLockZoomIcon">🔓</span>
             <span id="radarLockZoomText">Lock Zoom</span>
           </button>
 
           <!-- Close Button with visible 20s countdown -->
-          <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const l=document.getElementById('radarLockZoomBtn')||document.getElementById('radarResetZoomBtn');if(l){event.preventDefault();l.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
+          <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const l=document.getElementById('radarLockZoomBtn');if(l){event.preventDefault();l.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
             <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(20s)</span></span>
           </button>
         </div>
@@ -1625,10 +1644,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=95"></script>
+  <script src="traffic-flood.js?v=96"></script>
     <script>
-    const APP_BUILD = 95;
-    const APP_VERSION = '1.9.31';
+    const APP_BUILD = 96;
+    const APP_VERSION = '1.9.32';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1694,10 +1713,10 @@
       const topCloseBtn = openModal.querySelector('button[id^="close"][id$="Top"]');
       if (!topCloseBtn) return;
 
-      // If already on the Close button or top radar control buttons, lock focus / prevent jumping
+      // If already on the Close button or top radar Lock Zoom button, prevent jumping away
       if (
         document.activeElement === topCloseBtn ||
-        (document.activeElement && (document.activeElement.id === 'radarResetZoomBtn' || document.activeElement.id === 'radarLockZoomBtn'))
+        (document.activeElement && document.activeElement.id === 'radarLockZoomBtn')
       ) {
         e.preventDefault();
         return;
@@ -2790,13 +2809,31 @@
     function applySelectedLocation(name, lat, lon, postcode) {
       const nLat = parseFloat(lat);
       const nLon = parseFloat(lon);
+      const newName = shortenPlaceName(name);
+      const locationChanged = (
+        !CURRENT_LOCATION ||
+        Math.abs((CURRENT_LOCATION.lat || 0) - nLat) > 0.0005 ||
+        Math.abs((CURRENT_LOCATION.lon || 0) - nLon) > 0.0005 ||
+        (CURRENT_LOCATION.name && CURRENT_LOCATION.name !== newName && CURRENT_LOCATION.name !== 'Current Location')
+      );
+
       CURRENT_LOCATION = {
-        name: shortenPlaceName(name),
+        name: newName,
         postcode: (postcode && postcode !== 'undefined') ? postcode : '',
         lat: nLat,
         lon: nLon,
         desc: formatCoordDesc(nLat, nLon)
       };
+
+      // When location changes, unlock radar zoom and reset zoom level to default
+      if (locationChanged) {
+        try { localStorage.removeItem('radar_locked_zoom'); } catch (_) {}
+        if (typeof updateRadarLockZoomBtn === 'function') updateRadarLockZoomBtn();
+        if (typeof radarLeafletMap !== 'undefined' && radarLeafletMap) {
+          radarLeafletMap.setView([nLat, nLon], typeof RADAR_DEFAULT_ZOOM !== 'undefined' ? RADAR_DEFAULT_ZOOM : 9);
+        }
+      }
+
       saveSavedLocation();
       recordLocationQuery(CURRENT_LOCATION);
       updateLocationHeader();
@@ -6069,7 +6106,7 @@
                 if (zoomOut) zoomOut.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                const target = document.getElementById('radarResetZoomBtn') || document.getElementById('closeRadarBtnTop');
+                const target = document.getElementById('radarLockZoomBtn') || document.getElementById('closeRadarBtnTop');
                 if (target) target.focus();
               } else if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -6087,7 +6124,7 @@
                 if (zoomIn) zoomIn.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                const target = document.getElementById('radarResetZoomBtn') || document.getElementById('closeRadarBtnTop');
+                const target = document.getElementById('radarLockZoomBtn') || document.getElementById('closeRadarBtnTop');
                 if (target) target.focus();
               } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
@@ -6285,45 +6322,37 @@
         if (text) text.textContent = `Locked (z${saved})`;
         btn.classList.add('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
         btn.classList.remove('bg-white/10', 'border-white/15', 'text-white');
-        btn.title = `Zoom locked at level ${saved}. Click to unlock.`;
+        btn.title = `Zoom locked at level ${saved}. Click to unlock & reset zoom.`;
       } else {
         if (icon) icon.textContent = '🔓';
         if (text) text.textContent = 'Lock Zoom';
         btn.classList.remove('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
         btn.classList.add('bg-white/10', 'border-white/15', 'text-white');
-        btn.title = 'Lock current zoom level for all future visits';
+        btn.title = 'Lock current zoom level for future visits';
       }
     }
 
     function toggleRadarLockZoom() {
       resetRadarAutoCloseTimer();
-      const currentZ = radarLeafletMap ? radarLeafletMap.getZoom() : RADAR_DEFAULT_ZOOM;
       let isCurrentlyLocked = false;
       try {
         isCurrentlyLocked = localStorage.getItem('radar_locked_zoom') !== null;
       } catch (_) {}
 
-      try {
-        if (isCurrentlyLocked && parseInt(localStorage.getItem('radar_locked_zoom'), 10) === currentZ) {
-          localStorage.removeItem('radar_locked_zoom');
-        } else {
-          localStorage.setItem('radar_locked_zoom', currentZ.toString());
+      if (isCurrentlyLocked) {
+        // Unlock AND reset map zoom & center back to default
+        try { localStorage.removeItem('radar_locked_zoom'); } catch (_) {}
+        if (radarLeafletMap) {
+          const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
+          const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
+          radarLeafletMap.flyTo([lat, lon], RADAR_DEFAULT_ZOOM, { duration: 0.6 });
         }
-      } catch (_) {}
-      updateRadarLockZoomBtn();
-    }
-
-    function resetRadarZoomAndCenter() {
-      resetRadarAutoCloseTimer();
-      try {
-        localStorage.removeItem('radar_locked_zoom');
-      } catch (_) {}
-      updateRadarLockZoomBtn();
-      if (radarLeafletMap) {
-        const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
-        const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
-        radarLeafletMap.flyTo([lat, lon], RADAR_DEFAULT_ZOOM, { duration: 0.6 });
+      } else {
+        // Lock current zoom level
+        const currentZ = radarLeafletMap ? radarLeafletMap.getZoom() : RADAR_DEFAULT_ZOOM;
+        try { localStorage.setItem('radar_locked_zoom', currentZ.toString()); } catch (_) {}
       }
+      updateRadarLockZoomBtn();
     }
 
     // 20-Second Auto-Revert Countdown for Radar

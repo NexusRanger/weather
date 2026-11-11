@@ -73,13 +73,13 @@ async function fetchTrafficData() {
 
     if (roadClosure) {
       if (currentSpeed >= 15) {
-        card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Works (${currentSpeed} mph)</span>`;
+        card.innerHTML = `<span class="text-orange-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span> Works (${currentSpeed} mph)</span>`;
         if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
       } else if (currentSpeed > 0) {
-        card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Slow (${currentSpeed} mph)</span>`;
+        card.innerHTML = `<span class="text-orange-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span> Slow (${currentSpeed} mph)</span>`;
         if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
       } else if (!isMajorRoad) {
-        card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1">⚠️ Local Restriction</span>`;
+        card.innerHTML = `<span class="text-orange-400 font-bold flex items-center gap-1">⚠️ Local Restriction</span>`;
         if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
       } else {
         card.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1">⛔ Road Closed</span>`;
@@ -89,7 +89,7 @@ async function fetchTrafficData() {
       card.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span> Heavy Delays (${currentSpeed} mph)</span>`;
       if (trafficPill) trafficPill.classList.add('traffic-alert-red-pulse');
     } else if (delayPct >= 20) {
-      card.innerHTML = `<span class="text-amber-300 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Moderate (${currentSpeed} mph)</span>`;
+      card.innerHTML = `<span class="text-orange-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span> Moderate (${currentSpeed} mph)</span>`;
       if (trafficPill) trafficPill.classList.add('traffic-alert-amber-pulse');
     } else {
       card.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Flowing (${currentSpeed} mph)</span>`;
