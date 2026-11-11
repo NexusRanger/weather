@@ -90,6 +90,16 @@
       border: none !important;
     }
     
+    /* Radar Location Beacon Pulse */
+    @keyframes beaconPulse {
+      0% { transform: scale(0.9); opacity: 1; }
+      50% { transform: scale(1.6); opacity: 0.3; }
+      100% { transform: scale(0.9); opacity: 1; }
+    }
+    .radar-beacon-ring {
+      animation: beaconPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
         /* Header Location Marquee (Smooth ping-pong scroll for long names) */
     @keyframes marqueePingPong {
       0%, 22% {
@@ -1238,7 +1248,7 @@
     </div>
   </div>
 
-  <!-- WEATHER RADAR & WIND MAP MODAL (WINDY EMBED) -->
+  <!-- WEATHER RADAR MODAL (CLEAN NATIVE LEAFLET + RAINVIEWER) -->
   <div id="radarModal" onclick="closeRadarModal()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-5 max-w-5xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[850px] cursor-default">
       
@@ -1251,62 +1261,83 @@
           <div>
             <div class="flex items-center gap-2">
               <h3 class="text-base font-bold text-white flex items-center gap-2">
-                Live Weather Radar &amp; Wind Map
+                Live Precipitation Radar
               </h3>
               <span id="radarLocationLabel" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">Local Area</span>
             </div>
-            <p class="text-[11px] text-slate-400">Live precipitation radar, wind vectors, and satellite cloud layers via Windy</p>
+            <p class="text-[11px] text-slate-400">Clean local radar loop • Zoomed &amp; link-free</p>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Layer Selector Buttons -->
-          <div class="inline-flex rounded-xl bg-black/40 border border-white/10 p-0.5 text-xs font-medium">
-            <button id="radarLayerRadarBtn" onclick="setRadarLayer('radar')" class="px-2.5 py-1 rounded-lg text-white bg-cyan-500/35 border border-cyan-400/50 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 shadow-sm" title="Precipitation Radar Loop">
-              <span>🌧️</span> Radar
-            </button>
-            <button id="radarLayerWindBtn" onclick="setRadarLayer('wind')" class="px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent" title="Live Wind Speed &amp; Streamlines">
-              <span>💨</span> Wind
-            </button>
-            <button id="radarLayerCloudsBtn" onclick="setRadarLayer('clouds')" class="px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent" title="Satellite Cloud Cover">
-              <span>☁️</span> Clouds
-            </button>
-            <button id="radarLayerRainBtn" onclick="setRadarLayer('rain')" class="px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent" title="Rain Forecast Accumulation">
-              <span>💧</span> Rain
-            </button>
-          </div>
+          <!-- Re-center Button -->
+          <button id="radarRecenterBtn" onclick="recenterRadarMap()" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Re-center on Location">
+            <span>🎯</span> Re-center
+          </button>
 
+          <!-- Close Button -->
           <button id="closeRadarBtnTop" tabindex="1" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
             <span>✕ Close</span>
           </button>
         </div>
       </div>
 
-      <!-- Modal Body (Iframe Container) -->
-      <div class="relative flex-1 min-h-0 w-full mt-3 rounded-xl overflow-hidden border border-white/10 bg-slate-950/80">
-        <iframe id="radarIframe" src="" class="w-full h-full border-0" loading="lazy" allow="fullscreen" title="Live Weather Radar and Wind Map"></iframe>
-        <div id="radarIframeLoading" class="absolute inset-0 flex items-center justify-center bg-slate-950/90 text-slate-400 text-xs font-mono pointer-events-none transition-opacity duration-300">
+      <!-- Modal Body (Leaflet Map Container) -->
+      <div class="relative flex-1 min-h-0 w-full mt-3 rounded-xl overflow-hidden border border-white/10 bg-slate-950">
+        <div id="radarLeafletMap" class="w-full h-full" style="height: 100%; min-height: 380px;"></div>
+
+        <!-- Floating Scrubber & Playback Controls Pill -->
+        <div class="absolute bottom-3 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[1000] bg-slate-900/90 backdrop-blur-md border border-white/20 rounded-2xl p-2 px-3 shadow-2xl flex items-center gap-3">
+          <!-- Play / Pause -->
+          <button id="radarPlayBtn" onclick="toggleRadarPlayPause()" class="w-8 h-8 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center justify-center text-xs transition shadow-md cursor-pointer" title="Play / Pause Radar Loop">
+            <span id="radarPlayIcon">⏸</span>
+          </button>
+
+          <!-- Time Scrubber -->
+          <div class="flex flex-col gap-0.5 min-w-[140px] sm:min-w-[190px]">
+            <div class="flex items-center justify-between text-[10px] font-mono leading-none">
+              <span id="radarTimeLabel" class="text-cyan-300 font-bold">Loading...</span>
+              <span id="radarRelativeLabel" class="text-slate-400">Live</span>
+            </div>
+            <input id="radarScrubber" type="range" min="0" max="12" step="1" value="12" oninput="onRadarScrub(this.value)" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+          </div>
+
+          <!-- Frame Steppers -->
+          <div class="flex items-center gap-1">
+            <button onclick="stepRadarFrame(-1)" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs flex items-center justify-center transition cursor-pointer" title="Step Back 10m">◀</button>
+            <button onclick="stepRadarFrame(1)" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs flex items-center justify-center transition cursor-pointer" title="Step Forward 10m">▶</button>
+          </div>
+        </div>
+
+        <!-- Loading overlay -->
+        <div id="radarLoading" class="absolute inset-0 flex items-center justify-center bg-slate-950/90 text-slate-400 text-xs font-mono pointer-events-none transition-opacity duration-300 z-[1001]">
           <div class="flex items-center gap-2">
             <span class="inline-block w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
-            <span>Loading live radar map...</span>
+            <span>Loading radar sweep...</span>
           </div>
         </div>
       </div>
 
-      <!-- Modal Footer Note -->
-      <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono mt-2 flex-shrink-0">
-        <span>📍 Centered on your selected location • Zoom and drag with mouse, touch or TV remote</span>
-        <span class="text-slate-500">Press <strong class="text-slate-300">Esc</strong> or click outside to close</span>
+      <!-- Modal Footer -->
+      <div class="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400 font-mono mt-2 flex-shrink-0">
+        <div class="flex items-center gap-1.5">
+          <span>Rain Intensity:</span>
+          <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#00ffff]"></span> Light</span>
+          <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#00ff00]"></span> Moderate</span>
+          <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ffff00]"></span> Heavy</span>
+          <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ff0000]"></span> Severe</span>
+        </div>
+        <span class="text-slate-500">Zero links • Zoom: Drag / Wheel / Pinch / Remote • Press <strong class="text-slate-300">Esc</strong> to close</span>
       </div>
 
     </div>
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=83"></script>
+  <script src="traffic-flood.js?v=84"></script>
     <script>
-    const APP_BUILD = 83;
-    const APP_VERSION = '1.9.19';
+    const APP_BUILD = 84;
+    const APP_VERSION = '1.9.20';
 
     async function checkForUpdates() {
       try {
@@ -5349,14 +5380,181 @@
       }
     }
 
-    // WEATHER RADAR & WIND MAP (WINDY EMBED LOGIC)
-    let currentRadarLayer = 'radar';
+    // LIVE PRECIPITATION RADAR (CLEAN NATIVE LEAFLET + RAINVIEWER)
+    let radarLeafletMap = null;
+    let radarTileLayers = [];
+    let radarFrames = [];
+    let currentRadarIdx = 0;
+    let radarIsPlaying = true;
+    let radarAnimTimer = null;
+    let radarLocationMarker = null;
+    const RADAR_DEFAULT_ZOOM = 10; // Slightly zoomed in on local town & immediate surrounding area
 
-    function getWindyEmbedUrl(lat, lon, layer = 'radar') {
-      const safeLat = (typeof lat === 'number' && !isNaN(lat)) ? lat : ((typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.70);
-      const safeLon = (typeof lon === 'number' && !isNaN(lon)) ? lon : ((typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.23);
-      const product = layer === 'radar' ? 'radar' : 'ecmwf';
-      return `https://embed.windy.com/embed2.html?lat=${safeLat.toFixed(3)}&lon=${safeLon.toFixed(3)}&detailLat=${safeLat.toFixed(3)}&detailLon=${safeLon.toFixed(3)}&width=100%25&height=100%25&zoom=8&level=surface&overlay=${layer}&product=${product}&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=mph&metricTemp=%C2%B0C&radarRange=-1`;
+    async function initOrRefreshRadarMap() {
+      const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
+      const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
+
+      if (!radarLeafletMap) {
+        const container = document.getElementById('radarLeafletMap');
+        if (!container) return;
+
+        radarLeafletMap = L.map('radarLeafletMap', {
+          zoomControl: true,
+          attributionControl: false, // Absolutely zero links or watermark flags
+          keyboard: false,
+          boxZoom: false
+        }).setView([lat, lon], RADAR_DEFAULT_ZOOM);
+
+        // Dark Canvas Base layer (Zero links, clean dark map)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          subdomains: 'abcd',
+          maxZoom: 16
+        }).addTo(radarLeafletMap);
+
+        // Pulsing Location Beacon
+        const beaconIcon = L.divIcon({
+          className: 'radar-beacon-container',
+          html: '<div style="position:relative;width:24px;height:24px;margin-left:-12px;margin-top:-12px;"><div class="radar-beacon-ring" style="position:absolute;inset:0;border-radius:9999px;background:rgba(56,189,248,0.45);"></div><div style="position:absolute;top:5px;left:5px;width:14px;height:14px;border-radius:9999px;background:#06b6d4;border:2.5px solid #ffffff;box-shadow:0 0 8px rgba(6,182,212,0.9);"></div></div>',
+          iconSize: [24, 24]
+        });
+
+        radarLocationMarker = L.marker([lat, lon], { icon: beaconIcon }).addTo(radarLeafletMap);
+      } else {
+        radarLeafletMap.setView([lat, lon], RADAR_DEFAULT_ZOOM);
+        if (radarLocationMarker) {
+          radarLocationMarker.setLatLng([lat, lon]);
+        }
+      }
+
+      // Invalidate size to ensure crisp rendering after modal display transition
+      [50, 150, 300].forEach(delay => {
+        setTimeout(() => {
+          if (radarLeafletMap) radarLeafletMap.invalidateSize();
+        }, delay);
+      });
+
+      // Load or refresh radar frames
+      await fetchRadarFrames();
+    }
+
+    async function fetchRadarFrames() {
+      const loader = document.getElementById('radarLoading');
+      if (loader) loader.classList.remove('hidden');
+
+      try {
+        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (!data || !data.radar || !data.radar.past) return;
+
+        // Clean up old layers if refreshing
+        radarTileLayers.forEach(l => {
+          if (radarLeafletMap) radarLeafletMap.removeLayer(l);
+        });
+        radarTileLayers = [];
+        radarFrames = data.radar.past;
+        const host = data.host;
+
+        // Preload tile layers (opacity 0 so browser caches them smoothly)
+        radarFrames.forEach((frame, i) => {
+          const layer = L.tileLayer(`${host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+            opacity: 0,
+            zIndex: 100 + i,
+            maxZoom: 16
+          });
+          layer.addTo(radarLeafletMap);
+          radarTileLayers.push(layer);
+        });
+
+        const scrubber = document.getElementById('radarScrubber');
+        if (scrubber) {
+          scrubber.max = radarFrames.length - 1;
+        }
+
+        // Show latest frame
+        showRadarFrame(radarFrames.length - 1);
+        startRadarAnimation();
+
+        if (loader) loader.classList.add('hidden');
+      } catch (err) {
+        console.warn('Radar fetch failed:', err);
+        if (loader) {
+          loader.innerHTML = '<span class="text-amber-300">Radar feed temporarily offline. Retry shortly.</span>';
+        }
+      }
+    }
+
+    function showRadarFrame(idx) {
+      if (!radarTileLayers.length) return;
+      currentRadarIdx = Math.max(0, Math.min(radarTileLayers.length - 1, idx));
+
+      radarTileLayers.forEach((layer, i) => {
+        layer.setOpacity(i === currentRadarIdx ? 0.78 : 0);
+      });
+
+      const frame = radarFrames[currentRadarIdx];
+      if (frame) {
+        const d = new Date(frame.time * 1000);
+        const timeStr = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const isLatest = currentRadarIdx === radarFrames.length - 1;
+
+        const timeLbl = document.getElementById('radarTimeLabel');
+        if (timeLbl) timeLbl.textContent = timeStr;
+
+        const relLbl = document.getElementById('radarRelativeLabel');
+        if (relLbl) {
+          const diffMins = Math.round((Date.now() - frame.time * 1000) / 60000);
+          relLbl.textContent = isLatest ? 'Live Now' : `${diffMins}m ago`;
+        }
+
+        const scrubber = document.getElementById('radarScrubber');
+        if (scrubber) scrubber.value = currentRadarIdx;
+      }
+    }
+
+    function startRadarAnimation() {
+      if (radarAnimTimer) clearInterval(radarAnimTimer);
+      radarIsPlaying = true;
+      const icon = document.getElementById('radarPlayIcon');
+      if (icon) icon.textContent = '⏸';
+      radarAnimTimer = setInterval(() => {
+        let next = currentRadarIdx + 1;
+        if (next >= radarTileLayers.length) next = 0;
+        showRadarFrame(next);
+      }, 750);
+    }
+
+    function stopRadarAnimation() {
+      if (radarAnimTimer) {
+        clearInterval(radarAnimTimer);
+        radarAnimTimer = null;
+      }
+      radarIsPlaying = false;
+      const icon = document.getElementById('radarPlayIcon');
+      if (icon) icon.textContent = '▶';
+    }
+
+    function toggleRadarPlayPause() {
+      if (radarIsPlaying) stopRadarAnimation();
+      else startRadarAnimation();
+    }
+
+    function onRadarScrub(val) {
+      stopRadarAnimation();
+      showRadarFrame(parseInt(val, 10));
+    }
+
+    function stepRadarFrame(delta) {
+      stopRadarAnimation();
+      showRadarFrame(currentRadarIdx + delta);
+    }
+
+    function recenterRadarMap() {
+      if (radarLeafletMap) {
+        const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
+        const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
+        radarLeafletMap.flyTo([lat, lon], RADAR_DEFAULT_ZOOM, { duration: 0.6 });
+      }
     }
 
     function openRadarModal() {
@@ -5371,61 +5569,19 @@
         }
       } catch (_) {}
 
-      // Update location name badge
       const locBadge = document.getElementById('radarLocationLabel');
       if (locBadge && typeof CURRENT_LOCATION !== 'undefined') {
         locBadge.textContent = CURRENT_LOCATION.name || `${CURRENT_LOCATION.lat.toFixed(2)}°N, ${Math.abs(CURRENT_LOCATION.lon).toFixed(2)}°W`;
       }
 
-      updateRadarIframe(currentRadarLayer);
+      initOrRefreshRadarMap();
 
       const closeBtn = document.getElementById('closeRadarBtnTop');
       if (closeBtn) closeBtn.focus();
     }
 
-    function updateRadarIframe(layer) {
-      currentRadarLayer = layer || 'radar';
-      const iframe = document.getElementById('radarIframe');
-      const loader = document.getElementById('radarIframeLoading');
-      if (!iframe) return;
-
-      const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.70;
-      const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.23;
-      const targetUrl = getWindyEmbedUrl(lat, lon, currentRadarLayer);
-
-      if (iframe.src !== targetUrl) {
-        if (loader) loader.classList.remove('hidden');
-        iframe.onload = () => {
-          if (loader) loader.classList.add('hidden');
-        };
-        iframe.src = targetUrl;
-      } else {
-        if (loader) loader.classList.add('hidden');
-      }
-
-      // Highlight active layer button
-      const layerBtns = {
-        radar: document.getElementById('radarLayerRadarBtn'),
-        wind: document.getElementById('radarLayerWindBtn'),
-        clouds: document.getElementById('radarLayerCloudsBtn'),
-        rain: document.getElementById('radarLayerRainBtn')
-      };
-
-      Object.entries(layerBtns).forEach(([k, btn]) => {
-        if (!btn) return;
-        if (k === currentRadarLayer) {
-          btn.className = 'px-2.5 py-1 rounded-lg text-white bg-cyan-500/35 border border-cyan-400/50 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 shadow-sm';
-        } else {
-          btn.className = 'px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent';
-        }
-      });
-    }
-
-    function setRadarLayer(layer) {
-      updateRadarIframe(layer);
-    }
-
     function closeRadarModal(pop = true) {
+      stopRadarAnimation();
       const modal = document.getElementById('radarModal');
       if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.add('hidden');
