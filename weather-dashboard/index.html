@@ -975,9 +975,8 @@
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <span>📍</span> Set Location (Postcode, Town or GPS)
         </h3>
-        <button id="closeLocationBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="closeLocationModal()" title="Close (or Esc/Back)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white text-xs font-semibold border border-white/15 focus:outline-none transition-all flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          <span>Close</span>
+        <button id="closeLocationBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer">
+          <span>✕ Close</span>
         </button>
       </div>
 
@@ -1045,9 +1044,8 @@
         </div>
         <div class="flex items-center gap-2">
           <!-- Prominent TV-focusable Close Button -->
-          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){const firstChip=document.querySelector('#mapRecentChips button');if(firstChip){event.preventDefault();firstChip.focus();}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white text-xs font-semibold border border-white/15 focus:outline-none transition-all flex items-center gap-1.5 cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            <span>Close</span>
+          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){const firstChip=document.querySelector('#mapRecentChips button');if(firstChip){event.preventDefault();firstChip.focus();}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
+            <span>✕ Close</span>
           </button>
         </div>
       </div>
@@ -1249,7 +1247,7 @@
   </div>
 
   <!-- WEATHER RADAR MODAL (CLEAN NATIVE LEAFLET + RAINVIEWER) -->
-  <div id="radarModal" onclick="closeRadarModal()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
+  <div id="radarModal" onclick="closeRadarModal()" onmousemove="resetRadarAutoCloseTimer()" onkeydown="resetRadarAutoCloseTimer()" ontouchstart="resetRadarAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-5 max-w-5xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[850px] cursor-default">
       
       <!-- Modal Header -->
@@ -1259,11 +1257,12 @@
             🛰️
           </div>
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <h3 class="text-base font-bold text-white flex items-center gap-2">
                 Live Precipitation Radar
               </h3>
               <span id="radarLocationLabel" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">Local Area</span>
+              <span id="radarCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 30s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="radarCountdownSecs">30s</span></span>
             </div>
             <p class="text-[11px] text-slate-400">Clean local radar loop • Zoomed &amp; link-free</p>
           </div>
@@ -1275,9 +1274,9 @@
             <span>🎯</span> Re-center
           </button>
 
-          <!-- Close Button -->
+          <!-- Close Button with visible 30s countdown -->
           <button id="closeRadarBtnTop" tabindex="1" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
-            <span>✕ Close</span>
+            <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
           </button>
         </div>
       </div>
@@ -1327,17 +1326,17 @@
           <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ffff00]"></span> Heavy</span>
           <span class="flex items-center gap-0.5"><span class="w-2.5 h-2 rounded-xs bg-[#ff0000]"></span> Severe</span>
         </div>
-        <span class="text-slate-500">Zero links • Zoom: Drag / Wheel / Pinch / Remote • Press <strong class="text-slate-300">Esc</strong> to close</span>
+        <span class="text-slate-500">Auto-reverts after 30s • Interaction resets timer • Press <strong class="text-slate-300">Esc</strong> to close</span>
       </div>
 
     </div>
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=85"></script>
+  <script src="traffic-flood.js?v=86"></script>
     <script>
-    const APP_BUILD = 85;
-    const APP_VERSION = '1.9.21';
+    const APP_BUILD = 86;
+    const APP_VERSION = '1.9.22';
 
     async function checkForUpdates() {
       try {
@@ -1529,10 +1528,16 @@
       initStarRatingEvents();
       loadConstructiveFeedbackFeed();
 
+      // Clear prior focus so the user clearly sees the Close button light up in amber
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      // Standardized 0.8s (800ms) delay to prominently highlight the Close button
       setTimeout(() => {
-        const commentBox = document.getElementById('feedbackCommentInput');
-        if (commentBox) commentBox.focus();
-      }, 300);
+        const closeBtn = document.getElementById('closeFeedbackBtnTop');
+        if (closeBtn) closeBtn.focus();
+      }, 800);
     }
 
     function closeFeedbackModal(pop = true) {
@@ -1711,12 +1716,12 @@
 
       initOrRefreshHistoryMap();
 
-      // TV D-Pad UX: Focus arrives after ~350ms so the modal opens smoothly first,
-      // and then the Close button lights up in warm amber-yellow.
+      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
+      // and then the Close button prominently highlights in warm amber-yellow.
       setTimeout(() => {
         const btn = document.getElementById('closeMapBtnTop');
         if (btn) btn.focus();
-      }, 350);
+      }, 800);
     }
 
     function closeHistoryMapModal(pop = true) {
@@ -2875,14 +2880,14 @@
         document.activeElement.blur();
       }
 
-      // TV D-Pad UX: Focus arrives after ~350ms (about a third of a second) so the modal opens
-      // smoothly, and the Close button prominently highlights in warm amber-yellow so you know where you are.
+      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
+      // and then the Close button prominently highlights in warm amber-yellow so you know where you are.
       setTimeout(() => {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) {
           closeBtn.focus();
         }
-      }, 350);
+      }, 800);
     }
 
     function closeLocationModal(pop = true) {
@@ -5314,12 +5319,12 @@
         document.activeElement.blur();
       }
 
-      // TV D-Pad UX: Focus arrives after ~350ms so the modal opens smoothly first,
+      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
       // and then the Close button lights up in warm amber-yellow.
       setTimeout(() => {
         const closeBtn = document.getElementById('closeShareBtnTop');
         if (closeBtn) closeBtn.focus();
-      }, 350);
+      }, 800);
     }
 
     function renderQrFallback(container, url) {
@@ -5542,26 +5547,65 @@
     }
 
     function toggleRadarPlayPause() {
+      resetRadarAutoCloseTimer();
       if (radarIsPlaying) stopRadarAnimation();
       else startRadarAnimation();
     }
 
     function onRadarScrub(val) {
+      resetRadarAutoCloseTimer();
       stopRadarAnimation();
       showRadarFrame(parseInt(val, 10));
     }
 
     function stepRadarFrame(delta) {
+      resetRadarAutoCloseTimer();
       stopRadarAnimation();
       showRadarFrame(currentRadarIdx + delta);
     }
 
     function recenterRadarMap() {
+      resetRadarAutoCloseTimer();
       if (radarLeafletMap) {
         const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
         const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
         radarLeafletMap.flyTo([lat, lon], RADAR_DEFAULT_ZOOM, { duration: 0.6 });
       }
+    }
+
+    // 30-Second Auto-Revert Countdown for Radar
+    let radarAutoCloseSecs = 30;
+    let radarAutoCloseTimer = null;
+
+    function resetRadarAutoCloseTimer() {
+      radarAutoCloseSecs = 30;
+      updateRadarCountdownDisplay();
+      if (radarAutoCloseTimer) clearInterval(radarAutoCloseTimer);
+      radarAutoCloseTimer = setInterval(() => {
+        radarAutoCloseSecs--;
+        updateRadarCountdownDisplay();
+        if (radarAutoCloseSecs <= 0) {
+          clearInterval(radarAutoCloseTimer);
+          radarAutoCloseTimer = null;
+          closeRadarModal();
+        }
+      }, 1000);
+    }
+
+    function updateRadarCountdownDisplay() {
+      const secsEl = document.getElementById('radarCountdownSecs');
+      if (secsEl) secsEl.textContent = `${radarAutoCloseSecs}s`;
+      const btnTimerEl = document.getElementById('radarBtnCountdown');
+      if (btnTimerEl) btnTimerEl.textContent = `(${radarAutoCloseSecs}s)`;
+    }
+
+    function stopRadarAutoCloseTimer() {
+      if (radarAutoCloseTimer) {
+        clearInterval(radarAutoCloseTimer);
+        radarAutoCloseTimer = null;
+      }
+      radarAutoCloseSecs = 30;
+      updateRadarCountdownDisplay();
     }
 
     function openRadarModal() {
@@ -5576,19 +5620,30 @@
         }
       } catch (_) {}
 
+      // Clear prior focus so the user clearly sees the Close button light up in amber
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
       const locBadge = document.getElementById('radarLocationLabel');
       if (locBadge && typeof CURRENT_LOCATION !== 'undefined') {
         locBadge.textContent = CURRENT_LOCATION.name || `${CURRENT_LOCATION.lat.toFixed(2)}°N, ${Math.abs(CURRENT_LOCATION.lon).toFixed(2)}°W`;
       }
 
       initOrRefreshRadarMap();
+      resetRadarAutoCloseTimer();
 
-      const closeBtn = document.getElementById('closeRadarBtnTop');
-      if (closeBtn) closeBtn.focus();
+      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
+      // and then the Close button prominently highlights in warm amber-yellow.
+      setTimeout(() => {
+        const closeBtn = document.getElementById('closeRadarBtnTop');
+        if (closeBtn) closeBtn.focus();
+      }, 800);
     }
 
     function closeRadarModal(pop = true) {
       stopRadarAnimation();
+      stopRadarAutoCloseTimer();
       const modal = document.getElementById('radarModal');
       if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.add('hidden');
