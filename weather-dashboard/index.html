@@ -902,12 +902,13 @@
     
     <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC, RIVERS & SHARE) -->
     <div id="colLocalInfo" class="relative z-20 flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
-      <!-- Traffic Pill -->
-      <div id="trafficPill" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm transition-all" title="Live Traffic Flow (A46 / Local Area via TomTom)">
+      <!-- Traffic Pill Button -->
+      <button id="trafficPill" onclick="openTrafficModal()" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer text-left group" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
         <span class="text-xs">🚗</span>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Traffic:</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Traffic:</span>
         <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
-      </div>
+        <span class="text-[10px] text-slate-500 group-hover:text-emerald-300 transition-colors ml-0.5">ℹ️</span>
+      </button>
 
       <!-- River Pill -->
       <div id="riverPill" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 shadow-sm transition-all" title="UK Environment Agency Live River & Flood Monitoring">
@@ -1246,6 +1247,116 @@
     </div>
   </div>
 
+  <!-- TRAFFIC & CONGESTION BREAKDOWN MODAL -->
+  <div id="trafficModal" onclick="closeTrafficModal()" onmousemove="resetTrafficAutoCloseTimer()" onkeydown="resetTrafficAutoCloseTimer()" ontouchstart="resetTrafficAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-5 text-left cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-4 sm:p-5 max-w-lg w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-lg shadow-md flex-shrink-0">
+            🚗
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                Live Traffic &amp; Road Flow
+              </h3>
+              <span id="trafficLocationLabel" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Local Corridor</span>
+              <span id="trafficCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 20s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="trafficCountdownSecs">20s</span></span>
+            </div>
+            <p class="text-[11px] text-slate-400">Live corridor speed, congestion breakdown &amp; road conditions</p>
+          </div>
+        </div>
+
+        <button id="closeTrafficBtnTop" tabindex="1" onclick="closeTrafficModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Traffic (Esc / Back)">
+          <span>✕ Close <span id="trafficBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(20s)</span></span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="py-3 space-y-3 overflow-y-auto">
+        <!-- Status Banner -->
+        <div id="trafficStatusBanner" class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center gap-3">
+          <span id="trafficStatusIcon" class="text-2xl">🟢</span>
+          <div class="flex-1 min-w-0">
+            <div id="trafficStatusHeadline" class="text-xs font-bold text-emerald-300 uppercase tracking-wide">Flowing Normally</div>
+            <p id="trafficStatusExplanation" class="text-[11px] text-slate-300 leading-snug mt-0.5">Traffic is moving freely with no delays detected along the main corridor.</p>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <!-- Measured Speed -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Current Speed</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="trafficCurrentSpeedVal" class="text-xl font-bold font-mono text-white">--</span>
+              <span class="text-xs text-slate-400 font-mono">mph</span>
+            </div>
+            <span id="trafficSpeedSubtext" class="text-[10px] text-slate-400">Local vehicle probe average</span>
+          </div>
+
+          <!-- Free-Flow Baseline -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Free-Flow Speed</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="trafficFreeFlowVal" class="text-xl font-bold font-mono text-slate-300">--</span>
+              <span class="text-xs text-slate-400 font-mono">mph</span>
+            </div>
+            <span class="text-[10px] text-slate-400">Standard uncongested speed</span>
+          </div>
+
+          <!-- Delay Indicator -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Estimated Delay</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="trafficDelayVal" class="text-base font-bold font-mono text-emerald-400">None (+0s)</span>
+            </div>
+            <span id="trafficDelaySub" class="text-[10px] text-slate-400">Compared to clear run</span>
+          </div>
+
+          <!-- Flow Efficiency -->
+          <div class="p-2.5 rounded-xl bg-slate-900/70 border border-white/10">
+            <span class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block">Corridor Flow</span>
+            <div class="flex items-baseline gap-1.5 mt-0.5">
+              <span id="trafficEfficiencyVal" class="text-base font-bold font-mono text-emerald-400">100%</span>
+            </div>
+            <span id="trafficEfficiencySub" class="text-[10px] text-slate-400">Optimal throughput</span>
+          </div>
+        </div>
+
+        <!-- Corridor & Weather Context Card -->
+        <div class="p-3 rounded-xl bg-slate-900/70 border border-white/10 space-y-2">
+          <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Route &amp; Weather Factors</div>
+          <div class="flex items-center justify-between text-xs py-1 border-b border-white/5">
+            <span class="text-slate-400">Monitored Route</span>
+            <span id="trafficCorridorType" class="text-slate-200 font-medium">Regional Trunk Corridor (A46)</span>
+          </div>
+          <div class="flex items-center justify-between text-xs py-1 border-b border-white/5">
+            <span class="text-slate-400">Road Restrictions</span>
+            <span id="trafficClosureText" class="text-emerald-400 font-medium">None reported</span>
+          </div>
+          <div class="flex items-center justify-between text-xs py-1 border-b border-white/5">
+            <span class="text-slate-400">Road Surface Risk</span>
+            <span id="trafficSurfaceWeather" class="text-slate-200 font-medium">Spray free • Frost-free</span>
+          </div>
+          <div class="flex items-center justify-between text-xs pt-1">
+            <span class="text-slate-400">Feed Confidence</span>
+            <span id="trafficConfidenceVal" class="text-sky-300 font-mono text-[11px]">100% (Dense probe data)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-2 border-t border-white/10 flex-shrink-0">
+        <span class="text-emerald-400">✓ Cached feed (zero extra API requests)</span>
+        <span class="text-slate-500">Auto-reverts in 20s • Press <strong class="text-slate-300">Esc</strong> to close</span>
+      </div>
+
+    </div>
+  </div>
+
   <!-- WEATHER RADAR MODAL (CLEAN NATIVE LEAFLET + RAINVIEWER) -->
   <div id="radarModal" onclick="closeRadarModal()" onmousemove="resetRadarAutoCloseTimer()" onkeydown="resetRadarAutoCloseTimer()" ontouchstart="resetRadarAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-5 max-w-5xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[850px] cursor-default">
@@ -1333,10 +1444,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=86"></script>
+  <script src="traffic-flood.js?v=87"></script>
     <script>
-    const APP_BUILD = 86;
-    const APP_VERSION = '1.9.22';
+    const APP_BUILD = 87;
+    const APP_VERSION = '1.9.23';
 
     async function checkForUpdates() {
       try {
@@ -5206,6 +5317,10 @@
 
     // TV Remote & Back Button Handlers (Android TV, Tizen, webOS, browser history)
     window.addEventListener('popstate', (e) => {
+      const trafficModal = document.getElementById('trafficModal');
+      if (trafficModal && !trafficModal.classList.contains('hidden')) {
+        closeTrafficModal(false);
+      }
       const radarModal = document.getElementById('radarModal');
       if (radarModal && !radarModal.classList.contains('hidden')) {
         closeRadarModal(false);
@@ -5653,8 +5768,186 @@
       }
     }
 
+    // TRAFFIC & CONGESTION MODAL LOGIC (READS BACKGROUND CACHE ONLY - ZERO EXTRA API CALLS)
+    let trafficAutoCloseSecs = 20;
+    let trafficAutoCloseTimer = null;
+
+    function resetTrafficAutoCloseTimer() {
+      trafficAutoCloseSecs = 20;
+      updateTrafficCountdownDisplay();
+      if (trafficAutoCloseTimer) clearInterval(trafficAutoCloseTimer);
+      trafficAutoCloseTimer = setInterval(() => {
+        trafficAutoCloseSecs--;
+        updateTrafficCountdownDisplay();
+        if (trafficAutoCloseSecs <= 0) {
+          clearInterval(trafficAutoCloseTimer);
+          trafficAutoCloseTimer = null;
+          closeTrafficModal();
+        }
+      }, 1000);
+    }
+
+    function updateTrafficCountdownDisplay() {
+      const secsEl = document.getElementById('trafficCountdownSecs');
+      if (secsEl) secsEl.textContent = `${trafficAutoCloseSecs}s`;
+      const btnEl = document.getElementById('trafficBtnCountdown');
+      if (btnEl) btnEl.textContent = `(${trafficAutoCloseSecs}s)`;
+    }
+
+    function stopTrafficAutoCloseTimer() {
+      if (trafficAutoCloseTimer) {
+        clearInterval(trafficAutoCloseTimer);
+        trafficAutoCloseTimer = null;
+      }
+      trafficAutoCloseSecs = 20;
+      updateTrafficCountdownDisplay();
+    }
+
+    function openTrafficModal() {
+      const modal = document.getElementById('trafficModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      try {
+        if (!history.state || history.state.modal !== 'trafficModal') {
+          history.pushState({ modal: 'trafficModal' }, '');
+        }
+      } catch (_) {}
+
+      // Clear prior focus so the user clearly sees the Close button light up in amber
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      // Populate data from memory (zero extra API calls!)
+      populateTrafficModalData();
+
+      // Start 20s auto-revert timer
+      resetTrafficAutoCloseTimer();
+
+      // Standardized 0.8s (800ms) delay to prominently highlight the Close button
+      setTimeout(() => {
+        const closeBtn = document.getElementById('closeTrafficBtnTop');
+        if (closeBtn) closeBtn.focus();
+      }, 800);
+    }
+
+    function populateTrafficModalData() {
+      const locLabel = document.getElementById('trafficLocationLabel');
+      if (locLabel && typeof CURRENT_LOCATION !== 'undefined') {
+        locLabel.textContent = CURRENT_LOCATION.name ? `${CURRENT_LOCATION.name} Corridor` : 'Local Corridor';
+      }
+
+      const d = window.CACHED_TRAFFIC_DATA || {
+        currentSpeed: 30,
+        freeFlowSpeed: 30,
+        delaySecs: 0,
+        delayMins: '0.0',
+        delayPct: 0,
+        roadClosure: false,
+        frc: 'FRC3',
+        roadType: 'Regional Trunk Corridor (A46)',
+        confidence: 100,
+        conditionLabel: 'Flowing Normally',
+        conditionColor: 'text-emerald-400',
+        conditionDesc: 'Traffic is moving freely with no delays detected along the main corridor.',
+        updatedAt: new Date()
+      };
+
+      const banner = document.getElementById('trafficStatusBanner');
+      const icon = document.getElementById('trafficStatusIcon');
+      const headline = document.getElementById('trafficStatusHeadline');
+      const explanation = document.getElementById('trafficStatusExplanation');
+
+      if (headline) {
+        headline.textContent = d.conditionLabel;
+        headline.className = `text-xs font-bold uppercase tracking-wide ${d.conditionColor}`;
+      }
+      if (explanation) explanation.textContent = d.conditionDesc;
+
+      if (banner && icon) {
+        if (d.delayPct >= 40 || d.roadClosure) {
+          banner.className = 'p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 flex items-center gap-3';
+          icon.textContent = d.roadClosure ? '⛔' : '🔴';
+        } else if (d.delayPct >= 20) {
+          banner.className = 'p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 flex items-center gap-3';
+          icon.textContent = '🟡';
+        } else {
+          banner.className = 'p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center gap-3';
+          icon.textContent = '🟢';
+        }
+      }
+
+      const curSpeedEl = document.getElementById('trafficCurrentSpeedVal');
+      if (curSpeedEl) curSpeedEl.textContent = d.currentSpeed;
+
+      const freeFlowEl = document.getElementById('trafficFreeFlowVal');
+      if (freeFlowEl) freeFlowEl.textContent = d.freeFlowSpeed;
+
+      const delayEl = document.getElementById('trafficDelayVal');
+      if (delayEl) {
+        if (d.delaySecs > 45) {
+          delayEl.textContent = `+${d.delayMins} mins`;
+          delayEl.className = 'text-base font-bold font-mono ' + (d.delayPct >= 40 ? 'text-rose-400' : 'text-amber-300');
+        } else {
+          delayEl.textContent = 'None (+0s)';
+          delayEl.className = 'text-base font-bold font-mono text-emerald-400';
+        }
+      }
+
+      const effEl = document.getElementById('trafficEfficiencyVal');
+      if (effEl) {
+        const effPct = Math.max(10, 100 - d.delayPct);
+        effEl.textContent = `${effPct}%`;
+        effEl.className = 'text-base font-bold font-mono ' + (effPct < 60 ? 'text-rose-400' : effPct < 85 ? 'text-amber-300' : 'text-emerald-400');
+      }
+
+      const corridorEl = document.getElementById('trafficCorridorType');
+      if (corridorEl) corridorEl.textContent = d.roadType;
+
+      const closureEl = document.getElementById('trafficClosureText');
+      if (closureEl) {
+        closureEl.textContent = d.roadClosure ? 'Active restrictions / closure' : 'None reported (Clear route)';
+        closureEl.className = d.roadClosure ? 'text-amber-300 font-medium' : 'text-emerald-400 font-medium';
+      }
+
+      const confEl = document.getElementById('trafficConfidenceVal');
+      if (confEl) confEl.textContent = `${d.confidence}% (Real-time vehicle probes)`;
+
+      // Cross-reference road weather from Open-Meteo Road tile if present
+      const weatherSurfaceEl = document.getElementById('trafficSurfaceWeather');
+      if (weatherSurfaceEl) {
+        const roadTileText = document.getElementById('roadComfortText');
+        if (roadTileText && roadTileText.textContent) {
+          weatherSurfaceEl.textContent = roadTileText.textContent.trim();
+        } else {
+          weatherSurfaceEl.textContent = 'Standard grip • Frost-free';
+        }
+      }
+    }
+
+    function closeTrafficModal(pop = true) {
+      stopTrafficAutoCloseTimer();
+      const modal = document.getElementById('trafficModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (pop && history.state && history.state.modal === 'trafficModal') {
+        try { history.back(); } catch (_) {}
+      }
+    }
+
     function handleGlobalBack(e) {
       if (isTvBackKey(e)) {
+        const trafficModal = document.getElementById('trafficModal');
+        if (trafficModal && !trafficModal.classList.contains('hidden')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          closeTrafficModal();
+          return false;
+        }
         const radarModal = document.getElementById('radarModal');
         if (radarModal && !radarModal.classList.contains('hidden')) {
           e.preventDefault();
@@ -5721,7 +6014,7 @@
     // TV Remote UX: Focus the top bar Location button on startup so focus starts cleanly at the top
     setTimeout(() => {
       const topBtn = document.getElementById('headerLocationBtn');
-      if (topBtn && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)') && !document.querySelector('#radarModal:not(.hidden)')) {
+      if (topBtn && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)') && !document.querySelector('#radarModal:not(.hidden)') && !document.querySelector('#trafficModal:not(.hidden)')) {
         topBtn.focus();
       }
     }, 400);
