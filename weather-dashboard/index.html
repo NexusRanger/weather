@@ -906,6 +906,13 @@
         <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
       </div>
 
+      <!-- Radar Modal Pill -->
+      <button id="radarBtn" onclick="openRadarModal()" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer text-left group" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
+        <span class="text-xs">🛰️</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Radar:</span>
+        <span class="text-xs font-bold text-cyan-300 group-hover:text-cyan-200 flex items-center gap-1">Live Map ↗</span>
+      </button>
+
       <!-- Share Dashboard Pill -->
       <button id="shareBtn" onclick="openShareModal()" class="glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-sky-400 cursor-pointer text-left group" title="Share this dashboard or scan QR code" tabindex="0">
         <span class="text-xs">📲</span>
@@ -1231,11 +1238,75 @@
     </div>
   </div>
 
+  <!-- WEATHER RADAR & WIND MAP MODAL (WINDY EMBED) -->
+  <div id="radarModal" onclick="closeRadarModal()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-6 text-left cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-5 max-w-5xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[850px] cursor-default">
+      
+      <!-- Modal Header -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-lg shadow-md flex-shrink-0">
+            🛰️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                Live Weather Radar &amp; Wind Map
+              </h3>
+              <span id="radarLocationLabel" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">Local Area</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Live precipitation radar, wind vectors, and satellite cloud layers via Windy</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Layer Selector Buttons -->
+          <div class="inline-flex rounded-xl bg-black/40 border border-white/10 p-0.5 text-xs font-medium">
+            <button id="radarLayerRadarBtn" onclick="setRadarLayer('radar')" class="px-2.5 py-1 rounded-lg text-white bg-cyan-500/35 border border-cyan-400/50 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 shadow-sm" title="Precipitation Radar Loop">
+              <span>🌧️</span> Radar
+            </button>
+            <button id="radarLayerWindBtn" onclick="setRadarLayer('wind')" class="px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent" title="Live Wind Speed &amp; Streamlines">
+              <span>💨</span> Wind
+            </button>
+            <button id="radarLayerCloudsBtn" onclick="setRadarLayer('clouds')" class="px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent" title="Satellite Cloud Cover">
+              <span>☁️</span> Clouds
+            </button>
+            <button id="radarLayerRainBtn" onclick="setRadarLayer('rain')" class="px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent" title="Rain Forecast Accumulation">
+              <span>💧</span> Rain
+            </button>
+          </div>
+
+          <button id="closeRadarBtnTop" tabindex="1" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
+            <span>✕ Close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Iframe Container) -->
+      <div class="relative flex-1 min-h-0 w-full mt-3 rounded-xl overflow-hidden border border-white/10 bg-slate-950/80">
+        <iframe id="radarIframe" src="" class="w-full h-full border-0" loading="lazy" allow="fullscreen" title="Live Weather Radar and Wind Map"></iframe>
+        <div id="radarIframeLoading" class="absolute inset-0 flex items-center justify-center bg-slate-950/90 text-slate-400 text-xs font-mono pointer-events-none transition-opacity duration-300">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
+            <span>Loading live radar map...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer Note -->
+      <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono mt-2 flex-shrink-0">
+        <span>📍 Centered on your selected location • Zoom and drag with mouse, touch or TV remote</span>
+        <span class="text-slate-500">Press <strong class="text-slate-300">Esc</strong> or click outside to close</span>
+      </div>
+
+    </div>
+  </div>
+
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=81"></script>
+  <script src="traffic-flood.js?v=83"></script>
     <script>
-    const APP_BUILD = 82;
-    const APP_VERSION = '1.9.18';
+    const APP_BUILD = 83;
+    const APP_VERSION = '1.9.19';
 
     async function checkForUpdates() {
       try {
@@ -5099,6 +5170,10 @@
 
     // TV Remote & Back Button Handlers (Android TV, Tizen, webOS, browser history)
     window.addEventListener('popstate', (e) => {
+      const radarModal = document.getElementById('radarModal');
+      if (radarModal && !radarModal.classList.contains('hidden')) {
+        closeRadarModal(false);
+      }
       const mapModal = document.getElementById('historyMapModal');
       if (mapModal && !mapModal.classList.contains('hidden')) {
         closeHistoryMapModal(false);
@@ -5274,8 +5349,102 @@
       }
     }
 
+    // WEATHER RADAR & WIND MAP (WINDY EMBED LOGIC)
+    let currentRadarLayer = 'radar';
+
+    function getWindyEmbedUrl(lat, lon, layer = 'radar') {
+      const safeLat = (typeof lat === 'number' && !isNaN(lat)) ? lat : ((typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.70);
+      const safeLon = (typeof lon === 'number' && !isNaN(lon)) ? lon : ((typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.23);
+      const product = layer === 'radar' ? 'radar' : 'ecmwf';
+      return `https://embed.windy.com/embed2.html?lat=${safeLat.toFixed(3)}&lon=${safeLon.toFixed(3)}&detailLat=${safeLat.toFixed(3)}&detailLon=${safeLon.toFixed(3)}&width=100%25&height=100%25&zoom=8&level=surface&overlay=${layer}&product=${product}&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=mph&metricTemp=%C2%B0C&radarRange=-1`;
+    }
+
+    function openRadarModal() {
+      const modal = document.getElementById('radarModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      try {
+        if (!history.state || history.state.modal !== 'radarModal') {
+          history.pushState({ modal: 'radarModal' }, '');
+        }
+      } catch (_) {}
+
+      // Update location name badge
+      const locBadge = document.getElementById('radarLocationLabel');
+      if (locBadge && typeof CURRENT_LOCATION !== 'undefined') {
+        locBadge.textContent = CURRENT_LOCATION.name || `${CURRENT_LOCATION.lat.toFixed(2)}°N, ${Math.abs(CURRENT_LOCATION.lon).toFixed(2)}°W`;
+      }
+
+      updateRadarIframe(currentRadarLayer);
+
+      const closeBtn = document.getElementById('closeRadarBtnTop');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function updateRadarIframe(layer) {
+      currentRadarLayer = layer || 'radar';
+      const iframe = document.getElementById('radarIframe');
+      const loader = document.getElementById('radarIframeLoading');
+      if (!iframe) return;
+
+      const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.70;
+      const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.23;
+      const targetUrl = getWindyEmbedUrl(lat, lon, currentRadarLayer);
+
+      if (iframe.src !== targetUrl) {
+        if (loader) loader.classList.remove('hidden');
+        iframe.onload = () => {
+          if (loader) loader.classList.add('hidden');
+        };
+        iframe.src = targetUrl;
+      } else {
+        if (loader) loader.classList.add('hidden');
+      }
+
+      // Highlight active layer button
+      const layerBtns = {
+        radar: document.getElementById('radarLayerRadarBtn'),
+        wind: document.getElementById('radarLayerWindBtn'),
+        clouds: document.getElementById('radarLayerCloudsBtn'),
+        rain: document.getElementById('radarLayerRainBtn')
+      };
+
+      Object.entries(layerBtns).forEach(([k, btn]) => {
+        if (!btn) return;
+        if (k === currentRadarLayer) {
+          btn.className = 'px-2.5 py-1 rounded-lg text-white bg-cyan-500/35 border border-cyan-400/50 text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 shadow-sm';
+        } else {
+          btn.className = 'px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 text-[11px] transition cursor-pointer flex items-center gap-1 border border-transparent';
+        }
+      });
+    }
+
+    function setRadarLayer(layer) {
+      updateRadarIframe(layer);
+    }
+
+    function closeRadarModal(pop = true) {
+      const modal = document.getElementById('radarModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (pop && history.state && history.state.modal === 'radarModal') {
+        try { history.back(); } catch (_) {}
+      }
+    }
+
     function handleGlobalBack(e) {
       if (isTvBackKey(e)) {
+        const radarModal = document.getElementById('radarModal');
+        if (radarModal && !radarModal.classList.contains('hidden')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          closeRadarModal();
+          return false;
+        }
         const mapModal = document.getElementById('historyMapModal');
         if (mapModal && !mapModal.classList.contains('hidden')) {
           e.preventDefault();
@@ -5334,7 +5503,7 @@
     // TV Remote UX: Focus the top bar Location button on startup so focus starts cleanly at the top
     setTimeout(() => {
       const topBtn = document.getElementById('headerLocationBtn');
-      if (topBtn && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)')) {
+      if (topBtn && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)') && !document.querySelector('#radarModal:not(.hidden)')) {
         topBtn.focus();
       }
     }, 400);
