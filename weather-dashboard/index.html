@@ -424,6 +424,67 @@
       outline: none !important;
     }
 
+    /* Ambient TV idle mode: Suppress main-page yellow focus highlight after 10s of inactivity */
+    body.focus-dormant .tv-focus-amber:focus,
+    body.focus-dormant .tv-focus-amber:focus-visible,
+    body.focus-dormant #footerTimeline:focus,
+    body.focus-dormant #footerTimeline:focus-visible {
+      outline: none !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      background-color: transparent !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    /* Leaflet Radar & Map TV Zoom Buttons Focus Style */
+    .leaflet-control-zoom a:focus,
+    .leaflet-control-zoom a:focus-visible {
+      outline: none !important;
+      border: 2px solid #fbbf24 !important;
+      background-color: rgba(245, 158, 11, 0.45) !important;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.7) !important;
+      color: #fbbf24 !important;
+    }
+
+    /* Location Map: Long thin luminous pointer connecting popup to map pin without obscuring neighborhood */
+    .history-map-tall-popup .leaflet-popup-content-wrapper {
+      background: rgba(15, 23, 42, 0.94) !important;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 16px rgba(56, 189, 248, 0.25) !important;
+      border-radius: 14px !important;
+    }
+    .history-map-tall-popup .leaflet-popup-tip-container {
+      width: 14px !important;
+      height: 38px !important;
+      margin-top: -1px;
+      overflow: visible;
+    }
+    .history-map-tall-popup .leaflet-popup-tip {
+      display: none !important;
+    }
+    .history-map-tall-popup .leaflet-popup-tip-container::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 0;
+      width: 2px;
+      height: 38px;
+      background: linear-gradient(to bottom, #38bdf8, rgba(56, 189, 248, 0.35));
+      box-shadow: 0 0 6px rgba(56, 189, 248, 0.7);
+    }
+    .history-map-tall-popup .leaflet-popup-tip-container::after {
+      content: '';
+      position: absolute;
+      left: 4.5px;
+      bottom: -3px;
+      width: 5px;
+      height: 5px;
+      border-radius: 9999px;
+      background: #38bdf8;
+      box-shadow: 0 0 8px #38bdf8;
+    }
+
     .ambient-glow {
       position: fixed;
       top: -15%;
@@ -581,16 +642,16 @@
           <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink" style="max-width: min(320px, 30vw);" onclick="openLocationModal()" title="Click to change location">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth</span>
           </h1>
-          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none">
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span id="headerPostcodeBadge">GL5 5HH</span>
             <span class="text-[8px] text-indigo-400">✏️</span>
           </button>
-          <button tabindex="-1" onclick="detectCurrentLocation()" title="Use Current GPS Location" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+          <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Use Current GPS Location" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span id="gpsButtonIcon">📍</span>
             <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
           </button>
           <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline flex-shrink-0 whitespace-nowrap">51.70°N, 2.23°W</span>
-          <button id="headerGlobeBtn" tabindex="0" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="tv-focus-amber p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none" aria-label="Location History Map">
+          <button id="headerGlobeBtn" tabindex="-1" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none cursor-default" aria-label="Location History Map">
             <svg class="w-4 h-4 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
               <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
@@ -614,7 +675,7 @@
 
         <!-- TV Zoom / Scale Selector (hidden on mobile portrait) -->
         <div class="tv-only flex items-center gap-0.5 bg-black/40 rounded-lg p-0.5 border border-white/10 text-xs">
-          <button tabindex="-1" onclick="adjustScale(-0.05)" title="Zoom Out / Shrink layout" class="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center">
+          <button id="zoomOutBtn" tabindex="0" onclick="adjustScale(-0.05)" title="Zoom Out / Shrink layout" class="tv-focus-amber p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center focus:outline-none cursor-pointer">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7"></circle>
               <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
@@ -622,7 +683,7 @@
             </svg>
           </button>
           <span id="scaleLabel" class="text-[10px] font-mono px-1 text-slate-400">100%</span>
-          <button tabindex="-1" onclick="adjustScale(0.05)" title="Zoom In / Enlarge layout" class="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center">
+          <button id="zoomInBtn" tabindex="0" onclick="adjustScale(0.05)" title="Zoom In / Enlarge layout" class="tv-focus-amber p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center focus:outline-none cursor-pointer">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7"></circle>
               <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
@@ -633,12 +694,12 @@
         </div>
 
         <div class="flex items-center gap-1">
-          <button tabindex="-1" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="tv-only p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition">
+          <button id="fullscreenBtn" tabindex="0" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="tv-focus-amber tv-only p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition focus:outline-none cursor-pointer">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
             </svg>
           </button>
-          <button tabindex="-1" onclick="reloadDashboard()" title="Reload Dashboard (Full Page & Data Refresh)" class="p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition group">
+          <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Reload Dashboard (Full Page & Data Refresh)" class="tv-focus-amber p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition group focus:outline-none cursor-pointer">
             <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
@@ -1125,7 +1186,7 @@
 
   
   <!-- SHARE DASHBOARD / QR CODE MODAL -->
-  <div id="shareModal" onclick="closeShareModal()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 md:p-6 text-left cursor-pointer">
+  <div id="shareModal" onclick="closeShareModal()" onmousemove="resetShareAutoCloseTimer()" onkeydown="resetShareAutoCloseTimer()" ontouchstart="resetShareAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 md:p-6 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-lg w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
       
       <!-- Modal Header -->
@@ -1135,14 +1196,17 @@
             📲
           </div>
           <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              Share Dashboard
-            </h3>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                Share Dashboard
+              </h3>
+              <span id="shareCountdownBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 flex items-center gap-1 whitespace-nowrap" title="Auto-closes after 40s of inactivity"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> Auto-close: <span id="shareCountdownSecs">40s</span></span>
+            </div>
             <p class="text-[11px] text-slate-400">Scan QR code or copy link to open on phone, tablet, or TV</p>
           </div>
         </div>
         <button id="closeShareBtnTop" tabindex="1" onclick="closeShareModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('copyShareLinkBtn');if(b){event.preventDefault();b.focus();}}" title="Close Share (Esc / Back)">
-          <span>✕ Close</span>
+          <span>✕ Close <span id="shareBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(40s)</span></span>
         </button>
       </div>
 
@@ -1200,7 +1264,7 @@
                 <span>📺</span> Smart TV &amp; Shield
               </div>
               <p class="text-[10px] text-slate-300 leading-snug">
-                <strong class="text-emerald-300">Looks best on TV!</strong> Open in TV browser (<strong class="text-sky-300">TV Bro</strong>, Samsung, Silk) &amp; press <strong class="text-amber-300">F</strong>. Full remote control &amp; auto-refresh.
+                <strong class="text-emerald-300">Looks best on TV!</strong> (<strong class="text-amber-300">TV Bro recommended</strong> on Shield / Android TV, also works on Samsung &amp; Silk). Press <strong class="text-sky-300">F</strong> for fullscreen. Full D-pad remote control &amp; auto-refresh.
               </p>
             </div>
 
@@ -1487,12 +1551,12 @@
 
         <div class="flex items-center gap-2">
           <!-- Re-center Button -->
-          <button id="radarRecenterBtn" onclick="recenterRadarMap()" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Re-center on Location">
+          <button id="radarRecenterBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}" onclick="recenterRadarMap()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Re-center on Location">
             <span>🎯</span> Re-center
           </button>
 
           <!-- Close Button with visible 20s countdown -->
-          <button id="closeRadarBtnTop" tabindex="1" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
+          <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const r=document.getElementById('radarRecenterBtn')||document.querySelector('#radarModal .leaflet-control-zoom-in');if(r){event.preventDefault();r.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
             <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(20s)</span></span>
           </button>
         </div>
@@ -1550,10 +1614,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=92"></script>
+  <script src="traffic-flood.js?v=93"></script>
     <script>
-    const APP_BUILD = 92;
-    const APP_VERSION = '1.9.28';
+    const APP_BUILD = 93;
+    const APP_VERSION = '1.9.29';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1606,6 +1670,16 @@
       );
       if (!openModal) return;
 
+      // If currently on leaflet-control-zoom-out, allow Up arrow to focus leaflet-control-zoom-in!
+      if (document.activeElement && document.activeElement.classList.contains('leaflet-control-zoom-out')) {
+        const zoomIn = openModal.querySelector('.leaflet-control-zoom-in');
+        if (zoomIn) {
+          e.preventDefault();
+          zoomIn.focus();
+          return;
+        }
+      }
+
       const topCloseBtn = openModal.querySelector('button[id^="close"][id$="Top"]');
       if (!topCloseBtn) return;
 
@@ -1621,6 +1695,19 @@
     }, true);
 
     // D-Pad Page Flow: Natural, logical navigation between Header <-> Status Strip <-> Bottom Panel
+    function getHeaderNavButtons() {
+      const list = [
+        document.getElementById('headerLocationBtn'),
+        document.getElementById('gpsHeaderBtn'),
+        (typeof isMapUnlocked === 'function' && isMapUnlocked()) ? document.getElementById('headerGlobeBtn') : null,
+        document.getElementById('zoomOutBtn'),
+        document.getElementById('zoomInBtn'),
+        document.getElementById('fullscreenBtn'),
+        document.getElementById('reloadBtn')
+      ];
+      return list.filter(el => el && !el.classList.contains('hidden') && el.offsetParent !== null);
+    }
+
     window.addEventListener('keydown', function handleMainPageDpadNavigation(e) {
       // Ignore if any modal is open
       const modalOpen = document.querySelector(
@@ -1629,6 +1716,7 @@
       if (modalOpen) return;
 
       const active = document.activeElement;
+      const headerBtns = getHeaderNavButtons();
       const pills = [
         document.getElementById('trafficPill'),
         document.getElementById('riverPill'),
@@ -1639,11 +1727,10 @@
 
       const footer = document.getElementById('footerTimeline');
       const locBtn = document.getElementById('headerLocationBtn');
-      const globeBtn = document.getElementById('headerGlobeBtn');
 
       if (e.key === 'ArrowDown') {
-        // From header down to status strip pills
-        if (active === locBtn || active === globeBtn) {
+        // From any header button down to status strip pills
+        if (headerBtns.includes(active)) {
           e.preventDefault();
           const target = pills[0] || footer;
           if (target) target.focus();
@@ -1673,27 +1760,76 @@
           }
         }
       } else if (e.key === 'ArrowLeft') {
+        // Horizontal navigation inside header
+        const hIdx = headerBtns.indexOf(active);
+        if (hIdx > 0) {
+          e.preventDefault();
+          headerBtns[hIdx - 1].focus();
+        }
         // Horizontal navigation inside status strip
-        const idx = pills.indexOf(active);
-        if (idx > 0) {
+        const pIdx = pills.indexOf(active);
+        if (pIdx > 0) {
           e.preventDefault();
-          pills[idx - 1].focus();
-        } else if (active === globeBtn && locBtn) {
-          e.preventDefault();
-          locBtn.focus();
+          pills[pIdx - 1].focus();
         }
       } else if (e.key === 'ArrowRight') {
+        // Horizontal navigation inside header
+        const hIdx = headerBtns.indexOf(active);
+        if (hIdx >= 0 && hIdx < headerBtns.length - 1) {
+          e.preventDefault();
+          headerBtns[hIdx + 1].focus();
+        }
         // Horizontal navigation inside status strip
-        const idx = pills.indexOf(active);
-        if (idx >= 0 && idx < pills.length - 1) {
+        const pIdx = pills.indexOf(active);
+        if (pIdx >= 0 && pIdx < pills.length - 1) {
           e.preventDefault();
-          pills[idx + 1].focus();
-        } else if (active === locBtn && globeBtn) {
-          e.preventDefault();
-          globeBtn.focus();
+          pills[pIdx + 1].focus();
         }
       }
     });
+
+    // 10-Second Focus Inactivity Timer: Clears main-page yellow highlight when idle
+    let mainPageFocusIdleTimer = null;
+    function resetMainPageFocusActivity() {
+      document.body.classList.remove('focus-dormant');
+      if (mainPageFocusIdleTimer) {
+        clearTimeout(mainPageFocusIdleTimer);
+      }
+      mainPageFocusIdleTimer = setTimeout(() => {
+        const modalOpen = document.querySelector(
+          '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+        );
+        if (!modalOpen) {
+          document.body.classList.add('focus-dormant');
+          if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+          }
+        }
+      }, 10000);
+    }
+    ['keydown', 'pointerdown', 'mousemove', 'touchstart'].forEach(evt => {
+      window.addEventListener(evt, resetMainPageFocusActivity, { passive: true });
+    });
+    resetMainPageFocusActivity();
+
+    // Map Button Visibility & TV Focus Sync (Only focusable if unlocked)
+    function syncMapButtonState() {
+      const btn = document.getElementById('headerGlobeBtn');
+      if (!btn) return;
+      if (typeof isMapUnlocked === 'function' && isMapUnlocked()) {
+        btn.tabIndex = 0;
+        btn.classList.add('tv-focus-amber');
+        btn.classList.remove('cursor-default');
+        btn.classList.add('cursor-pointer');
+        btn.setAttribute('aria-hidden', 'false');
+      } else {
+        btn.tabIndex = -1;
+        btn.classList.remove('tv-focus-amber');
+        btn.classList.add('cursor-default');
+        btn.classList.remove('cursor-pointer');
+        btn.setAttribute('aria-hidden', 'true');
+      }
+    }
 
     async function checkForUpdates() {
       try {
@@ -2413,7 +2549,9 @@
           closeButton: true,
           autoPan: false, // Prevents map from jumping when auto-opening popups during tablet finger panning
           closeOnClick: false,
-          minWidth: 185
+          minWidth: 185,
+          offset: [0, -48],
+          className: 'history-map-tall-popup'
         });
 
         marker.on('click', (e) => {
@@ -3315,6 +3453,7 @@
       // Check for secret map unlock password
       if (q.toLowerCase() === 'showmethemap') {
         try { localStorage.setItem('ambient_map_unlocked', 'true'); } catch (_) {}
+        syncMapButtonState();
         if (status) {
           status.style.color = '#38bdf8';
           status.textContent = '✅ Map access unlocked on this device!';
@@ -3331,6 +3470,7 @@
       if (q.toLowerCase() === 'show feedback' || q.toLowerCase() === 'showfeedback') {
         try { localStorage.setItem('ambient_feedback_unlocked', 'true'); } catch (_) {}
         checkFeedbackPillVisibility();
+    syncMapButtonState();
         if (status) {
           status.style.color = '#fbbf24';
           status.textContent = '⭐ Feedback button unlocked on this device!';
@@ -3347,6 +3487,7 @@
       if (q.toLowerCase() === 'hide feedback' || q.toLowerCase() === 'hidefeedback') {
         try { localStorage.removeItem('ambient_feedback_unlocked'); } catch (_) {}
         checkFeedbackPillVisibility();
+    syncMapButtonState();
         if (status) {
           status.style.color = '#94a3b8';
           status.textContent = '🔒 Feedback button hidden.';
@@ -3358,6 +3499,7 @@
       // Optional re-lock code
       if (q.toLowerCase() === 'hidethemap' || q.toLowerCase() === 'lockthemap') {
         try { localStorage.removeItem('ambient_map_unlocked'); } catch (_) {}
+        syncMapButtonState();
         if (status) {
           status.style.color = '#f43f5e';
           status.textContent = '🔒 Map locked on this device.';
@@ -5657,6 +5799,42 @@
       );
     }
 
+    let shareAutoCloseTimer = null;
+    let shareAutoCloseSecs = 40;
+
+    function resetShareAutoCloseTimer() {
+      if (shareAutoCloseTimer) {
+        clearInterval(shareAutoCloseTimer);
+        shareAutoCloseTimer = null;
+      }
+      shareAutoCloseSecs = 40;
+      updateShareCountdownDisplay();
+      shareAutoCloseTimer = setInterval(() => {
+        shareAutoCloseSecs--;
+        updateShareCountdownDisplay();
+        if (shareAutoCloseSecs <= 0) {
+          stopShareAutoCloseTimer();
+          closeShareModal();
+        }
+      }, 1000);
+    }
+
+    function updateShareCountdownDisplay() {
+      const secsEl = document.getElementById('shareCountdownSecs');
+      if (secsEl) secsEl.textContent = `${shareAutoCloseSecs}s`;
+      const btnEl = document.getElementById('shareBtnCountdown');
+      if (btnEl) btnEl.textContent = `(${shareAutoCloseSecs}s)`;
+    }
+
+    function stopShareAutoCloseTimer() {
+      if (shareAutoCloseTimer) {
+        clearInterval(shareAutoCloseTimer);
+        shareAutoCloseTimer = null;
+      }
+      shareAutoCloseSecs = 40;
+      updateShareCountdownDisplay();
+    }
+
     function openShareModal() {
       const modal = document.getElementById('shareModal');
       if (!modal) return;
@@ -5668,6 +5846,9 @@
           history.pushState({ modal: 'shareModal' }, '');
         }
       } catch (_) {}
+
+      // Start 40s auto-revert countdown
+      resetShareAutoCloseTimer();
 
       // Generate current share URL with postcode or coordinates/location
       let shareUrl = window.location.href;
@@ -5743,6 +5924,7 @@
     }
 
     function closeShareModal(pop = true) {
+      stopShareAutoCloseTimer();
       const modal = document.getElementById('shareModal');
       if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.add('hidden');
@@ -5827,6 +6009,54 @@
           radarCanvasEl.addEventListener('keydown', handleGlobalBack, true);
           radarCanvasEl.addEventListener('keyup', handleGlobalBack, true);
         }
+
+        // Setup Leaflet zoom buttons for TV remote D-Pad navigation
+        setTimeout(() => {
+          const mapEl = document.getElementById('radarLeafletMap');
+          if (!mapEl) return;
+          const zoomIn = mapEl.querySelector('.leaflet-control-zoom-in');
+          const zoomOut = mapEl.querySelector('.leaflet-control-zoom-out');
+          if (zoomIn) {
+            zoomIn.setAttribute('tabindex', '0');
+            zoomIn.classList.add('tv-focus-amber');
+            zoomIn.title = 'Zoom in (+)';
+            zoomIn.addEventListener('keydown', (e) => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (zoomOut) zoomOut.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                const target = document.getElementById('radarRecenterBtn') || document.getElementById('closeRadarBtnTop');
+                if (target) target.focus();
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (radarLeafletMap) radarLeafletMap.zoomIn();
+              }
+            });
+          }
+          if (zoomOut) {
+            zoomOut.setAttribute('tabindex', '0');
+            zoomOut.classList.add('tv-focus-amber');
+            zoomOut.title = 'Zoom out (-)';
+            zoomOut.addEventListener('keydown', (e) => {
+              if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (zoomIn) zoomIn.focus();
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                const target = document.getElementById('radarRecenterBtn') || document.getElementById('closeRadarBtnTop');
+                if (target) target.focus();
+              } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const playBtn = document.getElementById('radarPlayBtn');
+                if (playBtn) playBtn.focus();
+              } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (radarLeafletMap) radarLeafletMap.zoomOut();
+              }
+            });
+          }
+        }, 250);
 
         // Dark Canvas Base layer (No API key required, zero watermark)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
@@ -6485,6 +6715,7 @@
     setInterval(updateClock, 1000);
 
     checkFeedbackPillVisibility();
+    syncMapButtonState();
 
     initLocation();
     setInterval(fetchWeatherData, 15 * 60 * 1000);
