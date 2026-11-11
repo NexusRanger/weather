@@ -519,7 +519,7 @@
 
   <!-- AUTO-UPDATE NOTIFICATION BANNER -->
   <div id="updateBanner" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden">
-    <button id="applyUpdateBtn" onclick="applyAppUpdate()" class="tv-focus-amber px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-sky-600 to-indigo-600 hover:from-indigo-500 hover:to-sky-500 text-white text-xs font-semibold shadow-[0_0_20px_rgba(99,102,241,0.6)] border border-white/20 flex items-center gap-2.5 transition transform hover:scale-105 active:scale-95 animate-pulse focus:outline-none" title="Press Enter / OK to reload with new update">
+    <button id="applyUpdateBtn" tabindex="0" onclick="applyAppUpdate()" onkeydown="handleUpdateBannerKeydown(event)" class="tv-focus-amber px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-sky-600 to-indigo-600 hover:from-indigo-500 hover:to-sky-500 text-white text-xs font-semibold shadow-[0_0_20px_rgba(99,102,241,0.6)] border border-white/20 flex items-center gap-2.5 transition transform hover:scale-105 active:scale-95 animate-pulse focus:outline-none cursor-pointer" title="Press Enter / OK to reload with new update">
       <span class="text-sm">✨</span>
       <span id="updateBannerText">New dashboard update ready</span>
       <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-normal">Press OK to reload</span>
@@ -1423,10 +1423,52 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=88"></script>
+  <script src="traffic-flood.js?v=89"></script>
     <script>
-    const APP_BUILD = 88;
-    const APP_VERSION = '1.9.24';
+    const APP_BUILD = 89;
+    const APP_VERSION = '1.9.25';
+
+    function handleUpdateBannerKeydown(e) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const target = document.getElementById('headerLocationBtn') || document.getElementById('headerLocationTitle');
+        if (target && typeof target.focus === 'function') target.focus();
+      } else if (e.key === 'ArrowUp') {
+        // Uppermost focus lock: holding Up keeps focus on update banner
+        e.preventDefault();
+      }
+    }
+
+    // D-Pad UX: Quick jump to update banner when holding Up button
+    window.addEventListener('keydown', function handleDpadUpdateBanner(e) {
+      if (e.key !== 'ArrowUp') return;
+
+      const banner = document.getElementById('updateBanner');
+      if (!banner || banner.classList.contains('hidden')) return;
+
+      const updateBtn = document.getElementById('applyUpdateBtn');
+      if (!updateBtn) return;
+
+      // Do not redirect if any modal is currently visible
+      const modalOpen = document.querySelector('#locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #radarModal:not(.hidden), #trafficModal:not(.hidden)');
+      if (modalOpen) return;
+
+      if (document.activeElement === updateBtn) {
+        e.preventDefault();
+        return;
+      }
+
+      const active = document.activeElement;
+      const header = document.querySelector('header');
+      const inHeader = header && (header.contains(active) || active === header);
+      const nearTop = active && active.getBoundingClientRect && (active.getBoundingClientRect().top <= 140);
+      const isBodyOrNull = !active || active === document.body;
+
+      if (inHeader || nearTop || isBodyOrNull) {
+        e.preventDefault();
+        updateBtn.focus();
+      }
+    }, true);
 
     async function checkForUpdates() {
       try {
@@ -1604,9 +1646,37 @@
       });
     }
 
+    // Modal pre-focus preservation (restores user's position upon closing windows)
+    let lastFocusedElementBeforeModal = null;
+
+    function savePreModalFocus(fallbackElId) {
+      const active = document.activeElement;
+      if (active && active !== document.body && !active.closest('.fixed.inset-0')) {
+        lastFocusedElementBeforeModal = active;
+      } else if (fallbackElId) {
+        lastFocusedElementBeforeModal = document.getElementById(fallbackElId);
+      }
+    }
+
+    function restorePreModalFocus(fallbackElId) {
+      setTimeout(() => {
+        let target = lastFocusedElementBeforeModal;
+        if (!target || !document.body.contains(target) || typeof target.focus !== 'function') {
+          if (fallbackElId) {
+            target = document.getElementById(fallbackElId);
+          }
+        }
+        if (target && typeof target.focus === 'function') {
+          try { target.focus(); } catch (_) {}
+        }
+        lastFocusedElementBeforeModal = null;
+      }, 50);
+    }
+
     function openFeedbackModal() {
       const modal = document.getElementById('feedbackModal');
       if (!modal) return;
+      savePreModalFocus('feedbackBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       try {
@@ -1623,11 +1693,11 @@
         document.activeElement.blur();
       }
 
-      // Standardized 0.8s (800ms) delay to prominently highlight the Close button
+      // Standardized 1.2s (1200ms) delay to prominently highlight the Close button
       setTimeout(() => {
         const closeBtn = document.getElementById('closeFeedbackBtnTop');
         if (closeBtn) closeBtn.focus();
-      }, 800);
+      }, 1200);
     }
 
     function closeFeedbackModal(pop = true) {
@@ -1638,6 +1708,7 @@
       if (pop && history.state && history.state.modal === 'feedbackModal') {
         try { history.back(); } catch (_) {}
       }
+      restorePreModalFocus('feedbackBtn');
     }
 
     async function submitUserFeedback() {
@@ -1791,6 +1862,7 @@
       }
       const modal = document.getElementById('historyMapModal');
       if (!modal) return;
+      savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       try {
@@ -1806,12 +1878,12 @@
 
       initOrRefreshHistoryMap();
 
-      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
+      // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
       // and then the Close button prominently highlights in warm amber-yellow.
       setTimeout(() => {
         const btn = document.getElementById('closeMapBtnTop');
         if (btn) btn.focus();
-      }, 800);
+      }, 1200);
     }
 
     function closeHistoryMapModal(pop = true) {
@@ -1822,11 +1894,7 @@
       if (pop && history.state && history.state.modal === 'historyMap') {
         try { history.back(); } catch (_) {}
       }
-      // Return focus cleanly to the top bar Location button
-      setTimeout(() => {
-        const topBtn = document.getElementById('headerLocationBtn');
-        if (topBtn) topBtn.focus();
-      }, 100);
+      restorePreModalFocus('headerGlobeBtn');
     }
 
     function clearHistoryQueries() {
@@ -2955,6 +3023,7 @@
       const status = document.getElementById('locationSearchStatus');
       if (status) status.textContent = '';
       resetSmartLocationInputState();
+      savePreModalFocus('headerLocationBtn');
       if (input) {
         input.value = '';
       }
@@ -2970,14 +3039,14 @@
         document.activeElement.blur();
       }
 
-      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
+      // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
       // and then the Close button prominently highlights in warm amber-yellow so you know where you are.
       setTimeout(() => {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) {
           closeBtn.focus();
         }
-      }, 800);
+      }, 1200);
     }
 
     function closeLocationModal(pop = true) {
@@ -2989,6 +3058,7 @@
           try { history.back(); } catch (_) {}
         }
       }
+      restorePreModalFocus('headerLocationBtn');
     }
 
     async function searchLocationFromModal() {
@@ -5349,6 +5419,7 @@
     function openShareModal() {
       const modal = document.getElementById('shareModal');
       if (!modal) return;
+      savePreModalFocus('shareBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       try {
@@ -5413,12 +5484,12 @@
         document.activeElement.blur();
       }
 
-      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
+      // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
       // and then the Close button lights up in warm amber-yellow.
       setTimeout(() => {
         const closeBtn = document.getElementById('closeShareBtnTop');
         if (closeBtn) closeBtn.focus();
-      }, 800);
+      }, 1200);
     }
 
     function renderQrFallback(container, url) {
@@ -5438,6 +5509,7 @@
       if (pop && history.state && history.state.modal === 'shareModal') {
         try { history.back(); } catch (_) {}
       }
+      restorePreModalFocus('shareBtn');
     }
 
     async function copyShareUrl() {
@@ -5705,6 +5777,7 @@
     function openRadarModal() {
       const modal = document.getElementById('radarModal');
       if (!modal) return;
+      savePreModalFocus('radarBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
@@ -5727,12 +5800,12 @@
       initOrRefreshRadarMap();
       resetRadarAutoCloseTimer();
 
-      // TV D-Pad UX: Standardized 0.8s (800ms) delay so the modal opens smoothly first,
+      // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
       // and then the Close button prominently highlights in warm amber-yellow.
       setTimeout(() => {
         const closeBtn = document.getElementById('closeRadarBtnTop');
         if (closeBtn) closeBtn.focus();
-      }, 800);
+      }, 1200);
     }
 
     function closeRadarModal(pop = true) {
@@ -5745,6 +5818,7 @@
       if (pop && history.state && history.state.modal === 'radarModal') {
         try { history.back(); } catch (_) {}
       }
+      restorePreModalFocus('radarBtn');
     }
 
     // TRAFFIC & CONGESTION MODAL LOGIC (READS BACKGROUND CACHE ONLY - ZERO EXTRA API CALLS)
@@ -5785,6 +5859,7 @@
     function openTrafficModal() {
       const modal = document.getElementById('trafficModal');
       if (!modal) return;
+      savePreModalFocus('trafficPill');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
@@ -5805,11 +5880,11 @@
       // Start 20s auto-revert timer
       resetTrafficAutoCloseTimer();
 
-      // Standardized 0.8s (800ms) delay to prominently highlight the Close button
+      // Standardized 1.2s (1200ms) delay to prominently highlight the Close button
       setTimeout(() => {
         const closeBtn = document.getElementById('closeTrafficBtnTop');
         if (closeBtn) closeBtn.focus();
-      }, 800);
+      }, 1200);
     }
 
     function populateTrafficModalData() {
@@ -5915,6 +5990,7 @@
       if (pop && history.state && history.state.modal === 'trafficModal') {
         try { history.back(); } catch (_) {}
       }
+      restorePreModalFocus('trafficPill');
     }
 
     function handleGlobalBack(e) {
