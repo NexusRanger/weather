@@ -76,6 +76,44 @@
       background: #030712 !important;
       font-family: inherit !important;
     }
+
+    /* Bulletproof Leaflet TV & Embedded Browser Tile Fixes (prevents rounded tiles & subpixel gaps) */
+    .leaflet-pane,
+    .leaflet-tile,
+    .leaflet-marker-icon,
+    .leaflet-marker-shadow,
+    .leaflet-tile-container,
+    .leaflet-pane > svg,
+    .leaflet-pane > canvas,
+    .leaflet-zoom-box,
+    .leaflet-image-layer,
+    .leaflet-layer {
+      position: absolute !important;
+      left: 0;
+      top: 0;
+    }
+    .leaflet-tile,
+    .leaflet-tile-container img,
+    .leaflet-container img.leaflet-tile {
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: none !important;
+      max-height: none !important;
+      outline: 1px solid transparent !important;
+      transform-style: flat !important;
+      -webkit-transform-style: flat !important;
+      image-rendering: -webkit-optimize-contrast;
+    }
+    .leaflet-tile {
+      filter: inherit;
+      visibility: hidden;
+    }
+    .leaflet-tile-loaded {
+      visibility: inherit !important;
+    }
     .leaflet-bar a {
       background-color: rgba(15, 23, 42, 0.9) !important;
       color: #94a3b8 !important;
@@ -1423,10 +1461,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=89"></script>
+  <script src="traffic-flood.js?v=90"></script>
     <script>
-    const APP_BUILD = 89;
-    const APP_VERSION = '1.9.25';
+    const APP_BUILD = 90;
+    const APP_VERSION = '1.9.26';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -2226,7 +2264,10 @@
           zoomControl: true,
           attributionControl: false, // Remove bottom-right Leaflet link & Ukrainian flag
           keyboard: false,           // Prevent Leaflet from trapping TV D-pad navigation
-          boxZoom: false
+          boxZoom: false,
+          zoomSnap: 1,
+          zoomDelta: 1,
+          fadeAnimation: false
         }).setView([40, -10], 2);
 
         // Remove Leaflet map container and controls from D-pad tab order so TV remote only uses bottom shortcuts & Close
@@ -2250,13 +2291,15 @@
         // Dark Canvas Base layer (No API key required)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
-          maxZoom: 16
+          maxZoom: 16,
+          detectRetina: false
         }).addTo(historyLeafletMap);
 
         // Dark Labels overlay
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
-          maxZoom: 16
+          maxZoom: 16,
+          detectRetina: false
         }).addTo(historyLeafletMap);
 
         historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
@@ -5573,19 +5616,24 @@
           zoomControl: true,
           attributionControl: false, // Absolutely zero links or watermark flags
           keyboard: false,
-          boxZoom: false
+          boxZoom: false,
+          zoomSnap: 1,        // Strictly snap to whole integer zoom levels to eliminate TV subpixel tile gaps
+          zoomDelta: 1,
+          fadeAnimation: false // Avoid GPU texture tearing / ghost tiles on older TV processors
         }).setView([lat, lon], RADAR_DEFAULT_ZOOM);
 
         // Dark Canvas Base layer (No API key required, zero watermark)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
-          maxZoom: 16
+          maxZoom: 16,
+          detectRetina: false
         }).addTo(radarLeafletMap);
 
         // Dark Labels overlay (Town names, roads)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
-          maxZoom: 16
+          maxZoom: 16,
+          detectRetina: false
         }).addTo(radarLeafletMap);
 
         // Pulsing Location Beacon
@@ -5638,7 +5686,8 @@
             opacity: 0,
             zIndex: 100 + i,
             maxNativeZoom: 7, // RainViewer free tier max native zoom is 7; smoothly upscales for zoom 8-16
-            maxZoom: 16
+            maxZoom: 16,
+            detectRetina: false
           });
           layer.addTo(radarLeafletMap);
           radarTileLayers.push(layer);
