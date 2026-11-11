@@ -1550,9 +1550,9 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Re-center Button -->
-          <button id="radarRecenterBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}" onclick="recenterRadarMap()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Re-center on Location">
-            <span>🎯</span> Re-center
+          <!-- Reset View Button -->
+          <button id="radarRecenterBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z){event.preventDefault();z.focus();}}" onclick="recenterRadarMap()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Reset Map View (Zoom &amp; Location)">
+            <span>🎯</span> Reset
           </button>
 
           <!-- Close Button with visible 20s countdown -->
@@ -1614,10 +1614,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=93"></script>
+  <script src="traffic-flood.js?v=94"></script>
     <script>
-    const APP_BUILD = 93;
-    const APP_VERSION = '1.9.29';
+    const APP_BUILD = 94;
+    const APP_VERSION = '1.9.30';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5374,8 +5374,8 @@
             cardBorderBg = 'bg-sky-500/20 border-cyan-400 shadow-[0_0_10px_rgba(56,189,248,0.35)] ring-1 ring-cyan-400';
             timeBadgeHtml = `<span class="text-[7.5px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-cyan-400 text-slate-950 uppercase tracking-tight leading-none shadow-[0_0_6px_rgba(6,182,212,0.8)]" title="Current Hour (Now)">Now</span>`;
           } else if (isMidday) {
-            cardBorderBg = 'glass-tile border-amber-400/40 bg-amber-400/10 shadow-[0_0_6px_rgba(251,191,36,0.15)]';
-            timeBadgeHtml = `<span class="text-[7.5px] font-mono font-bold px-1 py-0.2 rounded bg-amber-400/25 text-amber-300 border border-amber-400/35 leading-none" title="Midday / Noon (12:00)">12h ☀️</span>`;
+            // Unshaded card with clean blue arrow and label above the midday point
+            timeBadgeHtml = `<div class="flex flex-col items-center justify-center leading-tight -my-0.5" title="Midday (12:00)"><span class="text-[6.5px] font-bold tracking-tighter text-sky-400 uppercase font-mono">midday</span><svg class="w-2 h-1.5 text-sky-400 fill-current -mt-0.5" viewBox="0 0 10 8"><polygon points="0,0 10,0 5,7"/></svg></div>`;
           }
 
           const card = document.createElement('div');
@@ -5722,8 +5722,9 @@
           if (nowCard) cachedNowOffsetLeft = Math.max(0, nowCard.offsetLeft - 6);
         }
 
-        // If user scrolled left into the past
-        if (container.scrollLeft < cachedNowOffsetLeft - 25) {
+        // Auto-return to "Now" if scrolled away from Now (either left into overnight history OR right into future hours)
+        const scrollDelta = Math.abs(container.scrollLeft - cachedNowOffsetLeft);
+        if (scrollDelta > 25) {
           if (hourlyReturnToNowTimer) clearTimeout(hourlyReturnToNowTimer);
           hourlyReturnToNowTimer = setTimeout(() => {
             scrollToNow(true);
