@@ -1090,6 +1090,10 @@
             <button id="panoramicPrevBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(-1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Previous Day (Yesterday / Left Arrow)">◀</button>
             <span id="panoramicDayLabel" class="text-[9px] font-bold font-mono px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/35 whitespace-nowrap">Today (24h)</span>
             <button id="panoramicNextBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Next Day (Tomorrow / Right Arrow)">▶</button>
+            <button id="panoramicLockBtn" type="button" tabindex="0" onclick="event.stopPropagation(); togglePanoramicLock();" class="hidden tv-focus-amber px-2 py-0.2 ml-1 rounded-full bg-white/10 hover:bg-sky-500/25 border border-white/15 text-[9px] font-semibold font-mono text-slate-300 hover:text-white transition items-center gap-1 cursor-pointer focus:outline-none" title="Keep panoramic view open without timing out (Today &amp; Tomorrow only)">
+              <span id="panoramicLockIcon">🔓</span>
+              <span id="panoramicLockText">Lock Pano View</span>
+            </button>
           </div>
         </div>
         <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2.5 whitespace-nowrap">
@@ -1649,10 +1653,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=100"></script>
+  <script src="traffic-flood.js?v=101"></script>
     <script>
-    const APP_BUILD = 100;
-    const APP_VERSION = '1.9.36';
+    const APP_BUILD = 101;
+    const APP_VERSION = '1.9.37';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1782,23 +1786,36 @@
       ].filter(el => el && !el.classList.contains('hidden'));
 
       const footer = document.getElementById('footerTimeline');
+      const panoLockBtn = document.getElementById('panoramicLockBtn');
+      const isPanoLockVisible = panoLockBtn && !panoLockBtn.classList.contains('hidden') && panoLockBtn.offsetParent !== null;
       const locBtn = document.getElementById('headerLocationBtn');
 
       if (e.key === 'ArrowDown') {
         // From any header button down to status strip pills
         if (headerBtns.includes(active)) {
           e.preventDefault();
-          const target = pills[0] || footer;
+          const target = pills[0] || (isPanoLockVisible ? panoLockBtn : footer);
           if (target) target.focus();
         }
-        // From status strip pills down to the single bottom panel
+        // From status strip pills down to Lock Pano button (if visible) or bottom panel
         else if (pills.includes(active)) {
           e.preventDefault();
           if (footer) footer.focus();
         }
+        // From Lock Pano button down to bottom panel
+        else if (active === panoLockBtn) {
+          e.preventDefault();
+          if (footer) footer.focus();
+        }
       } else if (e.key === 'ArrowUp') {
-        // From bottom panel up to status strip pills
+        // From bottom panel up to Lock Pano button (if visible on Today/Tomorrow) or status strip pills
         if (active === footer) {
+          e.preventDefault();
+          const target = isPanoLockVisible ? panoLockBtn : (pills[0] || locBtn);
+          if (target) target.focus();
+        }
+        // From Lock Pano button up to status strip pills
+        else if (active === panoLockBtn) {
           e.preventDefault();
           const target = pills[0] || locBtn;
           if (target) target.focus();
@@ -1816,6 +1833,11 @@
           }
         }
       } else if (e.key === 'ArrowLeft') {
+        if (active === panoLockBtn && typeof stepPanoramicDay === 'function') {
+          e.preventDefault();
+          stepPanoramicDay(-1);
+          return;
+        }
         // Horizontal navigation inside header
         const hIdx = headerBtns.indexOf(active);
         if (hIdx > 0) {
@@ -1829,6 +1851,11 @@
           pills[pIdx - 1].focus();
         }
       } else if (e.key === 'ArrowRight') {
+        if (active === panoLockBtn && typeof stepPanoramicDay === 'function') {
+          e.preventDefault();
+          stepPanoramicDay(1);
+          return;
+        }
         // Horizontal navigation inside header
         const hIdx = headerBtns.indexOf(active);
         if (hIdx >= 0 && hIdx < headerBtns.length - 1) {
@@ -5563,13 +5590,78 @@
 
     let cachedHourlyData = null;
     let isHourlyCompressed = false;
-    let panoramicDayOffset = 0; // 0 = Next 24h, 1..6 = Upcoming Days, -1 = Past 24h
+    let panoramicDayOffset = 0; // 0 = Today, 1..9 = Upcoming Days, -1 = Yesterday
+    let isPanoramicLocked = false;
+    let hasRestoredPanoramicLock = false;
     let hourlyResetTimer = null;
     let hourlyReturnToNowTimer = null;
     let hourlyGlideRaf = null;
     let hourlyStepTarget = null;
     let isAutoGliding = false;
     let cachedNowOffsetLeft = 0;
+
+    function syncPanoramicLockUI() {
+      const lockBtn = document.getElementById('panoramicLockBtn');
+      const lockIcon = document.getElementById('panoramicLockIcon');
+      const lockText = document.getElementById('panoramicLockText');
+      const hintText = document.getElementById('timelineHintText');
+      const canLock = isHourlyCompressed && (panoramicDayOffset === 0 || panoramicDayOffset === 1);
+
+      if (!canLock) {
+        if (isPanoramicLocked) {
+          isPanoramicLocked = false;
+          try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
+        }
+        if (lockBtn) {
+          if (document.activeElement === lockBtn) {
+            const footer = document.getElementById('footerTimeline');
+            if (footer) footer.focus({ preventScroll: true });
+          }
+          lockBtn.classList.add('hidden');
+          lockBtn.classList.remove('inline-flex');
+        }
+      } else {
+        if (lockBtn) {
+          lockBtn.classList.remove('hidden');
+          lockBtn.classList.add('inline-flex');
+          if (isPanoramicLocked) {
+            if (lockIcon) lockIcon.textContent = '🔒';
+            if (lockText) lockText.textContent = 'Pano Locked';
+            lockBtn.classList.add('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
+            lockBtn.classList.remove('bg-white/10', 'border-white/15', 'text-slate-300');
+            lockBtn.title = 'Panoramic view locked (will not time out). Click to unlock.';
+          } else {
+            if (lockIcon) lockIcon.textContent = '🔓';
+            if (lockText) lockText.textContent = 'Lock Pano View';
+            lockBtn.classList.remove('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
+            lockBtn.classList.add('bg-white/10', 'border-white/15', 'text-slate-300');
+            lockBtn.title = 'Keep panoramic view open without timing out (Today & Tomorrow only)';
+          }
+        }
+      }
+
+      if (isHourlyCompressed && hintText) {
+        if (isPanoramicLocked && canLock) {
+          hintText.innerHTML = '<span>◀ Yesterday • Tomorrow ▶</span><span class="text-cyan-300 font-semibold">🔒 Pano Locked • Click / OK to exit</span>';
+        } else {
+          hintText.innerHTML = '<span>◀ Yesterday • Tomorrow ▶</span><span class="text-slate-500">Click / OK to exit • Auto-resets</span>';
+        }
+      }
+    }
+
+    function togglePanoramicLock() {
+      if (!isHourlyCompressed || (panoramicDayOffset !== 0 && panoramicDayOffset !== 1)) return;
+      isPanoramicLocked = !isPanoramicLocked;
+      if (isPanoramicLocked) {
+        try {
+          localStorage.setItem('ambient_pano_locked', JSON.stringify({ dayOffset: panoramicDayOffset }));
+        } catch (_) {}
+      } else {
+        try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
+      }
+      syncPanoramicLockUI();
+      resetPanoramicAutoTimer();
+    }
 
     function cancelHourlyGlide() {
       if (hourlyGlideRaf) {
@@ -5650,7 +5742,14 @@
     let panoramicSlideTimer = null;
 
     function resetPanoramicAutoTimer() {
-      if (hourlyResetTimer) clearTimeout(hourlyResetTimer);
+      if (hourlyResetTimer) {
+        clearTimeout(hourlyResetTimer);
+        hourlyResetTimer = null;
+      }
+      // If Pano View is locked on Today (0) or Tomorrow (1), do not time out
+      if (isPanoramicLocked && (panoramicDayOffset === 0 || panoramicDayOffset === 1)) {
+        return;
+      }
       hourlyResetTimer = setTimeout(() => {
         setHourlyCompressedMode(false);
       }, 20000);
@@ -5662,6 +5761,14 @@
       if (nextOffset !== panoramicDayOffset) {
         const dir = nextOffset > panoramicDayOffset ? 1 : -1;
         panoramicDayOffset = nextOffset;
+        if (panoramicDayOffset !== 0 && panoramicDayOffset !== 1) {
+          // Never allow lock to carry over onto other days
+          isPanoramicLocked = false;
+          try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
+        } else if (isPanoramicLocked) {
+          try { localStorage.setItem('ambient_pano_locked', JSON.stringify({ dayOffset: panoramicDayOffset })); } catch (_) {}
+        }
+        syncPanoramicLockUI();
         renderHourly(cachedHourlyData, dir, startDragPx);
       } else {
         // At boundary (-1 or +9): spring current row gently back to center
@@ -5762,6 +5869,23 @@
     function renderHourly(hourly, slideDirection = 0, startDragPx = 0) {
       if (!hourly || !hourly.time) return;
       cachedHourlyData = hourly;
+
+      if (!hasRestoredPanoramicLock) {
+        hasRestoredPanoramicLock = true;
+        try {
+          const raw = localStorage.getItem('ambient_pano_locked');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && (parsed.dayOffset === 0 || parsed.dayOffset === 1)) {
+              isPanoramicLocked = true;
+              setHourlyCompressedMode(true, parsed.dayOffset, false);
+              return;
+            } else {
+              localStorage.removeItem('ambient_pano_locked');
+            }
+          }
+        } catch (_) {}
+      }
 
       const container = document.getElementById('hourlyTimeline');
       if (!container) return;
@@ -6077,7 +6201,7 @@
       }
     }
 
-    function setHourlyCompressedMode(compressed) {
+    function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true) {
       isHourlyCompressed = compressed;
       const footer = document.getElementById('footerTimeline');
       const title = document.getElementById('timelineTitle');
@@ -6087,23 +6211,24 @@
       if (hourlyResetTimer) { clearTimeout(hourlyResetTimer); hourlyResetTimer = null; }
 
       if (compressed) {
-        panoramicDayOffset = 0;
+        panoramicDayOffset = (initialOffset === 0 || initialOffset === 1) ? initialOffset : 0;
         if (title) title.textContent = '24-Hour Panoramic:';
         if (dayNav) {
           dayNav.classList.remove('hidden');
           dayNav.classList.add('inline-flex');
         }
-        if (hintText) {
-          hintText.innerHTML = '<span>◀ Yesterday • Tomorrow ▶</span><span class="text-slate-500">Click / OK to exit • Auto-resets</span>';
-        }
+        syncPanoramicLockUI();
         renderHourly(cachedHourlyData);
 
         // Maintain focus on #footerTimeline so clicking/pressing OK or Left/Right works immediately
-        if (footer) footer.focus({ preventScroll: true });
+        if (shouldFocus && footer) footer.focus({ preventScroll: true });
 
         resetPanoramicAutoTimer();
       } else {
         panoramicDayOffset = 0;
+        isPanoramicLocked = false;
+        try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
+        syncPanoramicLockUI();
         if (title) title.textContent = '24-Hour Forecast & Rain Probability';
         if (dayNav) {
           dayNav.classList.add('hidden');
@@ -6114,7 +6239,7 @@
         }
         renderHourly(cachedHourlyData);
 
-        if (footer) footer.focus({ preventScroll: true });
+        if (shouldFocus && footer) footer.focus({ preventScroll: true });
       }
     }
 
@@ -6215,6 +6340,7 @@
       // - In Panoramic Glance: ArrowRight / ArrowLeft steps forward/back through upcoming days!
       // - In Normal View: ArrowRight / ArrowLeft scrolls smoothly with continuous momentum
       footer.addEventListener('keydown', (e) => {
+        if (e.target && e.target.closest && e.target.closest('#panoramicDayNav')) return;
         if (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13) {
           e.preventDefault();
           toggleHourlyCompression();
