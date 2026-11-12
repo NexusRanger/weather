@@ -1745,10 +1745,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=109"></script>
+  <script src="traffic-flood.js?v=110"></script>
     <script>
-    const APP_BUILD = 109;
-    const APP_VERSION = '1.9.45';
+    const APP_BUILD = 110;
+    const APP_VERSION = '1.9.46';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1965,8 +1965,7 @@
 
     // 10-Second Focus Inactivity Timer: Clears main-page yellow highlight when idle
     let mainPageFocusIdleTimer = null;
-    function resetMainPageFocusActivity() {
-      document.body.classList.remove('focus-dormant');
+    function scheduleMainPageFocusIdle() {
       if (mainPageFocusIdleTimer) {
         clearTimeout(mainPageFocusIdleTimer);
       }
@@ -1980,8 +1979,15 @@
           if (locBtn) {
             locBtn.focus({ preventScroll: true });
           }
+        } else {
+          // Keep polling while modal is open so focus-dormant still triggers after auto-close
+          scheduleMainPageFocusIdle();
         }
       }, 10000);
+    }
+    function resetMainPageFocusActivity() {
+      document.body.classList.remove('focus-dormant');
+      scheduleMainPageFocusIdle();
     }
     ['keydown', 'pointerdown', 'mousemove', 'touchstart'].forEach(evt => {
       window.addEventListener(evt, resetMainPageFocusActivity, { passive: true });
@@ -2207,6 +2213,9 @@
           try { target.focus(); } catch (_) {}
         }
         lastFocusedElementBeforeModal = null;
+        if (typeof resetMainPageFocusActivity === 'function') {
+          resetMainPageFocusActivity();
+        }
       }, 50);
     }
 
@@ -5373,8 +5382,9 @@
 
       const nearDotsEl = document.getElementById('windNearDots');
       if (nearDotsEl && typeof getWindDot === 'function') {
-        let nearMaxSpeed = windSpeedVal;
-        let nearMaxGust = Math.round(cur.wind_gusts_10m || windSpeedVal);
+        let nearMaxSpeed = 0;
+        let nearMaxGust = 0;
+        let foundHourlyWindow = false;
         if (hourly && hourly.time && hourly.wind_speed_10m) {
           const nowPrefix = (cur && cur.time) ? cur.time.slice(0, 13) : new Date().toISOString().slice(0, 13);
           let idx0 = hourly.time.findIndex(t => t.startsWith(nowPrefix));
@@ -5385,7 +5395,12 @@
             const wg = (hourly.wind_gusts_10m && hourly.wind_gusts_10m[k] != null) ? Math.round(hourly.wind_gusts_10m[k]) : ws;
             if (ws > nearMaxSpeed) nearMaxSpeed = ws;
             if (wg > nearMaxGust) nearMaxGust = wg;
+            foundHourlyWindow = true;
           }
+        }
+        if (!foundHourlyWindow) {
+          nearMaxSpeed = windSpeedVal;
+          nearMaxGust = Math.round(cur.wind_gusts_10m || windSpeedVal);
         }
         const nearWindDot = getWindDot(nearMaxSpeed, nearMaxGust);
         nearDotsEl.innerHTML = nearWindDot.html;
