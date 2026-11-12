@@ -834,7 +834,10 @@
             <!-- Wind -->
             <div id="windTile" class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1 transition-all">
               <div class="flex flex-col justify-between min-w-0 flex-1">
-                <div class="text-[10px] text-slate-400 leading-none">Wind</div>
+                <div class="flex items-center gap-1.5 text-[10px] text-slate-400 leading-none">
+                  <span>Wind</span>
+                  <span id="windNearDots" class="inline-flex items-center" title="Peak wind expected in the next 3 hours"></span>
+                </div>
                 <div class="flex items-baseline gap-1 my-[1px]">
                   <span id="windSpeed" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
                   <span class="text-[9px] text-slate-400 leading-none">mph</span>
@@ -1730,10 +1733,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=107"></script>
+  <script src="traffic-flood.js?v=108"></script>
     <script>
-    const APP_BUILD = 107;
-    const APP_VERSION = '1.9.43';
+    const APP_BUILD = 108;
+    const APP_VERSION = '1.9.44';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5356,6 +5359,27 @@
       document.getElementById('windCompass').textContent = compassStr;
       document.getElementById('windGust').textContent = `Gusts: ${Math.round(cur.wind_gusts_10m)} mph`;
 
+      const nearDotsEl = document.getElementById('windNearDots');
+      if (nearDotsEl && typeof getWindDot === 'function') {
+        let nearMaxSpeed = windSpeedVal;
+        let nearMaxGust = Math.round(cur.wind_gusts_10m || windSpeedVal);
+        if (hourly && hourly.time && hourly.wind_speed_10m) {
+          const nowPrefix = (cur && cur.time) ? cur.time.slice(0, 13) : new Date().toISOString().slice(0, 13);
+          let idx0 = hourly.time.findIndex(t => t.startsWith(nowPrefix));
+          if (idx0 < 0) idx0 = 0;
+          const idxEnd = Math.min(hourly.time.length, idx0 + 4);
+          for (let k = idx0; k < idxEnd; k++) {
+            const ws = Math.round(hourly.wind_speed_10m[k] || 0);
+            const wg = (hourly.wind_gusts_10m && hourly.wind_gusts_10m[k] != null) ? Math.round(hourly.wind_gusts_10m[k]) : ws;
+            if (ws > nearMaxSpeed) nearMaxSpeed = ws;
+            if (wg > nearMaxGust) nearMaxGust = wg;
+          }
+        }
+        const nearWindDot = getWindDot(nearMaxSpeed, nearMaxGust);
+        nearDotsEl.innerHTML = nearWindDot.html;
+        nearDotsEl.title = `Next 3h peak: ${nearMaxSpeed} mph, Gusts ${nearMaxGust} mph (${nearWindDot.level})`;
+      }
+
       // Wind compass arrow pointing in direction of wind flow
       const windArrow = document.getElementById('windArrowIcon');
       if (windArrow && typeof cur.wind_direction_10m === 'number') {
@@ -5679,19 +5703,19 @@
 
         const row = document.createElement('div');
         row.className = `grid items-center gap-1 py-[2px] px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'}`;
-        row.style.gridTemplateColumns = '38px 40px 20px 28px 14px 22px minmax(26px, 1fr) 24px 22px';
+        row.style.gridTemplateColumns = '38px 40px 20px 28px 14px 22px 22px minmax(26px, 1fr) 24px';
         row.innerHTML = `
           <span class="font-bold text-white text-[11px] leading-none truncate">${dayName}</span>
           <span class="text-[9px] text-slate-400 font-mono tabular-nums leading-none whitespace-nowrap">${dateSub}</span>
           <span class="flex items-center justify-center text-[13px] leading-none">${info.icon}</span>
           <span class="text-right text-[10px] text-sky-400 font-mono tabular-nums leading-none ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
           <span class="flex items-center justify-center text-[10px] text-cyan-300 font-bold leading-none">${hasFrostRisk ? '❄️' : ''}</span>
+          <span class="flex items-center justify-center cursor-help leading-none" title="${windDot.title}">${windDot.html}</span>
           <span class="text-right font-mono tabular-nums text-[10px] leading-none ${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${min}°</span>
           <div class="w-full h-1.5 rounded-full bg-slate-800/90 overflow-hidden relative">
             <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${leftPct}%; width: ${widthPct}%"></div>
           </div>
           <span class="text-right font-mono tabular-nums text-[11px] leading-none ${maxColorClass}">${max}°</span>
-          <span class="flex items-center justify-center cursor-help leading-none" title="${windDot.title}">${windDot.html}</span>
         `;
         container.appendChild(row);
       }
