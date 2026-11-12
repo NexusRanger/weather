@@ -1745,10 +1745,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=115"></script>
+  <script src="traffic-flood.js?v=116"></script>
     <script>
-    const APP_BUILD = 115;
-    const APP_VERSION = '1.9.51';
+    const APP_BUILD = 116;
+    const APP_VERSION = '1.9.52';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3052,6 +3052,9 @@
           await lookupCoords(parseFloat(lat), parseFloat(lon), false);
         }
       } else if (pc) {
+        if (loc) {
+          pendingCustomLocationName = loc;
+        }
         await lookupPostcode(pc);
       } else if (loc) {
         await lookupTown(loc);
@@ -6767,18 +6770,26 @@
       // Start 40s auto-revert countdown
       resetShareAutoCloseTimer();
 
-      // Generate current share URL with postcode or coordinates/location
+      // Generate current share URL with postcode and place name, or coordinates/location
       let shareUrl = window.location.href;
       try {
         const u = new URL(window.location.href);
-        if (typeof CURRENT_LOCATION !== 'undefined') {
+        // Clear any old/stale query params first
+        ['postcode', 'pc', 'location', 'town', 'q', 'lat', 'lon', 'v'].forEach(k => u.searchParams.delete(k));
+
+        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION) {
           const pc = CURRENT_LOCATION.postcode || '';
+          const placeName = (CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
+
+          if (placeName) {
+            u.searchParams.set('q', placeName);
+          }
+
           if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
             u.searchParams.set('postcode', pc);
           } else if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
             u.searchParams.set('lat', CURRENT_LOCATION.lat);
             u.searchParams.set('lon', CURRENT_LOCATION.lon);
-            if (CURRENT_LOCATION.name) u.searchParams.set('q', CURRENT_LOCATION.name);
           }
         }
         shareUrl = u.toString();
