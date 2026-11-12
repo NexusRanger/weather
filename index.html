@@ -811,42 +811,46 @@
           <div class="grid grid-cols-2 gap-1 mt-0.5 pt-0.5 border-t border-white/10 flex-1 min-h-0">
             
             <!-- Rain Today -->
-            <div id="rainTodayTile" class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1 transition-all">
-              <div class="flex flex-col justify-between min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
-                  <span class="truncate">Rain Today</span>
-                  <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono leading-none flex-shrink-0">--%</span>
-                </div>
-                <div class="flex items-baseline gap-1 my-[1px]">
-                  <span id="precipToday" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">0.0</span>
-                  <span class="text-[9px] text-slate-400 leading-none">mm</span>
-                </div>
-                <div id="rainTileNowcast" class="text-[9px] text-slate-400 leading-none truncate">Accumulated</div>
+            <div id="rainTodayTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
+              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+                <span class="whitespace-nowrap">Rain Today</span>
+                <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono leading-none whitespace-nowrap flex-shrink-0">--%</span>
               </div>
-              <div id="rainTileIconSlot" class="flex items-center justify-center flex-shrink-0 pl-0.5" title="Rain / Dry status">
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 max-h-full" viewBox="0 0 36 36" fill="none">
-                  <path d="M10 24h15a5 5 0 0 0 .8-9.93A6.5 6.5 0 0 0 13.2 12.2 4.8 4.8 0 0 0 10 24z" fill="#cbd5e1"/>
-                  <path d="M13 27l-1.2 3M18 27l-1.2 3M23 27l-1.2 3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-                </svg>
+              <div class="flex items-end justify-between gap-1 mt-0.5">
+                <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
+                  <div class="flex items-baseline gap-1">
+                    <span id="precipToday" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">0.0</span>
+                    <span class="text-[9px] text-slate-400 leading-none">mm</span>
+                  </div>
+                  <div id="rainTileNowcast" class="text-[9px] text-slate-400 leading-none truncate">Accumulated</div>
+                </div>
+                <div id="rainTileIconSlot" class="flex items-center justify-center flex-shrink-0" title="Rain / Dry status">
+                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                    <path d="M10 24h15a5 5 0 0 0 .8-9.93A6.5 6.5 0 0 0 13.2 12.2 4.8 4.8 0 0 0 10 24z" fill="#cbd5e1"/>
+                    <path d="M13 27l-1.2 3M18 27l-1.2 3M23 27l-1.2 3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
             <!-- Wind -->
-            <div id="windTile" class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1 transition-all">
-              <div class="flex flex-col justify-between min-w-0 flex-1">
-                <div class="flex items-center gap-1.5 text-[10px] text-slate-400 leading-none">
+            <div id="windTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
+              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+                <div class="flex items-center gap-1.5">
                   <span>Wind</span>
                   <span id="windNearDots" class="inline-flex items-center" title="Peak wind expected in the next 3 hours"></span>
                 </div>
-                <div class="flex items-baseline gap-1 my-[1px]">
-                  <span id="windSpeed" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                  <span class="text-[9px] text-slate-400 leading-none">mph</span>
-                </div>
-                <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
+                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[10px] leading-none whitespace-nowrap flex-shrink-0">--</span>
               </div>
-              <div class="flex flex-col items-center justify-between flex-shrink-0 pl-0.5">
-                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[10px] leading-none">--</span>
-                <div class="w-7 h-7 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_6px_rgba(56,189,248,0.2)] mt-0.5" title="Wind flow compass">
+              <div class="flex items-end justify-between gap-1 mt-0.5">
+                <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
+                  <div class="flex items-baseline gap-1">
+                    <span id="windSpeed" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[9px] text-slate-400 leading-none">mph</span>
+                  </div>
+                  <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
+                </div>
+                <div class="w-7 h-7 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_6px_rgba(56,189,248,0.2)] flex-shrink-0" title="Wind flow compass">
                   <span class="absolute top-0.5 text-[5px] font-mono font-bold text-sky-300/75 leading-none">N</span>
                   <span class="absolute bottom-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
                   <span class="absolute left-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
@@ -859,95 +863,103 @@
             </div>
 
             <!-- Barometer -->
-            <div id="barometerTile" class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1 transition-all">
-              <div class="flex flex-col justify-between min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
-                  <span class="truncate">Barometer</span>
-                  <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400 leading-none flex-shrink-0">Steady</span>
-                </div>
-                <div class="flex items-baseline gap-1 my-[1px]">
-                  <span id="barometer" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">----</span>
-                  <span class="text-[9px] text-slate-400 leading-none">hPa</span>
-                </div>
-                <div class="text-[9px] text-slate-500 leading-none truncate">Surface pressure</div>
+            <div id="barometerTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
+              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+                <span class="whitespace-nowrap">Barometer</span>
+                <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400 leading-none whitespace-nowrap flex-shrink-0">Steady</span>
               </div>
-              <div class="flex items-center justify-center flex-shrink-0 pl-0.5" title="Barometer dial">
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 max-h-full" viewBox="0 0 36 36" fill="none">
-                  <circle cx="18" cy="18" r="13" fill="rgba(15,23,42,0.55)" stroke="rgba(148,163,184,0.45)" stroke-width="2"/>
-                  <path d="M9.5 24.5a11 11 0 1 1 17 0" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
-                  <line id="baroNeedle" x1="18" y1="18" x2="18" y2="8.5" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" style="transform-origin: 18px 18px; transition: transform 0.6s ease;"/>
-                  <circle cx="18" cy="18" r="2.3" fill="#f8fafc"/>
-                </svg>
+              <div class="flex items-end justify-between gap-1 mt-0.5">
+                <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
+                  <div class="flex items-baseline gap-1">
+                    <span id="barometer" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">----</span>
+                    <span class="text-[9px] text-slate-400 leading-none">hPa</span>
+                  </div>
+                  <div class="text-[9px] text-slate-500 leading-none truncate">Surface pressure</div>
+                </div>
+                <div class="flex items-center justify-center flex-shrink-0" title="Barometer dial">
+                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                    <circle cx="18" cy="18" r="13" fill="rgba(15,23,42,0.55)" stroke="rgba(148,163,184,0.45)" stroke-width="2"/>
+                    <path d="M9.5 24.5a11 11 0 1 1 17 0" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+                    <line id="baroNeedle" x1="18" y1="18" x2="18" y2="8.5" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" style="transform-origin: 18px 18px; transition: transform 0.6s ease;"/>
+                    <circle cx="18" cy="18" r="2.3" fill="#f8fafc"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
             <!-- Humidity & Dew -->
-            <div class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1">
-              <div class="flex flex-col justify-between min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
-                  <span class="truncate">Humidity</span>
-                  <span id="dewPoint" class="text-[9px] font-mono text-slate-300 leading-none flex-shrink-0">Dew --°</span>
-                </div>
-                <div class="flex items-baseline gap-1 my-[1px]">
-                  <span id="humidity" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                  <span class="text-[9px] text-slate-400 leading-none">%</span>
-                </div>
-                <div class="text-[9px] text-slate-500 leading-none truncate">Moisture level</div>
+            <div class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between">
+              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+                <span class="whitespace-nowrap">Humidity</span>
+                <span id="dewPoint" class="text-[9px] font-mono text-slate-300 leading-none whitespace-nowrap flex-shrink-0">Dew --°</span>
               </div>
-              <div class="flex items-center justify-center flex-shrink-0 pl-0.5" title="Humidity droplet">
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 max-h-full" viewBox="0 0 36 36" fill="none">
-                  <defs>
-                    <linearGradient id="humDropGrad" x1="12" y1="6" x2="24" y2="30" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stop-color="#7dd3fc"/>
-                      <stop offset="100%" stop-color="#0284c7"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M18 5C18 5 9 15.5 9 21.8a9 9 0 0 0 18 0C27 15.5 18 5 18 5z" fill="url(#humDropGrad)" stroke="rgba(186,230,253,0.6)" stroke-width="1.2"/>
-                  <path d="M13.8 20.5a4.5 4.5 0 0 0 2.7 4.4" stroke="rgba(255,255,255,0.65)" stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
+              <div class="flex items-end justify-between gap-1 mt-0.5">
+                <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
+                  <div class="flex items-baseline gap-1">
+                    <span id="humidity" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[9px] text-slate-400 leading-none">%</span>
+                  </div>
+                  <div class="text-[9px] text-slate-500 leading-none truncate">Moisture level</div>
+                </div>
+                <div class="flex items-center justify-center flex-shrink-0" title="Humidity droplet">
+                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                    <defs>
+                      <linearGradient id="humDropGrad" x1="12" y1="6" x2="24" y2="30" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#7dd3fc"/>
+                        <stop offset="100%" stop-color="#0284c7"/>
+                      </linearGradient>
+                    </defs>
+                    <path d="M18 5C18 5 9 15.5 9 21.8a9 9 0 0 0 18 0C27 15.5 18 5 18 5z" fill="url(#humDropGrad)" stroke="rgba(186,230,253,0.6)" stroke-width="1.2"/>
+                    <path d="M13.8 20.5a4.5 4.5 0 0 0 2.7 4.4" stroke="rgba(255,255,255,0.65)" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
             <!-- Air Quality (AQI) -->
-            <div id="aqiTile" class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1 transition-all">
-              <div class="flex flex-col justify-between min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
-                  <span class="truncate">Air Quality</span>
-                  <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300 leading-none flex-shrink-0">Good</span>
-                </div>
-                <div class="flex items-baseline gap-1 my-[1px]">
-                  <span id="aqiVal" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                  <span class="text-[9px] text-slate-400 leading-none">AQI</span>
-                </div>
-                <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
+            <div id="aqiTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
+              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+                <span class="whitespace-nowrap">Air Quality</span>
+                <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300 leading-none whitespace-nowrap flex-shrink-0">Good</span>
               </div>
-              <div class="flex items-center justify-center flex-shrink-0 pl-0.5" title="Air Quality">
-                <svg id="aqiLeafIcon" class="w-7 h-7 sm:w-8 sm:h-8 max-h-full" viewBox="0 0 36 36" fill="none">
-                  <path d="M28 8C17 8 10 14 10 24c0 1.4.2 2.6.5 3.6 1 .3 2.2.4 3.5.4 10 0 14-7 14-20z" fill="#34d399" fill-opacity="0.28" stroke="#34d399" stroke-width="1.8" stroke-linejoin="round"/>
-                  <path d="M9 28c4-4.5 9-9.5 15-14" stroke="#6ee7b7" stroke-width="1.8" stroke-linecap="round"/>
-                </svg>
+              <div class="flex items-end justify-between gap-1 mt-0.5">
+                <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
+                  <div class="flex items-baseline gap-1">
+                    <span id="aqiVal" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[9px] text-slate-400 leading-none">AQI</span>
+                  </div>
+                  <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
+                </div>
+                <div class="flex items-center justify-center flex-shrink-0" title="Air Quality">
+                  <svg id="aqiLeafIcon" class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                    <path d="M28 8C17 8 10 14 10 24c0 1.4.2 2.6.5 3.6 1 .3 2.2.4 3.5.4 10 0 14-7 14-20z" fill="#34d399" fill-opacity="0.28" stroke="#34d399" stroke-width="1.8" stroke-linejoin="round"/>
+                    <path d="M9 28c4-4.5 9-9.5 15-14" stroke="#6ee7b7" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
             <!-- Cloud & UV -->
-            <div id="cloudUvTile" class="glass-tile rounded-lg py-1 px-1.5 flex items-stretch justify-between gap-1 transition-all">
-              <div class="flex flex-col justify-between min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
-                  <span class="truncate">Cloud &amp; UV</span>
-                  <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400 leading-none flex-shrink-0">UV: --</span>
-                </div>
-                <div class="flex items-baseline gap-1 my-[1px]">
-                  <span id="cloudCover" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                  <span class="text-[9px] text-slate-400 leading-none">%</span>
-                </div>
-                <div class="text-[9px] text-slate-500 leading-none truncate">Sky cover</div>
+            <div id="cloudUvTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
+              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+                <span class="whitespace-nowrap">Cloud &amp; UV</span>
+                <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400 leading-none whitespace-nowrap flex-shrink-0">UV: --</span>
               </div>
-              <div class="flex items-center justify-center flex-shrink-0 pl-0.5" title="Cloud & UV">
-                <svg class="w-7 h-7 sm:w-8 sm:h-8 max-h-full" viewBox="0 0 36 36" fill="none">
-                  <circle cx="23" cy="13" r="5.5" fill="#fbbf24"/>
-                  <path d="M23 4.5v2M23 19.5v2M14.5 13h2M29.5 13h2M17 7l1.4 1.4M27.6 17.6L29 19M29 7l-1.4 1.4" stroke="#fbbf24" stroke-width="1.6" stroke-linecap="round"/>
-                  <path d="M9 26.5h14.5a4.5 4.5 0 0 0 .7-8.94A5.8 5.8 0 0 0 12.8 16a4.3 4.3 0 0 0-3.8 10.5z" fill="#e2e8f0" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-                </svg>
+              <div class="flex items-end justify-between gap-1 mt-0.5">
+                <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
+                  <div class="flex items-baseline gap-1">
+                    <span id="cloudCover" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[9px] text-slate-400 leading-none">%</span>
+                  </div>
+                  <div class="text-[9px] text-slate-500 leading-none truncate">Sky cover</div>
+                </div>
+                <div class="flex items-center justify-center flex-shrink-0" title="Cloud & UV">
+                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                    <circle cx="23" cy="13" r="5.5" fill="#fbbf24"/>
+                    <path d="M23 4.5v2M23 19.5v2M14.5 13h2M29.5 13h2M17 7l1.4 1.4M27.6 17.6L29 19M29 7l-1.4 1.4" stroke="#fbbf24" stroke-width="1.6" stroke-linecap="round"/>
+                    <path d="M9 26.5h14.5a4.5 4.5 0 0 0 .7-8.94A5.8 5.8 0 0 0 12.8 16a4.3 4.3 0 0 0-3.8 10.5z" fill="#e2e8f0" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
@@ -1733,10 +1745,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=108"></script>
+  <script src="traffic-flood.js?v=109"></script>
     <script>
-    const APP_BUILD = 108;
-    const APP_VERSION = '1.9.44';
+    const APP_BUILD = 109;
+    const APP_VERSION = '1.9.45';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
