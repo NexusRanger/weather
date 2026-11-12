@@ -1745,10 +1745,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=110"></script>
+  <script src="traffic-flood.js?v=111"></script>
     <script>
-    const APP_BUILD = 110;
-    const APP_VERSION = '1.9.46';
+    const APP_BUILD = 111;
+    const APP_VERSION = '1.9.47';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -4635,6 +4635,32 @@
       return '--:--';
     }
 
+    let lastClockHourKey = '';
+    function getLiveLocationHourPrefix() {
+      const now = new Date();
+      if (ACTIVE_TIMEZONE) {
+        try {
+          const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: ACTIVE_TIMEZONE,
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', hour12: false
+          }).formatToParts(now);
+          const p = {};
+          parts.forEach(part => { p[part.type] = part.value; });
+          const hh = p.hour === '24' ? '00' : p.hour;
+          if (p.year && p.month && p.day && hh) {
+            return `${p.year}-${p.month}-${p.day}T${hh}`;
+          }
+        } catch (_) {}
+      }
+      const locNow = getLocationWallClockNow(null);
+      const yyyy = locNow.getFullYear();
+      const mm = String(locNow.getMonth() + 1).padStart(2, '0');
+      const dd = String(locNow.getDate()).padStart(2, '0');
+      const hh = String(locNow.getHours()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}T${hh}`;
+    }
+
     function updateClock() {
       const now = new Date();
       let hours = String(now.getHours()).padStart(2, '0');
@@ -4667,6 +4693,15 @@
       document.getElementById('clockDate').textContent = dateText;
       
       checkSolarMilestoneHighlights();
+
+      // Re-sync the 24h panoramic 'Now' card locally when the clock rolls to a new hour (zero API calls)
+      const currentHourKey = getLiveLocationHourPrefix();
+      if (lastClockHourKey && currentHourKey !== lastClockHourKey && typeof cachedHourlyData !== 'undefined' && cachedHourlyData) {
+        lastClockHourKey = currentHourKey;
+        renderHourly(cachedHourlyData);
+      } else if (!lastClockHourKey) {
+        lastClockHourKey = currentHourKey;
+      }
     }
 
     function evaluateFrost(hourly, cur, daily) {
@@ -6055,9 +6090,13 @@
         panoramicSlideTimer = null;
       }
 
-      // Find current hour index in the location's local time (using cur.time prefix if available)
+      // Find current hour index synced to the live page clock (with fallback to cached _currentLocalTime)
       let nowIndex = -1;
-      if (hourly._currentLocalTime) {
+      const livePrefix = (typeof getLiveLocationHourPrefix === 'function') ? getLiveLocationHourPrefix() : '';
+      if (livePrefix) {
+        nowIndex = hourly.time.findIndex(t => t.startsWith(livePrefix));
+      }
+      if (nowIndex < 0 && hourly._currentLocalTime) {
         const prefix = hourly._currentLocalTime.slice(0, 13);
         nowIndex = hourly.time.findIndex(t => t.startsWith(prefix));
       }
