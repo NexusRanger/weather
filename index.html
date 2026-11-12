@@ -1213,7 +1213,7 @@
       <div class="mt-4">
         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter Postcode, Town or City</label>
         <div class="flex gap-2">
-          <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Stroud, GL5 5HH, Sydney, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
+          <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Stroud Hotel GL5 3AP, Nailsworth, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
           <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none" onkeydown="handleSearchBtnKeydown(event)">
             Search
           </button>
@@ -1745,10 +1745,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=111"></script>
+  <script src="traffic-flood.js?v=112"></script>
     <script>
-    const APP_BUILD = 111;
-    const APP_VERSION = '1.9.47';
+    const APP_BUILD = 112;
+    const APP_VERSION = '1.9.48';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -2369,7 +2369,10 @@
       if (!loc || !loc.lat || !loc.lon) return;
       try {
         let queries = getHistoryQueries();
-        queries = queries.filter(q => Math.abs(q.lat - loc.lat) > 0.05 || Math.abs(q.lon - loc.lon) > 0.05);
+        queries = queries.filter(q => (
+          (Math.abs(q.lat - loc.lat) > 0.05 || Math.abs(q.lon - loc.lon) > 0.05) &&
+          (q.name || '').toLowerCase() !== (loc.name || '').toLowerCase()
+        ));
         queries.unshift({
           name: loc.name || 'Location',
           postcode: loc.postcode || '',
@@ -2942,10 +2945,14 @@
       return new Date(Date.now() - browserOffsetMs + locationOffsetMs);
     }
 
+    let pendingCustomLocationName = '';
+
     function applySelectedLocation(name, lat, lon, postcode) {
       const nLat = parseFloat(lat);
       const nLon = parseFloat(lon);
-      const newName = shortenPlaceName(name);
+      const chosenName = pendingCustomLocationName ? pendingCustomLocationName.trim() : (name || '');
+      pendingCustomLocationName = '';
+      const newName = shortenPlaceName(chosenName);
       const locationChanged = (
         !CURRENT_LOCATION ||
         Math.abs((CURRENT_LOCATION.lat || 0) - nLat) > 0.0005 ||
@@ -3774,6 +3781,39 @@
       restorePreModalFocus('headerLocationBtn');
     }
 
+    function parseCustomNameAndLocation(raw) {
+      if (!raw) return { customName: '', query: raw, postcode: '' };
+      let str = raw.trim();
+
+      // Pattern 1: Embedded UK Postcode anywhere (e.g. "Stroud Hotel GL5 5HH", "Stroud Hotel, GL5 3AP", "Home GL5 1AB")
+      const ukPcRegex = /\b([A-Z]{1,2}[0-9][A-Z0-9]?)\s*([0-9][A-Z]{2})\b/i;
+      const pcMatch = str.match(ukPcRegex);
+      if (pcMatch) {
+        const fullPc = `${pcMatch[1].toUpperCase()} ${pcMatch[2].toUpperCase()}`;
+        const beforePc = str.slice(0, pcMatch.index).trim().replace(/,\s*$/, '').trim();
+        if (beforePc.length > 0) {
+          return { customName: titleCaseCustomName(beforePc), query: fullPc, postcode: fullPc };
+        }
+      }
+
+      // Pattern 2: Explicit comma separator (e.g. "The Black Horse, Nailsworth" or "My Office, London")
+      if (str.includes(',')) {
+        const parts = str.split(',');
+        const custom = parts[0].trim();
+        const rest = parts.slice(1).join(',').trim();
+        if (custom.length > 0 && rest.length > 0) {
+          return { customName: titleCaseCustomName(custom), query: rest, postcode: '' };
+        }
+      }
+
+      return { customName: '', query: str, postcode: '' };
+    }
+
+    function titleCaseCustomName(name) {
+      if (!name) return '';
+      return name.trim().replace(/\b[a-z]/g, c => c.toUpperCase());
+    }
+
     async function searchLocationFromModal() {
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
@@ -3856,6 +3896,13 @@
       if (status) status.textContent = 'Searching location...';
       if (btn) btn.disabled = true;
 
+      // Extract custom display name if entered (e.g. "Stroud Hotel GL5 3AP" -> customName: "Stroud Hotel", query: "GL5 3AP")
+      const parsedCustom = parseCustomNameAndLocation(q);
+      if (parsedCustom.customName) {
+        pendingCustomLocationName = parsedCustom.customName;
+        q = parsedCustom.query;
+      }
+
       const prefMatch = matchLocationPreference(q);
       if (prefMatch && applyLocationPreference(prefMatch)) {
         if (btn) btn.disabled = false;
@@ -3881,10 +3928,12 @@
       if (btn) btn.disabled = false;
 
       if (success) {
+        pendingCustomLocationName = '';
         clearUrlLocationParams();
         closeLocationModal();
       } else {
-        if (status) status.textContent = `Could not find "${q}". Try another city, town or postcode.`;
+        pendingCustomLocationName = '';
+        if (status) status.textContent = `Could not find "${input.value.trim()}". Try another city, town or postcode.`;
       }
     }
 
@@ -4111,7 +4160,7 @@
                 lon: q.lon,
                 postcode: q.postcode
               });
-              if (filtered.length >= 4) break;
+              if (filtered.length >= 8) break;
             }
           }
           if (filtered.length > 0) {
