@@ -778,18 +778,18 @@
               <span id="lastUpdated" class="text-[9px] font-mono text-slate-400">Syncing...</span>
             </div>
 
-            <div class="mt-0.5 flex items-center justify-between gap-1.5">
+            <div class="mt-0.5 flex items-center justify-between gap-1">
               <div class="flex items-center gap-1.5 min-w-0">
-                <span id="currentTemp" class="text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono leading-none flex-shrink-0">--°</span>
+                <span id="currentTemp" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tighter text-white font-mono leading-none flex-shrink-0">--°</span>
                 <div class="min-w-0">
                   <div id="feelsLike" class="text-xs font-medium text-slate-300 whitespace-nowrap leading-tight">Feels like --°C</div>
                   <div id="todayRange" class="text-[10px] font-mono text-slate-400 whitespace-nowrap leading-tight">▲ --°  ▼ --°</div>
                 </div>
               </div>
-              <div class="text-right flex items-center gap-1.5 flex-shrink-0 min-w-0">
-                <div id="weatherIconLg" class="text-2xl sm:text-3xl leading-none flex-shrink-0">☁️</div>
+              <div class="text-right flex items-center gap-1 flex-shrink-0 min-w-0 max-w-[45%]">
+                <div id="weatherIconLg" class="text-xl sm:text-2xl leading-none flex-shrink-0">☁️</div>
                 <div class="text-left min-w-0">
-                  <div id="weatherDesc" class="text-sm font-bold text-white capitalize leading-tight truncate">Overcast</div>
+                  <div id="weatherDesc" class="text-xs sm:text-sm font-bold text-white capitalize leading-tight truncate">Overcast</div>
                   <div id="weatherSubDesc" class="text-[9px] text-slate-400 leading-tight truncate">Calm valley air</div>
                 </div>
               </div>
@@ -810,10 +810,10 @@
           <!-- 6 Dense Tiles (2 cols x 3 rows) -->
           <div class="grid grid-cols-2 gap-1 mt-0.5 pt-0.5 border-t border-white/10 flex-1 min-h-0">
             
-            <!-- Rain Today -->
+            <!-- Rain -->
             <div id="rainTodayTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
               <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
-                <span class="whitespace-nowrap">Rain Today</span>
+                <span class="whitespace-nowrap">Rain</span>
                 <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono leading-none whitespace-nowrap flex-shrink-0">--%</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
@@ -1745,10 +1745,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=113"></script>
+  <script src="traffic-flood.js?v=114"></script>
     <script>
-    const APP_BUILD = 113;
-    const APP_VERSION = '1.9.49';
+    const APP_BUILD = 114;
+    const APP_VERSION = '1.9.50';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
