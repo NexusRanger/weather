@@ -1676,6 +1676,12 @@
       <div class="relative flex-1 min-h-0 w-full mt-3 rounded-xl overflow-hidden border border-white/10 bg-slate-950">
         <div id="radarLeafletMap" class="w-full h-full" style="height: 100%; min-height: 380px;"></div>
 
+        <!-- Floating Rain Status Pill (right of +/- zoom controls) -->
+        <div id="radarRainStatusPill" class="pointer-events-none absolute top-2.5 left-12 z-[1000] px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/15 shadow-lg flex items-center gap-2 text-xs font-semibold text-slate-200 max-w-[calc(100%-64px)] truncate transition-all duration-300">
+          <span id="radarRainStatusIcon">🌵</span>
+          <span id="radarRainStatusText">Checking local rain outlook...</span>
+        </div>
+
         <!-- Floating Scrubber & Playback Controls Pill -->
         <div class="absolute bottom-3 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[1000] bg-slate-900/90 backdrop-blur-md border border-white/20 rounded-2xl p-2 px-3 shadow-2xl flex items-center gap-3">
           <!-- Play / Pause -->
@@ -1724,10 +1730,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=106"></script>
+  <script src="traffic-flood.js?v=107"></script>
     <script>
-    const APP_BUILD = 106;
-    const APP_VERSION = '1.9.42';
+    const APP_BUILD = 107;
+    const APP_VERSION = '1.9.43';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -7008,6 +7014,11 @@
       if (mapEl) {
         mapEl.classList.toggle('radar-zoom-locked', isLocked);
       }
+      const rainPill = document.getElementById('radarRainStatusPill');
+      if (rainPill) {
+        rainPill.classList.toggle('left-3', isLocked);
+        rainPill.classList.toggle('left-12', !isLocked);
+      }
       if (radarLeafletMap) {
         try {
           if (isLocked) {
@@ -7122,6 +7133,84 @@
       updateRadarCountdownDisplay();
     }
 
+    function updateRadarRainStatusPill() {
+      const iconEl = document.getElementById('radarRainStatusIcon');
+      const textEl = document.getElementById('radarRainStatusText');
+      const pillEl = document.getElementById('radarRainStatusPill');
+      if (!textEl || !pillEl) return;
+
+      let icon = '🌵';
+      let msg = 'No rain expected today';
+      let borderCls = 'border-white/15';
+
+      // 1. Check live 15-min nowcast slides first
+      if (typeof rainNowcastSlides !== 'undefined' && Array.isArray(rainNowcastSlides) && rainNowcastSlides.length > 0) {
+        const s0 = String(rainNowcastSlides[0] || '');
+        const s0Low = s0.toLowerCase();
+        const curIcon = (document.getElementById('rainNowcastIcon')?.textContent || '').trim();
+
+        if (s0Low.includes('raining') || s0Low.includes('drizzle') || s0Low.includes('showers') || s0Low.includes('storm') || s0Low.includes('snow') || s0Low.includes('sleet')) {
+          if (s0Low.includes('starting') || s0Low.includes('in ~') || s0Low.includes('expected')) {
+            icon = curIcon || '🌦️';
+            msg = s0;
+            borderCls = 'border-sky-400/40';
+          } else {
+            icon = curIcon || '🌧️';
+            const s1 = rainNowcastSlides[1] ? ` • ${rainNowcastSlides[1]}` : '';
+            msg = `Raining now${s1}`;
+            borderCls = 'border-cyan-400/50';
+          }
+          if (iconEl) iconEl.textContent = icon;
+          textEl.textContent = msg;
+          pillEl.className = `pointer-events-none absolute top-2.5 ${document.getElementById('radarLeafletMap')?.classList.contains('radar-zoom-locked') ? 'left-3' : 'left-12'} z-[1000] px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border ${borderCls} shadow-lg flex items-center gap-2 text-xs font-semibold text-slate-200 max-w-[calc(100%-64px)] truncate transition-all duration-300`;
+          return;
+        }
+      }
+
+      // 2. Check cached hourly forecast for upcoming rain today
+      if (typeof cachedHourlyData !== 'undefined' && cachedHourlyData && Array.isArray(cachedHourlyData.time)) {
+        const nowMs = Date.now();
+        const locNow = typeof getLocationWallClockNow === 'function'
+          ? getLocationWallClockNow(cachedHourlyData._currentLocalTime)
+          : new Date();
+        const todayStr = `${locNow.getFullYear()}-${String(locNow.getMonth() + 1).padStart(2, '0')}-${String(locNow.getDate()).padStart(2, '0')}`;
+
+        let foundToday = null;
+        for (let i = 0; i < cachedHourlyData.time.length; i++) {
+          const tStr = cachedHourlyData.time[i];
+          const slotMs = typeof parseLocationIsoToMs === 'function' ? parseLocationIsoToMs(tStr) : Date.parse(tStr);
+          if (slotMs < nowMs - 30 * 60000) continue;
+          const precip = (cachedHourlyData.precipitation && cachedHourlyData.precipitation[i]) || 0;
+          const prob = (cachedHourlyData.precipitation_probability && cachedHourlyData.precipitation_probability[i]) || 0;
+          if ((precip >= 0.1 && prob >= 25) || prob >= 45) {
+            if (tStr.startsWith(todayStr)) {
+              foundToday = { slotMs, timeStr: tStr.slice(11, 16), prob };
+            }
+            break;
+          }
+        }
+
+        if (foundToday) {
+          const diffHrs = Math.round((foundToday.slotMs - nowMs) / 3600000);
+          icon = '🌦️';
+          borderCls = 'border-sky-400/40';
+          if (diffHrs <= 0) {
+            msg = `Rain expected shortly (~${foundToday.timeStr})`;
+          } else if (diffHrs === 1) {
+            msg = `Rain in ~1 hour (${foundToday.timeStr})`;
+          } else if (diffHrs <= 6) {
+            msg = `Rain in ${diffHrs} hours (${foundToday.timeStr})`;
+          } else {
+            msg = `Rain expected later today (~${foundToday.timeStr})`;
+          }
+        }
+      }
+
+      if (iconEl) iconEl.textContent = icon;
+      textEl.textContent = msg;
+      pillEl.className = `pointer-events-none absolute top-2.5 ${document.getElementById('radarLeafletMap')?.classList.contains('radar-zoom-locked') ? 'left-3' : 'left-12'} z-[1000] px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border ${borderCls} shadow-lg flex items-center gap-2 text-xs font-semibold text-slate-200 max-w-[calc(100%-64px)] truncate transition-all duration-300`;
+    }
+
     function openRadarModal() {
       const modal = document.getElementById('radarModal');
       if (!modal) return;
@@ -7147,6 +7236,7 @@
 
       initOrRefreshRadarMap();
       updateRadarLockZoomBtn();
+      updateRadarRainStatusPill();
       resetRadarAutoCloseTimer();
 
       // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
