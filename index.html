@@ -298,21 +298,30 @@
       flex-shrink: 0 !important;
     }
 
-    /* Suppress native browser/TV white focus rings globally */
+    /* Suppress native browser/TV white focus rings globally across all interactive elements */
     button:focus,
     button:focus-visible,
     a:focus,
     a:focus-visible,
+    input:focus,
+    input:focus-visible,
+    textarea:focus,
+    textarea:focus-visible,
     .tv-focus-amber:focus,
     .tv-focus-amber:focus-visible {
       outline: none !important;
+      outline-style: none !important;
       -webkit-tap-highlight-color: transparent !important;
     }
 
-    /* TV Focus Warm Amber Glow (Uniform, crisp border across all focusable elements) */
+    /* TV Focus Warm Amber Glow (Uniform, crisp, standard-thickness border across all focusable elements) */
     body:not(.focus-dormant) .tv-focus-amber:focus,
-    body:not(.focus-dormant) .tv-focus-amber:focus-visible {
+    body:not(.focus-dormant) .tv-focus-amber:focus-visible,
+    body:not(.focus-dormant) #headerLocationBtn:focus,
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible,
+    #headerLocationBtn.loc-btn-flash {
       outline: none !important;
+      outline-style: none !important;
       animation: none !important;
       border-color: #fbbf24 !important;
       background-color: rgba(245, 158, 11, 0.20) !important;
@@ -321,20 +330,23 @@
       transform: scale(1.015);
       transition: all 0.2s ease-out;
     }
-    body:not(.focus-dormant) #headerLocationBtn:focus,
-    body:not(.focus-dormant) #headerLocationBtn:focus-visible,
-    #headerLocationBtn.loc-btn-flash {
-      border-color: #fbbf24 !important;
-      background-color: rgba(245, 158, 11, 0.35) !important;
-      color: #fef3c7 !important;
-      box-shadow: 0 0 0 1.5px #fbbf24, 0 0 16px rgba(251, 191, 36, 0.6) !important;
-      transform: scale(1.04);
-      transition: all 0.15s ease-out !important;
-    }
     body:not(.focus-dormant) #headerLocationBtn:focus #headerPostcodeBadge,
     body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerPostcodeBadge,
     #headerLocationBtn.loc-btn-flash #headerPostcodeBadge {
       color: #fbbf24 !important;
+    }
+
+    /* Uniform Standard-Width Yellow Focus on Search & Location Name Inputs (no white or thick double border) */
+    #locationInput:focus,
+    #locationInput:focus-visible,
+    #customRenameInput:focus,
+    #customRenameInput:focus-visible {
+      outline: none !important;
+      outline-style: none !important;
+      border-color: #fbbf24 !important;
+      background-color: rgba(0, 0, 0, 0.75) !important;
+      box-shadow: 0 0 0 0.75px #fbbf24, 0 0 11px rgba(251, 191, 36, 0.42) !important;
+      transform: none !important;
     }
 
     /* Wind Speed Warning Highlights */
@@ -1271,7 +1283,7 @@
         <div>
           <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town or City</label>
           <div class="flex gap-1.5">
-            <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
+            <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none" onkeydown="handleLocationInputKeydown(event)">
             <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none cursor-pointer" onkeydown="handleSearchBtnKeydown(event)">
               Search
             </button>
@@ -1284,7 +1296,7 @@
           <div class="flex items-center gap-1.5">
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
             <div class="relative flex-1 flex items-center">
-              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
+              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
               <button id="customRenameClearBtn" type="button" tabindex="-1" onclick="clearRenameInput()" class="hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear text">✕</button>
             </div>
             <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
@@ -1827,10 +1839,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=131"></script>
+  <script src="traffic-flood.js?v=132"></script>
     <script>
-    const APP_BUILD = 131;
-    const APP_VERSION = '1.9.67';
+    const APP_BUILD = 132;
+    const APP_VERSION = '1.9.68';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
