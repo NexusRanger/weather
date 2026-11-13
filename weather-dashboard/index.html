@@ -1784,10 +1784,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=123"></script>
+  <script src="traffic-flood.js?v=124"></script>
     <script>
-    const APP_BUILD = 123;
-    const APP_VERSION = '1.9.59';
+    const APP_BUILD = 124;
+    const APP_VERSION = '1.9.60';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5361,6 +5361,79 @@
       };
     }
 
+    function generateClothingAdvice(cur, hourly, isPrecipActiveOrSoon) {
+      if (!cur) return '🧥 Jacket or layers recommended';
+
+      let feelsLike = typeof cur.apparent_temperature === 'number' ? cur.apparent_temperature : (cur.temperature_2m || 10);
+      let temp = typeof cur.temperature_2m === 'number' ? cur.temperature_2m : feelsLike;
+      let windSpeed = typeof cur.wind_speed_10m === 'number' ? Math.round(cur.wind_speed_10m) : 0;
+      let windGusts = typeof cur.wind_gusts_10m === 'number' ? Math.round(cur.wind_gusts_10m) : windSpeed;
+      let cloud = typeof cur.cloud_cover === 'number' ? cur.cloud_cover : 50;
+      let isDay = typeof cur.is_day === 'number' ? cur.is_day === 1 : true;
+
+      // Sample next 3 hours from hourly to anticipate dropping temperatures or gusty winds
+      if (hourly && hourly.time && hourly.apparent_temperature) {
+        try {
+          const nowMs = Date.now();
+          let samples = [];
+          for (let i = 0; i < hourly.time.length; i++) {
+            const tMs = new Date(hourly.time[i]).getTime();
+            const diffH = (tMs - nowMs) / 3600000;
+            if (diffH >= 0 && diffH <= 3.5) {
+              if (typeof hourly.apparent_temperature[i] === 'number') samples.push(hourly.apparent_temperature[i]);
+            }
+          }
+          if (samples.length > 0) {
+            feelsLike = Math.min(...samples);
+          }
+        } catch (_) {}
+      }
+
+      const flRound = Math.round(feelsLike);
+      const isBlustery = windSpeed >= 18 || windGusts >= 26;
+      const isWet = isPrecipActiveOrSoon || (cur.precipitation && cur.precipitation > 0.1);
+
+      // Freezing / Near-Freezing (Feels like <= 3°C)
+      if (feelsLike <= 3) {
+        if (isWet) return `🧥 Heavy waterproof coat & gloves (${flRound}°C)`;
+        if (isBlustery) return `🧥 Big winter coat & scarf — bitter wind (${flRound}°C)`;
+        return `🧥 Big winter coat & gloves needed (${flRound}°C)`;
+      }
+
+      // Cold (Feels like 4°C to 8°C)
+      if (feelsLike <= 8) {
+        if (isWet) return `🧥 Warm waterproof coat advised (${flRound}°C)`;
+        if (isBlustery) return `🧥 Big coat advised — chilly wind chill (${flRound}°C)`;
+        return `🧥 Warm coat advised for going out (${flRound}°C)`;
+      }
+
+      // Chilly (Feels like 9°C to 12°C)
+      if (feelsLike <= 12) {
+        if (isWet) return `☔ Waterproof coat or jacket needed (${flRound}°C)`;
+        if (isBlustery) return `🧥 Windproof jacket or warm fleece (${flRound}°C)`;
+        return `🧥 Jacket, fleece or warm sweater fine (${flRound}°C)`;
+      }
+
+      // Mild (Feels like 13°C to 16°C)
+      if (feelsLike <= 16) {
+        if (isWet) return `☔ Light waterproof jacket or brolly (${flRound}°C)`;
+        if (isBlustery) return `🧥 Light jacket or windbreaker (${flRound}°C)`;
+        if (isDay && cloud < 30) return `👕 Light layers or cardigan — sunny & mild (${flRound}°C)`;
+        return `🧥 Light jacket or sweater fine (${flRound}°C)`;
+      }
+
+      // Warm (Feels like 17°C to 21°C)
+      if (feelsLike <= 21) {
+        if (isWet) return `☔ Waterproof layer or brolly — mild (${flRound}°C)`;
+        if (isDay && cloud < 40) return `👕 T-shirt & sunglasses — pleasant (${flRound}°C)`;
+        return `👕 T-shirt or light shirt — no big coat needed (${flRound}°C)`;
+      }
+
+      // Hot (Feels like >= 22°C)
+      if (isDay && cloud < 50) return `👕 Shorts & T-shirt — warm & sunny (${flRound}°C)`;
+      return `👕 Light summer clothes — warm (${flRound}°C)`;
+    }
+
     function evaluateRainNowcast(cur, minutely_15, hourly) {
       const tileSub = document.getElementById('rainTileNowcast');
       const locNow = getLocationWallClockNow((cur && cur.time) || (hourly && hourly._currentLocalTime));
@@ -5404,7 +5477,8 @@
             setRainNowcastSlides(
               [
                 `${verb} (${rateStr})`,
-                `Stopping in ~${stopSlot.mins} mins`
+                `Stopping in ~${stopSlot.mins} mins`,
+                generateClothingAdvice(cur, hourly, true)
               ],
               `${conf}% conf`,
               curDetails.badgeClass,
@@ -5417,7 +5491,8 @@
             setRainNowcastSlides(
               [
                 `${verb} (${rateStr})`,
-                `${curDetails.name} continuing`
+                `${curDetails.name} continuing`,
+                generateClothingAdvice(cur, hourly, true)
               ],
               'High conf',
               curDetails.badgeClass,
@@ -5447,7 +5522,8 @@
             setRainNowcastSlides(
               [
                 `${intensity} starting soon`,
-                `Starting in ~${m || 15} mins`
+                `Starting in ~${m || 15} mins`,
+                generateClothingAdvice(cur, hourly, true)
               ],
               `${conf}% conf`,
               slotDetails.badgeClass,
@@ -5458,7 +5534,8 @@
             setRainNowcastSlides(
               [
                 `${intensity} in ~${m} mins`,
-                `Starting approx ${timeStr}`
+                `Starting approx ${timeStr}`,
+                generateClothingAdvice(cur, hourly, true)
               ],
               `${conf}% conf`,
               slotDetails.badgeClass,
@@ -5469,7 +5546,8 @@
             setRainNowcastSlides(
               [
                 `${intensity} expected ~${timeStr}`,
-                `Probability ~${conf}%`
+                `Probability ~${conf}%`,
+                generateClothingAdvice(cur, hourly, true)
               ],
               `${conf}% conf`,
               'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0 ml-1.5',
@@ -5486,7 +5564,8 @@
           setRainNowcastSlides(
             [
               `Shower risk in ~${chanceSlot.mins}m`,
-              `Chance ~${chanceSlot.prob}% next 90m`
+              `Chance ~${chanceSlot.prob}% next 90m`,
+              generateClothingAdvice(cur, hourly, true)
             ],
             `${chanceSlot.prob}% risk`,
             'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/20 flex-shrink-0 ml-1.5',
@@ -5529,7 +5608,8 @@
       setRainNowcastSlides(
         [
           `Dry next ${dryHoursStr}`,
-          'No precipitation expected'
+          'No precipitation expected',
+          generateClothingAdvice(cur, hourly, false)
         ],
         '95% conf',
         'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 flex-shrink-0 ml-1.5',
