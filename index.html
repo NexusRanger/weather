@@ -251,8 +251,42 @@
       animation: marqueeScrollLeftFrost var(--frost-scroll-duration, 11s) linear infinite;
       animation-delay: 5.5s; /* Staggered phase offset so windscreen & night sky never scroll together */
     }
+    /* Clothing Advice / Rain Nowcast Marquee Scroll (asynchronous timing) */
+    @keyframes marqueeScrollLeftNowcast {
+      0%, 8% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      60% {
+        transform: translateX(var(--nowcast-scroll-distance, -100px));
+        opacity: 1;
+      }
+      82% {
+        transform: translateX(var(--nowcast-scroll-distance, -100px));
+        opacity: 1;
+      }
+      90% {
+        transform: translateX(var(--nowcast-scroll-distance, -100px));
+        opacity: 0;
+      }
+      94% {
+        transform: translateX(0);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .nowcast-scroll {
+      display: inline-block !important;
+      will-change: transform;
+      animation: marqueeScrollLeftNowcast var(--nowcast-scroll-duration, 8.5s) linear infinite;
+      animation-delay: 2.2s; /* Staggered phase offset: distinct from stargazing (0s) and windscreen (5.5s) */
+    }
     #stargazingAdviceContainer.has-fade,
-    #frostDetailContainer.has-fade {
+    #frostDetailContainer.has-fade,
+    #rainNowcastTextContainer.has-fade {
       mask-image: linear-gradient(to right, black 85%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
@@ -811,8 +845,8 @@
             <div id="rainNowcastBanner" class="mt-0.5 px-2 py-0.5 rounded-lg bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden" title="15-minute high-resolution rain nowcasting" style="min-height: 24px;">
               <div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden pr-1">
                 <span id="rainNowcastIcon" class="text-xs flex-shrink-0">☔</span>
-                <div class="overflow-hidden flex-1 relative" style="height: 16px;">
-                  <div id="rainNowcastText" class="font-semibold text-sky-200 text-[10px] sm:text-[11px] whitespace-nowrap leading-tight" style="transition: opacity 0.3s ease, transform 0.3s ease;">Checking rain radar...</div>
+                <div id="rainNowcastTextContainer" class="overflow-hidden flex-1 relative" style="height: 16px;">
+                  <div id="rainNowcastText" class="font-semibold text-sky-200 text-[10px] sm:text-[11px] whitespace-nowrap leading-tight" style="transition: opacity 0.3s ease;">Checking rain radar...</div>
                 </div>
               </div>
               <span id="rainNowcastBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0 ml-1.5">--% conf</span>
@@ -1782,10 +1816,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=126"></script>
+  <script src="traffic-flood.js?v=127"></script>
     <script>
-    const APP_BUILD = 126;
-    const APP_VERSION = '1.9.62';
+    const APP_BUILD = 127;
+    const APP_VERSION = '1.9.63';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -4447,12 +4481,20 @@
       btn.addEventListener('keydown', (e) => {
         const siblings = Array.from(containerEl.querySelectorAll('button'));
         const idx = siblings.indexOf(btn);
-        if (e.key === 'ArrowRight' && idx >= 0 && idx < siblings.length - 1) {
+        if (e.key === 'ArrowRight') {
           e.preventDefault();
-          siblings[idx + 1].focus();
-        } else if (e.key === 'ArrowLeft' && idx > 0) {
+          if (idx >= 0 && idx < siblings.length - 1) {
+            siblings[idx + 1].focus();
+          } else if (siblings.length > 0) {
+            siblings[0].focus(); // Roll back around to first location chip
+          }
+        } else if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          siblings[idx - 1].focus();
+          if (idx > 0) {
+            siblings[idx - 1].focus();
+          } else if (siblings.length > 0) {
+            siblings[siblings.length - 1].focus(); // Roll around to last location chip
+          }
         } else if (e.key === 'ArrowUp' && typeof upFallbackFn === 'function') {
           const target = upFallbackFn();
           if (target) { e.preventDefault(); target.focus(); }
@@ -4853,6 +4895,7 @@
         checkLocationTitleScroll();
         checkFrostDetailScroll();
         checkStargazingAdviceScroll();
+        if (typeof checkRainNowcastScroll === 'function') checkRainNowcastScroll();
       }, 100);
     });
 
@@ -5295,12 +5338,75 @@
     let currentRainSlideIndex = 0;
     let rainTickerTimer = null;
 
+    function checkRainNowcastScroll() {
+      const container = document.getElementById('rainNowcastTextContainer');
+      const textEl = document.getElementById('rainNowcastText');
+      if (!container || !textEl) return 0;
+      const diff = textEl.scrollWidth - container.clientWidth;
+      if (diff > 4) {
+        const scrollDurSec = Math.max(7.5, Math.round(diff / 15) + 4.5);
+        textEl.style.setProperty('--nowcast-scroll-distance', `-${diff + 8}px`);
+        textEl.style.setProperty('--nowcast-scroll-duration', `${scrollDurSec}s`);
+        textEl.classList.add('nowcast-scroll');
+        container.classList.add('has-fade');
+        return scrollDurSec;
+      } else {
+        textEl.classList.remove('nowcast-scroll');
+        textEl.style.removeProperty('--nowcast-scroll-distance');
+        textEl.style.removeProperty('--nowcast-scroll-duration');
+        container.classList.remove('has-fade');
+        return 0;
+      }
+    }
+
+    function displayRainNowcastSlide(slideIdx) {
+      const textEl = document.getElementById('rainNowcastText');
+      const container = document.getElementById('rainNowcastTextContainer');
+      if (!textEl || !rainNowcastSlides || rainNowcastSlides.length === 0) return;
+
+      currentRainSlideIndex = slideIdx % rainNowcastSlides.length;
+
+      // Clean up previous marquee
+      textEl.classList.remove('nowcast-scroll');
+      textEl.style.removeProperty('--nowcast-scroll-distance');
+      textEl.style.removeProperty('--nowcast-scroll-duration');
+      if (container) container.classList.remove('has-fade');
+
+      textEl.textContent = rainNowcastSlides[currentRainSlideIndex];
+      textEl.style.opacity = '1';
+
+      if (rainTickerTimer) {
+        clearTimeout(rainTickerTimer);
+        rainTickerTimer = null;
+      }
+
+      // Measure after layout (60ms) to ensure exact width
+      setTimeout(() => {
+        const scrollDurSec = checkRainNowcastScroll();
+
+        if (rainNowcastSlides.length > 1) {
+          // If scrolling (e.g. clothing advice), dwell for the animation duration + buffer so user can read everything!
+          // If static, dwell for comfortable 4.0s
+          const dwellMs = scrollDurSec > 0 ? Math.round(scrollDurSec * 1000 + 1200) : 4000;
+          rainTickerTimer = setTimeout(() => {
+            textEl.style.opacity = '0';
+            setTimeout(() => {
+              displayRainNowcastSlide(currentRainSlideIndex + 1);
+            }, 300);
+          }, dwellMs);
+        }
+      }, 60);
+    }
+
     function setRainNowcastSlides(slides, badgeText, badgeClass, bannerClass, iconChar) {
-      rainNowcastSlides = slides;
+      if (rainTickerTimer) {
+        clearTimeout(rainTickerTimer);
+        rainTickerTimer = null;
+      }
+      rainNowcastSlides = Array.isArray(slides) ? slides : [];
       currentRainSlideIndex = 0;
       const banner = document.getElementById('rainNowcastBanner');
       const badge = document.getElementById('rainNowcastBadge');
-      const text = document.getElementById('rainNowcastText');
       const icon = document.getElementById('rainNowcastIcon');
       
       if (banner && bannerClass) banner.className = bannerClass;
@@ -5308,32 +5414,7 @@
       if (badge && badgeClass) badge.className = badgeClass;
       if (icon && iconChar) icon.textContent = iconChar;
 
-      if (text && slides.length > 0) {
-        text.textContent = slides[0];
-        text.style.opacity = '1';
-        text.style.transform = 'translateY(0)';
-      }
-
-      if (rainTickerTimer) {
-        clearInterval(rainTickerTimer);
-        rainTickerTimer = null;
-      }
-
-      // Alternate every 3.8 seconds between status and timing details
-      if (slides.length > 1) {
-        rainTickerTimer = setInterval(() => {
-          const textEl = document.getElementById('rainNowcastText');
-          if (!textEl || rainNowcastSlides.length <= 1) return;
-          textEl.style.opacity = '0';
-          textEl.style.transform = 'translateY(-3px)';
-          setTimeout(() => {
-            currentRainSlideIndex = (currentRainSlideIndex + 1) % rainNowcastSlides.length;
-            textEl.textContent = rainNowcastSlides[currentRainSlideIndex];
-            textEl.style.opacity = '1';
-            textEl.style.transform = 'translateY(0)';
-          }, 300);
-        }, 3800);
-      }
+      displayRainNowcastSlide(0);
     }
 
     function getPrecipDetails(code, amount = 0, isDay = 1) {
