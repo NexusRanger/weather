@@ -407,9 +407,16 @@
       transition: opacity 0.2s ease-out;
     }
     #sevenDayList *:focus,
-    #sevenDayList *:focus-visible {
+    #sevenDayList *:focus-visible,
+    #sevenDayList [data-day-index]:focus,
+    #sevenDayList [data-day-index]:focus-visible {
       outline: none !important;
       box-shadow: none !important;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      #sevenDayList [data-day-index]:hover {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+      }
     }
 
     /* Rain Today Wet Highlight */
@@ -1985,10 +1992,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=141"></script>
+  <script src="traffic-flood.js?v=142"></script>
     <script>
-    const APP_BUILD = 141;
-    const APP_VERSION = '1.9.77';
+    const APP_BUILD = 142;
+    const APP_VERSION = '1.9.78';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -7326,15 +7333,20 @@
 
         const row = document.createElement('div');
         row.setAttribute('data-day-index', i);
-        row.className = `grid items-center gap-1 py-[2px] px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer hover:bg-white/10`;
+        row.className = `grid items-center gap-1 py-[2px] px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none`;
         row.style.gridTemplateColumns = '44px 40px 20px 28px 14px 22px 22px minmax(26px, 1fr) 24px';
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
           setHourlyCompressedMode(true, i);
-          if (document.activeElement && document.activeElement.closest('#sevenDayList')) {
-            document.activeElement.blur();
-          }
+          if (row) row.blur();
+          if (document.activeElement) document.activeElement.blur();
         };
+        row.addEventListener('mouseleave', () => {
+          if (document.activeElement === row) row.blur();
+        });
+        row.addEventListener('touchend', () => {
+          if (document.activeElement === row) row.blur();
+        }, { passive: true });
         row.innerHTML = `
           <span class="day-name-cell font-bold text-white text-[11px] leading-none truncate flex items-center gap-1">
             <span class="day-pano-dot hidden w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b] animate-pulse flex-shrink-0"></span>
@@ -7367,15 +7379,20 @@
         : 0;
 
       // Indicator in 10-day forecast illuminates ONLY when actively exploring away from home.
-      // It never lingers once reset to today or tomorrow!
+      // It never lingers once reset to today or tomorrow, or on initial load / refresh!
       const isExploringAway = isPanoActive && (activeIdx !== homeOffset) && (activeIdx >= 0 && activeIdx < 10);
+
+      if (!isExploringAway) {
+        clearTenDayForecastHighlights();
+        return;
+      }
 
       rows.forEach(row => {
         const idx = parseInt(row.getAttribute('data-day-index'), 10);
         const dot = row.querySelector('.day-pano-dot');
         const text = row.querySelector('.day-name-text');
 
-        if (isExploringAway && idx === activeIdx) {
+        if (idx === activeIdx) {
           row.classList.add('day-row-pano-active');
           row.classList.remove('day-row-pano-dim');
           if (dot) dot.classList.remove('hidden');
@@ -7384,7 +7401,7 @@
             text.classList.add('font-black');
             text.classList.remove('text-white');
           }
-        } else if (isExploringAway) {
+        } else {
           row.classList.remove('day-row-pano-active');
           row.classList.add('day-row-pano-dim');
           if (dot) dot.classList.add('hidden');
@@ -7393,23 +7410,8 @@
             text.classList.remove('font-black');
             text.classList.add('text-white');
           }
-        } else {
-          row.classList.remove('day-row-pano-active');
-          row.classList.remove('day-row-pano-dim');
-          if (dot) dot.classList.add('hidden');
-          if (text) {
-            text.classList.remove('text-amber-300');
-            text.classList.remove('font-black');
-            text.classList.add('text-white');
-          }
         }
       });
-
-      if (!isExploringAway) {
-        if (document.activeElement && document.activeElement.closest('#sevenDayList')) {
-          document.activeElement.blur();
-        }
-      }
     }
 
     function clearTenDayForecastHighlights() {
@@ -7534,7 +7536,10 @@
         isPanoramicLocked = true;
         lockedDayOffset = panoramicDayOffset;
         try {
-          localStorage.setItem('ambient_pano_locked', JSON.stringify({ dayOffset: lockedDayOffset }));
+          localStorage.setItem('ambient_pano_locked', JSON.stringify({
+            dayOffset: lockedDayOffset,
+            savedDate: new Date().toISOString().slice(0, 10)
+          }));
         } catch (_) {}
       }
       syncPanoramicLockUI();
@@ -7770,10 +7775,16 @@
           const raw = localStorage.getItem('ambient_pano_locked');
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (parsed && (parsed.dayOffset === -1 || parsed.dayOffset === 0 || parsed.dayOffset === 1)) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            if (parsed && parsed.savedDate && parsed.savedDate !== todayStr) {
+              // Rollover from a previous day: discard stale lock so old locks don't persist
+              localStorage.removeItem('ambient_pano_locked');
+            } else if (parsed && (parsed.dayOffset === -1 || parsed.dayOffset === 0 || parsed.dayOffset === 1)) {
               isPanoramicLocked = true;
               lockedDayOffset = parsed.dayOffset;
+              panoramicDayOffset = parsed.dayOffset;
               setHourlyCompressedMode(true, parsed.dayOffset, false);
+              clearTenDayForecastHighlights();
               return;
             } else {
               localStorage.removeItem('ambient_pano_locked');
