@@ -598,6 +598,22 @@
       border-color: #fbbf24 !important;
       box-shadow: 0 0 0 0.75px #fbbf24, 0 8px 32px 0 rgba(0, 0, 0, 0.35), 0 0 11px rgba(251, 191, 36, 0.38) !important;
     }
+    @keyframes panoEyeCatchGlow {
+      0% {
+        border-color: rgba(56, 189, 248, 0.95) !important;
+        box-shadow: 0 0 0 1.5px rgba(56, 189, 248, 0.95), 0 0 28px rgba(56, 189, 248, 0.6), inset 0 0 16px rgba(56, 189, 248, 0.25) !important;
+      }
+      50% {
+        border-color: rgba(251, 191, 36, 0.95) !important;
+        box-shadow: 0 0 0 1.5px rgba(251, 191, 36, 0.95), 0 0 22px rgba(251, 191, 36, 0.5), inset 0 0 12px rgba(251, 191, 36, 0.2) !important;
+      }
+      100% {
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35) !important;
+      }
+    }
+    .pano-eye-catch {
+      animation: panoEyeCatchGlow 1.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+    }
     #hourlyTimeline,
     #hourlyTimeline:focus,
     #hourlyTimeline:focus-visible {
@@ -1989,10 +2005,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=144"></script>
+  <script src="traffic-flood.js?v=145"></script>
     <script>
-    const APP_BUILD = 144;
-    const APP_VERSION = '1.9.80';
+    const APP_BUILD = 145;
+    const APP_VERSION = '1.9.81';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -7378,6 +7394,7 @@
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
           setHourlyCompressedMode(true, i);
+          triggerFooterPanoEyeCatch();
           if (row) row.blur();
           if (document.activeElement) document.activeElement.blur();
         };
@@ -7471,6 +7488,20 @@
       if (document.activeElement && document.activeElement.closest('#sevenDayList')) {
         document.activeElement.blur();
       }
+    }
+
+    function triggerFooterPanoEyeCatch() {
+      const footer = document.getElementById('footerTimeline');
+      if (!footer) return;
+      footer.classList.remove('pano-eye-catch');
+      void footer.offsetWidth;
+      footer.classList.add('pano-eye-catch');
+      setTimeout(() => {
+        if (footer) footer.classList.remove('pano-eye-catch');
+      }, 1300);
+      try {
+        footer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (_) {}
     }
 
     let cachedHourlyData = null;
@@ -7865,7 +7896,16 @@
       }
 
       if (isHourlyCompressed) {
-        const oldRow = (slideDirection !== 0) ? container.querySelector('.panoramic-day-row:last-child, .panoramic-day-row') : null;
+        let oldRow = (slideDirection !== 0) ? container.querySelector('.panoramic-day-row:last-child, .panoramic-day-row') : null;
+        if (!oldRow && slideDirection !== 0 && container.children.length > 0) {
+          // Outgoing view was normal scrolling timeline: package existing visible cards into an animated outgoing row
+          const outgoing = document.createElement('div');
+          outgoing.className = 'panoramic-day-row flex gap-1 w-full flex-shrink-0';
+          while (container.firstChild) {
+            outgoing.appendChild(container.firstChild);
+          }
+          oldRow = outgoing;
+        }
         container.className = 'w-full overflow-hidden pb-0.5 relative';
 
         // Determine the whole 24-hour day slice (00:00 - 23:00) based on panoramicDayOffset
@@ -8008,7 +8048,7 @@
             container.appendChild(track);
             track.style.transform = `translateX(${startDragPx}px)`;
             void track.offsetWidth;
-            track.style.transition = 'transform 380ms cubic-bezier(0.22, 1, 0.36, 1)';
+            track.style.transition = 'transform 420ms cubic-bezier(0.22, 1, 0.36, 1)';
             track.style.transform = 'translateX(calc(-100% - 14px))';
           } else {
             track.appendChild(newRow);
@@ -8017,7 +8057,7 @@
             container.appendChild(track);
             track.style.transform = `translateX(calc(-100% - 14px + ${startDragPx}px))`;
             void track.offsetWidth;
-            track.style.transition = 'transform 380ms cubic-bezier(0.22, 1, 0.36, 1)';
+            track.style.transition = 'transform 420ms cubic-bezier(0.22, 1, 0.36, 1)';
             track.style.transform = 'translateX(0px)';
           }
 
@@ -8027,7 +8067,7 @@
               container.innerHTML = '';
               container.appendChild(newRow);
             }
-          }, 390);
+          }, 430);
         } else {
           container.innerHTML = '';
           container.appendChild(newRow);
@@ -8151,7 +8191,9 @@
       }
     }
 
-    function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true) {
+    function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true, animDirection = null) {
+      const prevCompressed = isHourlyCompressed;
+      const prevOffset = (typeof panoramicDayOffset === 'number') ? panoramicDayOffset : 0;
       isHourlyCompressed = compressed;
       const footer = document.getElementById('footerTimeline');
       const title = document.getElementById('timelineTitle');
@@ -8168,6 +8210,20 @@
         } else {
           panoramicDayOffset = 0;
         }
+
+        // Determine animated scroll/slide direction for silky smooth visual glide:
+        let slideDir = 0;
+        if (animDirection !== null) {
+          slideDir = animDirection;
+        } else if (!prevCompressed) {
+          // Transitioning from normal timeline into 24h panoramic: always glide into view
+          slideDir = 1;
+        } else if (panoramicDayOffset !== prevOffset) {
+          slideDir = panoramicDayOffset > prevOffset ? 1 : -1;
+        } else {
+          slideDir = 1;
+        }
+
         if (title) title.textContent = '24-Hour Panoramic:';
         if (dayNav) {
           dayNav.classList.remove('hidden');
@@ -8175,7 +8231,7 @@
         }
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
-        renderHourly(cachedHourlyData);
+        renderHourly(cachedHourlyData, slideDir);
 
         // Maintain focus on #footerTimeline so clicking/pressing OK or Left/Right works immediately
         if (shouldFocus && footer) footer.focus({ preventScroll: true });
