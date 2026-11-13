@@ -290,6 +290,13 @@
       mask-image: linear-gradient(to right, black 85%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
+    #rainNowcastBanner {
+      height: 28px !important;
+      min-height: 28px !important;
+      max-height: 28px !important;
+      box-sizing: border-box !important;
+      flex-shrink: 0 !important;
+    }
 
     /* Suppress native browser/TV white focus rings globally */
     button:focus,
@@ -842,10 +849,10 @@
             </div>
 
             <!-- LIVE RAIN NOWCAST BANNER (Animated Ticker) -->
-            <div id="rainNowcastBanner" class="mt-0.5 px-2 py-0.5 rounded-lg bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden" title="15-minute high-resolution rain nowcasting" style="min-height: 24px;">
-              <div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden pr-1">
+            <div id="rainNowcastBanner" class="mt-0.5 px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden h-7 flex-shrink-0" title="15-minute high-resolution rain nowcasting" style="height: 28px; min-height: 28px; max-height: 28px; box-sizing: border-box;">
+              <div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden pr-1 h-full">
                 <span id="rainNowcastIcon" class="text-xs flex-shrink-0">☔</span>
-                <div id="rainNowcastTextContainer" class="overflow-hidden flex-1 relative" style="height: 16px;">
+                <div id="rainNowcastTextContainer" class="overflow-hidden flex-1 relative flex items-center h-full" style="height: 18px;">
                   <div id="rainNowcastText" class="font-semibold text-sky-200 text-[10px] sm:text-[11px] whitespace-nowrap leading-tight" style="transition: opacity 0.3s ease;">Checking rain radar...</div>
                 </div>
               </div>
@@ -1816,10 +1823,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=128"></script>
+  <script src="traffic-flood.js?v=129"></script>
     <script>
-    const APP_BUILD = 128;
-    const APP_VERSION = '1.9.64';
+    const APP_BUILD = 129;
+    const APP_VERSION = '1.9.65';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5422,7 +5429,14 @@
       const badge = document.getElementById('rainNowcastBadge');
       const icon = document.getElementById('rainNowcastIcon');
       
-      if (banner && bannerClass) banner.className = bannerClass;
+      if (banner && bannerClass) {
+        banner.className = bannerClass;
+        banner.classList.add('h-7', 'flex-shrink-0');
+        banner.style.height = '28px';
+        banner.style.minHeight = '28px';
+        banner.style.maxHeight = '28px';
+        banner.style.boxSizing = 'border-box';
+      }
       if (badge && badgeText) badge.textContent = badgeText;
       if (badge && badgeClass) badge.className = badgeClass;
       if (icon && iconChar) icon.textContent = iconChar;
