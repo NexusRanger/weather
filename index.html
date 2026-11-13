@@ -1428,6 +1428,15 @@
           </div>
         </div>
 
+        <!-- 📰 In The News: Exceptional Floods, Storms & Unusual Events -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-amber-300 mb-1 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block"></span>
+            <span>📰</span> In The News: Floods, Storms &amp; Unusual Events
+          </div>
+          <div id="wondersNewsChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
         <!-- 🚀 Rocket Launch Sites & Spaceports -->
         <div>
           <div class="text-[10px] font-semibold uppercase tracking-wider text-violet-300 mb-1 flex items-center gap-1">
@@ -1971,10 +1980,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=138"></script>
+  <script src="traffic-flood.js?v=139"></script>
     <script>
-    const APP_BUILD = 138;
-    const APP_VERSION = '1.9.74';
+    const APP_BUILD = 139;
+    const APP_VERSION = '1.9.75';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5267,6 +5276,16 @@
 
     // Curated Global Wonders, Spaceports & Extreme Weather Catalog
     const GLOBAL_WONDERS_CATALOG = [
+      // 📰 In The News: Exceptional Floods, Storms & Unusual Events
+      { name: 'Valencia Floods', desc: 'Valencia, Spain • Catastrophic "Dana" flash floods and historic deluges', category: 'news', icon: '🌊', lat: 39.4699, lon: -0.3763, country: 'Spain' },
+      { name: 'Typhoon Man-yi', desc: 'Luzon, Philippines • Rare cluster of 4 simultaneous typhoons & violent storm surge', category: 'news', icon: '🌀', lat: 15.7500, lon: 121.0000, country: 'Philippines' },
+      { name: 'Honduras Sara Floods', desc: 'San Pedro Sula, Honduras • Tropical Storm Sara relentless mudslides and river crests', category: 'news', icon: '🌧️', lat: 15.5000, lon: -88.0333, country: 'Honduras' },
+      { name: 'Hurricane Rafael', desc: 'Artemisa, Cuba • Category 3 Hurricane strike & nationwide electric grid blackout', category: 'news', icon: '🌀', lat: 22.8133, lon: -82.7633, country: 'Cuba' },
+      { name: 'Lewotobi Eruption', desc: 'Flores, Indonesia • Explosive volcanic ash eruption (9km high plume)', category: 'news', icon: '🌋', lat: -8.5380, lon: 122.7750, country: 'Indonesia' },
+      { name: 'Sicily Deluge', desc: 'Catania, Sicily, Italy • Mediterranean cyclone flash flooding sweeping into sea', category: 'news', icon: '🌊', lat: 37.5079, lon: 15.0830, country: 'Italy' },
+      { name: 'Texas Flood Basin', desc: 'Lubbock, TX, USA • Record-shattering November downpours & highway inundations', category: 'news', icon: '⛈️', lat: 33.5779, lon: -101.8552, country: 'USA' },
+      { name: 'Reykjanes Fissure', desc: 'Grindavík, Iceland • Active volcanic ground magma dyke and fissures', category: 'news', icon: '🌋', lat: 63.8425, lon: -22.4344, country: 'Iceland' },
+
       // 🚀 Rocket Launch Sites & Spaceports (SpaceX Starship, NASA Space Coast & Orbital Hubs)
       { name: 'Starbase (SpaceX)', desc: 'Boca Chica, TX • SpaceX Starship Orbital Launch Pad & Starfactory', category: 'space', icon: '🚀', lat: 25.9972, lon: -97.1561, country: 'USA' },
       { name: 'Cape Canaveral', desc: 'Space Coast, FL • NASA Kennedy Space Center & SpaceX LC-39A / SLC-40', category: 'space', icon: '🚀', lat: 28.5729, lon: -80.6490, country: 'USA' },
@@ -5506,6 +5525,7 @@
       wondersPopulated = true;
 
       const containerMap = {
+        news: document.getElementById('wondersNewsChips'),
         space: document.getElementById('wondersSpaceChips'),
         weather: document.getElementById('wondersWeatherChips'),
         volcano: document.getElementById('wondersVolcanoChips'),
@@ -5520,7 +5540,9 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.tabIndex = 0;
-        btn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
+        btn.className = (w.category === 'news')
+          ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 hover:border-amber-400/60 text-xs text-amber-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
+          : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
         btn.title = `${w.name}: ${w.desc}`;
         btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
         btn.onclick = () => {
