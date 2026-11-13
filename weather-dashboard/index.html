@@ -1376,7 +1376,12 @@
           <!-- Link info & actions -->
           <div class="flex-1 min-w-0 text-left w-full flex flex-col justify-between h-full">
             <div>
-              <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Dashboard Link</div>
+              <div class="flex items-center gap-1.5 flex-wrap text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+                <span>Dashboard Link</span>
+                <span id="shareTitleBadge" class="hidden lowercase text-xs font-bold text-emerald-300 font-sans tracking-normal bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 rounded-full capitalize shadow-sm">
+                  &ldquo;<span id="shareTitleText"></span>&rdquo;
+                </span>
+              </div>
               <div id="shareUrlText" class="text-xs font-mono text-sky-300 break-all bg-black/40 p-2 rounded-lg border border-white/10 mt-1 select-all select-text">
                 Loading link...
               </div>
@@ -2365,22 +2370,101 @@
     let historyLeafletMap = null;
     let historyMarkersLayer = null;
 
-    // Immediate startup purge of legacy test seeds (like Los Angeles)
+    // Separate Storage Keys:
+    // 1. ambient_user_recent_locations: Personal to this device (retains custom user titles & local search picks)
+    // 2. ambient_public_map_cache: Dedicated cache for the 30-Day World Map synced with Google Sheets
+    const USER_RECENTS_STORAGE_KEY = 'ambient_user_recent_locations';
+    const PUBLIC_MAP_CACHE_KEY = 'ambient_public_map_cache';
+
+    // One-time startup migration: ensure existing user recents are safely preserved in personal storage
     try {
-      const rawMem = localStorage.getItem('ambient_location_queries');
+      if (!localStorage.getItem(USER_RECENTS_STORAGE_KEY)) {
+        const legacy = localStorage.getItem('ambient_location_queries');
+        if (legacy) {
+          localStorage.setItem(USER_RECENTS_STORAGE_KEY, legacy);
+        }
+      }
+      const rawMem = localStorage.getItem(PUBLIC_MAP_CACHE_KEY) || localStorage.getItem('ambient_location_queries');
       if (rawMem) {
         let memArr = JSON.parse(rawMem);
         if (Array.isArray(memArr)) {
           memArr = memArr.filter(q => q && q.name && !q.name.toLowerCase().includes('los angeles'));
-          localStorage.setItem('ambient_location_queries', JSON.stringify(memArr));
+          localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(memArr));
         }
       }
     } catch (_) {}
 
+    function isPersonalLocationName(name) {
+      if (!name) return false;
+      const s = String(name).trim().toLowerCase();
+      const personalRegex = /\b(mum|mums|mum's|mom|moms|mom's|dad|dads|dad's|nan|nana|nanna|nanny|nanny's|grandma|grandpa|gran|granny|granny's|home|my home|our home|house|my house|our house|flat|my flat|our flat|apartment|cottage|my cottage|office|my office|work|my work|desk|cabin|shed)\b/i;
+      if (personalRegex.test(s)) return true;
+      if (/^(my|our)\s+/i.test(s)) return true;
+      return false;
+    }
+
+    function getDepersonalizedLocationName(loc) {
+      if (!loc) return 'Location';
+      const rawName = (loc.name || '').trim();
+      const geo = (loc.geoName || '').trim();
+
+      // If geoName is clean and verified, use it whenever custom title is personal or custom-labeled
+      if (geo && !isPersonalLocationName(geo)) {
+        if (isPersonalLocationName(rawName) || geo.toLowerCase() !== rawName.toLowerCase()) {
+          return shortenPlaceName(geo);
+        }
+      }
+
+      // If rawName is personal, fall back to outward postcode or geographic town
+      if (isPersonalLocationName(rawName)) {
+        if (loc.postcode) {
+          const pcMatch = String(loc.postcode).match(/^([A-Z]{1,2}[0-9][A-Z0-9]?)\s*([0-9][A-Z]{2})$/i);
+          if (pcMatch) {
+            return `${pcMatch[1].toUpperCase()} Area`;
+          }
+          if (loc.postcode !== 'GEO' && loc.postcode !== 'GPS') {
+            return `${String(loc.postcode).trim()} Area`;
+          }
+        }
+        if (geo && !isPersonalLocationName(geo)) {
+          return shortenPlaceName(geo);
+        }
+        return 'Local Forecast';
+      }
+
+      return shortenPlaceName(rawName) || 'Location';
+    }
+
+    function recordUserRecentLocation(loc) {
+      if (!loc || !loc.lat || !loc.lon) return;
+      try {
+        const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
+        let queries = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(queries)) queries = [];
+        queries = queries.filter(q => {
+          const sameName = (q.name || '').toLowerCase() === (loc.name || '').toLowerCase();
+          const sameCoords = Math.abs(q.lat - loc.lat) < 0.001 && Math.abs(q.lon - loc.lon) < 0.001;
+          return !sameName && !sameCoords;
+        });
+        queries.unshift({
+          name: loc.name || 'Location',
+          geoName: loc.geoName || '',
+          postcode: loc.postcode || '',
+          lat: loc.lat,
+          lon: loc.lon,
+          timestamp: Date.now()
+        });
+        if (queries.length > 25) queries = queries.slice(0, 25);
+        localStorage.setItem(USER_RECENTS_STORAGE_KEY, JSON.stringify(queries));
+      } catch (err) {
+        console.warn('Could not record user recent location:', err);
+      }
+    }
+
     function getHistoryQueries() {
       const now = Date.now();
       try {
-        const raw = localStorage.getItem('ambient_location_queries');
+        const raw = localStorage.getItem(PUBLIC_MAP_CACHE_KEY) || localStorage.getItem('ambient_location_queries');
         if (raw) {
           const arr = JSON.parse(raw);
           const cutoff = now - 30 * 24 * 60 * 60 * 1000;
@@ -2389,7 +2473,10 @@
               if (!q || !q.lat || !q.lon || !q.name) return false;
               if (q.name.toLowerCase().includes('los angeles')) return false;
               return q.timestamp && q.timestamp >= cutoff;
-            });
+            }).map(q => ({
+              ...q,
+              name: getDepersonalizedLocationName(q)
+            }));
           }
         }
       } catch (_) {}
@@ -2398,22 +2485,27 @@
 
     function recordLocationQuery(loc) {
       if (!loc || !loc.lat || !loc.lon) return;
+      // 1. Record personal custom title into the user's private recent locations list
+      recordUserRecentLocation(loc);
+
+      // 2. Generate depersonalized, purely geographic name for the public world map & shared sheet
       try {
-        let queries = getHistoryQueries();
-        queries = queries.filter(q => {
-          const sameName = (q.name || '').toLowerCase() === (loc.name || '').toLowerCase();
+        const publicName = getDepersonalizedLocationName(loc);
+        let mapQueries = getHistoryQueries();
+        mapQueries = mapQueries.filter(q => {
+          const sameName = (q.name || '').toLowerCase() === publicName.toLowerCase();
           const sameCoords = Math.abs(q.lat - loc.lat) < 0.001 && Math.abs(q.lon - loc.lon) < 0.001;
           return !sameName && !sameCoords;
         });
-        queries.unshift({
-          name: loc.name || 'Location',
+        mapQueries.unshift({
+          name: publicName,
           postcode: loc.postcode || '',
           lat: loc.lat,
           lon: loc.lon,
           timestamp: Date.now()
         });
-        if (queries.length > 50) queries = queries.slice(0, 50);
-        localStorage.setItem('ambient_location_queries', JSON.stringify(queries));
+        if (mapQueries.length > 50) mapQueries = mapQueries.slice(0, 50);
+        localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(mapQueries));
 
         const PRIVATE_SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
         if (PRIVATE_SHEETS_ENDPOINT) {
@@ -2423,7 +2515,7 @@
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
               action: 'log',
-              name: loc.name,
+              name: publicName,
               postcode: loc.postcode,
               lat: loc.lat,
               lon: loc.lon,
@@ -2516,7 +2608,8 @@
 
     function clearHistoryQueries() {
       if (confirm("Clear your 30-day location search history?")) {
-        localStorage.removeItem('ambient_location_queries');
+        try { localStorage.removeItem(PUBLIC_MAP_CACHE_KEY); } catch (_) {}
+        try { localStorage.removeItem('ambient_location_queries'); } catch (_) {}
         initOrRefreshHistoryMap();
       }
     }
@@ -2539,7 +2632,7 @@
       const gps = (typeof getSavedGpsLocation === 'function') ? getSavedGpsLocation() : null;
       if (gps && typeof gps.lat === 'number' && typeof gps.lon === 'number') {
         return {
-          name: gps.name,
+          name: getDepersonalizedLocationName(gps),
           postcode: gps.postcode || 'GPS',
           lat: gps.lat,
           lon: gps.lon,
@@ -2548,7 +2641,7 @@
       }
       if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') {
         return {
-          name: CURRENT_LOCATION.name,
+          name: getDepersonalizedLocationName(CURRENT_LOCATION),
           postcode: CURRENT_LOCATION.postcode || '',
           lat: CURRENT_LOCATION.lat,
           lon: CURRENT_LOCATION.lon,
@@ -2931,8 +3024,12 @@
                 deduped.push(sq);
               }
             });
-            queries = deduped;
-            try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
+            // Guarantee depersonalization for public world map rendering
+            queries = deduped.map(sq => ({
+              ...sq,
+              name: getDepersonalizedLocationName(sq)
+            }));
+            try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(queries)); } catch (_) {}
             renderHistoryMarkersAndChips(queries);
           }
         }
@@ -3021,6 +3118,7 @@
       const chosenName = pendingCustomLocationName ? pendingCustomLocationName.trim() : (name || '');
       pendingCustomLocationName = '';
       const newName = shortenPlaceName(chosenName);
+      const geoPlace = shortenPlaceName(name) || newName;
       const locationChanged = (
         !CURRENT_LOCATION ||
         Math.abs((CURRENT_LOCATION.lat || 0) - nLat) > 0.0005 ||
@@ -3030,6 +3128,7 @@
 
       CURRENT_LOCATION = {
         name: newName,
+        geoName: geoPlace,
         postcode: (postcode && postcode !== 'undefined') ? postcode : '',
         lat: nLat,
         lon: nLon,
@@ -3060,6 +3159,9 @@
     function saveSavedLocation() {
       if (CURRENT_LOCATION && CURRENT_LOCATION.name) {
         CURRENT_LOCATION.name = shortenPlaceName(CURRENT_LOCATION.name);
+      }
+      if (CURRENT_LOCATION && CURRENT_LOCATION.geoName) {
+        CURRENT_LOCATION.geoName = shortenPlaceName(CURRENT_LOCATION.geoName);
       }
       const serialized = JSON.stringify(CURRENT_LOCATION);
       try {
@@ -3883,6 +3985,9 @@
       if (!cleanNewName) return;
 
       CURRENT_LOCATION.name = cleanNewName;
+      if (!CURRENT_LOCATION.geoName) {
+        CURRENT_LOCATION.geoName = cleanNewName;
+      }
       saveSavedLocation();
       recordLocationQuery(CURRENT_LOCATION);
       updateLocationHeader();
@@ -4192,7 +4297,7 @@
       hideRecentDeleteBar();
 
       try {
-        const raw = localStorage.getItem('ambient_location_queries');
+        const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
         let queries = raw ? JSON.parse(raw) : [];
         if (!Array.isArray(queries)) queries = [];
 
@@ -4207,7 +4312,8 @@
           return true;
         });
 
-        localStorage.setItem('ambient_location_queries', JSON.stringify(queries));
+        localStorage.setItem(USER_RECENTS_STORAGE_KEY, JSON.stringify(queries));
+        try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
       } catch (_) {}
 
       renderLocationModalPicks();
@@ -4252,9 +4358,9 @@
     function renderLocationModalPicks() {
       hideRecentDeleteBar();
 
-      // 1. Render recent searches from ambient_location_queries
+      // 1. Render recent searches from ambient_user_recent_locations (personal to device)
       try {
-        const raw = localStorage.getItem('ambient_location_queries');
+        const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
         const queries = raw ? JSON.parse(raw) : [];
         const recentCont = document.getElementById('recentLocationsContainer');
         const recentChips = document.getElementById('recentLocationChips');
@@ -6861,6 +6967,24 @@
 
       // Start 40s auto-revert countdown
       resetShareAutoCloseTimer();
+
+      // Populate visual title badge in Share header: e.g. Dashboard Link "Stroud Hotel" (green font/badge)
+      const titleBadge = document.getElementById('shareTitleBadge');
+      const titleText = document.getElementById('shareTitleText');
+      const activeTitle = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location')
+        ? CURRENT_LOCATION.name
+        : '';
+
+      if (titleBadge && titleText) {
+        if (activeTitle) {
+          titleText.textContent = activeTitle;
+          titleBadge.classList.remove('hidden');
+          titleBadge.classList.add('inline-flex');
+        } else {
+          titleBadge.classList.add('hidden');
+          titleBadge.classList.remove('inline-flex');
+        }
+      }
 
       // Generate current share URL with postcode and place name, or coordinates/location
       let shareUrl = window.location.href;
