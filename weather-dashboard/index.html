@@ -1225,7 +1225,7 @@
       <div class="mt-4">
         <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter Postcode, Town or City</label>
         <div class="flex gap-2">
-          <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Stroud Hotel GL5 3AP, Nailsworth, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
+          <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
           <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none" onkeydown="handleSearchBtnKeydown(event)">
             Search
           </button>
@@ -1238,12 +1238,12 @@
             <span class="text-amber-300 flex-shrink-0">💡</span>
             <div>
               <span class="font-semibold text-white">Custom Dashboard Title:</span>
-              Type or speak any friendly name before a postcode (e.g. <span class="text-sky-300 font-mono text-[10px]">Stroud Hotel GL5 3AP</span> or <span class="text-sky-300 font-mono text-[10px]">Home, GL5 1AB</span>). It sets your header title, saves to recent places, and is embedded into your shared link!
+              Type or speak any friendly name before a postcode (e.g. <span class="text-sky-300 font-mono text-[10px]">Grand Hotel BN1 2FW</span> or <span class="text-sky-300 font-mono text-[10px]">Castle View, EH1 2NG</span>). It sets your header title, saves to recent places, and is embedded into your shared link!
             </div>
           </div>
           <div class="pt-2 border-t border-white/10 flex items-center gap-2">
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
-            <input id="customRenameInput" type="text" placeholder="New title (e.g. Stroud Hotel)" class="flex-1 bg-black/60 border border-white/20 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onkeydown="if(event.key==='Enter'){applyCurrentLocationRename();}">
+            <input id="customRenameInput" type="text" placeholder="New title (e.g. Grand Hotel)" class="flex-1 bg-black/60 border border-white/20 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onkeydown="if(event.key==='Enter'){applyCurrentLocationRename();}">
             <button id="customRenameBtn" type="button" onclick="applyCurrentLocationRename()" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
             </button>
@@ -1776,10 +1776,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=119"></script>
+  <script src="traffic-flood.js?v=120"></script>
     <script>
-    const APP_BUILD = 119;
-    const APP_VERSION = '1.9.55';
+    const APP_BUILD = 120;
+    const APP_VERSION = '1.9.56';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
