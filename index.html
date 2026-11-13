@@ -1280,10 +1280,10 @@
           <div class="flex items-center gap-1.5">
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
             <div class="relative flex-1 flex items-center">
-              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="updateRenameClearBtnVisibility()" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
+              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
               <button id="customRenameClearBtn" type="button" tabindex="-1" onclick="clearRenameInput()" class="hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear text">✕</button>
             </div>
-            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
+            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
             </button>
           </div>
@@ -1466,7 +1466,7 @@
               </div>
               <p class="text-[10px] text-slate-300 leading-snug">
                 <span class="block mb-0.5"><strong class="text-emerald-300">Looks best on TV!</strong></span>
-                (<strong class="text-amber-300">"TV Bro" [browser] recommended</strong> on Shield / Android TV, also works on most Smart TV browsers). Press <strong class="text-sky-300">F</strong> for fullscreen. Full D-pad remote control &amp; auto-refresh.
+                (<strong class="text-amber-300">"TV Bro" browser recommended</strong> on Shield / Android TV, also works on most Smart TV browsers). Press <strong class="text-sky-300">F</strong> for fullscreen. Full D-pad remote control &amp; auto-refresh.
               </p>
             </div>
 
@@ -1823,10 +1823,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=129"></script>
+  <script src="traffic-flood.js?v=130"></script>
     <script>
-    const APP_BUILD = 129;
-    const APP_VERSION = '1.9.65';
+    const APP_BUILD = 130;
+    const APP_VERSION = '1.9.66';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3601,7 +3601,12 @@
 
     function handleLocationInputKeydown(e) {
       if (e.key === 'Enter') {
+        e.preventDefault();
+        const input = document.getElementById('locationInput');
+        if (input && input.blur) input.blur();
         searchLocationFromModal();
+        const searchBtn = document.getElementById('searchLocBtn');
+        if (searchBtn && typeof searchBtn.focus === 'function') searchBtn.focus();
       } else if (e.key === 'ArrowRight') {
         // Move to Search button without submitting
         const searchBtn = document.getElementById('searchLocBtn');
@@ -3633,7 +3638,12 @@
 
     function handleRenameInputKeydown(e) {
       if (e.key === 'Enter') {
+        e.preventDefault();
+        const input = document.getElementById('customRenameInput');
+        if (input && input.blur) input.blur();
         applyCurrentLocationRename();
+        const renameBtn = document.getElementById('customRenameBtn');
+        if (renameBtn && typeof renameBtn.focus === 'function') renameBtn.focus();
       } else if (e.key === 'ArrowRight') {
         // Exit text box to Save Title button
         const renameBtn = document.getElementById('customRenameBtn');
@@ -3773,9 +3783,9 @@
       const input = document.getElementById('locationInput');
       if (!input) return;
 
-      const VOICE_PAUSE_RESET_MS = 3500;
+      const VOICE_PAUSE_RESET_MS = 2500;
 
-      // Record when focus or a click enters the typing box so only an immediate (< 1.2s) first 'q' is ignored
+      // Record when focus or a click enters the typing box so an accidental Q (< 4.5s) is swallowed
       input.addEventListener('focus', () => {
         locActivatedAt = Date.now();
         locInitialQSwallowed = false;
@@ -3817,7 +3827,7 @@
             locSettledValue = '';
           }
         }
-        if (!locInitialQSwallowed && (Date.now() - locActivatedAt <= 1200) && input.value.trim().toLowerCase() === 'q') {
+        if (!locInitialQSwallowed && (Date.now() - locActivatedAt <= 4500) && input.value.trim().toLowerCase() === 'q') {
           input.value = '';
           locInitialQSwallowed = true;
           resetSmartLocationInputState();
@@ -3837,13 +3847,13 @@
         // Detect a new microphone dictation or accidental 'q' when text is already present
         if (!locPrefixToStrip && locSettledValue && input.value.startsWith(locSettledValue)) {
           const added = input.value.slice(locSettledValue.length);
-          if (!locInitialQSwallowed && (now - locActivatedAt <= 1200) && added.trim().toLowerCase() === 'q') {
+          if (!locInitialQSwallowed && (now - locActivatedAt <= 4500) && added.trim().toLowerCase() === 'q') {
             input.value = '';
             locInitialQSwallowed = true;
             resetSmartLocationInputState();
             return;
           }
-          // Only treat as a brand-new microphone search if > 3.5s has passed AND it's not a postcode/place continuation
+          // Only treat as a brand-new microphone search if > 2.5s has passed AND it's not a postcode/place continuation
           if (elapsed > VOICE_PAUSE_RESET_MS && !isSpokenContinuation(locSettledValue, added)) {
             if (added.length >= 2 || e.isComposing || e.inputType === 'insertCompositionText' || e.inputType === 'insertFromPaste') {
               locPrefixToStrip = locSettledValue;
@@ -3863,12 +3873,17 @@
           }
         }
 
-        // Only ignore a standalone 'q' if it arrives within 1.2s of focusing/clicking the box (and only once per focus)
-        if (!locInitialQSwallowed && (now - locActivatedAt <= 1200) && input.value.trim().toLowerCase() === 'q') {
+        // Only ignore a standalone 'q' if it arrives within 4.5s of focusing/clicking the box
+        if (!locInitialQSwallowed && (now - locActivatedAt <= 4500) && input.value.trim().toLowerCase() === 'q') {
           input.value = '';
           locInitialQSwallowed = true;
           resetSmartLocationInputState();
           return;
+        }
+
+        // Strip accidental leading 'q' or 'Q' if followed by space or a consonant/digit (e.g. "q London" -> "London", "qSW1A" -> "SW1A")
+        if (!isDeletion && (now - locActivatedAt <= 6000) && /^q(?:\s+|[b-df-hj-np-tv-z0-9])/i.test(input.value)) {
+          input.value = input.value.replace(/^q\s+/i, '').replace(/^q(?=[b-df-hj-np-tv-z0-9])/i, '');
         }
 
         // If the voice recognizer OVERWROTE the first half of a spoken postcode/place after a pause
@@ -3926,9 +3941,9 @@
           }
           locSettledValue = input.value;
 
-          // When speech/typing settles with valid text, dismiss mobile on-screen keyboard
+          // When speech/typing settles with valid text (2.5s pause), dismiss on-screen keyboard
           // and move focus to the Search button so the user can immediately tap / press OK
-          if (input.value.trim().length >= 3 && document.activeElement === input) {
+          if (input.value.trim().length >= 2 && document.activeElement === input) {
             if (input.blur) input.blur();
             const searchBtn = document.getElementById('searchLocBtn');
             if (searchBtn && typeof searchBtn.focus === 'function') {
@@ -4119,8 +4134,14 @@
       }
     }
 
+    let renameActivatedAt = 0;
+    let renameInitialQSwallowed = false;
+    let renameSettleTimer = null;
+
     function handleRenameInputFocus(el) {
       if (!el) return;
+      renameActivatedAt = Date.now();
+      renameInitialQSwallowed = false;
       // Auto-clear pre-filled current title so user starts typing fresh immediately
       if (el.dataset.prefilled === 'true' || (CURRENT_LOCATION && el.value === CURRENT_LOCATION.name)) {
         el.value = '';
@@ -4131,6 +4152,8 @@
 
     function handleRenameInputClick(el) {
       if (!el) return;
+      renameActivatedAt = Date.now();
+      renameInitialQSwallowed = false;
       // Auto-clear on click if still showing pre-filled title
       if (el.dataset.prefilled === 'true' || (CURRENT_LOCATION && el.value === CURRENT_LOCATION.name)) {
         el.value = '';
@@ -4139,8 +4162,45 @@
       updateRenameClearBtnVisibility();
     }
 
+    function handleRenameInputChange(el) {
+      if (!el) return;
+      const now = Date.now();
+      const val = el.value;
+
+      // Swallowing accidental Q within 4.5s of activating box
+      if (!renameInitialQSwallowed && (now - renameActivatedAt <= 4500) && val.trim().toLowerCase() === 'q') {
+        el.value = '';
+        renameInitialQSwallowed = true;
+        updateRenameClearBtnVisibility();
+        return;
+      }
+
+      // Strip accidental leading 'q' or 'Q' if followed by space or consonant/digit
+      if ((now - renameActivatedAt <= 6000) && /^q(?:\s+|[b-df-hj-np-tv-z0-9])/i.test(el.value)) {
+        el.value = el.value.replace(/^q\s+/i, '').replace(/^q(?=[b-df-hj-np-tv-z0-9])/i, '');
+      }
+
+      updateRenameClearBtnVisibility();
+
+      // Settle timer (2.5s) to close keyboard and return focus to Save Title button
+      if (renameSettleTimer) clearTimeout(renameSettleTimer);
+      renameSettleTimer = setTimeout(() => {
+        if (el.value.trim().length >= 1 && document.activeElement === el) {
+          if (el.blur) el.blur();
+          const renameBtn = document.getElementById('customRenameBtn');
+          if (renameBtn && typeof renameBtn.focus === 'function') {
+            renameBtn.focus();
+          }
+        }
+      }, 2500);
+    }
+
     function handleRenameInputBlur(el) {
       if (!el) return;
+      if (renameSettleTimer) {
+        clearTimeout(renameSettleTimer);
+        renameSettleTimer = null;
+      }
       // If user clicked away without entering a new title, restore current title politely
       if (!el.value || !el.value.trim()) {
         const curName = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
@@ -5390,9 +5450,11 @@
       if (isClothingSlide) {
         if (icon) icon.style.display = 'none';
         if (badge) badge.style.display = 'none';
+        textEl.style.color = '#6ee7b7'; // Bright emerald green for clothing advice
       } else {
         if (icon) icon.style.display = '';
         if (badge) badge.style.display = '';
+        textEl.style.color = ''; // Restore standard sky-200 color
       }
 
       if (rainTickerTimer) {
