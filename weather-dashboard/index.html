@@ -275,9 +275,21 @@
       animation: none !important;
       border-color: #fbbf24 !important;
       background-color: rgba(245, 158, 11, 0.20) !important;
+      color: #fef3c7 !important;
       box-shadow: 0 0 0 0.75px #fbbf24, 0 0 11px rgba(251, 191, 36, 0.42) !important;
       transform: scale(1.015);
       transition: all 0.2s ease-out;
+    }
+    body:not(.focus-dormant) #headerLocationBtn:focus,
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible {
+      border-color: #fbbf24 !important;
+      background-color: rgba(245, 158, 11, 0.25) !important;
+      color: #fef3c7 !important;
+      box-shadow: 0 0 0 0.75px #fbbf24, 0 0 12px rgba(251, 191, 36, 0.5) !important;
+    }
+    body:not(.focus-dormant) #headerLocationBtn:focus #headerPostcodeBadge,
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerPostcodeBadge {
+      color: #fbbf24 !important;
     }
 
     /* Wind Speed Warning Highlights */
@@ -1219,6 +1231,24 @@
           </button>
         </div>
         <div id="locationSearchStatus" class="text-[11px] text-slate-400 mt-2 min-h-[16px]"></div>
+
+        <!-- Custom Title Guidance & Direct Rename Box -->
+        <div class="mt-2.5 p-2.5 rounded-xl bg-sky-950/40 border border-sky-400/25 text-left space-y-2">
+          <div class="flex items-start gap-1.5 text-[11px] text-slate-300 leading-snug">
+            <span class="text-amber-300 flex-shrink-0">💡</span>
+            <div>
+              <span class="font-semibold text-white">Custom Dashboard Title:</span>
+              Type or speak any friendly name before a postcode (e.g. <span class="text-sky-300 font-mono text-[10px]">Stroud Hotel GL5 3AP</span> or <span class="text-sky-300 font-mono text-[10px]">Home, GL5 1AB</span>). It sets your header title, saves to recent places, and is embedded into your shared link!
+            </div>
+          </div>
+          <div class="pt-2 border-t border-white/10 flex items-center gap-2">
+            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
+            <input id="customRenameInput" type="text" placeholder="New title (e.g. Stroud Hotel)" class="flex-1 bg-black/60 border border-white/20 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onkeydown="if(event.key==='Enter'){applyCurrentLocationRename();}">
+            <button id="customRenameBtn" type="button" onclick="applyCurrentLocationRename()" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
+              Save Title
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Quick GPS Button -->
@@ -1252,7 +1282,7 @@
   </div>
 
   <!-- 30-DAY LOCATION HISTORY WORLD MAP MODAL -->
-  <div id="historyMapModal" onclick="closeHistoryMapModal()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-5 text-left cursor-pointer">
+  <div id="historyMapModal" onclick="closeHistoryMapModal()" onmousemove="resetHistoryMapAutoCloseTimer()" onkeydown="resetHistoryMapAutoCloseTimer()" ontouchstart="resetHistoryMapAutoCloseTimer()" onpointerdown="resetHistoryMapAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-5 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
       
       <!-- Modal Header -->
@@ -1275,9 +1305,9 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <!-- Prominent TV-focusable Close Button -->
+          <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
           <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){const firstChip=document.querySelector('#mapRecentChips button');if(firstChip){event.preventDefault();firstChip.focus();}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
-            <span>✕ Close</span>
+            <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
           </button>
         </div>
       </div>
@@ -1300,7 +1330,7 @@
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
           <button id="closeMapBtnBottom" onkeydown="if(event.key==='ArrowUp'){const topBtn=document.getElementById('closeMapBtnTop');if(topBtn){event.preventDefault();topBtn.focus();}else if(event.key==='ArrowLeft'){const chips=document.querySelectorAll('#mapRecentChips button');if(chips.length){event.preventDefault();chips[chips.length-1].focus();}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition focus:outline-none flex items-center gap-1 cursor-pointer" tabindex="0">
-            ✕ Close
+            <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-200 font-mono text-[10px] ml-0.5">(45s)</span></span>
           </button>
         </div>
       </div>
@@ -1746,10 +1776,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=118"></script>
+  <script src="traffic-flood.js?v=119"></script>
     <script>
-    const APP_BUILD = 118;
-    const APP_VERSION = '1.9.54';
+    const APP_BUILD = 119;
+    const APP_VERSION = '1.9.55';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -2406,6 +2436,40 @@
       }
     }
 
+    let historyMapAutoCloseSecs = 45;
+    let historyMapAutoCloseTimer = null;
+
+    function updateHistoryMapCountdownDisplay() {
+      const topBtnTimer = document.getElementById('mapBtnCountdownTop');
+      const bottomBtnTimer = document.getElementById('mapBtnCountdownBottom');
+      if (topBtnTimer) topBtnTimer.textContent = `(${historyMapAutoCloseSecs}s)`;
+      if (bottomBtnTimer) bottomBtnTimer.textContent = `(${historyMapAutoCloseSecs}s)`;
+    }
+
+    function resetHistoryMapAutoCloseTimer() {
+      historyMapAutoCloseSecs = 45;
+      updateHistoryMapCountdownDisplay();
+      if (historyMapAutoCloseTimer) clearInterval(historyMapAutoCloseTimer);
+      historyMapAutoCloseTimer = setInterval(() => {
+        historyMapAutoCloseSecs--;
+        updateHistoryMapCountdownDisplay();
+        if (historyMapAutoCloseSecs <= 0) {
+          clearInterval(historyMapAutoCloseTimer);
+          historyMapAutoCloseTimer = null;
+          closeHistoryMapModal();
+        }
+      }, 1000);
+    }
+
+    function stopHistoryMapAutoCloseTimer() {
+      if (historyMapAutoCloseTimer) {
+        clearInterval(historyMapAutoCloseTimer);
+        historyMapAutoCloseTimer = null;
+      }
+      historyMapAutoCloseSecs = 45;
+      updateHistoryMapCountdownDisplay();
+    }
+
     function openHistoryMapModal() {
       if (!isMapUnlocked()) {
         // Without the password, clicking the globe does nothing
@@ -2428,6 +2492,7 @@
       }
 
       initOrRefreshHistoryMap();
+      resetHistoryMapAutoCloseTimer();
 
       // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
       // and then the Close button prominently highlights in warm amber-yellow.
@@ -2438,6 +2503,7 @@
     }
 
     function closeHistoryMapModal(pop = true) {
+      stopHistoryMapAutoCloseTimer();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.add('hidden');
@@ -3761,6 +3827,10 @@
       if (input) {
         input.value = '';
       }
+      const renameInput = document.getElementById('customRenameInput');
+      if (renameInput) {
+        renameInput.value = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
+      }
       const delBar = document.getElementById('recentDeleteBar');
       if (delBar) {
         delBar.classList.add('hidden');
@@ -3803,6 +3873,27 @@
         }
       }
       restorePreModalFocus('headerLocationBtn');
+    }
+
+    function applyCurrentLocationRename() {
+      const renameInput = document.getElementById('customRenameInput');
+      const status = document.getElementById('locationSearchStatus');
+      if (!renameInput || !renameInput.value.trim() || !CURRENT_LOCATION) return;
+      const cleanNewName = titleCaseCustomName(shortenPlaceName(renameInput.value.trim()));
+      if (!cleanNewName) return;
+
+      CURRENT_LOCATION.name = cleanNewName;
+      saveSavedLocation();
+      recordLocationQuery(CURRENT_LOCATION);
+      updateLocationHeader();
+
+      if (status) {
+        status.style.color = '#38bdf8';
+        status.textContent = `✅ Renamed dashboard title to "${cleanNewName}"!`;
+      }
+      setTimeout(() => {
+        closeLocationModal();
+      }, 700);
     }
 
     function parseCustomNameAndLocation(raw) {
