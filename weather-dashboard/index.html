@@ -1217,7 +1217,7 @@
         <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
           <span>📍</span> Set Location (Postcode, Town or GPS)
         </h3>
-        <button id="closeLocationBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('locationInput');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
+        <button id="closeLocationBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
           <span>✕ Close <span id="locationBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
         </button>
       </div>
@@ -1782,10 +1782,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=125"></script>
+  <script src="traffic-flood.js?v=126"></script>
     <script>
-    const APP_BUILD = 125;
-    const APP_VERSION = '1.9.61';
+    const APP_BUILD = 126;
+    const APP_VERSION = '1.9.62';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3566,8 +3566,9 @@
         const searchBtn = document.getElementById('searchLocBtn');
         if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
       } else if (e.key === 'ArrowDown') {
-        const renameInput = document.getElementById('customRenameInput');
-        if (renameInput) { e.preventDefault(); renameInput.focus(); }
+        // Step down to Save Title button (bypassing text inputs on vertical scroll)
+        const renameBtn = document.getElementById('customRenameBtn');
+        if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
       } else if (e.key === 'ArrowUp') {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) { e.preventDefault(); closeBtn.focus(); }
@@ -3576,10 +3577,12 @@
 
     function handleSearchBtnKeydown(e) {
       if (e.key === 'ArrowLeft') {
+        // Only enter text entry box when pressing Left from Search button
         const input = document.getElementById('locationInput');
         if (input) { e.preventDefault(); input.focus(); }
       } else if (e.key === 'ArrowDown') {
-        const renameBtn = document.getElementById('customRenameBtn') || document.getElementById('customRenameInput');
+        // Scroll down directly to Save Title button without entering text boxes
+        const renameBtn = document.getElementById('customRenameBtn');
         if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
       } else if (e.key === 'ArrowUp') {
         const closeBtn = document.getElementById('closeLocationBtnTop');
@@ -3591,34 +3594,39 @@
       if (e.key === 'Enter') {
         applyCurrentLocationRename();
       } else if (e.key === 'ArrowRight') {
+        // Exit text box to Save Title button
         const renameBtn = document.getElementById('customRenameBtn');
         if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
       } else if (e.key === 'ArrowDown') {
+        // Step down to GPS button
         const gpsBtn = document.getElementById('gpsModalBtn');
         if (gpsBtn) { e.preventDefault(); gpsBtn.focus(); }
       } else if (e.key === 'ArrowUp') {
-        const input = document.getElementById('locationInput');
-        if (input) { e.preventDefault(); input.focus(); }
+        const searchBtn = document.getElementById('searchLocBtn');
+        if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
       }
     }
 
     function handleRenameBtnKeydown(e) {
       if (e.key === 'ArrowLeft') {
+        // Only enter title rename box when pressing Left from Save Title button
         const renameInput = document.getElementById('customRenameInput');
         if (renameInput) { e.preventDefault(); renameInput.focus(); }
       } else if (e.key === 'ArrowDown') {
+        // Scroll down to GPS button
         const gpsBtn = document.getElementById('gpsModalBtn');
         if (gpsBtn) { e.preventDefault(); gpsBtn.focus(); }
       } else if (e.key === 'ArrowUp') {
-        const searchBtn = document.getElementById('searchLocBtn') || document.getElementById('locationInput');
+        const searchBtn = document.getElementById('searchLocBtn');
         if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
       }
     }
 
     function handleGpsBtnKeydown(e) {
       if (e.key === 'ArrowUp') {
-        const renameInput = document.getElementById('customRenameInput') || document.getElementById('customRenameBtn');
-        if (renameInput) { e.preventDefault(); renameInput.focus(); }
+        // Up to Save Title button (bypassing text boxes)
+        const renameBtn = document.getElementById('customRenameBtn');
+        if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
       } else if (e.key === 'ArrowDown') {
         const firstPick = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
         if (firstPick) { e.preventDefault(); firstPick.focus(); }
