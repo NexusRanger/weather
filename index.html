@@ -1404,14 +1404,10 @@
       <!-- Action Hero Bar -->
       <div class="my-2.5 p-2.5 rounded-xl bg-gradient-to-r from-purple-900/50 via-indigo-900/40 to-fuchsia-900/40 border border-purple-400/30 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
         <div class="text-[11px] text-purple-200">
-          <span class="font-bold text-white">🚀 SpaceX &amp; Extreme Weather</span>
-          <span class="hidden sm:inline text-purple-300/80 ml-1">• Jump straight to Starship launch site or spin for a random pick!</span>
+          <span class="font-bold text-white">🎲 Global Wonders &amp; Destinations</span>
+          <span class="hidden sm:inline text-purple-300/80 ml-1">• Pick a fascinating location or spin for a surprise random destination!</span>
         </div>
         <div class="flex items-center gap-1.5 flex-shrink-0">
-          <button id="starbaseQuickBtn" tabindex="0" onclick="selectStarbaseDirectly()" class="tv-focus-amber px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs shadow-[0_0_10px_rgba(139,92,246,0.4)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1">
-            <span>🚀</span>
-            <span>Starbase</span>
-          </button>
           <button id="surpriseMeBtn" tabindex="0" onclick="pickRandomWonderAndLoad()" class="tv-focus-amber px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-[0_0_12px_rgba(217,70,239,0.45)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
             <span>🎲</span>
             <span>Surprise Me!</span>
@@ -1424,7 +1420,7 @@
         <!-- 🚀 Rocket Launch Sites & Spaceports -->
         <div>
           <div class="text-[10px] font-semibold uppercase tracking-wider text-violet-300 mb-1 flex items-center gap-1">
-            <span>🚀</span> Rocket Launch Sites &amp; Spaceports (SpaceX Starship)
+            <span>🚀</span> Rocket Launch Sites &amp; Spaceports
           </div>
           <div id="wondersSpaceChips" class="flex flex-wrap gap-1.5"></div>
         </div>
@@ -1964,10 +1960,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=136"></script>
+  <script src="traffic-flood.js?v=137"></script>
     <script>
-    const APP_BUILD = 136;
-    const APP_VERSION = '1.9.72';
+    const APP_BUILD = 137;
+    const APP_VERSION = '1.9.73';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3780,7 +3776,12 @@
       if (e.key === 'ArrowLeft') {
         // Only enter text entry box when pressing Left from Search button
         const input = document.getElementById('locationInput');
-        if (input) { e.preventDefault(); input.focus(); }
+        if (input) {
+          e.preventDefault();
+          input.focus();
+          const len = input.value.length;
+          try { input.setSelectionRange(len, len); } catch (_) {}
+        }
       } else if (e.key === 'ArrowDown') {
         // Scroll down directly to Save Title button without entering text boxes
         const renameBtn = document.getElementById('customRenameBtn');
@@ -3819,7 +3820,12 @@
       if (e.key === 'ArrowLeft') {
         // Only enter title rename box when pressing Left from Save Title button
         const renameInput = document.getElementById('customRenameInput');
-        if (renameInput) { e.preventDefault(); renameInput.focus(); }
+        if (renameInput) {
+          e.preventDefault();
+          renameInput.focus();
+          const len = renameInput.value.length;
+          try { renameInput.setSelectionRange(len, len); } catch (_) {}
+        }
       } else if (e.key === 'ArrowDown') {
         // Scroll down to GPS button
         const gpsBtn = document.getElementById('gpsModalBtn');
@@ -4025,7 +4031,7 @@
       const input = document.getElementById('locationInput');
       if (!input) return;
 
-      const VOICE_PAUSE_RESET_MS = 2500;
+      const VOICE_PAUSE_RESET_MS = 6000;
 
       // Record when focus or a click enters the typing box so an accidental Q (< 4.5s) is swallowed
       input.addEventListener('focus', () => {
@@ -4169,7 +4175,16 @@
 
         locLastInputAt = now;
         if (locSettleTimer) clearTimeout(locSettleTimer);
+
+        // Generous typing settle delay: 6.0s normally, extended to 12.0s if input ends with a space (e.g. "Edinburgh ")
+        // so the user has ample time to type multi-word destinations without being interrupted!
+        const endsWithSpace = input.value.endsWith(' ') || input.value.endsWith(',');
+        const settleDelay = endsWithSpace ? 12000 : 6000;
+
         locSettleTimer = setTimeout(() => {
+          // If the user ended with a space and is still in the input, don't interrupt multi-word typing!
+          if (input.value.endsWith(' ') && document.activeElement === input) return;
+
           if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
             const added = input.value.slice(locPrefixToStrip.length);
             if (!isSpokenContinuation(locPrefixToStrip, added)) {
@@ -4183,7 +4198,7 @@
           }
           locSettledValue = input.value;
 
-          // When speech/typing settles with valid text (2.5s pause), dismiss on-screen keyboard
+          // When speech/typing settles with valid text, dismiss on-screen keyboard
           // and move focus to the Search button so the user can immediately tap / press OK,
           // or sit back and let it automatically continue the search after 3 seconds of inactivity!
           if (input.value.trim().length >= 2 && document.activeElement === input) {
@@ -4194,7 +4209,7 @@
               startSearchAutoContinueCountdown();
             }
           }
-        }, VOICE_PAUSE_RESET_MS);
+        }, settleDelay);
       });
     })();
 
@@ -4453,10 +4468,14 @@
 
       updateRenameClearBtnVisibility();
 
-      // Settle timer (2.5s) to close keyboard and return focus to Save Title button,
+      // Generous settle timer (6.0s normally, 12.0s if ending with space) to close keyboard and return focus to Save Title button,
       // or sit back and let it automatically continue/save after 3 seconds of inactivity!
+      const endsWithSpace = el.value.endsWith(' ') || el.value.endsWith(',');
+      const settleDelay = endsWithSpace ? 12000 : 6000;
+
       if (renameSettleTimer) clearTimeout(renameSettleTimer);
       renameSettleTimer = setTimeout(() => {
+        if (el.value.endsWith(' ') && document.activeElement === el) return;
         if (el.value.trim().length >= 1 && document.activeElement === el) {
           if (el.blur) el.blur();
           const renameBtn = document.getElementById('customRenameBtn');
@@ -4465,7 +4484,7 @@
             startRenameAutoContinueCountdown();
           }
         }
-      }, 2500);
+      }, settleDelay);
     }
 
     function handleRenameInputBlur(el) {
@@ -5326,10 +5345,8 @@
       resetWondersAutoCloseTimer();
 
       setTimeout(() => {
-        const starbaseBtn = document.getElementById('starbaseQuickBtn');
         const surpriseBtn = document.getElementById('surpriseMeBtn');
-        const target = starbaseBtn || surpriseBtn;
-        if (target) target.focus();
+        if (surpriseBtn) surpriseBtn.focus();
       }, 100);
     }
 
