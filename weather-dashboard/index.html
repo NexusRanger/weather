@@ -1864,10 +1864,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=134"></script>
+  <script src="traffic-flood.js?v=135"></script>
     <script>
-    const APP_BUILD = 134;
-    const APP_VERSION = '1.9.70';
+    const APP_BUILD = 135;
+    const APP_VERSION = '1.9.71';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -6531,13 +6531,20 @@
       const rows = document.querySelectorAll('#sevenDayList [data-day-index]');
       const isPanoActive = (typeof isHourlyCompressed !== 'undefined' && isHourlyCompressed);
       const activeIdx = (typeof panoramicDayOffset !== 'undefined') ? panoramicDayOffset : 0;
+      const homeOffset = (typeof isPanoramicLocked !== 'undefined' && isPanoramicLocked && typeof lockedDayOffset === 'number')
+        ? lockedDayOffset
+        : 0;
+
+      // Indicator in 10-day forecast illuminates ONLY when actively exploring away from home.
+      // It never lingers once reset to today or tomorrow!
+      const isExploringAway = isPanoActive && (activeIdx !== homeOffset) && (activeIdx >= 0 && activeIdx < 10);
 
       rows.forEach(row => {
         const idx = parseInt(row.getAttribute('data-day-index'), 10);
         const dot = row.querySelector('.day-pano-dot');
         const text = row.querySelector('.day-name-text');
 
-        if (isPanoActive && idx === activeIdx) {
+        if (isExploringAway && idx === activeIdx) {
           row.classList.add('day-row-pano-active');
           row.classList.remove('day-row-pano-dim');
           if (dot) dot.classList.remove('hidden');
@@ -6545,7 +6552,7 @@
             text.classList.add('text-amber-300', 'font-black');
             text.classList.remove('text-white');
           }
-        } else if (isPanoActive) {
+        } else if (isExploringAway) {
           row.classList.remove('day-row-pano-active');
           row.classList.add('day-row-pano-dim');
           if (dot) dot.classList.add('hidden');
@@ -6568,6 +6575,7 @@
     let isHourlyCompressed = false;
     let panoramicDayOffset = 0; // 0 = Today, 1..9 = Upcoming Days, -1 = Yesterday
     let isPanoramicLocked = false;
+    let lockedDayOffset = 0; // Remembers the original locked home day (0 = Today, -1 = Yesterday, 1 = Tomorrow)
     let hasRestoredPanoramicLock = false;
     let hourlyResetTimer = null;
     let hourlyReturnToNowTimer = null;
@@ -6581,14 +6589,48 @@
       const lockIcon = document.getElementById('panoramicLockIcon');
       const lockText = document.getElementById('panoramicLockText');
       const hintText = document.getElementById('timelineHintText');
-      const canLock = isHourlyCompressed && (panoramicDayOffset === 0 || panoramicDayOffset === 1);
 
-      if (!canLock) {
-        if (isPanoramicLocked) {
-          isPanoramicLocked = false;
-          try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
-        }
+      if (!isHourlyCompressed) {
         if (lockBtn) {
+          lockBtn.classList.add('hidden');
+          lockBtn.classList.remove('inline-flex');
+        }
+        return;
+      }
+
+      const isLockableDay = (panoramicDayOffset === -1 || panoramicDayOffset === 0 || panoramicDayOffset === 1);
+
+      if (lockBtn) {
+        if (isPanoramicLocked) {
+          lockBtn.classList.remove('hidden');
+          lockBtn.classList.add('inline-flex');
+
+          const lockedDayName = (lockedDayOffset === -1) ? 'Yesterday' : (lockedDayOffset === 1 ? 'Tomorrow' : 'Today');
+
+          if (panoramicDayOffset === lockedDayOffset) {
+            if (lockIcon) lockIcon.textContent = '🔒';
+            if (lockText) lockText.textContent = `Pano Locked (${lockedDayName})`;
+            lockBtn.classList.add('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
+            lockBtn.classList.remove('bg-white/10', 'border-white/15', 'text-slate-300', 'bg-amber-500/25', 'border-amber-400/60', 'text-amber-200');
+            lockBtn.title = `Panoramic view locked to ${lockedDayName} (will not time out). Click / OK to unlock.`;
+          } else {
+            // Browsing other days: button stays visible and offers instant jump back to the locked day
+            if (lockIcon) lockIcon.textContent = '🔒';
+            if (lockText) lockText.textContent = `Locked: ${lockedDayName} ↩`;
+            lockBtn.classList.add('bg-amber-500/25', 'border-amber-400/60', 'text-amber-200');
+            lockBtn.classList.remove('bg-white/10', 'border-white/15', 'text-slate-300', 'bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
+            lockBtn.title = `Pano is locked to ${lockedDayName}. Click / OK to return home now, or wait 45s for auto-return.`;
+          }
+        } else if (isLockableDay) {
+          lockBtn.classList.remove('hidden');
+          lockBtn.classList.add('inline-flex');
+          if (lockIcon) lockIcon.textContent = '🔓';
+          const dayName = (panoramicDayOffset === -1) ? 'Yesterday' : (panoramicDayOffset === 1 ? 'Tomorrow' : 'Today');
+          if (lockText) lockText.textContent = `Lock ${dayName}`;
+          lockBtn.classList.remove('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200', 'bg-amber-500/25', 'border-amber-400/60', 'text-amber-200');
+          lockBtn.classList.add('bg-white/10', 'border-white/15', 'text-slate-300');
+          lockBtn.title = `Keep panoramic view open on ${dayName} without timing out.`;
+        } else {
           if (document.activeElement === lockBtn) {
             const footer = document.getElementById('footerTimeline');
             if (footer) footer.focus({ preventScroll: true });
@@ -6596,46 +6638,47 @@
           lockBtn.classList.add('hidden');
           lockBtn.classList.remove('inline-flex');
         }
-      } else {
-        if (lockBtn) {
-          lockBtn.classList.remove('hidden');
-          lockBtn.classList.add('inline-flex');
-          if (isPanoramicLocked) {
-            if (lockIcon) lockIcon.textContent = '🔒';
-            if (lockText) lockText.textContent = 'Pano Locked';
-            lockBtn.classList.add('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
-            lockBtn.classList.remove('bg-white/10', 'border-white/15', 'text-slate-300');
-            lockBtn.title = 'Panoramic view locked (will not time out). Click to unlock.';
-          } else {
-            if (lockIcon) lockIcon.textContent = '🔓';
-            if (lockText) lockText.textContent = 'Lock Pano View';
-            lockBtn.classList.remove('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200');
-            lockBtn.classList.add('bg-white/10', 'border-white/15', 'text-slate-300');
-            lockBtn.title = 'Keep panoramic view open without timing out (Today & Tomorrow only)';
-          }
-        }
       }
 
-      if (isHourlyCompressed && hintText) {
-        if (isPanoramicLocked && canLock) {
-          hintText.innerHTML = '<span>◀ Yesterday • Tomorrow ▶</span><span class="text-cyan-300 font-semibold">🔒 Pano Locked • Click / OK to exit</span>';
+      if (hintText) {
+        if (isPanoramicLocked) {
+          const lockedDayName = (lockedDayOffset === -1) ? 'Yesterday' : (lockedDayOffset === 1 ? 'Tomorrow' : 'Today');
+          if (panoramicDayOffset === lockedDayOffset) {
+            hintText.innerHTML = '<span>◀ Browse Days ▶</span><span class="text-cyan-300 font-semibold">🔒 Pano Locked (' + lockedDayName + ') • Click / OK to exit</span>';
+          } else {
+            hintText.innerHTML = '<span>◀ Browse Days ▶</span><span class="text-amber-300 font-semibold">🔒 Auto-returns to ' + lockedDayName + ' (45s)</span>';
+          }
         } else {
-          hintText.innerHTML = '<span>◀ Yesterday • Tomorrow ▶</span><span class="text-slate-500">Click / OK to exit • Auto-resets</span>';
+          hintText.innerHTML = '<span>◀ Browse Days ▶</span><span class="text-slate-500">Click / OK to exit • Auto-resets (45s)</span>';
         }
       }
     }
 
     function togglePanoramicLock() {
-      if (!isHourlyCompressed || (panoramicDayOffset !== 0 && panoramicDayOffset !== 1)) return;
-      isPanoramicLocked = !isPanoramicLocked;
+      if (!isHourlyCompressed) return;
+      const isLockableDay = (panoramicDayOffset === -1 || panoramicDayOffset === 0 || panoramicDayOffset === 1);
+
       if (isPanoramicLocked) {
+        if (panoramicDayOffset === lockedDayOffset) {
+          // Unlocking from the locked home day
+          isPanoramicLocked = false;
+          lockedDayOffset = 0;
+          try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
+        } else {
+          // While on another day, pressing the lock button immediately returns to the locked home day!
+          stepPanoramicDayTo(lockedDayOffset);
+          return;
+        }
+      } else if (isLockableDay) {
+        // Locking to Yesterday (-1), Today (0), or Tomorrow (1)
+        isPanoramicLocked = true;
+        lockedDayOffset = panoramicDayOffset;
         try {
-          localStorage.setItem('ambient_pano_locked', JSON.stringify({ dayOffset: panoramicDayOffset }));
+          localStorage.setItem('ambient_pano_locked', JSON.stringify({ dayOffset: lockedDayOffset }));
         } catch (_) {}
-      } else {
-        try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
       }
       syncPanoramicLockUI();
+      updateTenDayForecastIndicator();
       resetPanoramicAutoTimer();
     }
 
@@ -6722,13 +6765,20 @@
         clearTimeout(hourlyResetTimer);
         hourlyResetTimer = null;
       }
-      // If Pano View is locked on Today (0) or Tomorrow (1), do not time out
-      if (isPanoramicLocked && (panoramicDayOffset === 0 || panoramicDayOffset === 1)) {
+      // If Pano View is locked on home day (Yesterday, Today, or Tomorrow), it stays locked indefinitely
+      if (isPanoramicLocked && panoramicDayOffset === lockedDayOffset) {
         return;
       }
+      // When browsing away from home or viewing uncompressed/unlocked days:
+      // Allow remaining there longer (45 seconds) before auto-returning
       hourlyResetTimer = setTimeout(() => {
-        setHourlyCompressedMode(false);
-      }, 20000);
+        if (isPanoramicLocked && typeof lockedDayOffset === 'number') {
+          // Return to original locked day (Yesterday, Today, or Tomorrow)
+          stepPanoramicDayTo(lockedDayOffset);
+        } else {
+          setHourlyCompressedMode(false);
+        }
+      }, 45000);
     }
 
     function stepPanoramicDay(delta, startDragPx = 0) {
@@ -6737,13 +6787,6 @@
       if (nextOffset !== panoramicDayOffset) {
         const dir = nextOffset > panoramicDayOffset ? 1 : -1;
         panoramicDayOffset = nextOffset;
-        if (panoramicDayOffset !== 0 && panoramicDayOffset !== 1) {
-          // Never allow lock to carry over onto other days
-          isPanoramicLocked = false;
-          try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
-        } else if (isPanoramicLocked) {
-          try { localStorage.setItem('ambient_pano_locked', JSON.stringify({ dayOffset: panoramicDayOffset })); } catch (_) {}
-        }
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
         renderHourly(cachedHourlyData, dir, startDragPx);
@@ -6760,6 +6803,19 @@
           activeRow.style.transition = 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)';
           activeRow.style.transform = 'translateX(0px)';
         }
+      }
+      resetPanoramicAutoTimer();
+    }
+
+    function stepPanoramicDayTo(targetOffset) {
+      if (!isHourlyCompressed) return;
+      const nextOffset = Math.max(-1, Math.min(9, targetOffset));
+      if (nextOffset !== panoramicDayOffset) {
+        const dir = nextOffset > panoramicDayOffset ? 1 : -1;
+        panoramicDayOffset = nextOffset;
+        syncPanoramicLockUI();
+        updateTenDayForecastIndicator();
+        renderHourly(cachedHourlyData, dir);
       }
       resetPanoramicAutoTimer();
     }
@@ -6853,8 +6909,9 @@
           const raw = localStorage.getItem('ambient_pano_locked');
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (parsed && (parsed.dayOffset === 0 || parsed.dayOffset === 1)) {
+            if (parsed && (parsed.dayOffset === -1 || parsed.dayOffset === 0 || parsed.dayOffset === 1)) {
               isPanoramicLocked = true;
+              lockedDayOffset = parsed.dayOffset;
               setHourlyCompressedMode(true, parsed.dayOffset, false);
               return;
             } else {
@@ -7192,7 +7249,13 @@
       if (hourlyResetTimer) { clearTimeout(hourlyResetTimer); hourlyResetTimer = null; }
 
       if (compressed) {
-        panoramicDayOffset = (typeof initialOffset === 'number') ? Math.max(-1, Math.min(9, initialOffset)) : 0;
+        if (typeof initialOffset === 'number') {
+          panoramicDayOffset = Math.max(-1, Math.min(9, initialOffset));
+        } else if (isPanoramicLocked && typeof lockedDayOffset === 'number') {
+          panoramicDayOffset = lockedDayOffset;
+        } else {
+          panoramicDayOffset = 0;
+        }
         if (title) title.textContent = '24-Hour Panoramic:';
         if (dayNav) {
           dayNav.classList.remove('hidden');
@@ -7209,6 +7272,7 @@
       } else {
         panoramicDayOffset = 0;
         isPanoramicLocked = false;
+        lockedDayOffset = 0;
         try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
