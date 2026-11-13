@@ -1243,7 +1243,10 @@
           </div>
           <div class="pt-2 border-t border-white/10 flex items-center gap-2">
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
-            <input id="customRenameInput" type="text" placeholder="New title (e.g. Grand Hotel)" class="flex-1 bg-black/60 border border-white/20 rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onkeydown="if(event.key==='Enter'){applyCurrentLocationRename();}">
+            <div class="relative flex-1 flex items-center">
+              <input id="customRenameInput" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="updateRenameClearBtnVisibility()" onblur="handleRenameInputBlur(this)" onkeydown="if(event.key==='Enter'){applyCurrentLocationRename();}">
+              <button id="customRenameClearBtn" type="button" tabindex="-1" onclick="clearRenameInput()" class="hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear text">✕</button>
+            </div>
             <button id="customRenameBtn" type="button" onclick="applyCurrentLocationRename()" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
             </button>
@@ -3931,7 +3934,15 @@
       }
       const renameInput = document.getElementById('customRenameInput');
       if (renameInput) {
-        renameInput.value = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
+        const curName = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
+        renameInput.value = curName;
+        renameInput.dataset.prefilled = curName ? 'true' : 'false';
+        if (curName) {
+          renameInput.placeholder = `Current: "${curName}"`;
+        } else {
+          renameInput.placeholder = 'New title (e.g. Grand Hotel)';
+        }
+        updateRenameClearBtnVisibility();
       }
       const delBar = document.getElementById('recentDeleteBar');
       if (delBar) {
@@ -3999,6 +4010,59 @@
       setTimeout(() => {
         closeLocationModal();
       }, 700);
+    }
+
+    function updateRenameClearBtnVisibility() {
+      const input = document.getElementById('customRenameInput');
+      const clearBtn = document.getElementById('customRenameClearBtn');
+      if (input && clearBtn) {
+        if (input.value && input.value.trim().length > 0) {
+          clearBtn.classList.remove('hidden');
+        } else {
+          clearBtn.classList.add('hidden');
+        }
+      }
+    }
+
+    function clearRenameInput() {
+      const input = document.getElementById('customRenameInput');
+      if (input) {
+        input.value = '';
+        input.dataset.prefilled = 'false';
+        updateRenameClearBtnVisibility();
+        input.focus();
+      }
+    }
+
+    function handleRenameInputFocus(el) {
+      if (!el) return;
+      // Auto-clear pre-filled current title so user starts typing fresh immediately
+      if (el.dataset.prefilled === 'true' || (CURRENT_LOCATION && el.value === CURRENT_LOCATION.name)) {
+        el.value = '';
+        el.dataset.prefilled = 'false';
+      }
+      updateRenameClearBtnVisibility();
+    }
+
+    function handleRenameInputClick(el) {
+      if (!el) return;
+      // Auto-clear on click if still showing pre-filled title
+      if (el.dataset.prefilled === 'true' || (CURRENT_LOCATION && el.value === CURRENT_LOCATION.name)) {
+        el.value = '';
+        el.dataset.prefilled = 'false';
+      }
+      updateRenameClearBtnVisibility();
+    }
+
+    function handleRenameInputBlur(el) {
+      if (!el) return;
+      // If user clicked away without entering a new title, restore current title politely
+      if (!el.value || !el.value.trim()) {
+        const curName = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
+        el.value = curName;
+        el.dataset.prefilled = curName ? 'true' : 'false';
+      }
+      setTimeout(updateRenameClearBtnVisibility, 150);
     }
 
     function parseCustomNameAndLocation(raw) {
