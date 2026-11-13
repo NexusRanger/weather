@@ -1985,10 +1985,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=140"></script>
+  <script src="traffic-flood.js?v=141"></script>
     <script>
-    const APP_BUILD = 140;
-    const APP_VERSION = '1.9.76';
+    const APP_BUILD = 141;
+    const APP_VERSION = '1.9.77';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -4885,9 +4885,12 @@
         } else if (e.key === 'ArrowUp' && typeof upFallbackFn === 'function') {
           const target = upFallbackFn();
           if (target) { e.preventDefault(); target.focus(); }
-        } else if (e.key === 'ArrowDown' && typeof downFallbackFn === 'function') {
-          const target = downFallbackFn();
-          if (target) { e.preventDefault(); target.focus(); }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (typeof downFallbackFn === 'function') {
+            const target = downFallbackFn();
+            if (target) target.focus();
+          }
         }
       });
     }
@@ -5174,7 +5177,7 @@
             gpsBtn,
             nearbyChips,
             () => document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn'),
-            null
+            () => document.getElementById('discoverQuickBtn')
           );
           nearbyChips.appendChild(gpsBtn);
         }
@@ -5248,7 +5251,7 @@
             btn,
             nearbyChips,
             () => document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn'),
-            null
+            () => document.getElementById('discoverQuickBtn')
           );
           nearbyChips.appendChild(btn);
         });
@@ -5266,8 +5269,11 @@
         wireLocationChipDpad(
           discoverBtn,
           nearbyChips,
-          () => document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn'),
-          null
+          () => {
+            const allNearby = Array.from(nearbyChips.querySelectorAll('button:not(#discoverQuickBtn)'));
+            return allNearby[allNearby.length - 1] || document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn');
+          },
+          () => discoverBtn
         );
         nearbyChips.appendChild(discoverBtn);
       }
@@ -5479,6 +5485,22 @@
       });
     }
 
+    function scrollChipIntoView(chip) {
+      const scrollArea = document.getElementById('wondersContentArea');
+      if (!scrollArea || !chip) return;
+      const containerRect = scrollArea.getBoundingClientRect();
+      const chipRect = chip.getBoundingClientRect();
+      const padding = 20;
+
+      if (chipRect.top < containerRect.top + padding) {
+        const delta = chipRect.top - (containerRect.top + padding);
+        scrollArea.scrollBy({ top: delta, behavior: 'smooth' });
+      } else if (chipRect.bottom > containerRect.bottom - padding) {
+        const delta = chipRect.bottom - (containerRect.bottom - padding);
+        scrollArea.scrollBy({ top: delta, behavior: 'smooth' });
+      }
+    }
+
     function handleWondersModalKeydown(e) {
       onWondersModalActivity();
 
@@ -5489,8 +5511,12 @@
         return;
       }
 
+      const isTab = (e.key === 'Tab');
       const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-      if (!arrowKeys.includes(e.key)) return;
+      if (!arrowKeys.includes(e.key) && !isTab) return;
+
+      e.preventDefault();
+      e.stopPropagation();
 
       const closeBtn = document.getElementById('closeWondersBtnTop');
       const surpriseBtn = document.getElementById('surpriseMeBtn');
@@ -5511,26 +5537,24 @@
         return parent ? Array.from(parent.querySelectorAll('button:not([disabled])')) : [];
       };
 
-      const getAllChips = () => {
-        const list = [];
-        chipShelves.forEach(sel => {
-          list.push(...getShelfButtons(sel));
-        });
-        return list;
-      };
+      // Collect only non-empty shelves in visual sequence
+      const activeShelves = [];
+      const allChips = [];
+      chipShelves.forEach(sel => {
+        const btns = getShelfButtons(sel);
+        if (btns.length > 0) {
+          activeShelves.push({ selector: sel, buttons: btns });
+          allChips.push(...btns);
+        }
+      });
 
       const activeEl = document.activeElement;
 
       // 1. Focus is on Close Button
       if (activeEl === closeBtn) {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          if (surpriseBtn) {
-            surpriseBtn.focus();
-            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
-          }
+        if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
+          if (surpriseBtn) surpriseBtn.focus();
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-          e.preventDefault();
           if (surpriseBtn) surpriseBtn.focus();
         }
         return;
@@ -5538,121 +5562,185 @@
 
       // 2. Focus is on Surprise Me Button
       if (activeEl === surpriseBtn) {
-        if (e.key === 'ArrowUp') {
-          e.preventDefault();
+        if (e.key === 'ArrowUp' || (isTab && e.shiftKey)) {
           if (closeBtn) closeBtn.focus();
-        } else if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          const allChips = getAllChips();
+        } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
           if (allChips.length > 0) {
             allChips[0].focus();
-            allChips[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            scrollChipIntoView(allChips[0]);
           }
         } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-          e.preventDefault();
           if (closeBtn) closeBtn.focus();
         }
         return;
       }
 
-      // 3. Focus is on one of the destination chips
-      const allChips = getAllChips();
-      const currentChipIdx = allChips.indexOf(activeEl);
+      // Find which shelf the active element belongs to
+      let currentShelfIdx = -1;
+      let idxInShelf = -1;
+      for (let s = 0; s < activeShelves.length; s++) {
+        const idx = activeShelves[s].buttons.indexOf(activeEl);
+        if (idx !== -1) {
+          currentShelfIdx = s;
+          idxInShelf = idx;
+          break;
+        }
+      }
 
-      if (currentChipIdx !== -1) {
-        let currentShelfIdx = -1;
-        let shelfButtons = [];
-        for (let s = 0; s < chipShelves.length; s++) {
-          const btns = getShelfButtons(chipShelves[s]);
-          if (btns.includes(activeEl)) {
-            currentShelfIdx = s;
-            shelfButtons = btns;
-            break;
+      // 3. Fallback: If activeElement is not inside activeShelves, focus the first chip or surprise button
+      if (currentShelfIdx === -1) {
+        if (allChips.length > 0) {
+          allChips[0].focus();
+          scrollChipIntoView(allChips[0]);
+        } else if (surpriseBtn) {
+          surpriseBtn.focus();
+        }
+        return;
+      }
+
+      const currentShelf = activeShelves[currentShelfIdx];
+      const shelfButtons = currentShelf.buttons;
+
+      // Handle Tab navigation
+      if (isTab) {
+        const globalIdx = allChips.indexOf(activeEl);
+        if (!e.shiftKey) {
+          // Tab forward: next chip, or wrap to surpriseBtn
+          if (globalIdx < allChips.length - 1) {
+            allChips[globalIdx + 1].focus();
+            scrollChipIntoView(allChips[globalIdx + 1]);
+          } else if (surpriseBtn) {
+            surpriseBtn.focus();
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } else {
+          // Shift+Tab backward: prev chip, or jump to surpriseBtn
+          if (globalIdx > 0) {
+            allChips[globalIdx - 1].focus();
+            scrollChipIntoView(allChips[globalIdx - 1]);
+          } else if (surpriseBtn) {
+            surpriseBtn.focus();
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }
-        const idxInShelf = shelfButtons.indexOf(activeEl);
+        return;
+      }
 
-        if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          if (idxInShelf < shelfButtons.length - 1) {
-            const next = shelfButtons[idxInShelf + 1];
-            next.focus();
-            next.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          } else if (currentChipIdx < allChips.length - 1) {
-            const next = allChips[currentChipIdx + 1];
-            next.focus();
-            next.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          }
-        } else if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          if (idxInShelf > 0) {
-            const prev = shelfButtons[idxInShelf - 1];
-            prev.focus();
-            prev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          } else if (currentChipIdx > 0) {
-            const prev = allChips[currentChipIdx - 1];
-            prev.focus();
-            prev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          } else {
-            if (surpriseBtn) {
-              surpriseBtn.focus();
-              if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-          }
-        } else if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          let targetChip = null;
-          for (let s = currentShelfIdx + 1; s < chipShelves.length; s++) {
-            const nextShelfBtns = getShelfButtons(chipShelves[s]);
-            if (nextShelfBtns.length > 0) {
-              const currentLeft = activeEl.offsetLeft;
-              let closest = nextShelfBtns[0];
-              let minDiff = Math.abs(closest.offsetLeft - currentLeft);
-              for (let b = 1; b < nextShelfBtns.length; b++) {
-                const diff = Math.abs(nextShelfBtns[b].offsetLeft - currentLeft);
-                if (diff < minDiff) {
-                  minDiff = diff;
-                  closest = nextShelfBtns[b];
-                }
-              }
-              targetChip = closest;
-              break;
-            }
-          }
-          if (targetChip) {
-            targetChip.focus();
-            targetChip.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          }
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          let targetChip = null;
-          for (let s = currentShelfIdx - 1; s >= 0; s--) {
-            const prevShelfBtns = getShelfButtons(chipShelves[s]);
-            if (prevShelfBtns.length > 0) {
-              const currentLeft = activeEl.offsetLeft;
-              let closest = prevShelfBtns[0];
-              let minDiff = Math.abs(closest.offsetLeft - currentLeft);
-              for (let b = 1; b < prevShelfBtns.length; b++) {
-                const diff = Math.abs(prevShelfBtns[b].offsetLeft - currentLeft);
-                if (diff < minDiff) {
-                  minDiff = diff;
-                  closest = prevShelfBtns[b];
-                }
-              }
-              targetChip = closest;
-              break;
-            }
-          }
-          if (targetChip) {
-            targetChip.focus();
-            targetChip.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          } else {
-            if (surpriseBtn) {
-              surpriseBtn.focus();
-              if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+      // Handle ArrowRight: Next chip in current set, or step into next set
+      if (e.key === 'ArrowRight') {
+        if (idxInShelf < shelfButtons.length - 1) {
+          const next = shelfButtons[idxInShelf + 1];
+          next.focus();
+          scrollChipIntoView(next);
+        } else if (currentShelfIdx < activeShelves.length - 1) {
+          const next = activeShelves[currentShelfIdx + 1].buttons[0];
+          next.focus();
+          scrollChipIntoView(next);
+        }
+        return;
+      }
+
+      // Handle ArrowLeft: Previous chip in current set, or step into previous set
+      if (e.key === 'ArrowLeft') {
+        if (idxInShelf > 0) {
+          const prev = shelfButtons[idxInShelf - 1];
+          prev.focus();
+          scrollChipIntoView(prev);
+        } else if (currentShelfIdx > 0) {
+          const prevShelf = activeShelves[currentShelfIdx - 1];
+          const prev = prevShelf.buttons[prevShelf.buttons.length - 1];
+          prev.focus();
+          scrollChipIntoView(prev);
+        } else {
+          if (surpriseBtn) {
+            surpriseBtn.focus();
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }
+        return;
+      }
+
+      // Handle ArrowDown: Next row within current set, or move to next set
+      if (e.key === 'ArrowDown') {
+        const currentRect = activeEl.getBoundingClientRect();
+        // Check for chips in the same set that are on a lower row
+        const sameShelfBelow = shelfButtons.filter(b => {
+          return b.getBoundingClientRect().top > currentRect.top + 10;
+        });
+
+        if (sameShelfBelow.length > 0) {
+          let closest = sameShelfBelow[0];
+          let minDiff = Math.abs(closest.getBoundingClientRect().left - currentRect.left);
+          for (let i = 1; i < sameShelfBelow.length; i++) {
+            const diff = Math.abs(sameShelfBelow[i].getBoundingClientRect().left - currentRect.left);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closest = sameShelfBelow[i];
+            }
+          }
+          closest.focus();
+          scrollChipIntoView(closest);
+        } else if (currentShelfIdx < activeShelves.length - 1) {
+          // Step down into the next set, preserving horizontal position
+          const nextShelf = activeShelves[currentShelfIdx + 1];
+          let closest = nextShelf.buttons[0];
+          let minDiff = Math.abs(closest.getBoundingClientRect().left - currentRect.left);
+          for (let i = 1; i < nextShelf.buttons.length; i++) {
+            const diff = Math.abs(nextShelf.buttons[i].getBoundingClientRect().left - currentRect.left);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closest = nextShelf.buttons[i];
+            }
+          }
+          closest.focus();
+          scrollChipIntoView(closest);
+        }
+        // At bottom-most set and no rows below: stay on current chip!
+        return;
+      }
+
+      // Handle ArrowUp: Previous row within current set, or move to previous set above
+      if (e.key === 'ArrowUp') {
+        const currentRect = activeEl.getBoundingClientRect();
+        // Check for chips in the same set that are on a higher row
+        const sameShelfAbove = shelfButtons.filter(b => {
+          return b.getBoundingClientRect().bottom < currentRect.bottom - 10;
+        });
+
+        if (sameShelfAbove.length > 0) {
+          let closest = sameShelfAbove[0];
+          let minDiff = Math.abs(closest.getBoundingClientRect().left - currentRect.left);
+          for (let i = 1; i < sameShelfAbove.length; i++) {
+            const diff = Math.abs(sameShelfAbove[i].getBoundingClientRect().left - currentRect.left);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closest = sameShelfAbove[i];
+            }
+          }
+          closest.focus();
+          scrollChipIntoView(closest);
+        } else if (currentShelfIdx > 0) {
+          // Move up into the previous set above
+          const prevShelf = activeShelves[currentShelfIdx - 1];
+          let closest = prevShelf.buttons[0];
+          let minDiff = Math.abs(closest.getBoundingClientRect().left - currentRect.left);
+          for (let i = 1; i < prevShelf.buttons.length; i++) {
+            const diff = Math.abs(prevShelf.buttons[i].getBoundingClientRect().left - currentRect.left);
+            if (diff < minDiff) {
+              minDiff = diff;
+              closest = prevShelf.buttons[i];
+            }
+          }
+          closest.focus();
+          scrollChipIntoView(closest);
+        } else {
+          // Topmost set and row: move up to Surprise Me button
+          if (surpriseBtn) {
+            surpriseBtn.focus();
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }
+        return;
       }
     }
 
@@ -5755,9 +5843,7 @@
       const wondersModal = document.getElementById('wondersModal');
       if (wondersModal && !wondersModal.classList.contains('hidden') && wondersModal.contains(e.target)) {
         if (e.target.id !== 'closeWondersBtnTop' && e.target.id !== 'surpriseMeBtn') {
-          if (typeof e.target.scrollIntoView === 'function') {
-            e.target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-          }
+          scrollChipIntoView(e.target);
         }
       }
     });
