@@ -322,14 +322,18 @@
       transition: all 0.2s ease-out;
     }
     body:not(.focus-dormant) #headerLocationBtn:focus,
-    body:not(.focus-dormant) #headerLocationBtn:focus-visible {
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible,
+    #headerLocationBtn.loc-btn-flash {
       border-color: #fbbf24 !important;
-      background-color: rgba(245, 158, 11, 0.25) !important;
+      background-color: rgba(245, 158, 11, 0.35) !important;
       color: #fef3c7 !important;
-      box-shadow: 0 0 0 0.75px #fbbf24, 0 0 12px rgba(251, 191, 36, 0.5) !important;
+      box-shadow: 0 0 0 1.5px #fbbf24, 0 0 16px rgba(251, 191, 36, 0.6) !important;
+      transform: scale(1.04);
+      transition: all 0.15s ease-out !important;
     }
     body:not(.focus-dormant) #headerLocationBtn:focus #headerPostcodeBadge,
-    body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerPostcodeBadge {
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerPostcodeBadge,
+    #headerLocationBtn.loc-btn-flash #headerPostcodeBadge {
       color: #fbbf24 !important;
     }
 
@@ -1823,10 +1827,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=130"></script>
+  <script src="traffic-flood.js?v=131"></script>
     <script>
-    const APP_BUILD = 130;
-    const APP_VERSION = '1.9.66';
+    const APP_BUILD = 131;
+    const APP_VERSION = '1.9.67';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1930,20 +1934,30 @@
       );
       if (modalOpen) return;
 
-      const isDpadArrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
-      if (!isDpadArrow) return;
-
-      // TV Remote UX: Any D-Pad push while in dormant state wakes up and illuminates
-      // the active focus on the location button without navigating away, waiting for next push!
+      // TV Remote UX: When sitting in dormant / ambient state:
       if (document.body.classList.contains('focus-dormant') || !document.activeElement || document.activeElement === document.body) {
-        e.preventDefault();
-        e.stopPropagation();
-        document.body.classList.remove('focus-dormant');
-        const locBtn = document.getElementById('headerLocationBtn');
-        if (locBtn) locBtn.focus({ preventScroll: true });
-        resetMainPageFocusActivity();
+        const isSelect = typeof isSelectKey === 'function' ? isSelectKey(e) : (e.key === 'Enter' || e.key === ' ' || e.key === 'Select');
+        const isDpadArrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+        if (isSelect) {
+          e.preventDefault();
+          e.stopPropagation();
+          openLocationModal();
+          return;
+        }
+        if (isDpadArrow) {
+          e.preventDefault();
+          e.stopPropagation();
+          document.body.classList.remove('focus-dormant');
+          const locBtn = document.getElementById('headerLocationBtn');
+          if (locBtn) locBtn.focus({ preventScroll: true });
+          resetMainPageFocusActivity();
+          return;
+        }
         return;
       }
+
+      const isDpadArrow = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+      if (!isDpadArrow) return;
 
       const active = document.activeElement;
       const headerBtns = getHeaderNavButtons();
@@ -4019,7 +4033,32 @@
       updateLocationCountdownDisplay();
     }
 
+    let isOpeningLocationModal = false;
     function openLocationModal() {
+      if (isOpeningLocationModal) return;
+
+      const locBtn = document.getElementById('headerLocationBtn');
+      const wasDormant = document.body.classList.contains('focus-dormant');
+
+      // If screen is sitting in passive/dormant state, wake up and flash the location pill yellow for a moment first
+      if (wasDormant && locBtn) {
+        isOpeningLocationModal = true;
+        document.body.classList.remove('focus-dormant');
+        locBtn.focus({ preventScroll: true });
+        locBtn.classList.add('loc-btn-flash');
+
+        setTimeout(() => {
+          locBtn.classList.remove('loc-btn-flash');
+          isOpeningLocationModal = false;
+          proceedOpenLocationModal();
+        }, 280);
+        return;
+      }
+
+      proceedOpenLocationModal();
+    }
+
+    function proceedOpenLocationModal() {
       const modal = document.getElementById('locationModal');
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
