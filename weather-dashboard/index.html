@@ -1992,10 +1992,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=142"></script>
+  <script src="traffic-flood.js?v=143"></script>
     <script>
-    const APP_BUILD = 142;
-    const APP_VERSION = '1.9.78';
+    const APP_BUILD = 143;
+    const APP_VERSION = '1.9.79';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -6385,7 +6385,7 @@
       textEl.style.opacity = '1';
 
       // Hide sunshine/rain icon and comfort/confidence badge during clothing advice slide to give text full banner width
-      const isClothingSlide = (currentRainSlideIndex === 2) || (typeof currentText === 'string' && (currentText.startsWith('🧥') || currentText.startsWith('☔') || currentText.startsWith('👕') || currentText.includes('coat') || currentText.includes('jacket') || currentText.includes('shirt')));
+      const isClothingSlide = (currentRainSlideIndex === 2) || (typeof currentText === 'string' && (currentText.startsWith('🧥') || currentText.startsWith('☔') || currentText.startsWith('👕') || currentText.startsWith('🏖️') || currentText.includes('coat') || currentText.includes('jacket') || currentText.includes('shirt') || currentText.includes('sleeves')));
       if (isClothingSlide) {
         if (icon) icon.style.display = 'none';
         if (badge) badge.style.display = 'none';
@@ -6545,6 +6545,49 @@
       const flRound = Math.round(feelsLike);
       const isBlustery = windSpeed >= 18 || windGusts >= 26;
       const isWet = isPrecipActiveOrSoon || (cur.precipitation && cur.precipitation > 0.1);
+
+      // Geordie Easter Egg: Newcastle / The Toon clothing advice (no coats needed, coats are for softees!)
+      const locName = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION)
+        ? `${CURRENT_LOCATION.name || ''} ${CURRENT_LOCATION.geoName || ''}`.toLowerCase()
+        : '';
+      const isGeordieToon = locName.includes('newcastle') || locName.includes('the toon');
+
+      if (isGeordieToon) {
+        // Freezing / Near-Freezing (Feels like <= 3°C)
+        if (feelsLike <= 3) {
+          if (isWet) return `👕 Short sleeves & shorts — coats are strictly for softees, hinny! (${flRound}°C)`;
+          if (isBlustery) return `👕 Just a T-shirt, marra! Fresh breeze builds character (${flRound}°C)`;
+          return `👕 T-shirt weather! A coat in the Toon?! Are ye radge?! (${flRound}°C)`;
+        }
+
+        // Cold (Feels like 4°C to 8°C)
+        if (feelsLike <= 8) {
+          if (isWet) return `👕 Skin's waterproof, pet! No coat needed, Bigg Market ready (${flRound}°C)`;
+          if (isBlustery) return `👕 Brisk breeze? Champion for short sleeves, bonny lad (${flRound}°C)`;
+          return `👕 Divvent be daft man, it's positively balmy out! Short sleeves (${flRound}°C)`;
+        }
+
+        // Chilly (Feels like 9°C to 12°C)
+        if (feelsLike <= 12) {
+          if (isWet) return `👕 Brolly? Nay chance man, ye'll poke someone's eye oot! (${flRound}°C)`;
+          if (isBlustery) return `👕 Shorts & T-shirt, marra — lovely refreshing gale (${flRound}°C)`;
+          return `👕 Just a T-shirt needed! Pure tropical for the Toon (${flRound}°C)`;
+        }
+
+        // Mild (Feels like 13°C to 16°C)
+        if (feelsLike <= 16) {
+          if (isWet) return `👕 Warm summer drizzle, hinny — no coat required (${flRound}°C)`;
+          return `👕 Proper lush out! Vest & shorts, sun's oot guns oot (${flRound}°C)`;
+        }
+
+        // Warm (Feels like 17°C to 21°C)
+        if (feelsLike <= 21) {
+          return `👕 Pure heatwave man! Ice pop & short sleeves, champion (${flRound}°C)`;
+        }
+
+        // Hot (Feels like >= 22°C)
+        return `🏖️ Pure boiling man! Tarmac's melting on the Quayside (${flRound}°C)`;
+      }
 
       // Freezing / Near-Freezing (Feels like <= 3°C)
       if (feelsLike <= 3) {
