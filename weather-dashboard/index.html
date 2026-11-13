@@ -1392,9 +1392,9 @@
       <div class="flex items-center justify-between pb-2 border-b border-white/10 flex-shrink-0">
         <div>
           <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-            <span>✨</span> Global Wonders, Launches &amp; Extremes
+            <span>🧭</span> Discover Global Destinations &amp; Rocket Launches
           </h3>
-          <p class="text-[10px] text-purple-300/80 mt-0.5">Explore real-time weather at rocket spaceports, active volcanoes &amp; iconic landmarks</p>
+          <p class="text-[10px] text-purple-300/80 mt-0.5">Live rocket flight countdowns, extreme weather records &amp; legendary landmarks</p>
         </div>
         <button id="closeWondersBtnTop" tabindex="0" onclick="closeWondersModal()" title="Close (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
           <span>✕ Close <span id="wondersBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
@@ -1404,8 +1404,8 @@
       <!-- Action Hero Bar -->
       <div class="my-2.5 p-2.5 rounded-xl bg-gradient-to-r from-purple-900/50 via-indigo-900/40 to-fuchsia-900/40 border border-purple-400/30 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
         <div class="text-[11px] text-purple-200">
-          <span class="font-bold text-white">🎲 Global Wonders &amp; Destinations</span>
-          <span class="hidden sm:inline text-purple-300/80 ml-1">• Pick a fascinating location or spin for a surprise random destination!</span>
+          <span class="font-bold text-white">🧭 Discover Destinations</span>
+          <span class="hidden sm:inline text-purple-300/80 ml-1">• Pick a live launch or wonder, or spin for a surprise destination!</span>
         </div>
         <div class="flex items-center gap-1.5 flex-shrink-0">
           <button id="surpriseMeBtn" tabindex="0" onclick="pickRandomWonderAndLoad()" class="tv-focus-amber px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-[0_0_12px_rgba(217,70,239,0.45)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
@@ -1417,6 +1417,17 @@
 
       <!-- Categorized Wonders Content -->
       <div class="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
+        <!-- 🔴 Live & Upcoming Rocket Launches -->
+        <div id="discoverLiveSection">
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-rose-300 mb-1 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500 animate-ping inline-block"></span> 🚀 Upcoming Rocket Launches (Live Feed):</span>
+            <span id="discoverLaunchesStatus" class="text-[9px] text-purple-300/70 lowercase font-mono">connecting...</span>
+          </div>
+          <div id="discoverLiveLaunchesChips" class="flex flex-wrap gap-1.5 min-h-[30px]">
+            <div class="text-[11px] text-slate-400 italic py-0.5">Fetching upcoming launches...</div>
+          </div>
+        </div>
+
         <!-- 🚀 Rocket Launch Sites & Spaceports -->
         <div>
           <div class="text-[10px] font-semibold uppercase tracking-wider text-violet-300 mb-1 flex items-center gap-1">
@@ -1960,10 +1971,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=137"></script>
+  <script src="traffic-flood.js?v=138"></script>
     <script>
-    const APP_BUILD = 137;
-    const APP_VERSION = '1.9.73';
+    const APP_BUILD = 138;
+    const APP_VERSION = '1.9.74';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3304,7 +3315,7 @@
 
     let pendingCustomLocationName = '';
 
-    function applySelectedLocation(name, lat, lon, postcode) {
+    function applySelectedLocation(name, lat, lon, postcode, recordInRecent = true) {
       const nLat = parseFloat(lat);
       const nLon = parseFloat(lon);
       const chosenName = pendingCustomLocationName ? pendingCustomLocationName.trim() : (name || '');
@@ -3337,7 +3348,9 @@
       }
 
       saveSavedLocation();
-      recordLocationQuery(CURRENT_LOCATION);
+      if (recordInRecent) {
+        recordLocationQuery(CURRENT_LOCATION);
+      }
       updateLocationHeader();
       fetchWeatherData();
     }
@@ -4775,8 +4788,8 @@
       return 2 * R * Math.asin(Math.sqrt(a));
     }
 
-    function loadLocationDirectly(name, lat, lon, postcode) {
-      applySelectedLocation(name, lat, lon, postcode);
+    function loadLocationDirectly(name, lat, lon, postcode, recordInRecent = true) {
+      applySelectedLocation(name, lat, lon, postcode, recordInRecent);
       closeLocationModal();
     }
 
@@ -5226,23 +5239,23 @@
           nearbyChips.appendChild(btn);
         });
 
-        // Special "🎲 Random" quick-pick chip appended as the final highlighted entry
-        const randomBtn = document.createElement('button');
-        randomBtn.id = 'randomWondersQuickBtn';
-        randomBtn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600/45 border border-purple-400/60 text-xs font-semibold text-purple-200 hover:text-white shadow-[0_0_12px_rgba(168,85,247,0.35)] transition cursor-pointer inline-flex items-center gap-1 focus:outline-none';
-        randomBtn.tabIndex = 0;
-        randomBtn.title = 'Explore Global Wonders, SpaceX Starship launches & extreme weather';
-        randomBtn.innerHTML = '<span>🎲</span><span>Random</span>';
-        randomBtn.onclick = () => {
+        // Special "🧭 Discover" quick-pick chip appended as the final highlighted entry
+        const discoverBtn = document.createElement('button');
+        discoverBtn.id = 'discoverQuickBtn';
+        discoverBtn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600/45 border border-purple-400/60 text-xs font-semibold text-purple-200 hover:text-white shadow-[0_0_12px_rgba(168,85,247,0.35)] transition cursor-pointer inline-flex items-center gap-1 focus:outline-none';
+        discoverBtn.tabIndex = 0;
+        discoverBtn.title = 'Discover live rocket launches, planetary extremes and world wonders';
+        discoverBtn.innerHTML = '<span>🧭</span><span>Discover</span>';
+        discoverBtn.onclick = () => {
           openWondersModal();
         };
         wireLocationChipDpad(
-          randomBtn,
+          discoverBtn,
           nearbyChips,
           () => document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn'),
           null
         );
-        nearbyChips.appendChild(randomBtn);
+        nearbyChips.appendChild(discoverBtn);
       }
     }
 
@@ -5328,10 +5341,134 @@
       resetWondersAutoCloseTimer();
     }
 
+    let liveLaunchesLoaded = false;
+    async function loadLiveRocketLaunches() {
+      const container = document.getElementById('discoverLiveLaunchesChips');
+      const statusEl = document.getElementById('discoverLaunchesStatus');
+      if (!container) return;
+
+      const CACHE_KEY = 'ambient_live_launches_cache';
+      const CACHE_TIME_KEY = 'ambient_live_launches_time';
+      const CACHE_TTL_MS = 12 * 60 * 1000; // 12 mins cache
+
+      let cachedData = null;
+      try {
+        const savedTime = parseInt(localStorage.getItem(CACHE_TIME_KEY) || '0', 10);
+        if (Date.now() - savedTime < CACHE_TTL_MS) {
+          cachedData = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        }
+      } catch (_) {}
+
+      if (cachedData && Array.isArray(cachedData) && cachedData.length > 0) {
+        renderLiveRocketLaunches(cachedData);
+        if (statusEl) statusEl.textContent = 'live schedule';
+        return;
+      }
+
+      try {
+        if (statusEl) statusEl.textContent = 'checking pads...';
+        const res = await fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=4', {
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const launches = (data && data.results && Array.isArray(data.results)) ? data.results : [];
+
+        if (launches.length > 0) {
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(launches));
+            localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
+          } catch (_) {}
+          renderLiveRocketLaunches(launches);
+          if (statusEl) statusEl.textContent = 'live schedule';
+        } else {
+          if (statusEl) statusEl.textContent = 'no upcoming launches';
+          container.innerHTML = '<div class="text-[11px] text-slate-400 py-0.5">No imminent launches in feed. Explore launch pads below!</div>';
+        }
+      } catch (err) {
+        console.warn('Failed to fetch live rocket launches:', err);
+        if (statusEl) statusEl.textContent = 'catalog';
+        container.innerHTML = '<div class="text-[11px] text-slate-400 py-0.5">Live launch feed offline. Explore active spaceports below!</div>';
+      }
+    }
+
+    function renderLiveRocketLaunches(launches) {
+      const container = document.getElementById('discoverLiveLaunchesChips');
+      if (!container) return;
+      container.innerHTML = '';
+
+      launches.forEach((l) => {
+        const pad = l.pad || {};
+        const loc = pad.location || {};
+        const lat = parseFloat(pad.latitude || (loc.id === 143 ? 25.9968 : 28.5729));
+        const lon = parseFloat(pad.longitude || (loc.id === 143 ? -97.1580 : -80.6490));
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        let shortName = l.name || 'Rocket Launch';
+        if (shortName.includes('|')) {
+          shortName = shortName.split('|')[0].trim();
+        }
+
+        let timeBadge = '';
+        if (l.net) {
+          const launchTime = new Date(l.net).getTime();
+          const diffMs = launchTime - Date.now();
+          const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+          if (diffHours <= 0 && diffHours >= -4) {
+            timeBadge = '🔴 Launching Now';
+          } else if (diffHours < 24 && diffHours > 0) {
+            timeBadge = `Tonight in ${diffHours}h`;
+          } else if (diffHours >= 24 && diffHours < 48) {
+            timeBadge = 'Tomorrow';
+          } else {
+            const d = new Date(l.net);
+            timeBadge = d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+          }
+        }
+
+        const siteShort = (loc.name && loc.name.includes('Starbase'))
+          ? 'Starbase, TX'
+          : (loc.name && loc.name.includes('Cape Canaveral'))
+            ? 'Cape Canaveral, FL'
+            : (loc.name && loc.name.includes('Vandenberg'))
+              ? 'Vandenberg, CA'
+              : (loc.name && loc.name.includes('Mahia'))
+                ? 'Mahia, NZ'
+                : (loc.country_code || 'Spaceport');
+
+        const btn = document.createElement('button');
+        btn.tabIndex = 0;
+        btn.className = 'tv-focus-amber px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-violet-900/40 to-indigo-900/40 hover:from-violet-800/60 hover:to-indigo-800/60 border border-violet-400/35 hover:border-violet-400/60 text-xs text-white transition cursor-pointer flex items-center gap-1.5 focus:outline-none';
+        btn.title = `${l.name} • ${pad.name || ''} (${siteShort}) • Press OK to view launchpad weather`;
+        btn.innerHTML = `<span>🚀</span><span class="font-semibold text-violet-200">${shortName}</span><span class="text-[10px] text-slate-300">(${siteShort})</span><span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-violet-500/25 text-amber-300 border border-violet-400/30">${timeBadge}</span>`;
+
+        btn.onclick = () => {
+          selectWonderLocation({
+            name: `${shortName} (${siteShort})`,
+            lat: lat,
+            lon: lon,
+            country: pad.country_code || 'USA'
+          });
+        };
+
+        btn.onkeydown = (e) => {
+          if (e.key === 'ArrowDown') {
+            const nextShelf = document.querySelector('#wondersSpaceChips button');
+            if (nextShelf) { e.preventDefault(); nextShelf.focus(); }
+          } else if (e.key === 'ArrowUp') {
+            const topAction = document.getElementById('surpriseMeBtn') || document.getElementById('closeWondersBtnTop');
+            if (topAction) { e.preventDefault(); topAction.focus(); }
+          }
+        };
+
+        container.appendChild(btn);
+      });
+    }
+
     function openWondersModal() {
       const modal = document.getElementById('wondersModal');
       if (!modal) return;
-      savePreModalFocus('randomWondersQuickBtn');
+      savePreModalFocus('discoverQuickBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
@@ -5342,6 +5479,7 @@
       } catch (_) {}
 
       populateWondersChips();
+      loadLiveRocketLaunches();
       resetWondersAutoCloseTimer();
 
       setTimeout(() => {
@@ -5360,7 +5498,7 @@
       if (pop && history.state && history.state.modal === 'wondersModal') {
         try { history.back(); } catch (_) {}
       }
-      restorePreModalFocus('randomWondersQuickBtn');
+      restorePreModalFocus('discoverQuickBtn');
     }
 
     function populateWondersChips() {
@@ -5395,7 +5533,8 @@
     function selectWonderLocation(wonder) {
       closeWondersModal(false);
       closeLocationModal(false);
-      loadLocationDirectly(wonder.name, wonder.lat, wonder.lon, wonder.country || '');
+      // Explored through Discover: do NOT clutter user's personal recent locations list!
+      loadLocationDirectly(wonder.name, wonder.lat, wonder.lon, wonder.country || '', false);
     }
 
     function selectStarbaseDirectly() {
