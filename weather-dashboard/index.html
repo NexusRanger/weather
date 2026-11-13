@@ -300,8 +300,12 @@
 
     /* Suppress native browser/TV white focus rings globally across all interactive elements */
     *,
+    *::before,
+    *::after,
     *:focus,
     *:focus-visible,
+    *:focus-within,
+    button,
     button:focus,
     button:focus-visible,
     a:focus,
@@ -310,15 +314,26 @@
     input:focus-visible,
     textarea:focus,
     textarea:focus-visible,
+    .focus\:outline-none,
+    .focus\:outline-none:focus,
+    .focus\:outline-none:focus-visible,
+    #headerLocationTitle,
     #headerLocationTitle:focus,
     #headerLocationTitle:focus-visible,
+    #headerLocationBtn,
+    #headerLocationBtn:focus,
+    #headerLocationBtn:focus-visible,
+    .tv-focus-amber,
     .tv-focus-amber:focus,
     .tv-focus-amber:focus-visible {
-      outline: none !important;
-      outline-style: none !important;
+      outline: 0 none transparent !important;
       outline-width: 0 !important;
+      outline-style: none !important;
+      outline-color: transparent !important;
+      outline-offset: 0 !important;
       -webkit-tap-highlight-color: transparent !important;
       -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+      -webkit-focus-ring-color: transparent !important;
     }
 
     /* TV Focus Warm Amber Glow (Uniform, crisp, standard-thickness border across all focusable elements) */
@@ -329,8 +344,11 @@
     body:not(.focus-dormant) #headerLocationTitle:focus,
     body:not(.focus-dormant) #headerLocationTitle:focus-visible,
     #headerLocationBtn.loc-btn-flash {
-      outline: none !important;
+      outline: 0 none transparent !important;
+      outline-width: 0 !important;
       outline-style: none !important;
+      outline-color: transparent !important;
+      outline-offset: 0 !important;
       animation: none !important;
       border-color: #fbbf24 !important;
       background-color: rgba(245, 158, 11, 0.20) !important;
@@ -350,8 +368,11 @@
     #locationInput:focus-visible,
     #customRenameInput:focus,
     #customRenameInput:focus-visible {
-      outline: none !important;
+      outline: 0 none transparent !important;
+      outline-width: 0 !important;
       outline-style: none !important;
+      outline-color: transparent !important;
+      outline-offset: 0 !important;
       border-color: #fbbf24 !important;
       background-color: rgba(0, 0, 0, 0.75) !important;
       box-shadow: 0 0 0 0.75px #fbbf24, 0 0 11px rgba(251, 191, 36, 0.42) !important;
@@ -787,7 +808,7 @@
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
         <div class="flex items-center gap-2 min-w-0 flex-nowrap">
-          <button id="headerLocationTitle" type="button" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent focus:outline-none" style="max-width: min(320px, 30vw);">
+          <button id="headerLocationTitle" type="button" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent" style="max-width: min(320px, 30vw); outline: none !important; outline-offset: 0 !important;">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth</span>
           </button>
           <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
@@ -1309,7 +1330,7 @@
           <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town or City</label>
           <div class="flex gap-1.5">
             <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none" onkeydown="handleLocationInputKeydown(event)">
-            <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none cursor-pointer" onkeydown="handleSearchBtnKeydown(event)">
+            <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" onblur="cancelSearchAutoContinue()" class="tv-focus-amber px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none cursor-pointer" onkeydown="handleSearchBtnKeydown(event)">
               Search
             </button>
           </div>
@@ -1324,7 +1345,7 @@
               <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
               <button id="customRenameClearBtn" type="button" tabindex="-1" onclick="clearRenameInput()" class="hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear text">✕</button>
             </div>
-            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
+            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onblur="cancelRenameAutoContinue()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
             </button>
           </div>
@@ -1359,6 +1380,85 @@
             <span>📍</span> Nearby Quick Picks:
           </div>
           <div id="nearbyLocationChips" class="flex flex-wrap gap-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOBAL WONDERS & EXTREMES MODAL -->
+  <div id="wondersModal" onclick="closeWondersModal()" onmousemove="onWondersModalActivity()" onkeydown="onWondersModalActivity()" ontouchstart="onWondersModalActivity()" onpointerdown="onWondersModalActivity()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-2xl w-full max-h-[92vh] overflow-y-auto border border-purple-400/30 shadow-[0_0_30px_rgba(168,85,247,0.2)] relative text-left cursor-default flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-2 border-b border-white/10 flex-shrink-0">
+        <div>
+          <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <span>✨</span> Global Wonders, Launches &amp; Extremes
+          </h3>
+          <p class="text-[10px] text-purple-300/80 mt-0.5">Explore real-time weather at rocket spaceports, active volcanoes &amp; iconic landmarks</p>
+        </div>
+        <button id="closeWondersBtnTop" tabindex="0" onclick="closeWondersModal()" title="Close (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
+          <span>✕ Close <span id="wondersBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
+        </button>
+      </div>
+
+      <!-- Action Hero Bar -->
+      <div class="my-2.5 p-2.5 rounded-xl bg-gradient-to-r from-purple-900/50 via-indigo-900/40 to-fuchsia-900/40 border border-purple-400/30 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+        <div class="text-[11px] text-purple-200">
+          <span class="font-bold text-white">🚀 SpaceX &amp; Extreme Weather</span>
+          <span class="hidden sm:inline text-purple-300/80 ml-1">• Jump straight to Starship launch site or spin for a random pick!</span>
+        </div>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button id="starbaseQuickBtn" tabindex="0" onclick="selectStarbaseDirectly()" class="tv-focus-amber px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-xs shadow-[0_0_10px_rgba(139,92,246,0.4)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1">
+            <span>🚀</span>
+            <span>Starbase</span>
+          </button>
+          <button id="surpriseMeBtn" tabindex="0" onclick="pickRandomWonderAndLoad()" class="tv-focus-amber px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-[0_0_12px_rgba(217,70,239,0.45)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
+            <span>🎲</span>
+            <span>Surprise Me!</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Categorized Wonders Content -->
+      <div class="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
+        <!-- 🚀 Rocket Launch Sites & Spaceports -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-violet-300 mb-1 flex items-center gap-1">
+            <span>🚀</span> Rocket Launch Sites &amp; Spaceports (SpaceX Starship)
+          </div>
+          <div id="wondersSpaceChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- ⚡ Live Extreme Weather Hotspots -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-amber-300 mb-1 flex items-center gap-1">
+            <span>⚡</span> Extreme Weather Hotspots (Lightning, Wind &amp; Heat)
+          </div>
+          <div id="wondersWeatherChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- 🌋 Active Volcanology & Seismic Hotspots -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-rose-300 mb-1 flex items-center gap-1">
+            <span>🌋</span> Active Volcanoes &amp; Seismic Hotspots
+          </div>
+          <div id="wondersVolcanoChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- ❄️ Extreme Cold & Polar Frontier -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-cyan-300 mb-1 flex items-center gap-1">
+            <span>❄️</span> Extreme Cold &amp; Polar Frontier
+          </div>
+          <div id="wondersColdChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- 🏛️ Iconic Landmarks & Wonders -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-emerald-300 mb-1 flex items-center gap-1">
+            <span>🏛️</span> Iconic Global Landmarks &amp; Wonders
+          </div>
+          <div id="wondersLandmarkChips" class="flex flex-wrap gap-1.5"></div>
         </div>
       </div>
     </div>
@@ -1864,10 +1964,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=135"></script>
+  <script src="traffic-flood.js?v=136"></script>
     <script>
-    const APP_BUILD = 135;
-    const APP_VERSION = '1.9.71';
+    const APP_BUILD = 136;
+    const APP_VERSION = '1.9.72';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1968,7 +2068,7 @@
     window.addEventListener('keydown', function handleMainPageDpadNavigation(e) {
       // Ignore if any modal is open
       const modalOpen = document.querySelector(
-        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+        '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
       );
       if (modalOpen) return;
 
@@ -3676,6 +3776,7 @@
     }
 
     function handleSearchBtnKeydown(e) {
+      if (typeof cancelSearchAutoContinue === 'function') cancelSearchAutoContinue();
       if (e.key === 'ArrowLeft') {
         // Only enter text entry box when pressing Left from Search button
         const input = document.getElementById('locationInput');
@@ -3691,6 +3792,7 @@
     }
 
     function handleRenameInputKeydown(e) {
+      if (typeof cancelAllLocationAutoContinue === 'function') cancelAllLocationAutoContinue();
       if (e.key === 'Enter') {
         e.preventDefault();
         const input = document.getElementById('customRenameInput');
@@ -3713,6 +3815,7 @@
     }
 
     function handleRenameBtnKeydown(e) {
+      if (typeof cancelRenameAutoContinue === 'function') cancelRenameAutoContinue();
       if (e.key === 'ArrowLeft') {
         // Only enter title rename box when pressing Left from Save Title button
         const renameInput = document.getElementById('customRenameInput');
@@ -3749,7 +3852,92 @@
     let locLastOutwardCode = '';
     let locLastOutwardAt = 0;
 
+    let searchAutoContinueTimer = null;
+    let searchAutoContinueSecs = 3;
+    let renameAutoContinueTimer = null;
+    let renameAutoContinueSecs = 3;
+
+    function cancelSearchAutoContinue() {
+      if (searchAutoContinueTimer) {
+        clearInterval(searchAutoContinueTimer);
+        searchAutoContinueTimer = null;
+      }
+      const searchBtn = document.getElementById('searchLocBtn');
+      if (searchBtn && searchBtn.textContent.includes('Search (')) {
+        searchBtn.textContent = 'Search';
+      }
+    }
+
+    function cancelRenameAutoContinue() {
+      if (renameAutoContinueTimer) {
+        clearInterval(renameAutoContinueTimer);
+        renameAutoContinueTimer = null;
+      }
+      const renameBtn = document.getElementById('customRenameBtn');
+      if (renameBtn && renameBtn.textContent.includes('Save Title (')) {
+        renameBtn.textContent = 'Save Title';
+      }
+    }
+
+    function cancelAllLocationAutoContinue() {
+      cancelSearchAutoContinue();
+      cancelRenameAutoContinue();
+    }
+
+    function startSearchAutoContinueCountdown() {
+      cancelAllLocationAutoContinue();
+      const searchBtn = document.getElementById('searchLocBtn');
+      const input = document.getElementById('locationInput');
+      if (!searchBtn || !input || !input.value.trim() || input.value.trim().length < 2) return;
+
+      searchAutoContinueSecs = 3;
+      searchBtn.textContent = `Search (${searchAutoContinueSecs}s)`;
+
+      searchAutoContinueTimer = setInterval(() => {
+        const modal = document.getElementById('locationModal');
+        if (!modal || modal.classList.contains('hidden') || document.activeElement !== searchBtn || !input.value.trim()) {
+          cancelSearchAutoContinue();
+          return;
+        }
+
+        searchAutoContinueSecs--;
+        if (searchAutoContinueSecs <= 0) {
+          cancelSearchAutoContinue();
+          searchLocationFromModal();
+        } else {
+          searchBtn.textContent = `Search (${searchAutoContinueSecs}s)`;
+        }
+      }, 1000);
+    }
+
+    function startRenameAutoContinueCountdown() {
+      cancelAllLocationAutoContinue();
+      const renameBtn = document.getElementById('customRenameBtn');
+      const input = document.getElementById('customRenameInput');
+      if (!renameBtn || !input || !input.value.trim()) return;
+
+      renameAutoContinueSecs = 3;
+      renameBtn.textContent = `Save Title (${renameAutoContinueSecs}s)`;
+
+      renameAutoContinueTimer = setInterval(() => {
+        const modal = document.getElementById('locationModal');
+        if (!modal || modal.classList.contains('hidden') || document.activeElement !== renameBtn || !input.value.trim()) {
+          cancelRenameAutoContinue();
+          return;
+        }
+
+        renameAutoContinueSecs--;
+        if (renameAutoContinueSecs <= 0) {
+          cancelRenameAutoContinue();
+          applyCurrentLocationRename();
+        } else {
+          renameBtn.textContent = `Save Title (${renameAutoContinueSecs}s)`;
+        }
+      }, 1000);
+    }
+
     function resetSmartLocationInputState() {
+      cancelAllLocationAutoContinue();
       locSettledValue = '';
       locLastInputAt = 0;
       locPrefixToStrip = '';
@@ -3996,12 +4184,14 @@
           locSettledValue = input.value;
 
           // When speech/typing settles with valid text (2.5s pause), dismiss on-screen keyboard
-          // and move focus to the Search button so the user can immediately tap / press OK
+          // and move focus to the Search button so the user can immediately tap / press OK,
+          // or sit back and let it automatically continue the search after 3 seconds of inactivity!
           if (input.value.trim().length >= 2 && document.activeElement === input) {
             if (input.blur) input.blur();
             const searchBtn = document.getElementById('searchLocBtn');
             if (searchBtn && typeof searchBtn.focus === 'function') {
               searchBtn.focus();
+              startSearchAutoContinueCountdown();
             }
           }
         }, VOICE_PAUSE_RESET_MS);
@@ -4155,6 +4345,7 @@
     }
 
     function closeLocationModal(pop = true) {
+      if (typeof cancelAllLocationAutoContinue === 'function') cancelAllLocationAutoContinue();
       stopLocationAutoCloseTimer();
       const modal = document.getElementById('locationModal');
       if (modal) {
@@ -4168,6 +4359,7 @@
     }
 
     function applyCurrentLocationRename() {
+      if (typeof cancelRenameAutoContinue === 'function') cancelRenameAutoContinue();
       const renameInput = document.getElementById('customRenameInput');
       const status = document.getElementById('locationSearchStatus');
       if (!renameInput || !renameInput.value.trim() || !CURRENT_LOCATION) return;
@@ -4261,7 +4453,8 @@
 
       updateRenameClearBtnVisibility();
 
-      // Settle timer (2.5s) to close keyboard and return focus to Save Title button
+      // Settle timer (2.5s) to close keyboard and return focus to Save Title button,
+      // or sit back and let it automatically continue/save after 3 seconds of inactivity!
       if (renameSettleTimer) clearTimeout(renameSettleTimer);
       renameSettleTimer = setTimeout(() => {
         if (el.value.trim().length >= 1 && document.activeElement === el) {
@@ -4269,6 +4462,7 @@
           const renameBtn = document.getElementById('customRenameBtn');
           if (renameBtn && typeof renameBtn.focus === 'function') {
             renameBtn.focus();
+            startRenameAutoContinueCountdown();
           }
         }
       }, 2500);
@@ -4323,6 +4517,7 @@
     }
 
     async function searchLocationFromModal() {
+      if (typeof cancelSearchAutoContinue === 'function') cancelSearchAutoContinue();
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
       const btn = document.getElementById('searchLocBtn');
@@ -4938,7 +5133,7 @@
           nearbyChips.appendChild(gpsBtn);
         }
 
-        const targetCount = lastGps ? 8 : 9;
+        const targetCount = lastGps ? 7 : 8;
 
         // Calculate true geographic distance (km) to all known hubs
         const hubsWithDist = ALL_REGIONAL_HUBS
@@ -4967,10 +5162,10 @@
           }
         };
 
-        // Take 3 local, 3 regional, and 3 (or 2 if GPS present) major/national destinations
+        // Take 3 local, 3 regional, and 1-2 major/national destinations
         addPicks(tier1, 3);
         addPicks(tier2, 3);
-        addPicks(tier3, lastGps ? 2 : 3);
+        addPicks(tier3, lastGps ? 1 : 2);
 
         // If any tier was sparse, fill remaining slots up to targetCount
         if (picks.length < targetCount) {
@@ -5011,6 +5206,24 @@
           );
           nearbyChips.appendChild(btn);
         });
+
+        // Special "🎲 Random" quick-pick chip appended as the final highlighted entry
+        const randomBtn = document.createElement('button');
+        randomBtn.id = 'randomWondersQuickBtn';
+        randomBtn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600/45 border border-purple-400/60 text-xs font-semibold text-purple-200 hover:text-white shadow-[0_0_12px_rgba(168,85,247,0.35)] transition cursor-pointer inline-flex items-center gap-1 focus:outline-none';
+        randomBtn.tabIndex = 0;
+        randomBtn.title = 'Explore Global Wonders, SpaceX Starship launches & extreme weather';
+        randomBtn.innerHTML = '<span>🎲</span><span>Random</span>';
+        randomBtn.onclick = () => {
+          openWondersModal();
+        };
+        wireLocationChipDpad(
+          randomBtn,
+          nearbyChips,
+          () => document.querySelector('#recentLocationChips button') || document.getElementById('gpsModalBtn'),
+          null
+        );
+        nearbyChips.appendChild(randomBtn);
       }
     }
 
@@ -5018,6 +5231,170 @@
       const input = document.getElementById('locationInput');
       if (input) input.value = query;
       searchLocationFromModal();
+    }
+
+    // Curated Global Wonders, Spaceports & Extreme Weather Catalog
+    const GLOBAL_WONDERS_CATALOG = [
+      // 🚀 Rocket Launch Sites & Spaceports (SpaceX Starship, NASA Space Coast & Orbital Hubs)
+      { name: 'Starbase (SpaceX)', desc: 'Boca Chica, TX • SpaceX Starship Orbital Launch Pad & Starfactory', category: 'space', icon: '🚀', lat: 25.9972, lon: -97.1561, country: 'USA' },
+      { name: 'Cape Canaveral', desc: 'Space Coast, FL • NASA Kennedy Space Center & SpaceX LC-39A / SLC-40', category: 'space', icon: '🚀', lat: 28.5729, lon: -80.6490, country: 'USA' },
+      { name: 'Vandenberg SFB', desc: 'California • SpaceX Falcon 9 West Coast Polar Orbital Launch Base', category: 'space', icon: '🛰️', lat: 34.6321, lon: -120.6106, country: 'USA' },
+      { name: 'Guiana Space Centre', desc: 'Kourou, French Guiana • European Space Agency (Ariane 6 / Vega)', category: 'space', icon: '🚀', lat: 5.2389, lon: -52.7681, country: 'French Guiana' },
+      { name: 'Baikonur Cosmodrome', desc: 'Kazakhstan • Gagarin\'s Start & Historic Manned Orbital Spaceport', category: 'space', icon: '🚀', lat: 45.9650, lon: 63.3050, country: 'Kazakhstan' },
+      { name: 'Rocket Lab Mahia', desc: 'New Zealand • Rocket Lab Electron Commercial Orbital Launch Complex 1', category: 'space', icon: '🚀', lat: -39.2604, lon: 177.8647, country: 'New Zealand' },
+
+      // ⚡ Live Extreme Weather Hotspots (Lightning, Winds, Deluges & Scorching Deserts)
+      { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
+      { name: 'Mount Washington', desc: 'New Hampshire, USA • Extreme Hurricane-Force Winds (372 km/h record)', category: 'weather', icon: '💨', lat: 44.2705, lon: -71.3033, country: 'USA' },
+      { name: 'Mawsynram', desc: 'Meghalaya, India • Wettest Place on Earth (~11,872 mm annual rain)', category: 'weather', icon: '🌧️', lat: 25.2975, lon: 91.5826, country: 'India' },
+      { name: 'Death Valley', desc: 'Furnace Creek, CA • World Record Hottest Air Temp (56.7°C)', category: 'weather', icon: '🔥', lat: 36.4618, lon: -116.8680, country: 'USA' },
+      { name: 'Dallol Acid Springs', desc: 'Danakil Depression, Ethiopia • Hottest Inhabited Volcanic Basin', category: 'weather', icon: '♨️', lat: 14.2417, lon: 40.2989, country: 'Ethiopia' },
+      { name: 'Rub\' al Khali', desc: 'Saudi Arabia • The Empty Quarter Vast Continuous Sand Desert', category: 'weather', icon: '🏜️', lat: 20.0000, lon: 50.0000, country: 'Saudi Arabia' },
+
+      // 🌋 Active Volcanology & Seismic Hotspots
+      { name: 'Grindavík Volcano', desc: 'Reykjanes Peninsula, Iceland • Active Fissure Eruptions & Blue Lagoon', category: 'volcano', icon: '🌋', lat: 63.8425, lon: -22.4344, country: 'Iceland' },
+      { name: 'Mount Etna', desc: 'Sicily, Italy • Europe\'s Most Active Stratovolcano', category: 'volcano', icon: '🌋', lat: 37.7510, lon: 14.9934, country: 'Italy' },
+      { name: 'Kīlauea Volcano', desc: 'Big Island, Hawaii • Active Halemaʻumaʻu Lava Crater', category: 'volcano', icon: '🌋', lat: 19.4069, lon: -155.2834, country: 'USA' },
+      { name: 'Mount Fuji', desc: 'Honshu, Japan • Iconic Snow-Capped Sacred Volcanic Peak', category: 'volcano', icon: '🗻', lat: 35.3606, lon: 138.7274, country: 'Japan' },
+      { name: 'Santorini Caldera', desc: 'Cyclades, Greece • Historic Aegean Volcanic Island Rim', category: 'volcano', icon: '🇬🇷', lat: 36.4166, lon: 25.4324, country: 'Greece' },
+
+      // ❄️ Extreme Cold & Polar Frontier
+      { name: 'Yakutsk', desc: 'Siberia, Russia • Coldest Major City Built on Continuous Permafrost', category: 'cold', icon: '❄️', lat: 62.0355, lon: 129.6755, country: 'Russia' },
+      { name: 'Oymyakon', desc: 'Siberia, Russia • Official Pole of Cold (-71.2°C record)', category: 'cold', icon: '🧊', lat: 63.4641, lon: 142.7737, country: 'Russia' },
+      { name: 'Longyearbyen', desc: 'Svalbard, High Arctic • World\'s Northernmost Town & Seed Vault', category: 'cold', icon: '🐻‍❄️', lat: 78.2232, lon: 15.6267, country: 'Norway' },
+      { name: 'McMurdo Station', desc: 'Ross Island, Antarctica • Main Scientific Base on Frozen Continent', category: 'cold', icon: '🐧', lat: -77.8463, lon: 166.6682, country: 'Antarctica' },
+      { name: 'South Pole Station', desc: 'Amundsen-Scott, Antarctica • Geographic South Pole (2,835m)', category: 'cold', icon: '🧭', lat: -90.0000, lon: 0.0000, country: 'Antarctica' },
+
+      // 🏛️ Iconic Landmarks & Wonders
+      { name: 'Pyramids of Giza', desc: 'Cairo, Egypt • Great Pyramid & Sphinx in the Desert', category: 'landmark', icon: '🏛️', lat: 29.9792, lon: 31.1342, country: 'Egypt' },
+      { name: 'Machu Picchu', desc: 'Andes, Peru • Ancient 15th-Century Inca Cloud Forest Citadel', category: 'landmark', icon: '🏔️', lat: -13.1631, lon: -72.5450, country: 'Peru' },
+      { name: 'Taj Mahal', desc: 'Agra, India • Monumental White Marble Wonder on the Yamuna', category: 'landmark', icon: '🕌', lat: 27.1751, lon: 78.0421, country: 'India' },
+      { name: 'Easter Island', desc: 'Rapa Nui, Pacific • Ancient Moai Monolithic Statues', category: 'landmark', icon: '🗿', lat: -27.1127, lon: -109.3497, country: 'Chile' },
+      { name: 'Grand Canyon', desc: 'South Rim, Arizona, USA • Mile-Deep Gorge Carved by Colorado River', category: 'landmark', icon: '🏜️', lat: 36.0544, lon: -112.1401, country: 'USA' },
+      { name: 'Stonehenge', desc: 'Salisbury Plain, Wiltshire, UK • Prehistoric Megalithic Wonder', category: 'landmark', icon: '🪨', lat: 51.1789, lon: -1.8262, country: 'UK' }
+    ];
+
+    let wondersAutoCloseTimer = null;
+    let wondersAutoCloseSecs = 45;
+    let wondersPopulated = false;
+
+    function resetWondersAutoCloseTimer() {
+      wondersAutoCloseSecs = 45;
+      updateWondersCountdownDisplay();
+      if (wondersAutoCloseTimer) {
+        clearInterval(wondersAutoCloseTimer);
+      }
+      wondersAutoCloseTimer = setInterval(() => {
+        wondersAutoCloseSecs--;
+        updateWondersCountdownDisplay();
+        if (wondersAutoCloseSecs <= 0) {
+          closeWondersModal();
+        }
+      }, 1000);
+    }
+
+    function stopWondersAutoCloseTimer() {
+      if (wondersAutoCloseTimer) {
+        clearInterval(wondersAutoCloseTimer);
+        wondersAutoCloseTimer = null;
+      }
+    }
+
+    function updateWondersCountdownDisplay() {
+      const el = document.getElementById('wondersBtnCountdown');
+      if (el) el.textContent = `(${Math.max(0, wondersAutoCloseSecs)}s)`;
+    }
+
+    function onWondersModalActivity() {
+      resetWondersAutoCloseTimer();
+    }
+
+    function openWondersModal() {
+      const modal = document.getElementById('wondersModal');
+      if (!modal) return;
+      savePreModalFocus('randomWondersQuickBtn');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      try {
+        if (!history.state || history.state.modal !== 'wondersModal') {
+          history.pushState({ modal: 'wondersModal' }, '');
+        }
+      } catch (_) {}
+
+      populateWondersChips();
+      resetWondersAutoCloseTimer();
+
+      setTimeout(() => {
+        const starbaseBtn = document.getElementById('starbaseQuickBtn');
+        const surpriseBtn = document.getElementById('surpriseMeBtn');
+        const target = starbaseBtn || surpriseBtn;
+        if (target) target.focus();
+      }, 100);
+    }
+
+    function closeWondersModal(pop = true) {
+      stopWondersAutoCloseTimer();
+      const modal = document.getElementById('wondersModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+
+      if (pop && history.state && history.state.modal === 'wondersModal') {
+        try { history.back(); } catch (_) {}
+      }
+      restorePreModalFocus('randomWondersQuickBtn');
+    }
+
+    function populateWondersChips() {
+      if (wondersPopulated) return;
+      wondersPopulated = true;
+
+      const containerMap = {
+        space: document.getElementById('wondersSpaceChips'),
+        weather: document.getElementById('wondersWeatherChips'),
+        volcano: document.getElementById('wondersVolcanoChips'),
+        cold: document.getElementById('wondersColdChips'),
+        landmark: document.getElementById('wondersLandmarkChips')
+      };
+
+      GLOBAL_WONDERS_CATALOG.forEach(w => {
+        const parent = containerMap[w.category];
+        if (!parent) return;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.tabIndex = 0;
+        btn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
+        btn.title = `${w.name}: ${w.desc}`;
+        btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
+        btn.onclick = () => {
+          selectWonderLocation(w);
+        };
+        parent.appendChild(btn);
+      });
+    }
+
+    function selectWonderLocation(wonder) {
+      closeWondersModal(false);
+      closeLocationModal(false);
+      loadLocationDirectly(wonder.name, wonder.lat, wonder.lon, wonder.country || '');
+    }
+
+    function selectStarbaseDirectly() {
+      const starbase = GLOBAL_WONDERS_CATALOG.find(w => w.name.includes('Starbase')) || {
+        name: 'Starbase (SpaceX)',
+        lat: 25.9972,
+        lon: -97.1561,
+        country: 'USA'
+      };
+      selectWonderLocation(starbase);
+    }
+
+    function pickRandomWonderAndLoad() {
+      if (!GLOBAL_WONDERS_CATALOG || GLOBAL_WONDERS_CATALOG.length === 0) return;
+      const pick = GLOBAL_WONDERS_CATALOG[Math.floor(Math.random() * GLOBAL_WONDERS_CATALOG.length)];
+      selectWonderLocation(pick);
     }
 
     // Unified marquee overflow scroll helper (shared by Header Title, Windscreen Frost, and Night Sky boxes)
@@ -8567,6 +8944,7 @@
         // Modal hierarchy: if any modal is visible, pressing Back jumps focus to its Close button,
         // or if already focused on the Close button, dismisses/closes the dialog!
         const modalConfigs = [
+          { modalId: 'wondersModal', closeBtnId: 'closeWondersBtnTop', closeFn: closeWondersModal },
           { modalId: 'riverModal', closeBtnId: 'closeRiverBtnTop', closeFn: closeRiverModal },
           { modalId: 'trafficModal', closeBtnId: 'closeTrafficBtnTop', closeFn: closeTrafficModal },
           { modalId: 'radarModal', closeBtnId: 'closeRadarBtnTop', closeFn: closeRadarModal },
@@ -8627,7 +9005,7 @@
     setTimeout(() => {
       document.body.classList.add('focus-dormant');
       const topBtn = document.getElementById('headerLocationBtn');
-      if (topBtn && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)') && !document.querySelector('#radarModal:not(.hidden)') && !document.querySelector('#trafficModal:not(.hidden)')) {
+      if (topBtn && !document.querySelector('#wondersModal:not(.hidden)') && !document.querySelector('#locationModal:not(.hidden)') && !document.querySelector('#shareModal:not(.hidden)') && !document.querySelector('#radarModal:not(.hidden)') && !document.querySelector('#trafficModal:not(.hidden)')) {
         topBtn.focus({ preventScroll: true });
       }
     }, 300);
