@@ -406,6 +406,11 @@
       opacity: 0.72;
       transition: opacity 0.2s ease-out;
     }
+    #sevenDayList *:focus,
+    #sevenDayList *:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
 
     /* Rain Today Wet Highlight */
     .rain-today-wet {
@@ -1386,8 +1391,8 @@
   </div>
 
   <!-- GLOBAL WONDERS & EXTREMES MODAL -->
-  <div id="wondersModal" onclick="closeWondersModal()" onmousemove="onWondersModalActivity()" onkeydown="onWondersModalActivity()" ontouchstart="onWondersModalActivity()" onpointerdown="onWondersModalActivity()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 cursor-pointer">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-2xl w-full max-h-[92vh] overflow-y-auto border border-purple-400/30 shadow-[0_0_30px_rgba(168,85,247,0.2)] relative text-left cursor-default flex flex-col">
+  <div id="wondersModal" onclick="closeWondersModal()" onmousemove="onWondersModalActivity()" onkeydown="handleWondersModalKeydown(event)" ontouchstart="onWondersModalActivity()" onpointerdown="onWondersModalActivity()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-2xl w-full max-h-[92vh] overflow-hidden border border-purple-400/30 shadow-[0_0_30px_rgba(168,85,247,0.2)] relative text-left cursor-default flex flex-col">
       <!-- Modal Header -->
       <div class="flex items-center justify-between pb-2 border-b border-white/10 flex-shrink-0">
         <div>
@@ -1416,7 +1421,7 @@
       </div>
 
       <!-- Categorized Wonders Content -->
-      <div class="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
+      <div id="wondersContentArea" class="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
         <!-- 🔴 Live & Upcoming Rocket Launches -->
         <div id="discoverLiveSection">
           <div class="text-[10px] font-semibold uppercase tracking-wider text-rose-300 mb-1 flex items-center justify-between">
@@ -1980,10 +1985,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=139"></script>
+  <script src="traffic-flood.js?v=140"></script>
     <script>
-    const APP_BUILD = 139;
-    const APP_VERSION = '1.9.75';
+    const APP_BUILD = 140;
+    const APP_VERSION = '1.9.76';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5470,18 +5475,185 @@
           });
         };
 
-        btn.onkeydown = (e) => {
-          if (e.key === 'ArrowDown') {
-            const nextShelf = document.querySelector('#wondersSpaceChips button');
-            if (nextShelf) { e.preventDefault(); nextShelf.focus(); }
-          } else if (e.key === 'ArrowUp') {
-            const topAction = document.getElementById('surpriseMeBtn') || document.getElementById('closeWondersBtnTop');
-            if (topAction) { e.preventDefault(); topAction.focus(); }
-          }
-        };
-
         container.appendChild(btn);
       });
+    }
+
+    function handleWondersModalKeydown(e) {
+      onWondersModalActivity();
+
+      if (isTvBackKey(e) || e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeWondersModal();
+        return;
+      }
+
+      const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      if (!arrowKeys.includes(e.key)) return;
+
+      const closeBtn = document.getElementById('closeWondersBtnTop');
+      const surpriseBtn = document.getElementById('surpriseMeBtn');
+      const scrollArea = document.getElementById('wondersContentArea');
+
+      const chipShelves = [
+        '#discoverLiveLaunchesChips',
+        '#wondersNewsChips',
+        '#wondersSpaceChips',
+        '#wondersWeatherChips',
+        '#wondersVolcanoChips',
+        '#wondersColdChips',
+        '#wondersLandmarkChips'
+      ];
+
+      const getShelfButtons = (selector) => {
+        const parent = document.querySelector(selector);
+        return parent ? Array.from(parent.querySelectorAll('button:not([disabled])')) : [];
+      };
+
+      const getAllChips = () => {
+        const list = [];
+        chipShelves.forEach(sel => {
+          list.push(...getShelfButtons(sel));
+        });
+        return list;
+      };
+
+      const activeEl = document.activeElement;
+
+      // 1. Focus is on Close Button
+      if (activeEl === closeBtn) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (surpriseBtn) {
+            surpriseBtn.focus();
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          if (surpriseBtn) surpriseBtn.focus();
+        }
+        return;
+      }
+
+      // 2. Focus is on Surprise Me Button
+      if (activeEl === surpriseBtn) {
+        if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (closeBtn) closeBtn.focus();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const allChips = getAllChips();
+          if (allChips.length > 0) {
+            allChips[0].focus();
+            allChips[0].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (closeBtn) closeBtn.focus();
+        }
+        return;
+      }
+
+      // 3. Focus is on one of the destination chips
+      const allChips = getAllChips();
+      const currentChipIdx = allChips.indexOf(activeEl);
+
+      if (currentChipIdx !== -1) {
+        let currentShelfIdx = -1;
+        let shelfButtons = [];
+        for (let s = 0; s < chipShelves.length; s++) {
+          const btns = getShelfButtons(chipShelves[s]);
+          if (btns.includes(activeEl)) {
+            currentShelfIdx = s;
+            shelfButtons = btns;
+            break;
+          }
+        }
+        const idxInShelf = shelfButtons.indexOf(activeEl);
+
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          if (idxInShelf < shelfButtons.length - 1) {
+            const next = shelfButtons[idxInShelf + 1];
+            next.focus();
+            next.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } else if (currentChipIdx < allChips.length - 1) {
+            const next = allChips[currentChipIdx + 1];
+            next.focus();
+            next.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (idxInShelf > 0) {
+            const prev = shelfButtons[idxInShelf - 1];
+            prev.focus();
+            prev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } else if (currentChipIdx > 0) {
+            const prev = allChips[currentChipIdx - 1];
+            prev.focus();
+            prev.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } else {
+            if (surpriseBtn) {
+              surpriseBtn.focus();
+              if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          let targetChip = null;
+          for (let s = currentShelfIdx + 1; s < chipShelves.length; s++) {
+            const nextShelfBtns = getShelfButtons(chipShelves[s]);
+            if (nextShelfBtns.length > 0) {
+              const currentLeft = activeEl.offsetLeft;
+              let closest = nextShelfBtns[0];
+              let minDiff = Math.abs(closest.offsetLeft - currentLeft);
+              for (let b = 1; b < nextShelfBtns.length; b++) {
+                const diff = Math.abs(nextShelfBtns[b].offsetLeft - currentLeft);
+                if (diff < minDiff) {
+                  minDiff = diff;
+                  closest = nextShelfBtns[b];
+                }
+              }
+              targetChip = closest;
+              break;
+            }
+          }
+          if (targetChip) {
+            targetChip.focus();
+            targetChip.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          let targetChip = null;
+          for (let s = currentShelfIdx - 1; s >= 0; s--) {
+            const prevShelfBtns = getShelfButtons(chipShelves[s]);
+            if (prevShelfBtns.length > 0) {
+              const currentLeft = activeEl.offsetLeft;
+              let closest = prevShelfBtns[0];
+              let minDiff = Math.abs(closest.offsetLeft - currentLeft);
+              for (let b = 1; b < prevShelfBtns.length; b++) {
+                const diff = Math.abs(prevShelfBtns[b].offsetLeft - currentLeft);
+                if (diff < minDiff) {
+                  minDiff = diff;
+                  closest = prevShelfBtns[b];
+                }
+              }
+              targetChip = closest;
+              break;
+            }
+          }
+          if (targetChip) {
+            targetChip.focus();
+            targetChip.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } else {
+            if (surpriseBtn) {
+              surpriseBtn.focus();
+              if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        }
+      }
     }
 
     function openWondersModal() {
@@ -5503,7 +5675,11 @@
 
       setTimeout(() => {
         const surpriseBtn = document.getElementById('surpriseMeBtn');
-        if (surpriseBtn) surpriseBtn.focus();
+        if (surpriseBtn) {
+          surpriseBtn.focus();
+          const scrollArea = document.getElementById('wondersContentArea');
+          if (scrollArea) scrollArea.scrollTop = 0;
+        }
       }, 100);
     }
 
@@ -5574,6 +5750,17 @@
       const pick = GLOBAL_WONDERS_CATALOG[Math.floor(Math.random() * GLOBAL_WONDERS_CATALOG.length)];
       selectWonderLocation(pick);
     }
+
+    document.addEventListener('focusin', (e) => {
+      const wondersModal = document.getElementById('wondersModal');
+      if (wondersModal && !wondersModal.classList.contains('hidden') && wondersModal.contains(e.target)) {
+        if (e.target.id !== 'closeWondersBtnTop' && e.target.id !== 'surpriseMeBtn') {
+          if (typeof e.target.scrollIntoView === 'function') {
+            e.target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          }
+        }
+      }
+    });
 
     // Unified marquee overflow scroll helper (shared by Header Title, Windscreen Frost, and Night Sky boxes)
     function applyMarqueeScroll(containerId, textId, scrollClass, distVar, durVar, minDur, speedDiv, durPad, distPad) {
@@ -7058,6 +7245,9 @@
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
           setHourlyCompressedMode(true, i);
+          if (document.activeElement && document.activeElement.closest('#sevenDayList')) {
+            document.activeElement.blur();
+          }
         };
         row.innerHTML = `
           <span class="day-name-cell font-bold text-white text-[11px] leading-none truncate flex items-center gap-1">
@@ -7104,7 +7294,8 @@
           row.classList.remove('day-row-pano-dim');
           if (dot) dot.classList.remove('hidden');
           if (text) {
-            text.classList.add('text-amber-300', 'font-black');
+            text.classList.add('text-amber-300');
+            text.classList.add('font-black');
             text.classList.remove('text-white');
           }
         } else if (isExploringAway) {
@@ -7112,18 +7303,46 @@
           row.classList.add('day-row-pano-dim');
           if (dot) dot.classList.add('hidden');
           if (text) {
-            text.classList.remove('text-amber-300', 'font-black');
+            text.classList.remove('text-amber-300');
+            text.classList.remove('font-black');
             text.classList.add('text-white');
           }
         } else {
-          row.classList.remove('day-row-pano-active', 'day-row-pano-dim');
+          row.classList.remove('day-row-pano-active');
+          row.classList.remove('day-row-pano-dim');
           if (dot) dot.classList.add('hidden');
           if (text) {
-            text.classList.remove('text-amber-300', 'font-black');
+            text.classList.remove('text-amber-300');
+            text.classList.remove('font-black');
             text.classList.add('text-white');
           }
         }
       });
+
+      if (!isExploringAway) {
+        if (document.activeElement && document.activeElement.closest('#sevenDayList')) {
+          document.activeElement.blur();
+        }
+      }
+    }
+
+    function clearTenDayForecastHighlights() {
+      const rows = document.querySelectorAll('#sevenDayList [data-day-index]');
+      rows.forEach(row => {
+        row.classList.remove('day-row-pano-active');
+        row.classList.remove('day-row-pano-dim');
+        const dot = row.querySelector('.day-pano-dot');
+        if (dot) dot.classList.add('hidden');
+        const text = row.querySelector('.day-name-text');
+        if (text) {
+          text.classList.remove('text-amber-300');
+          text.classList.remove('font-black');
+          text.classList.add('text-white');
+        }
+      });
+      if (document.activeElement && document.activeElement.closest('#sevenDayList')) {
+        document.activeElement.blur();
+      }
     }
 
     let cachedHourlyData = null;
@@ -7333,6 +7552,7 @@
         } else {
           setHourlyCompressedMode(false);
         }
+        clearTenDayForecastHighlights();
       }, 45000);
     }
 
@@ -7831,6 +8051,7 @@
         try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
+        clearTenDayForecastHighlights();
         if (title) title.textContent = '24-Hour Forecast & Rain Probability';
         if (dayNav) {
           dayNav.classList.add('hidden');
