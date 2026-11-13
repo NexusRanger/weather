@@ -1211,74 +1211,72 @@
   </div>
 
   <!-- LOCATION SEARCH MODAL -->
-  <div id="locationModal" onclick="closeLocationModal()" onmousemove="onLocationModalActivity()" onkeydown="onLocationModalActivity()" oninput="onLocationModalActivity()" ontouchstart="onLocationModalActivity()" onpointerdown="onLocationModalActivity()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4 cursor-pointer">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto border border-white/15 shadow-2xl relative text-left cursor-default">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+  <div id="locationModal" onclick="closeLocationModal()" onmousemove="onLocationModalActivity()" onkeydown="onLocationModalActivity()" oninput="onLocationModalActivity()" ontouchstart="onLocationModalActivity()" onpointerdown="onLocationModalActivity()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 cursor-pointer">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 max-w-lg w-full max-h-[94vh] overflow-y-auto border border-white/15 shadow-2xl relative text-left cursor-default">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
           <span>📍</span> Set Location (Postcode, Town or GPS)
         </h3>
-        <button id="closeLocationBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer">
+        <button id="closeLocationBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('locationInput');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
           <span>✕ Close <span id="locationBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
         </button>
       </div>
 
-      <div class="mt-4">
-        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Enter Postcode, Town or City</label>
-        <div class="flex gap-2">
-          <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
-          <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none" onkeydown="handleSearchBtnKeydown(event)">
-            Search
-          </button>
-        </div>
-        <div id="locationSearchStatus" class="text-[11px] text-slate-400 mt-2 min-h-[16px]"></div>
-
-        <!-- Custom Title Guidance & Direct Rename Box -->
-        <div class="mt-2.5 p-2.5 rounded-xl bg-sky-950/40 border border-sky-400/25 text-left space-y-2">
-          <div class="flex items-start gap-1.5 text-[11px] text-slate-300 leading-snug">
-            <span class="text-amber-300 flex-shrink-0">💡</span>
-            <div>
-              <span class="font-semibold text-white">Custom Dashboard Title:</span>
-              Type or speak any friendly name before a postcode (e.g. <span class="text-sky-300 font-mono text-[10px]">Grand Hotel BN1 2FW</span> or <span class="text-sky-300 font-mono text-[10px]">Castle View, EH1 2NG</span>). It sets your header title, saves to recent places, and is embedded into your shared link!
-            </div>
+      <div class="mt-2 space-y-2">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town or City</label>
+          <div class="flex gap-1.5">
+            <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" onkeydown="handleLocationInputKeydown(event)">
+            <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none cursor-pointer" onkeydown="handleSearchBtnKeydown(event)">
+              Search
+            </button>
           </div>
-          <div class="pt-2 border-t border-white/10 flex items-center gap-2">
+          <div id="locationSearchStatus" class="text-[10px] text-slate-400 empty:hidden mt-0.5 min-h-[14px]"></div>
+        </div>
+
+        <!-- Custom Title Guidance & Direct Rename Box (Compact TV Fit) -->
+        <div class="p-2 rounded-xl bg-sky-950/30 border border-sky-400/20 text-left">
+          <div class="flex items-center gap-1.5">
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
             <div class="relative flex-1 flex items-center">
-              <input id="customRenameInput" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="updateRenameClearBtnVisibility()" onblur="handleRenameInputBlur(this)" onkeydown="if(event.key==='Enter'){applyCurrentLocationRename();}">
+              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="updateRenameClearBtnVisibility()" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
               <button id="customRenameClearBtn" type="button" tabindex="-1" onclick="clearRenameInput()" class="hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear text">✕</button>
             </div>
-            <button id="customRenameBtn" type="button" onclick="applyCurrentLocationRename()" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
+            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
             </button>
+          </div>
+          <div class="text-[9px] text-slate-400 mt-1 leading-tight">
+            💡 <span class="text-slate-300 font-semibold">Tip:</span> You can also search <span class="text-sky-300 font-mono">"Grand Hotel BN1 2FW"</span> to set name &amp; postcode together.
           </div>
         </div>
       </div>
 
       <!-- Quick GPS Button -->
-      <div class="mt-3 pt-3 border-t border-white/10">
-        <button id="gpsModalBtn" tabindex="0" onclick="detectCurrentLocation(); closeLocationModal();" class="tv-focus-amber w-full py-2 px-3 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/30 font-semibold text-xs transition flex items-center justify-center gap-2 focus:outline-none" onkeydown="handleGpsBtnKeydown(event)">
+      <div class="mt-2 pt-2 border-t border-white/10">
+        <button id="gpsModalBtn" tabindex="0" onclick="detectCurrentLocation(); closeLocationModal();" class="tv-focus-amber w-full py-1.5 px-3 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-400/30 font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer" onkeydown="handleGpsBtnKeydown(event)">
           <span>📍</span> Use My Current Location (GPS)
         </button>
       </div>
 
       <!-- Recent & Regional Quick Picks -->
-      <div class="mt-3 pt-3 border-t border-white/10">
+      <div class="mt-2 pt-2 border-t border-white/10">
         <!-- Recent searches (if any) -->
-        <div id="recentLocationsContainer" class="hidden mb-2.5">
-          <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1.5 flex items-center justify-between gap-2">
+        <div id="recentLocationsContainer" class="hidden mb-2">
+          <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center justify-between gap-2">
             <span class="flex items-center gap-1"><span>🕒</span> Recent Locations:</span>
             <span class="text-[9px] font-normal normal-case text-slate-500">Hold to remove</span>
           </div>
-          <div id="recentLocationChips" class="flex flex-wrap gap-1.5"></div>
-          <div id="recentDeleteBar" class="hidden mt-2 px-2.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-400/50 flex items-center justify-between gap-2"></div>
+          <div id="recentLocationChips" class="flex flex-wrap gap-1"></div>
+          <div id="recentDeleteBar" class="hidden mt-1.5 px-2.5 py-1 rounded-xl bg-rose-500/15 border border-rose-400/50 flex items-center justify-between gap-2"></div>
         </div>
 
         <!-- Dynamic Nearby / Regional Picks -->
         <div>
-          <div id="nearbyPicksTitle" class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1.5 flex items-center gap-1">
+          <div id="nearbyPicksTitle" class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center gap-1">
             <span>📍</span> Nearby Quick Picks:
           </div>
-          <div id="nearbyLocationChips" class="flex flex-wrap gap-1.5"></div>
+          <div id="nearbyLocationChips" class="flex flex-wrap gap-1"></div>
         </div>
       </div>
     </div>
@@ -1784,10 +1782,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=124"></script>
+  <script src="traffic-flood.js?v=125"></script>
     <script>
-    const APP_BUILD = 124;
-    const APP_VERSION = '1.9.60';
+    const APP_BUILD = 125;
+    const APP_VERSION = '1.9.61';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3349,47 +3347,57 @@
       try {
         // Step 1: Query Open-Meteo for exact town/city string
         let results = await queryGeocoding(cleanName);
+        const hasUkOpenMeteoMatch = results.some(r => (r.country_code || '').toLowerCase() === 'gb');
 
-        // Step 2: If Open-Meteo has no match for the full phrase (e.g. "The Stroud Hotel", "Stroud Hotel",
-        // "Vienna Austria", or any landmark, pub, street, or multi-word address), query OpenStreetMap Nominatim!
-        if (results.length === 0) {
+        // Check if user explicitly asked for a specific non-UK country
+        const qLower = cleanName.toLowerCase();
+        const nonUkExplicit = ['ireland', 'france', 'spain', 'germany', 'italy', 'usa', 'united states', 'canada', 'australia', 'japan', 'america', 'nz', 'new zealand'].some(c => qLower.includes(c));
+
+        // Step 2: If Open-Meteo has NO results, OR if Open-Meteo has no UK match for an implicit/UK query
+        // (e.g. landmarks like "Tower Bridge", "Stonehenge", "Stroud Hotel", "Edinburgh Castle"), query OpenStreetMap Nominatim!
+        if (results.length === 0 || (!hasUkOpenMeteoMatch && !nonUkExplicit)) {
           const nomResults = await queryNominatim(cleanName);
           if (nomResults.length > 0) {
-            // Prefer UK result unless the user's query explicitly mentions a non-UK country/place
-            const qLower = cleanName.toLowerCase();
-            let chosen = nomResults.find(r => {
-              const cc = (r.address && r.address.country_code || '').toLowerCase();
-              const country = (r.address && r.address.country || '').toLowerCase();
-              return cc !== 'gb' && country && qLower.includes(country);
-            });
-            if (!chosen) {
-              chosen = nomResults.find(r => (r.address && r.address.country_code || '').toLowerCase() === 'gb') || nomResults[0];
+            let chosen = null;
+            if (nonUkExplicit) {
+              chosen = nomResults.find(r => {
+                const country = (r.address && r.address.country || '').toLowerCase();
+                return qLower.includes(country);
+              }) || nomResults[0];
+            } else {
+              // Prefer UK landmark / place
+              chosen = nomResults.find(r => (r.address && r.address.country_code || '').toLowerCase() === 'gb');
+              if (!chosen && results.length === 0) {
+                chosen = nomResults[0];
+              }
             }
 
-            const lat = parseFloat(chosen.lat);
-            const lon = parseFloat(chosen.lon);
-            const addr = chosen.address || {};
-            const cc = (addr.country_code || '').toUpperCase();
+            if (chosen) {
+              const lat = parseFloat(chosen.lat);
+              const lon = parseFloat(chosen.lon);
+              const addr = chosen.address || {};
+              const cc = (addr.country_code || '').toUpperCase();
 
-            // Build a short, clean display name (e.g. "The Stroud Hotel" or "Vienna")
-            const primaryName = chosen.name || (chosen.display_name ? chosen.display_name.split(',')[0].trim() : cleanName);
+              // Build a short, clean display name (e.g. "Tower Bridge" or "The Stroud Hotel")
+              const primaryName = chosen.name || (chosen.display_name ? chosen.display_name.split(',')[0].trim() : cleanName);
 
-            let pc = addr.postcode || '';
-            if (cc === 'GB' && !pc) {
-              pc = 'UK';
-              try {
-                const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
-                if (pcRes.ok) {
-                  const pcData = await pcRes.json();
-                  if (pcData.result && pcData.result.length > 0) {
-                    pc = pcData.result[0].postcode;
+              let pc = addr.postcode || '';
+              if (cc === 'GB' && !pc) {
+                pc = 'UK';
+                try {
+                  const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}`);
+                  if (pcRes.ok) {
+                    const pcData = await pcRes.json();
+                    if (pcData.result && pcData.result.length > 0) {
+                      pc = pcData.result[0].postcode;
+                    }
                   }
-                }
-              } catch (_) {}
-            }
+                } catch (_) {}
+              }
 
-            applySelectedLocation(primaryName, lat, lon, pc);
-            return true;
+              applySelectedLocation(primaryName, lat, lon, pc);
+              return true;
+            }
           }
         }
 
@@ -3558,8 +3566,8 @@
         const searchBtn = document.getElementById('searchLocBtn');
         if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
       } else if (e.key === 'ArrowDown') {
-        const gpsBtn = document.getElementById('gpsModalBtn');
-        if (gpsBtn) { e.preventDefault(); gpsBtn.focus(); }
+        const renameInput = document.getElementById('customRenameInput');
+        if (renameInput) { e.preventDefault(); renameInput.focus(); }
       } else if (e.key === 'ArrowUp') {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) { e.preventDefault(); closeBtn.focus(); }
@@ -3571,18 +3579,46 @@
         const input = document.getElementById('locationInput');
         if (input) { e.preventDefault(); input.focus(); }
       } else if (e.key === 'ArrowDown') {
-        const gpsBtn = document.getElementById('gpsModalBtn');
-        if (gpsBtn) { e.preventDefault(); gpsBtn.focus(); }
+        const renameBtn = document.getElementById('customRenameBtn') || document.getElementById('customRenameInput');
+        if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
       } else if (e.key === 'ArrowUp') {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) { e.preventDefault(); closeBtn.focus(); }
       }
     }
 
+    function handleRenameInputKeydown(e) {
+      if (e.key === 'Enter') {
+        applyCurrentLocationRename();
+      } else if (e.key === 'ArrowRight') {
+        const renameBtn = document.getElementById('customRenameBtn');
+        if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
+      } else if (e.key === 'ArrowDown') {
+        const gpsBtn = document.getElementById('gpsModalBtn');
+        if (gpsBtn) { e.preventDefault(); gpsBtn.focus(); }
+      } else if (e.key === 'ArrowUp') {
+        const input = document.getElementById('locationInput');
+        if (input) { e.preventDefault(); input.focus(); }
+      }
+    }
+
+    function handleRenameBtnKeydown(e) {
+      if (e.key === 'ArrowLeft') {
+        const renameInput = document.getElementById('customRenameInput');
+        if (renameInput) { e.preventDefault(); renameInput.focus(); }
+      } else if (e.key === 'ArrowDown') {
+        const gpsBtn = document.getElementById('gpsModalBtn');
+        if (gpsBtn) { e.preventDefault(); gpsBtn.focus(); }
+      } else if (e.key === 'ArrowUp') {
+        const searchBtn = document.getElementById('searchLocBtn') || document.getElementById('locationInput');
+        if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
+      }
+    }
+
     function handleGpsBtnKeydown(e) {
       if (e.key === 'ArrowUp') {
-        const searchBtn = document.getElementById('searchLocBtn');
-        if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
+        const renameInput = document.getElementById('customRenameInput') || document.getElementById('customRenameBtn');
+        if (renameInput) { e.preventDefault(); renameInput.focus(); }
       } else if (e.key === 'ArrowDown') {
         const firstPick = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
         if (firstPick) { e.preventDefault(); firstPick.focus(); }
@@ -8131,61 +8167,40 @@
 
     function handleGlobalBack(e) {
       if (isTvBackKey(e)) {
-        const riverModal = document.getElementById('riverModal');
-        if (riverModal && !riverModal.classList.contains('hidden')) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-          closeRiverModal();
-          return false;
-        }
-        const trafficModal = document.getElementById('trafficModal');
-        if (trafficModal && !trafficModal.classList.contains('hidden')) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-          closeTrafficModal();
-          return false;
-        }
-        const radarModal = document.getElementById('radarModal');
-        if (radarModal && !radarModal.classList.contains('hidden')) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-          closeRadarModal();
-          return false;
-        }
-        const mapModal = document.getElementById('historyMapModal');
-        if (mapModal && !mapModal.classList.contains('hidden')) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-          closeHistoryMapModal();
-          return false;
-        }
-        const shareModal = document.getElementById('shareModal');
-        if (shareModal && !shareModal.classList.contains('hidden')) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-          closeShareModal();
-          return false;
-        }
-        const feedbackModal = document.getElementById('feedbackModal');
-        if (feedbackModal && !feedbackModal.classList.contains('hidden')) {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-          closeFeedbackModal();
-          return false;
-        }
-        const locModal = document.getElementById('locationModal');
-        if (locModal && !locModal.classList.contains('hidden') && e.target.tagName !== 'INPUT') {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-          closeLocationModal();
-          return false;
+        // Modal hierarchy: if any modal is visible, pressing Back jumps focus to its Close button,
+        // or if already focused on the Close button, dismisses/closes the dialog!
+        const modalConfigs = [
+          { modalId: 'riverModal', closeBtnId: 'closeRiverBtnTop', closeFn: closeRiverModal },
+          { modalId: 'trafficModal', closeBtnId: 'closeTrafficBtnTop', closeFn: closeTrafficModal },
+          { modalId: 'radarModal', closeBtnId: 'closeRadarBtnTop', closeFn: closeRadarModal },
+          { modalId: 'historyMapModal', closeBtnId: 'closeMapBtnTop', altCloseBtnId: 'closeMapBtnBottom', closeFn: closeHistoryMapModal },
+          { modalId: 'shareModal', closeBtnId: 'closeShareBtnTop', closeFn: closeShareModal },
+          { modalId: 'feedbackModal', closeBtnId: 'closeFeedbackBtnTop', closeFn: closeFeedbackModal },
+          { modalId: 'locationModal', closeBtnId: 'closeLocationBtnTop', closeFn: closeLocationModal }
+        ];
+
+        for (const cfg of modalConfigs) {
+          const m = document.getElementById(cfg.modalId);
+          if (m && !m.classList.contains('hidden')) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+
+            const closeBtn = document.getElementById(cfg.closeBtnId);
+            const altCloseBtn = cfg.altCloseBtnId ? document.getElementById(cfg.altCloseBtnId) : null;
+            const activeEl = document.activeElement;
+
+            // If focus is ALREADY on the Close button, pressing Back closes the dialog!
+            // If focus is anywhere else (e.g. input, list, map, shortcuts), pressing Back jumps focus to the Close button!
+            if (activeEl && (activeEl === closeBtn || (altCloseBtn && activeEl === altCloseBtn))) {
+              cfg.closeFn();
+            } else if (closeBtn) {
+              closeBtn.focus();
+            } else {
+              cfg.closeFn();
+            }
+            return false;
+          }
         }
       }
       if (e.key === 'f' || e.key === 'F') {
