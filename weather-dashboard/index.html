@@ -299,6 +299,9 @@
     }
 
     /* Suppress native browser/TV white focus rings globally across all interactive elements */
+    *,
+    *:focus,
+    *:focus-visible,
     button:focus,
     button:focus-visible,
     a:focus,
@@ -307,11 +310,15 @@
     input:focus-visible,
     textarea:focus,
     textarea:focus-visible,
+    #headerLocationTitle:focus,
+    #headerLocationTitle:focus-visible,
     .tv-focus-amber:focus,
     .tv-focus-amber:focus-visible {
       outline: none !important;
       outline-style: none !important;
+      outline-width: 0 !important;
       -webkit-tap-highlight-color: transparent !important;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
     }
 
     /* TV Focus Warm Amber Glow (Uniform, crisp, standard-thickness border across all focusable elements) */
@@ -319,6 +326,8 @@
     body:not(.focus-dormant) .tv-focus-amber:focus-visible,
     body:not(.focus-dormant) #headerLocationBtn:focus,
     body:not(.focus-dormant) #headerLocationBtn:focus-visible,
+    body:not(.focus-dormant) #headerLocationTitle:focus,
+    body:not(.focus-dormant) #headerLocationTitle:focus-visible,
     #headerLocationBtn.loc-btn-flash {
       outline: none !important;
       outline-style: none !important;
@@ -762,9 +771,9 @@
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
         <div class="flex items-center gap-2 min-w-0 flex-nowrap">
-          <h1 id="headerLocationTitle" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink" style="max-width: min(320px, 30vw);" onclick="openLocationModal()" title="Click to change location">
+          <button id="headerLocationTitle" type="button" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent focus:outline-none" style="max-width: min(320px, 30vw);">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth</span>
-          </h1>
+          </button>
           <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span id="headerPostcodeBadge">GL5 5HH</span>
             <span class="text-[8px] text-indigo-400">✏️</span>
@@ -1839,10 +1848,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=132"></script>
+  <script src="traffic-flood.js?v=133"></script>
     <script>
-    const APP_BUILD = 132;
-    const APP_VERSION = '1.9.68';
+    const APP_BUILD = 133;
+    const APP_VERSION = '1.9.69';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -1928,6 +1937,7 @@
     // D-Pad Page Flow: Natural, logical navigation between Header <-> Status Strip <-> Bottom Panel
     function getHeaderNavButtons() {
       const list = [
+        document.getElementById('headerLocationTitle'),
         document.getElementById('headerLocationBtn'),
         document.getElementById('gpsHeaderBtn'),
         (typeof isMapUnlocked === 'function' && isMapUnlocked()) ? document.getElementById('headerGlobeBtn') : null,
@@ -2039,6 +2049,8 @@
         if (hIdx > 0) {
           e.preventDefault();
           headerBtns[hIdx - 1].focus();
+        } else if (hIdx === 0) {
+          e.preventDefault();
         }
         // Horizontal navigation inside status strip
         const pIdx = pills.indexOf(active);
@@ -4650,7 +4662,7 @@
                 lon: q.lon,
                 postcode: q.postcode
               });
-              if (filtered.length >= 8) break;
+              if (filtered.length >= 15) break;
             }
           }
           if (filtered.length > 0) {
@@ -4910,7 +4922,7 @@
           nearbyChips.appendChild(gpsBtn);
         }
 
-        const maxHubs = lastGps ? 5 : 6;
+        const targetCount = lastGps ? 8 : 9;
 
         // Calculate true geographic distance (km) to all known hubs
         const hubsWithDist = ALL_REGIONAL_HUBS
@@ -4921,8 +4933,33 @@
           }))
           .sort((a, b) => a.distKm - b.distKm);
 
-        // Filter hubs within genuine regional distance (<= 850 km)
-        let picks = hubsWithDist.filter(h => h.distKm <= 850).slice(0, maxHubs);
+        // Filter into distance tiers to provide rich variety across 2 full lines (Local, Regional, National)
+        const tier1 = hubsWithDist.filter(h => h.distKm <= 45);
+        const tier2 = hubsWithDist.filter(h => h.distKm > 45 && h.distKm <= 150);
+        const tier3 = hubsWithDist.filter(h => h.distKm > 150 && h.distKm <= 850);
+
+        let picks = [];
+        const pickSet = new Set();
+        const addPicks = (arr, count) => {
+          for (const item of arr) {
+            if (picks.length >= targetCount) break;
+            if (!pickSet.has(item.name.toLowerCase())) {
+              pickSet.add(item.name.toLowerCase());
+              picks.push(item);
+              if (--count <= 0) break;
+            }
+          }
+        };
+
+        // Take 3 local, 3 regional, and 3 (or 2 if GPS present) major/national destinations
+        addPicks(tier1, 3);
+        addPicks(tier2, 3);
+        addPicks(tier3, lastGps ? 2 : 3);
+
+        // If any tier was sparse, fill remaining slots up to targetCount
+        if (picks.length < targetCount) {
+          addPicks(hubsWithDist.filter(h => h.distKm <= 850), targetCount - picks.length);
+        }
 
         if (picks.length > 0) {
           // Genuinely nearby cities exist
@@ -4932,7 +4969,7 @@
           }
         } else {
           // If in a remote or far-off location with no regional hubs within 850 km, show top global capitals
-          picks = POPULAR_GLOBAL_HUBS.filter(h => !currentNameLower.includes(h.name.toLowerCase()) && h.name.toLowerCase() !== gpsShortLower).slice(0, maxHubs);
+          picks = POPULAR_GLOBAL_HUBS.filter(h => !currentNameLower.includes(h.name.toLowerCase()) && h.name.toLowerCase() !== gpsShortLower).slice(0, targetCount);
           if (nearbyTitle) {
             nearbyTitle.innerHTML = '<span>🌐</span> Popular Global Quick Picks:';
           }
