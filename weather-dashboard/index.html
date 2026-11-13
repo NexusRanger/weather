@@ -1816,10 +1816,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=127"></script>
+  <script src="traffic-flood.js?v=128"></script>
     <script>
-    const APP_BUILD = 127;
-    const APP_VERSION = '1.9.63';
+    const APP_BUILD = 128;
+    const APP_VERSION = '1.9.64';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5362,6 +5362,8 @@
     function displayRainNowcastSlide(slideIdx) {
       const textEl = document.getElementById('rainNowcastText');
       const container = document.getElementById('rainNowcastTextContainer');
+      const badge = document.getElementById('rainNowcastBadge');
+      const icon = document.getElementById('rainNowcastIcon');
       if (!textEl || !rainNowcastSlides || rainNowcastSlides.length === 0) return;
 
       currentRainSlideIndex = slideIdx % rainNowcastSlides.length;
@@ -5372,8 +5374,19 @@
       textEl.style.removeProperty('--nowcast-scroll-duration');
       if (container) container.classList.remove('has-fade');
 
-      textEl.textContent = rainNowcastSlides[currentRainSlideIndex];
+      const currentText = rainNowcastSlides[currentRainSlideIndex];
+      textEl.textContent = currentText;
       textEl.style.opacity = '1';
+
+      // Hide sunshine/rain icon and comfort/confidence badge during clothing advice slide to give text full banner width
+      const isClothingSlide = (currentRainSlideIndex === 2) || (typeof currentText === 'string' && (currentText.startsWith('🧥') || currentText.startsWith('☔') || currentText.startsWith('👕') || currentText.includes('coat') || currentText.includes('jacket') || currentText.includes('shirt')));
+      if (isClothingSlide) {
+        if (icon) icon.style.display = 'none';
+        if (badge) badge.style.display = 'none';
+      } else {
+        if (icon) icon.style.display = '';
+        if (badge) badge.style.display = '';
+      }
 
       if (rainTickerTimer) {
         clearTimeout(rainTickerTimer);
