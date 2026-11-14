@@ -2063,10 +2063,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=155"></script>
+  <script src="traffic-flood.js?v=156"></script>
     <script>
-    const APP_BUILD = 155;
-    const APP_VERSION = '1.9.91';
+    const APP_BUILD = 156;
+    const APP_VERSION = '1.9.92';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3847,26 +3847,50 @@
         return;
       }
 
+      // First try standard highAccuracy (fast if satellite chip / warm Wi-Fi cache exists)
+      // but fall back gracefully to network-assisted location after 4.5s so TV boxes (like NVIDIA SHIELD)
+      // don't get stuck waiting for a non-existent satellite GPS chip!
+      let resolved = false;
+
+      const onLocationSuccess = async (position) => {
+        if (resolved) return;
+        resolved = true;
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        await lookupCoords(lat, lon);
+        if (gpsIcon) gpsIcon.textContent = '📍';
+        if (gpsBtn) gpsBtn.textContent = 'Located!';
+        setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
+      };
+
+      const tryLowAccuracyFallback = () => {
+        navigator.geolocation.getCurrentPosition(
+          onLocationSuccess,
+          (error) => {
+            if (resolved) return;
+            resolved = true;
+            console.warn('Geolocation fallback error:', error);
+            let msg = 'Could not access location.';
+            if (error.code === 1) msg = 'Location access was denied in browser settings.';
+            else if (error.code === 2) msg = 'Location unavailable on this network/device.';
+            else if (error.code === 3) msg = 'Location request timed out.';
+            alert(msg);
+            if (gpsIcon) gpsIcon.textContent = '📍';
+            if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+          },
+          { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
+        );
+      };
+
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          await lookupCoords(lat, lon);
-          if (gpsIcon) gpsIcon.textContent = '📍';
-          if (gpsBtn) gpsBtn.textContent = 'Located!';
-          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
-        },
+        onLocationSuccess,
         (error) => {
-          console.warn('Geolocation error:', error);
-          let msg = 'Could not access location.';
-          if (error.code === 1) msg = 'Location access was denied in browser settings.';
-          else if (error.code === 2) msg = 'Location unavailable on this network/device.';
-          else if (error.code === 3) msg = 'Location request timed out.';
-          alert(msg);
-          if (gpsIcon) gpsIcon.textContent = '📍';
-          if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+          // If highAccuracy failed or timed out, immediately try network-level location
+          if (!resolved) {
+            tryLowAccuracyFallback();
+          }
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 4500, maximumAge: 60000 }
       );
     }
 
