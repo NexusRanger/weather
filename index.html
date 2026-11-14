@@ -1167,11 +1167,11 @@
           
           <!-- 1. CAR, FROST, OUTDOOR & SUN/HEAT PREDICTOR (AUTO-SEASONAL) -->
           <div>
-            <div class="flex items-center justify-between mb-1">
-              <span id="frostSectionPill" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1">
-                <span id="frostIcon">🚗</span> <span id="frostSectionTitle">Car &amp; Frost Watch</span>
+            <div class="flex items-center justify-between gap-1.5 mb-1 min-w-0">
+              <span id="frostSectionPill" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap">
+                <span id="frostIcon">🚗</span> <span id="frostSectionTitle" class="whitespace-nowrap">Cold &amp; Frost Watch</span>
               </span>
-              <span id="frostTimeWindow" class="text-[9px] font-mono text-slate-400 truncate">
+              <span id="frostTimeWindow" class="text-[9px] font-mono text-slate-400 text-right leading-tight max-w-[150px]">
                 Tomorrow (05-08 AM)
               </span>
             </div>
@@ -2060,10 +2060,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=153"></script>
+  <script src="traffic-flood.js?v=154"></script>
     <script>
-    const APP_BUILD = 153;
-    const APP_VERSION = '1.9.89';
+    const APP_BUILD = 154;
+    const APP_VERSION = '1.9.90';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -6408,8 +6408,8 @@
       const windSpeed = Math.round((cur && cur.wind_speed_10m) || 0);
       const humidity = Math.round((cur && cur.relative_humidity_2m) || 70);
 
-      let sectionTitle = "Car & Frost Watch";
-      let pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1";
+      let sectionTitle = "Cold & Frost Watch";
+      let pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
       let subLabel = "Windscreen Condition";
       let timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : "This Morning (05-08 AM)";
       let status = "Frost-Free";
@@ -6446,8 +6446,8 @@
       }
       // MODE 2: Warm / Hot / High UV Watch (Summer or warm climates like Australia: peak >= 21°C or UV >= 6)
       else if (todayMax >= 21 || maxUv >= 6.0) {
-        sectionTitle = "Sun & Car Heat Watch";
-        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1";
+        sectionTitle = "Sun & Heat Watch";
+        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
         subLabel = "Cabin & Sun Exposure";
         timeLabel = `Peak ${todayMax}°C • UV ${maxUv.toFixed(1)}`;
 
