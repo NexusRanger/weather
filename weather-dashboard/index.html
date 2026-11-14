@@ -1317,8 +1317,15 @@
 
     </main>
     
-    <!-- COMPACT LOCAL STATUS STRIP (TRAFFIC, RIVERS & SHARE) -->
+    <!-- COMPACT LOCAL STATUS STRIP (RADAR, TRAFFIC, RIVERS & SHARE) -->
     <div id="colLocalInfo" class="relative z-20 flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
+      <!-- Radar Modal Pill -->
+      <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
+        <span class="text-xs">🛰️</span>
+        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Radar:</span>
+        <span class="text-xs font-bold text-cyan-300 group-hover:text-cyan-200 flex items-center gap-1">Live Map ↗</span>
+      </button>
+
       <!-- Traffic Pill Button -->
       <button id="trafficPill" onclick="openTrafficModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
         <span class="text-xs">🚗</span>
@@ -1333,13 +1340,6 @@
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Rivers:</span>
         <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
         <span class="text-[10px] text-slate-500 group-hover:text-cyan-300 transition-colors ml-0.5">ℹ️</span>
-      </button>
-
-      <!-- Radar Modal Pill -->
-      <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
-        <span class="text-xs">🛰️</span>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Radar:</span>
-        <span class="text-xs font-bold text-cyan-300 group-hover:text-cyan-200 flex items-center gap-1">Live Map ↗</span>
       </button>
 
       <!-- Share Dashboard Pill -->
@@ -2060,10 +2060,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=152"></script>
+  <script src="traffic-flood.js?v=153"></script>
     <script>
-    const APP_BUILD = 152;
-    const APP_VERSION = '1.9.88';
+    const APP_BUILD = 153;
+    const APP_VERSION = '1.9.89';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -2196,9 +2196,9 @@
       const active = document.activeElement;
       const headerBtns = getHeaderNavButtons();
       const pills = [
+        document.getElementById('radarBtn'),
         document.getElementById('trafficPill'),
         document.getElementById('riverPill'),
-        document.getElementById('radarBtn'),
         document.getElementById('shareBtn'),
         document.getElementById('feedbackBtn')
       ].filter(el => el && !el.classList.contains('hidden'));
