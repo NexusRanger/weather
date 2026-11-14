@@ -2060,10 +2060,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=151"></script>
+  <script src="traffic-flood.js?v=152"></script>
     <script>
-    const APP_BUILD = 151;
-    const APP_VERSION = '1.9.87';
+    const APP_BUILD = 152;
+    const APP_VERSION = '1.9.88';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -4294,13 +4294,13 @@
         locLastInputAt = now;
         if (locSettleTimer) clearTimeout(locSettleTimer);
 
-        // Generous typing settle delay: 6.0s normally, extended to 12.0s if input ends with a space (e.g. "Edinburgh ")
-        // so the user has ample time to type multi-word destinations without being interrupted!
+        // Responsive settle delay for both voice and typing: 2.5s normally (down from 6s),
+        // or 4.5s if ending with a space/comma (down from 12s) to allow multi-word entry without long waiting!
         const endsWithSpace = input.value.endsWith(' ') || input.value.endsWith(',');
-        const settleDelay = endsWithSpace ? 12000 : 6000;
+        const settleDelay = endsWithSpace ? 4500 : 2500;
 
         locSettleTimer = setTimeout(() => {
-          // If the user ended with a space and is still in the input, don't interrupt multi-word typing!
+          // If the user ended with a space and is still actively in the input, don't interrupt multi-word typing!
           if (input.value.endsWith(' ') && document.activeElement === input) return;
 
           if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
@@ -4586,10 +4586,10 @@
 
       updateRenameClearBtnVisibility();
 
-      // Generous settle timer (6.0s normally, 12.0s if ending with space) to close keyboard and return focus to Save Title button,
-      // or sit back and let it automatically continue/save after 3 seconds of inactivity!
+      // Responsive settle timer (2.5s normally, 4.5s if ending with space/comma) for both voice and typing
+      // to dismiss on-screen keyboard, return focus to Save Title button, and start the auto-save countdown!
       const endsWithSpace = el.value.endsWith(' ') || el.value.endsWith(',');
-      const settleDelay = endsWithSpace ? 12000 : 6000;
+      const settleDelay = endsWithSpace ? 4500 : 2500;
 
       if (renameSettleTimer) clearTimeout(renameSettleTimer);
       renameSettleTimer = setTimeout(() => {
