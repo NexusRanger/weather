@@ -1907,20 +1907,29 @@
           </div>
           <div id="dunkirkCommuteCards" class="grid grid-cols-3 gap-2">
             <!-- Nailsworth -->
-            <div class="p-2 rounded-xl bg-slate-900/70 border border-white/10 text-center flex flex-col justify-between">
-              <div class="text-[10px] font-bold text-slate-300">Nailsworth</div>
+            <div id="commuteCardNailsworth" class="p-2 rounded-xl bg-slate-900/70 border border-emerald-500/30 text-center flex flex-col justify-between transition-all">
+              <div class="text-[10px] font-bold text-slate-300 flex items-center justify-center gap-1">
+                <span id="commuteDotNailsworth" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Nailsworth</span>
+              </div>
               <div id="driveTimeNailsworth" class="text-base font-extrabold font-mono text-emerald-400 my-0.5">-- min</div>
               <div id="driveSubNailsworth" class="text-[9px] font-mono text-slate-400">A46 (~1.0 mi)</div>
             </div>
             <!-- Stroud -->
-            <div class="p-2 rounded-xl bg-slate-900/70 border border-white/10 text-center flex flex-col justify-between">
-              <div class="text-[10px] font-bold text-slate-300">Stroud</div>
+            <div id="commuteCardStroud" class="p-2 rounded-xl bg-slate-900/70 border border-emerald-500/30 text-center flex flex-col justify-between transition-all">
+              <div class="text-[10px] font-bold text-slate-300 flex items-center justify-center gap-1">
+                <span id="commuteDotStroud" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Stroud</span>
+              </div>
               <div id="driveTimeStroud" class="text-base font-extrabold font-mono text-emerald-400 my-0.5">-- min</div>
               <div id="driveSubStroud" class="text-[9px] font-mono text-slate-400">A46 (~3.5 mi)</div>
             </div>
             <!-- Cirencester -->
-            <div class="p-2 rounded-xl bg-slate-900/70 border border-white/10 text-center flex flex-col justify-between">
-              <div class="text-[10px] font-bold text-slate-300">Cirencester</div>
+            <div id="commuteCardCirencester" class="p-2 rounded-xl bg-slate-900/70 border border-emerald-500/30 text-center flex flex-col justify-between transition-all">
+              <div class="text-[10px] font-bold text-slate-300 flex items-center justify-center gap-1">
+                <span id="commuteDotCirencester" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Cirencester</span>
+              </div>
               <div id="driveTimeCirencester" class="text-base font-extrabold font-mono text-emerald-400 my-0.5">-- min</div>
               <div id="driveSubCirencester" class="text-[9px] font-mono text-slate-400">A419 (~13.4 mi)</div>
             </div>
@@ -2115,10 +2124,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=163"></script>
+  <script src="traffic-flood.js?v=164"></script>
     <script>
-    const APP_BUILD = 163;
-    const APP_VERSION = '1.9.99';
+    const APP_BUILD = 164;
+    const APP_VERSION = '1.10.00';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -9892,29 +9901,76 @@
 
     function renderDunkirkCommute(results) {
       if (!Array.isArray(results)) return;
+      let maxDelay = 0;
+      let delayedNames = [];
+
       results.forEach(r => {
+        const cardEl = document.getElementById(`commuteCard${r.id}`);
+        const dotEl = document.getElementById(`commuteDot${r.id}`);
         const timeEl = document.getElementById(`driveTime${r.id}`);
         const subEl = document.getElementById(`driveSub${r.id}`);
+
+        if (r.delayMins > maxDelay) maxDelay = r.delayMins;
+        if (r.delayMins >= 2) delayedNames.push(r.id);
+
         if (timeEl) {
           timeEl.textContent = `${r.mins} min${r.mins === 1 ? '' : 's'}`;
-          if (r.delayMins >= 5) {
-            timeEl.className = 'text-base font-extrabold font-mono text-rose-400 my-0.5';
-          } else if (r.delayMins >= 2) {
-            timeEl.className = 'text-base font-extrabold font-mono text-amber-300 my-0.5';
-          } else {
-            timeEl.className = 'text-base font-extrabold font-mono text-emerald-400 my-0.5';
-          }
         }
-        if (subEl) {
-          const delayText = r.delayMins > 0 ? ` (+${r.delayMins}m delay)` : '';
-          subEl.textContent = `${r.road} (~${r.miles} mi)${delayText}`;
-          if (r.delayMins > 0) {
-            subEl.className = (r.delayMins >= 5 ? 'text-[9px] font-mono text-rose-300 font-semibold' : 'text-[9px] font-mono text-amber-300');
-          } else {
+
+        if (r.delayMins >= 5) {
+          if (cardEl) cardEl.className = 'p-2 rounded-xl bg-rose-950/40 border border-rose-500/60 shadow-sm shadow-rose-950/50 text-center flex flex-col justify-between transition-all';
+          if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse';
+          if (timeEl) timeEl.className = 'text-base font-extrabold font-mono text-rose-300 my-0.5';
+          if (subEl) {
+            subEl.textContent = `${r.road} (~${r.miles} mi) (+${r.delayMins}m delay)`;
+            subEl.className = 'text-[9px] font-mono text-rose-300 font-semibold';
+          }
+        } else if (r.delayMins >= 2) {
+          if (cardEl) cardEl.className = 'p-2 rounded-xl bg-amber-950/30 border border-amber-400/50 shadow-sm shadow-amber-950/50 text-center flex flex-col justify-between transition-all';
+          if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+          if (timeEl) timeEl.className = 'text-base font-extrabold font-mono text-amber-300 my-0.5';
+          if (subEl) {
+            subEl.textContent = `${r.road} (~${r.miles} mi) (+${r.delayMins}m delay)`;
+            subEl.className = 'text-[9px] font-mono text-amber-300 font-semibold';
+          }
+        } else {
+          if (cardEl) cardEl.className = 'p-2 rounded-xl bg-slate-900/70 border border-emerald-500/30 text-center flex flex-col justify-between transition-all';
+          if (dotEl) dotEl.className = 'w-1.5 h-1.5 rounded-full bg-emerald-400';
+          if (timeEl) timeEl.className = 'text-base font-extrabold font-mono text-emerald-400 my-0.5';
+          if (subEl) {
+            subEl.textContent = `${r.road} (~${r.miles} mi)`;
             subEl.className = 'text-[9px] font-mono text-slate-400';
           }
         }
       });
+
+      const statusEl = document.getElementById('dunkirkCommuteStatus');
+      if (statusEl) {
+        if (maxDelay >= 5) {
+          statusEl.textContent = `heavy delays (${delayedNames.join(', ')})`;
+          statusEl.className = 'text-[9px] font-mono lowercase text-rose-400 font-semibold';
+        } else if (maxDelay >= 2) {
+          statusEl.textContent = `delays on ${delayedNames.join(', ')}`;
+          statusEl.className = 'text-[9px] font-mono lowercase text-amber-300 font-semibold';
+        } else {
+          statusEl.textContent = 'routes flowing freely';
+          statusEl.className = 'text-[9px] font-mono lowercase text-emerald-400';
+        }
+      }
+
+      // If at Dunkirk Mills, also reflect severe delays in the main traffic pill
+      const trafficPill = document.getElementById('trafficPill');
+      const trafficCard = document.getElementById('trafficCard');
+      if (trafficPill && trafficCard) {
+        if (maxDelay >= 5) {
+          trafficPill.classList.remove('traffic-alert-amber-pulse');
+          trafficPill.classList.add('traffic-alert-red-pulse');
+          trafficCard.innerHTML = `<span class="text-rose-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span> Route Delays</span>`;
+        } else if (maxDelay >= 2 && !trafficPill.classList.contains('traffic-alert-red-pulse')) {
+          trafficPill.classList.add('traffic-alert-amber-pulse');
+          trafficCard.innerHTML = `<span class="text-orange-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span> Route Delays</span>`;
+        }
+      }
     }
 
     function closeTrafficModal(pop = true) {
