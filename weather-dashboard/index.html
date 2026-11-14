@@ -820,15 +820,6 @@
 <body>
   <div id="ambientGlow" class="ambient-glow"></div>
 
-  <!-- AUTO-UPDATE NOTIFICATION BANNER -->
-  <div id="updateBanner" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 hidden">
-    <button id="applyUpdateBtn" tabindex="0" onclick="applyAppUpdate()" onkeydown="handleUpdateBannerKeydown(event)" class="tv-focus-amber px-4 py-2 rounded-full bg-gradient-to-r from-indigo-600 via-sky-600 to-indigo-600 hover:from-indigo-500 hover:to-sky-500 text-white text-xs font-semibold shadow-[0_0_20px_rgba(99,102,241,0.6)] border border-white/20 flex items-center gap-2.5 transition transform hover:scale-105 active:scale-95 animate-pulse focus:outline-none cursor-pointer" title="Press Enter / OK to reload with new update">
-      <span class="text-sm">✨</span>
-      <span id="updateBannerText">New dashboard update ready</span>
-      <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-mono font-normal">Press OK to reload</span>
-    </button>
-  </div>
-
   <div id="dashboardRoot">
     
     <!-- HEADER BAR -->
@@ -946,10 +937,11 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
             </svg>
           </button>
-          <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Reload Dashboard (Full Page & Data Refresh)" class="tv-focus-amber p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition group focus:outline-none cursor-pointer">
+          <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Up to date • Click to refresh" class="tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer">
             <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
+            <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
           </button>
         </div>
       </div>
@@ -2124,52 +2116,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=169"></script>
+  <script src="traffic-flood.js?v=170"></script>
     <script>
-    const APP_BUILD = 169;
-    const APP_VERSION = '1.10.05';
-
-    function handleUpdateBannerKeydown(e) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        const target = document.getElementById('headerLocationBtn') || document.getElementById('headerLocationTitle');
-        if (target && typeof target.focus === 'function') target.focus();
-      } else if (e.key === 'ArrowUp') {
-        // Uppermost focus lock: holding Up keeps focus on update banner
-        e.preventDefault();
-      }
-    }
-
-    // D-Pad UX: Quick jump to update banner when holding Up button
-    window.addEventListener('keydown', function handleDpadUpdateBanner(e) {
-      if (e.key !== 'ArrowUp') return;
-
-      const banner = document.getElementById('updateBanner');
-      if (!banner || banner.classList.contains('hidden')) return;
-
-      const updateBtn = document.getElementById('applyUpdateBtn');
-      if (!updateBtn) return;
-
-      // Do not redirect if any modal is currently visible
-      const modalOpen = document.querySelector('#locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #radarModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden)');
-      if (modalOpen) return;
-
-      if (document.activeElement === updateBtn) {
-        e.preventDefault();
-        return;
-      }
-
-      const active = document.activeElement;
-      const header = document.querySelector('header');
-      const inHeader = header && (header.contains(active) || active === header);
-      const nearTop = active && active.getBoundingClientRect && (active.getBoundingClientRect().top <= 140);
-      const isBodyOrNull = !active || active === document.body;
-
-      if (inHeader || nearTop || isBodyOrNull) {
-        e.preventDefault();
-        updateBtn.focus();
-      }
-    }, true);
+    const APP_BUILD = 170;
+    const APP_VERSION = '1.10.06';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -2302,14 +2252,9 @@
           const target = pills[0] || locBtn;
           if (target) target.focus();
         }
-        // From status strip pills up to header location button (or update banner if visible)
+        // From status strip pills up to header location button
         else if (pills.includes(active)) {
-          const banner = document.getElementById('updateBanner');
-          const updateBtn = document.getElementById('applyUpdateBtn');
-          if (banner && !banner.classList.contains('hidden') && updateBtn) {
-            e.preventDefault();
-            updateBtn.focus();
-          } else if (locBtn) {
+          if (locBtn) {
             e.preventDefault();
             locBtn.focus();
           }
@@ -2405,30 +2350,39 @@
       }
     }
 
+    function setUpToDate(version = APP_VERSION) {
+      const btn = document.getElementById('reloadBtn');
+      const dot = document.getElementById('updateAvailableDot');
+      if (!btn) return;
+      btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer';
+      btn.title = `Up to date (v${version}) • Click to refresh`;
+      if (dot) dot.classList.add('hidden');
+    }
+
+    function setUpdateAvailable(newVersion, newBuild) {
+      const btn = document.getElementById('reloadBtn');
+      const dot = document.getElementById('updateAvailableDot');
+      if (!btn) return;
+      btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-sky-500/25 hover:bg-sky-500/40 border border-sky-400/60 text-sky-200 hover:text-white shadow-[0_0_12px_rgba(56,189,248,0.5)] animate-pulse transition group focus:outline-none cursor-pointer';
+      btn.title = `Update available (v${newVersion || ''}) • Click to reload with latest features`;
+      if (dot) dot.classList.remove('hidden');
+    }
+
     async function checkForUpdates() {
       try {
         const res = await fetch(`version.json?_=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
-            const banner = document.getElementById('updateBanner');
-            const text = document.getElementById('updateBannerText');
-            if (text && data.version) {
-              text.textContent = `New update available (v${data.version})`;
-            }
-            if (banner) {
-              banner.classList.remove('hidden');
-              // TV Remote UX: Immediately highlight the update banner button with amber glow
-              // so the user can simply press OK on their TV remote to update!
-              setTimeout(() => {
-                const btn = document.getElementById('applyUpdateBtn');
-                if (btn) btn.focus();
-              }, 250);
-            }
+            setUpdateAvailable(data.version, data.build);
+          } else {
+            setUpToDate(data && data.version ? data.version : APP_VERSION);
           }
+        } else {
+          setUpToDate();
         }
       } catch (e) {
-        // Silently ignore update check errors
+        setUpToDate();
       }
     }
 
