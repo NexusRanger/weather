@@ -1450,8 +1450,30 @@
               <button id="clearRecentLocationsBtn" type="button" tabindex="0" onclick="promptClearAllRecentLocations()" onkeydown="handleClearRecentBtnKeydown(event)" class="tv-focus-amber text-[9px] font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 rounded-md px-1.5 py-0.5 transition flex items-center gap-1 focus:outline-none cursor-pointer flex-shrink-0" title="Clear all recent locations">
                 <span>🗑️</span> Clear
               </button>
+              <button id="recentLocationsInfoBtn" type="button" tabindex="0" onclick="toggleRecentLocationsInfo()" onkeydown="handleRecentInfoBtnKeydown(event)" class="tv-focus-amber text-[10px] text-sky-400 hover:text-white bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 rounded-full w-4 h-4 flex items-center justify-center transition focus:outline-none cursor-pointer flex-shrink-0 font-serif font-bold italic" title="Storage info">
+                i
+              </button>
             </div>
             <span class="text-[9px] font-normal normal-case text-slate-500 flex-shrink-0">Hold to remove</span>
+          </div>
+          <div id="recentLocationsInfoBox" class="hidden my-1.5 p-2 rounded-xl bg-sky-950/40 border border-sky-400/30 text-[10px] text-sky-200 leading-relaxed shadow-lg">
+            <div class="flex items-start justify-between gap-1.5">
+              <div class="space-y-1">
+                <div class="font-bold text-white flex items-center gap-1">
+                  <span>🔒</span> 100% Private &amp; Local to Your Device
+                </div>
+                <p class="text-slate-300">
+                  Your locations are stored only inside your browser/TV's local memory (<code class="text-sky-300 font-mono">localStorage</code>). No personal accounts or tracking servers are used.
+                </p>
+                <p class="text-slate-300">
+                  Locations persist automatically across visits, restarts, and months away. If you return to a saved spot and click <span class="text-sky-300 font-semibold">"Locate Me"</span>, your custom title and settings are recalled automatically!
+                </p>
+                <p class="text-amber-200/90 flex items-center gap-1">
+                  <span>💡</span> Want to wipe them? Use the <span class="font-semibold text-rose-300">"Clear"</span> button anytime.
+                </p>
+              </div>
+              <button type="button" onclick="toggleRecentLocationsInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
+            </div>
           </div>
           <div id="recentLocationChips" class="flex flex-wrap gap-1"></div>
           <div id="recentDeleteBar" class="hidden mt-1.5 px-2.5 py-1 rounded-xl bg-rose-500/15 border border-rose-400/50 flex items-center justify-between gap-2"></div>
@@ -2063,10 +2085,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=158"></script>
+  <script src="traffic-flood.js?v=159"></script>
     <script>
-    const APP_BUILD = 158;
-    const APP_VERSION = '1.9.94';
+    const APP_BUILD = 159;
+    const APP_VERSION = '1.9.95';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -2749,7 +2771,8 @@
           lon: loc.lon,
           timestamp: Date.now()
         });
-        if (queries.length > 25) queries = queries.slice(0, 25);
+        // Retain up to 50 user locations in local persistent memory for smart GPS & return visits
+        if (queries.length > 50) queries = queries.slice(0, 50);
         localStorage.setItem(USER_RECENTS_STORAGE_KEY, JSON.stringify(queries));
       } catch (err) {
         console.warn('Could not record user recent location:', err);
@@ -3767,6 +3790,28 @@
       if (typeof calculateHaversineKm === 'function' && calculateHaversineKm(lat, lon, DUNKIRK_LAT, DUNKIRK_LON) <= 0.6) {
         resolvedName = 'Dunkirk Mills';
         resolvedPostcode = 'GL5 5HH';
+      }
+
+      // Proximity Memory Check: Look through user's saved locations (up to 50 places)
+      // If coordinates are within ~700m (0.7 km) of any place the user previously saved or renamed,
+      // automatically recall and apply their preferred name and postcode!
+      if (!resolvedName && typeof calculateHaversineKm === 'function') {
+        try {
+          const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
+          const recents = raw ? JSON.parse(raw) : [];
+          if (Array.isArray(recents)) {
+            for (const item of recents) {
+              if (typeof item.lat === 'number' && typeof item.lon === 'number' && item.name && item.name !== 'Current Location') {
+                const distKm = calculateHaversineKm(lat, lon, item.lat, item.lon);
+                if (distKm <= 0.7) {
+                  resolvedName = item.name;
+                  resolvedPostcode = item.postcode || '';
+                  break;
+                }
+              }
+            }
+          }
+        } catch (_) {}
       }
 
       // 1. UK high-accuracy lookup with wideSearch and 1000m radius
@@ -4982,11 +5027,42 @@
       if (nextChip) nextChip.focus();
     }
 
+    function toggleRecentLocationsInfo(forceState) {
+      const box = document.getElementById('recentLocationsInfoBox');
+      if (!box) return;
+      if (typeof forceState === 'boolean') {
+        if (forceState) box.classList.remove('hidden');
+        else box.classList.add('hidden');
+      } else {
+        box.classList.toggle('hidden');
+      }
+    }
+
+    function handleRecentInfoBtnKeydown(e) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const gpsBtn = document.getElementById('gpsModalBtn');
+        if (gpsBtn) gpsBtn.focus();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const clearBtn = document.getElementById('clearRecentLocationsBtn');
+        if (clearBtn) clearBtn.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const target = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
+        if (target) target.focus();
+      }
+    }
+
     function handleClearRecentBtnKeydown(e) {
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         const gpsBtn = document.getElementById('gpsModalBtn');
         if (gpsBtn) gpsBtn.focus();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const infoBtn = document.getElementById('recentLocationsInfoBtn');
+        if (infoBtn) infoBtn.focus();
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         const target = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
