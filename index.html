@@ -2085,10 +2085,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=159"></script>
+  <script src="traffic-flood.js?v=160"></script>
     <script>
-    const APP_BUILD = 159;
-    const APP_VERSION = '1.9.95';
+    const APP_BUILD = 160;
+    const APP_VERSION = '1.9.96';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -4523,6 +4523,10 @@
         delBar.classList.add('hidden');
         delBar.innerHTML = '';
       }
+      const infoBox = document.getElementById('recentLocationsInfoBox');
+      if (infoBox) {
+        infoBox.classList.add('hidden');
+      }
 
       if (modal) {
         modal.classList.remove('hidden');
@@ -4552,6 +4556,10 @@
     function closeLocationModal(pop = true) {
       if (typeof cancelAllLocationAutoContinue === 'function') cancelAllLocationAutoContinue();
       stopLocationAutoCloseTimer();
+      const infoBox = document.getElementById('recentLocationsInfoBox');
+      if (infoBox) {
+        infoBox.classList.add('hidden');
+      }
       const modal = document.getElementById('locationModal');
       if (modal) {
         modal.classList.add('hidden');
