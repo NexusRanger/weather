@@ -1445,13 +1445,13 @@
         <!-- Recent searches (if any) -->
         <div id="recentLocationsContainer" class="hidden mb-2">
           <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center justify-between gap-2">
-            <span class="flex items-center gap-1"><span>🕒</span> Recent Locations:</span>
-            <div class="flex items-center gap-2">
-              <span class="text-[9px] font-normal normal-case text-slate-500">Hold to remove</span>
-              <button id="clearRecentLocationsBtn" type="button" tabindex="0" onclick="clearAllRecentLocations()" onkeydown="handleClearRecentBtnKeydown(event)" class="tv-focus-amber text-[9px] font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 rounded-md px-1.5 py-0.5 transition flex items-center gap-1 focus:outline-none cursor-pointer" title="Clear all recent locations">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="flex items-center gap-1 flex-shrink-0"><span>🕒</span> Recent Locations:</span>
+              <button id="clearRecentLocationsBtn" type="button" tabindex="0" onclick="promptClearAllRecentLocations()" onkeydown="handleClearRecentBtnKeydown(event)" class="tv-focus-amber text-[9px] font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 rounded-md px-1.5 py-0.5 transition flex items-center gap-1 focus:outline-none cursor-pointer flex-shrink-0" title="Clear all recent locations">
                 <span>🗑️</span> Clear
               </button>
             </div>
+            <span class="text-[9px] font-normal normal-case text-slate-500 flex-shrink-0">Hold to remove</span>
           </div>
           <div id="recentLocationChips" class="flex flex-wrap gap-1"></div>
           <div id="recentDeleteBar" class="hidden mt-1.5 px-2.5 py-1 rounded-xl bg-rose-500/15 border border-rose-400/50 flex items-center justify-between gap-2"></div>
@@ -2060,10 +2060,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=149"></script>
+  <script src="traffic-flood.js?v=150"></script>
     <script>
-    const APP_BUILD = 149;
-    const APP_VERSION = '1.9.85';
+    const APP_BUILD = 150;
+    const APP_VERSION = '1.9.86';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -4949,6 +4949,96 @@
         const target = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
         if (target) target.focus();
       }
+    }
+
+    function promptClearAllRecentLocations() {
+      window._locModalCloseGuardUntil = Date.now() + 500;
+      const bar = document.getElementById('recentDeleteBar');
+      const clearBtn = document.getElementById('clearRecentLocationsBtn');
+      if (!bar) {
+        clearAllRecentLocations();
+        return;
+      }
+
+      // Deselect individual chips
+      document.querySelectorAll('#recentLocationChips button').forEach(b => {
+        b.classList.remove('ring-1', 'ring-rose-400', 'border-rose-400/70');
+      });
+
+      bar.innerHTML = '';
+      const label = document.createElement('span');
+      label.className = 'text-[11px] text-rose-200 font-medium truncate';
+      label.textContent = 'Clear all recent locations?';
+
+      const actions = document.createElement('div');
+      actions.className = 'flex items-center gap-1.5 flex-shrink-0';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'tv-focus-amber text-[11px] font-bold text-white px-2.5 py-0.5 rounded-lg bg-rose-600/90 hover:bg-rose-500 border border-rose-400/50 transition cursor-pointer focus:outline-none';
+      delBtn.tabIndex = 0;
+      delBtn.textContent = '🗑️ Clear All';
+
+      const keepBtn = document.createElement('button');
+      keepBtn.className = 'tv-focus-amber text-[11px] text-slate-200 hover:text-white px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer focus:outline-none';
+      keepBtn.tabIndex = 0;
+      keepBtn.textContent = 'Cancel';
+
+      const handleConfirm = (e, fn) => {
+        if (e) {
+          if (e.repeat) { e.preventDefault(); e.stopPropagation(); return; }
+          e.stopPropagation();
+        }
+        fn();
+      };
+
+      delBtn.addEventListener('click', (e) => handleConfirm(e, () => clearAllRecentLocations()));
+      keepBtn.addEventListener('click', (e) => handleConfirm(e, () => hideRecentDeleteBar(clearBtn)));
+
+      delBtn.addEventListener('keydown', (e) => {
+        if (isSelectKey(e)) {
+          if (e.repeat) { e.preventDefault(); e.stopPropagation(); return; }
+          return;
+        }
+        if (e.key === 'ArrowRight') { e.preventDefault(); keepBtn.focus(); }
+        else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (clearBtn) clearBtn.focus();
+        } else if (e.key === 'ArrowDown') {
+          const nextRow = document.querySelector('#nearbyLocationChips button');
+          if (nextRow) { e.preventDefault(); nextRow.focus(); }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          hideRecentDeleteBar(clearBtn);
+        }
+      });
+
+      keepBtn.addEventListener('keydown', (e) => {
+        if (isSelectKey(e)) {
+          if (e.repeat) { e.preventDefault(); e.stopPropagation(); return; }
+          return;
+        }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); delBtn.focus(); }
+        else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (clearBtn) clearBtn.focus();
+        } else if (e.key === 'ArrowDown') {
+          const nextRow = document.querySelector('#nearbyLocationChips button');
+          if (nextRow) { e.preventDefault(); nextRow.focus(); }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          hideRecentDeleteBar(clearBtn);
+        }
+      });
+
+      actions.appendChild(delBtn);
+      actions.appendChild(keepBtn);
+      bar.appendChild(label);
+      bar.appendChild(actions);
+      bar.classList.remove('hidden');
+
+      delBtn.focus();
     }
 
     function clearAllRecentLocations() {
