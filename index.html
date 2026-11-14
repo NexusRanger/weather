@@ -834,7 +834,7 @@
     <!-- HEADER BAR -->
     <header class="relative z-10 flex flex-nowrap items-center justify-between gap-2 pb-1 border-b border-white/10 flex-shrink-0">
       <div class="flex items-center gap-2 min-w-0 flex-1">
-        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
+        <div id="liveStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0 transition-colors duration-500 cursor-pointer" title="All data feeds connected (Live)"></div>
         <div class="flex items-center gap-2 min-w-0 flex-nowrap">
           <div id="dunkirkMillIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="Dunkirk Mills, Nailsworth">
             <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)] p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()">
@@ -2063,10 +2063,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=157"></script>
+  <script src="traffic-flood.js?v=158"></script>
     <script>
-    const APP_BUILD = 157;
-    const APP_VERSION = '1.9.93';
+    const APP_BUILD = 158;
+    const APP_VERSION = '1.9.94';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -7171,6 +7171,50 @@
       }
     }
 
+    // Live Database & API Connection Health Monitor
+    const API_HEALTH = {
+      weather: true,
+      aqi: true,
+      traffic: true,
+      flood: true
+    };
+
+    function updateLiveStatusDot() {
+      const dot = document.getElementById('liveStatusDot');
+      if (!dot) return;
+
+      const keys = Object.keys(API_HEALTH);
+      const onlineCount = keys.filter(k => API_HEALTH[k] === true).length;
+      const totalCount = keys.length;
+
+      // Reset dynamic color classes and glows
+      dot.classList.remove(
+        'bg-emerald-400', 'shadow-[0_0_8px_#34d399]',
+        'bg-amber-400', 'shadow-[0_0_8px_#fbbf24]',
+        'bg-rose-500', 'shadow-[0_0_8px_#f43f5e]'
+      );
+
+      // Flashing animation pulse is maintained across all states
+      if (!dot.classList.contains('animate-pulse')) {
+        dot.classList.add('animate-pulse');
+      }
+
+      if (onlineCount === totalCount) {
+        // Green: fully connected and working
+        dot.classList.add('bg-emerald-400', 'shadow-[0_0_8px_#34d399]');
+        dot.title = 'All databases & feeds connected (Weather, Air Quality, Traffic, Rivers)';
+      } else if (onlineCount > 0) {
+        // Orange: lost any databases / partial connection
+        dot.classList.add('bg-amber-400', 'shadow-[0_0_8px_#fbbf24]');
+        const offlineNames = keys.filter(k => !API_HEALTH[k]).map(k => k === 'aqi' ? 'Air Quality' : k.charAt(0).toUpperCase() + k.slice(1));
+        dot.title = `Partial connection (${onlineCount}/${totalCount} feeds online). Reconnecting: ${offlineNames.join(', ')}`;
+      } else {
+        // Red: no connection to databases
+        dot.classList.add('bg-rose-500', 'shadow-[0_0_8px_#f43f5e]');
+        dot.title = 'No connection to databases. Retrying...';
+      }
+    }
+
     async function fetchWeatherData() {
       const icon = document.getElementById('refreshIcon');
       if (icon) icon.classList.add('animate-spin');
@@ -7180,12 +7224,28 @@
         const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&past_days=1&forecast_days=11&current=temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&minutely_15=precipitation,precipitation_probability,weather_code&forecast_minutely_15=24&hourly=temperature_2m,dew_point_2m,soil_temperature_0cm,precipitation_probability,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max&wind_speed_unit=mph&timezone=auto&_=${cacheBust}`;
         const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${CURRENT_LOCATION.lat}&longitude=${CURRENT_LOCATION.lon}&current=european_aqi,pm2_5&_=${cacheBust}`;
 
-        const [weatherRes, aqiRes] = await Promise.all([
-          fetch(weatherUrl),
-          fetch(aqiUrl).catch(() => null)
-        ]);
+        let weatherRes = null;
+        let aqiRes = null;
 
-        if (!weatherRes.ok) throw new Error('Weather API error: ' + weatherRes.status);
+        try {
+          [weatherRes, aqiRes] = await Promise.all([
+            fetch(weatherUrl),
+            fetch(aqiUrl).catch(() => null)
+          ]);
+        } catch (netErr) {
+          API_HEALTH.weather = false;
+          API_HEALTH.aqi = false;
+          updateLiveStatusDot();
+          throw netErr;
+        }
+
+        if (!weatherRes || !weatherRes.ok) {
+          API_HEALTH.weather = false;
+          updateLiveStatusDot();
+          throw new Error('Weather API error: ' + (weatherRes ? weatherRes.status : 'offline'));
+        }
+        API_HEALTH.weather = true;
+
         const data = await weatherRes.json();
         
         if (data && data.timezone) {
@@ -7196,12 +7256,39 @@
         }
 
         let aqiData = null;
-        if (aqiRes && aqiRes.ok) aqiData = await aqiRes.json();
+        if (aqiRes && aqiRes.ok) {
+          try {
+            aqiData = await aqiRes.json();
+            API_HEALTH.aqi = true;
+          } catch (_) {
+            API_HEALTH.aqi = false;
+          }
+        } else {
+          API_HEALTH.aqi = false;
+        }
 
         renderDashboard(data, aqiData);
-        // Fetch local traffic and river data
-        await fetchTrafficData();
-        await fetchFloodData();
+
+        // Fetch local traffic and river data with status tracking
+        try {
+          if (typeof fetchTrafficData === 'function') {
+            const trafficOk = await fetchTrafficData();
+            API_HEALTH.traffic = (trafficOk !== false);
+          }
+        } catch (_) {
+          API_HEALTH.traffic = false;
+        }
+
+        try {
+          if (typeof fetchFloodData === 'function') {
+            const floodOk = await fetchFloodData();
+            API_HEALTH.flood = (floodOk !== false);
+          }
+        } catch (_) {
+          API_HEALTH.flood = false;
+        }
+
+        updateLiveStatusDot();
         
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -7209,6 +7296,7 @@
         checkForUpdates();
       } catch (err) {
         console.error('Fetch error:', err);
+        updateLiveStatusDot();
         document.getElementById('lastUpdated').textContent = 'Sync issue (retrying...)';
       } finally {
         if (icon) icon.classList.remove('animate-spin');

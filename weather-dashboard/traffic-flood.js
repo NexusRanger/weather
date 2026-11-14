@@ -159,6 +159,7 @@ async function fetchTrafficData() {
       conditionDesc,
       updatedAt: new Date()
     };
+    return true;
   } catch (e) {
     console.warn('Traffic fetch issue:', e.message);
     if (card) {
@@ -181,6 +182,7 @@ async function fetchTrafficData() {
         updatedAt: new Date()
       };
     }
+    return false;
   }
 }
 
@@ -260,11 +262,13 @@ async function fetchFloodData() {
       card.innerHTML = `<span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Normal</span>`;
       card.className = "text-xs font-bold text-emerald-400";
     }
+    return true;
   } catch (e) {
     console.warn('Flood fetch issue:', e.message);
     if (card) {
       card.innerHTML = `<span class="text-emerald-400 font-bold">Normal</span>`;
     }
+    return false;
   }
 }
 
