@@ -2087,10 +2087,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=161"></script>
+  <script src="traffic-flood.js?v=162"></script>
     <script>
-    const APP_BUILD = 161;
-    const APP_VERSION = '1.9.97';
+    const APP_BUILD = 162;
+    const APP_VERSION = '1.9.98';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -4438,8 +4438,12 @@
       }
     }
 
-    function resetLocationAutoCloseTimer() {
-      locationAutoCloseSecs = 30;
+    function resetLocationAutoCloseTimer(customSecs = null) {
+      const box = document.getElementById('recentLocationsInfoBox');
+      const isInfoOpen = box && !box.classList.contains('hidden');
+      const defaultSecs = isInfoOpen ? 60 : 30;
+
+      locationAutoCloseSecs = (typeof customSecs === 'number') ? customSecs : defaultSecs;
       updateLocationCountdownDisplay();
       if (locationAutoCloseTimer) clearInterval(locationAutoCloseTimer);
       locationAutoCloseTimer = setInterval(() => {
@@ -5046,6 +5050,10 @@
       } else {
         box.classList.toggle('hidden');
       }
+
+      // If info box is open, give 60 seconds (1 minute) to read peacefully; otherwise resume standard 30s
+      const isOpen = !box.classList.contains('hidden');
+      resetLocationAutoCloseTimer(isOpen ? 60 : 30);
     }
 
     function handleRecentInfoBtnKeydown(e) {
