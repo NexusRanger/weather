@@ -937,12 +937,17 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
             </svg>
           </button>
-          <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Up to date • Click to refresh" class="tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer">
-            <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
-          </button>
+          <div class="relative inline-flex items-center">
+            <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Up to date • Click to refresh" class="tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer">
+              <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
+            </button>
+            <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
+              <span>✓ Up to date (v1.10.08) &bull; Press OK to refresh</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -2116,10 +2121,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=171"></script>
+  <script src="traffic-flood.js?v=172"></script>
     <script>
-    const APP_BUILD = 171;
-    const APP_VERSION = '1.10.07';
+    const APP_BUILD = 172;
+    const APP_VERSION = '1.10.08';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -2312,6 +2317,7 @@
         );
         if (!modalOpen) {
           document.body.classList.add('focus-dormant');
+          hideReloadBadge();
           const locBtn = document.getElementById('headerLocationBtn');
           if (locBtn) {
             locBtn.focus({ preventScroll: true });
@@ -2350,22 +2356,63 @@
       }
     }
 
+    let appUpdateAvailable = false;
+    let appLatestVersion = APP_VERSION;
+
+    function updateReloadBadge() {
+      const badge = document.getElementById('reloadFocusBadge');
+      if (!badge) return;
+      if (appUpdateAvailable) {
+        badge.className = 'absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/60 text-sky-200 text-[11px] font-sans font-medium whitespace-nowrap shadow-[0_0_15px_rgba(56,189,248,0.35)] z-50 pointer-events-none backdrop-blur-md flex items-center gap-1.5';
+        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse inline-block flex-shrink-0"></span> <span>✨ Update available (v' + (appLatestVersion || '') + ') &bull; Press OK to reload</span>';
+      } else {
+        badge.className = 'absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-emerald-300 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none backdrop-blur-md flex items-center gap-1.5';
+        badge.innerHTML = '<span>✓ Up to date (v' + (appLatestVersion || '') + ') &bull; Press OK to refresh</span>';
+      }
+    }
+
+    function showReloadBadge() {
+      const badge = document.getElementById('reloadFocusBadge');
+      if (!badge) return;
+      updateReloadBadge();
+      badge.classList.remove('hidden');
+    }
+
+    function hideReloadBadge() {
+      const badge = document.getElementById('reloadFocusBadge');
+      if (badge) badge.classList.add('hidden');
+    }
+
+    const reloadBtnEl = document.getElementById('reloadBtn');
+    if (reloadBtnEl) {
+      reloadBtnEl.addEventListener('focus', showReloadBadge);
+      reloadBtnEl.addEventListener('blur', hideReloadBadge);
+      reloadBtnEl.addEventListener('mouseenter', showReloadBadge);
+      reloadBtnEl.addEventListener('mouseleave', hideReloadBadge);
+    }
+
     function setUpToDate(version = APP_VERSION) {
+      appUpdateAvailable = false;
+      appLatestVersion = version || APP_VERSION;
       const btn = document.getElementById('reloadBtn');
       const dot = document.getElementById('updateAvailableDot');
       if (!btn) return;
       btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer';
-      btn.title = `Up to date (v${version}) • Click to refresh`;
+      btn.title = `Up to date (v${appLatestVersion}) • Click to refresh`;
       if (dot) dot.classList.add('hidden');
+      updateReloadBadge();
     }
 
     function setUpdateAvailable(newVersion, newBuild) {
+      appUpdateAvailable = true;
+      appLatestVersion = newVersion || APP_VERSION;
       const btn = document.getElementById('reloadBtn');
       const dot = document.getElementById('updateAvailableDot');
       if (!btn) return;
       btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-sky-500/25 hover:bg-sky-500/40 border border-sky-400/60 text-sky-200 hover:text-white shadow-[0_0_12px_rgba(56,189,248,0.5)] animate-pulse transition group focus:outline-none cursor-pointer';
-      btn.title = `Update available (v${newVersion || ''}) • Click to reload with latest features`;
+      btn.title = `Update available (v${appLatestVersion}) • Click to reload with latest features`;
       if (dot) dot.classList.remove('hidden');
+      updateReloadBadge();
     }
 
     async function checkForUpdates() {
@@ -3366,6 +3413,7 @@
     function reloadDashboard() {
       const icon = document.getElementById('refreshIcon');
       if (icon) icon.classList.add('animate-spin');
+      hideReloadBadge();
       saveSavedLocation();
       const url = new URL(window.location.href);
       ['postcode', 'pc', 'location', 'town', 'q', 'lat', 'lon'].forEach(k => url.searchParams.delete(k));
