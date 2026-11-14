@@ -1357,8 +1357,8 @@
         <div>
           <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town or City</label>
           <div class="flex gap-1.5">
-            <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 bg-black/50 border border-white/20 rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none" onkeydown="handleLocationInputKeydown(event)">
-            <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" onblur="cancelSearchAutoContinue()" class="tv-focus-amber px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition focus:outline-none cursor-pointer" onkeydown="handleSearchBtnKeydown(event)">
+            <input id="locationInput" tabindex="0" type="text" placeholder="e.g. Tower Bridge SE1 2UP, Edinburgh, Paris" class="flex-1 h-[34px] bg-black/50 border border-white/20 rounded-xl px-2.5 text-xs text-white placeholder-slate-500 focus:outline-none" onkeydown="handleLocationInputKeydown(event)">
+            <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" onblur="cancelSearchAutoContinue()" class="tv-focus-amber h-[34px] px-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" onkeydown="handleSearchBtnKeydown(event)">
               Search
             </button>
           </div>
@@ -1370,10 +1370,10 @@
           <div class="flex items-center gap-1.5">
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
             <div class="relative flex-1 flex items-center">
-              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full bg-black/60 border border-white/20 rounded-lg pl-2.5 pr-7 py-1 text-xs text-white placeholder-slate-500 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
+              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full h-[34px] bg-black/60 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-500 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
               <button id="customRenameClearBtn" type="button" tabindex="-1" onclick="clearRenameInput()" class="hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear text">✕</button>
             </div>
-            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onblur="cancelRenameAutoContinue()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition focus:outline-none cursor-pointer flex-shrink-0">
+            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onblur="cancelRenameAutoContinue()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber h-[34px] px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
             </button>
           </div>
@@ -1396,7 +1396,12 @@
         <div id="recentLocationsContainer" class="hidden mb-2">
           <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1 flex items-center justify-between gap-2">
             <span class="flex items-center gap-1"><span>🕒</span> Recent Locations:</span>
-            <span class="text-[9px] font-normal normal-case text-slate-500">Hold to remove</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[9px] font-normal normal-case text-slate-500">Hold to remove</span>
+              <button id="clearRecentLocationsBtn" type="button" tabindex="0" onclick="clearAllRecentLocations()" onkeydown="handleClearRecentBtnKeydown(event)" class="tv-focus-amber text-[9px] font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 rounded-md px-1.5 py-0.5 transition flex items-center gap-1 focus:outline-none cursor-pointer" title="Clear all recent locations">
+                <span>🗑️</span> Clear
+              </button>
+            </div>
           </div>
           <div id="recentLocationChips" class="flex flex-wrap gap-1"></div>
           <div id="recentDeleteBar" class="hidden mt-1.5 px-2.5 py-1 rounded-xl bg-rose-500/15 border border-rose-400/50 flex items-center justify-between gap-2"></div>
@@ -2005,10 +2010,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=146"></script>
+  <script src="traffic-flood.js?v=147"></script>
     <script>
-    const APP_BUILD = 146;
-    const APP_VERSION = '1.9.82';
+    const APP_BUILD = 147;
+    const APP_VERSION = '1.9.83';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3889,7 +3894,7 @@
         const renameBtn = document.getElementById('customRenameBtn');
         if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
       } else if (e.key === 'ArrowDown') {
-        const firstPick = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
+        const firstPick = document.querySelector('#clearRecentLocationsBtn, #recentLocationChips button, #nearbyLocationChips button');
         if (firstPick) { e.preventDefault(); firstPick.focus(); }
       }
     }
@@ -4884,6 +4889,41 @@
       if (nextChip) nextChip.focus();
     }
 
+    function handleClearRecentBtnKeydown(e) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const gpsBtn = document.getElementById('gpsModalBtn');
+        if (gpsBtn) gpsBtn.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const target = document.querySelector('#recentLocationChips button, #nearbyLocationChips button');
+        if (target) target.focus();
+      }
+    }
+
+    function clearAllRecentLocations() {
+      window._locModalCloseGuardUntil = Date.now() + 500;
+      hideRecentDeleteBar();
+      try {
+        localStorage.removeItem(USER_RECENTS_STORAGE_KEY);
+        localStorage.removeItem('ambient_location_queries');
+      } catch (_) {}
+      renderLocationModalPicks();
+      const status = document.getElementById('locationSearchStatus');
+      if (status) {
+        status.style.color = '#fbbf24';
+        status.textContent = 'Cleared all recent locations.';
+        setTimeout(() => {
+          if (status.textContent && status.textContent.includes('Cleared all recent locations')) {
+            status.textContent = '';
+            status.style.color = '';
+          }
+        }, 2500);
+      }
+      const nextBtn = document.querySelector('#nearbyLocationChips button, #gpsModalBtn');
+      if (nextBtn) nextBtn.focus();
+    }
+
     function wireLocationChipDpad(btn, containerEl, upFallbackFn, downFallbackFn) {
       btn.addEventListener('keydown', (e) => {
         const siblings = Array.from(containerEl.querySelectorAll('button'));
@@ -5157,7 +5197,7 @@
               wireLocationChipDpad(
                 btn,
                 recentChips,
-                () => document.getElementById('gpsModalBtn'),
+                () => document.getElementById('clearRecentLocationsBtn') || document.getElementById('gpsModalBtn'),
                 () => document.querySelector('#nearbyLocationChips button')
               );
 
