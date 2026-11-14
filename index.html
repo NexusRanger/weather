@@ -2124,10 +2124,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=168"></script>
+  <script src="traffic-flood.js?v=169"></script>
     <script>
-    const APP_BUILD = 168;
-    const APP_VERSION = '1.10.04';
+    const APP_BUILD = 169;
+    const APP_VERSION = '1.10.05';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -8035,11 +8035,10 @@
 
       if (hintText) {
         if (isPanoramicLocked) {
-          const lockedDayName = (lockedDayOffset === -1) ? 'Yesterday' : (lockedDayOffset === 1 ? 'Tomorrow' : 'Today');
           if (panoramicDayOffset === lockedDayOffset) {
-            hintText.innerHTML = '<span class="text-cyan-300 font-semibold">🔒 Locked (' + lockedDayName + ') • Exit</span>';
+            hintText.innerHTML = '<span class="text-slate-400">Click / OK to exit</span>';
           } else {
-            hintText.innerHTML = '<span class="text-amber-300 font-semibold">🔒 Returns to ' + lockedDayName + ' (45s)</span>';
+            hintText.innerHTML = '<span class="text-amber-300 font-semibold">Auto-returns in 45s</span>';
           }
         } else {
           hintText.innerHTML = '<span class="text-slate-400">Click / OK to exit • Auto-resets (45s)</span>';
