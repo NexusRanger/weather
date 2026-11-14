@@ -2116,10 +2116,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=170"></script>
+  <script src="traffic-flood.js?v=171"></script>
     <script>
-    const APP_BUILD = 170;
-    const APP_VERSION = '1.10.06';
+    const APP_BUILD = 171;
+    const APP_VERSION = '1.10.07';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -4356,43 +4356,14 @@
           }
         }
 
-        locLastInputAt = now;
-        if (locSettleTimer) clearTimeout(locSettleTimer);
-
-        // Responsive settle delay for both voice and typing: 2.5s normally (down from 6s),
-        // or 4.5s if ending with a space/comma (down from 12s) to allow multi-word entry without long waiting!
-        const endsWithSpace = input.value.endsWith(' ') || input.value.endsWith(',');
-        const settleDelay = endsWithSpace ? 4500 : 2500;
-
-        locSettleTimer = setTimeout(() => {
-          // If the user ended with a space and is still actively in the input, don't interrupt multi-word typing!
-          if (input.value.endsWith(' ') && document.activeElement === input) return;
-
-          if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
-            const added = input.value.slice(locPrefixToStrip.length);
-            if (!isSpokenContinuation(locPrefixToStrip, added)) {
-              input.value = added.trimStart();
-            }
-            locPrefixToStrip = '';
+        if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
+          const added = input.value.slice(locPrefixToStrip.length);
+          if (!isSpokenContinuation(locPrefixToStrip, added)) {
+            input.value = added.trimStart();
           }
-          const normalized = normalizeSpokenUkPostcode(input.value);
-          if (normalized !== input.value) {
-            input.value = normalized;
-          }
-          locSettledValue = input.value;
-
-          // When speech/typing settles with valid text, dismiss on-screen keyboard
-          // and move focus to the Search button so the user can immediately tap / press OK,
-          // or sit back and let it automatically continue the search after 3 seconds of inactivity!
-          if (input.value.trim().length >= 2 && document.activeElement === input) {
-            if (input.blur) input.blur();
-            const searchBtn = document.getElementById('searchLocBtn');
-            if (searchBtn && typeof searchBtn.focus === 'function') {
-              searchBtn.focus();
-              startSearchAutoContinueCountdown();
-            }
-          }
-        }, settleDelay);
+          locPrefixToStrip = '';
+        }
+        locSettledValue = input.value;
       });
     })();
 
@@ -4662,24 +4633,6 @@
       }
 
       updateRenameClearBtnVisibility();
-
-      // Responsive settle timer (2.5s normally, 4.5s if ending with space/comma) for both voice and typing
-      // to dismiss on-screen keyboard, return focus to Save Title button, and start the auto-save countdown!
-      const endsWithSpace = el.value.endsWith(' ') || el.value.endsWith(',');
-      const settleDelay = endsWithSpace ? 4500 : 2500;
-
-      if (renameSettleTimer) clearTimeout(renameSettleTimer);
-      renameSettleTimer = setTimeout(() => {
-        if (el.value.endsWith(' ') && document.activeElement === el) return;
-        if (el.value.trim().length >= 1 && document.activeElement === el) {
-          if (el.blur) el.blur();
-          const renameBtn = document.getElementById('customRenameBtn');
-          if (renameBtn && typeof renameBtn.focus === 'function') {
-            renameBtn.focus();
-            startRenameAutoContinueCountdown();
-          }
-        }
-      }, settleDelay);
     }
 
     function handleRenameInputBlur(el) {
