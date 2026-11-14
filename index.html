@@ -2063,10 +2063,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=156"></script>
+  <script src="traffic-flood.js?v=157"></script>
     <script>
-    const APP_BUILD = 156;
-    const APP_VERSION = '1.9.92';
+    const APP_BUILD = 157;
+    const APP_VERSION = '1.9.93';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3536,7 +3536,7 @@
     // =========================================================================
     const LOCATION_PREFERENCES = [
       {
-        aliases: ['gl55hh', 'gl5 5hh', 'gl5 588', 'gl5588', 'dunkirk mills', 'dunkirk mill', 'dunkirk'],
+        aliases: ['gl55hh', 'gl5 5hh', 'gl55hr', 'gl5 5hr', 'gl5 588', 'gl5588', 'dunkirk mills', 'dunkirk mill', 'dunkirk'],
         name: 'Dunkirk Mills',
         postcode: 'GL5 5HH',
         lat: 51.7032,
@@ -3778,7 +3778,7 @@
             if (pcData.result && pcData.result.length > 0) {
               const r = pcData.result[0];
               const pcClean = String(r.postcode || '').replace(/\s+/g, '').toUpperCase();
-              if (pcClean === 'GL55HH') {
+              if (pcClean === 'GL55HH' || pcClean === 'GL55HR') {
                 resolvedName = 'Dunkirk Mills';
                 resolvedPostcode = 'GL5 5HH';
               } else {
