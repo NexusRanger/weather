@@ -945,12 +945,17 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
             </svg>
           </button>
-          <button id="castBtn" tabindex="0" onclick="triggerCast()" title="Cast to TV (Chromecast / Google TV / Shield)" class="tv-focus-amber relative p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7">
-            <svg id="castIcon" class="w-3.5 h-3.5 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
-            </svg>
-            <google-cast-launcher id="nativeCastLauncher" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"></google-cast-launcher>
-          </button>
+          <div class="relative inline-flex items-center">
+            <button id="castBtn" tabindex="0" onclick="triggerCast()" title="Cast to TV (Chromecast / Google TV / Shield)" class="tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-sm">
+              <svg id="castIcon" class="w-3.5 h-3.5 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+              </svg>
+              <google-cast-launcher id="nativeCastLauncher" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"></google-cast-launcher>
+            </button>
+            <div id="castFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/50 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-sky-200 backdrop-blur-md">
+              <span>📺 Cast to TV &bull; Stream to Chromecast / Shield</span>
+            </div>
+          </div>
           <div class="relative inline-flex items-center">
             <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Up to date • Click to refresh" class="tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer">
               <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -959,7 +964,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.10) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.11) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -1357,7 +1362,7 @@
       <button id="shareBtn" onclick="openShareModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Share this dashboard or scan QR code" tabindex="0">
         <span class="text-xs">📲</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Share:</span>
-        <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link ↗</span>
+        <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link / Cast ↗</span>
       </button>
 
       <!-- Feedback & Suggestions Pill (Secret/Code-unlocked by default) -->
@@ -2143,10 +2148,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=174"></script>
+  <script src="traffic-flood.js?v=175"></script>
     <script>
-    const APP_BUILD = 174;
-    const APP_VERSION = '1.10.10';
+    const APP_BUILD = 175;
+    const APP_VERSION = '1.10.11';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -2341,6 +2346,8 @@
         if (!modalOpen) {
           document.body.classList.add('focus-dormant');
           hideReloadBadge();
+          const castBadge = document.getElementById('castFocusBadge');
+          if (castBadge) castBadge.classList.add('hidden');
           const locBtn = document.getElementById('headerLocationBtn');
           if (locBtn) {
             locBtn.focus({ preventScroll: true });
@@ -9107,6 +9114,17 @@
     const CAST_APP_ID = 'EC255DC2';
 
     function initGoogleCast() {
+      const castBtnEl = document.getElementById('castBtn');
+      const castBadgeEl = document.getElementById('castFocusBadge');
+      if (castBtnEl && castBadgeEl) {
+        const showCastBadge = () => castBadgeEl.classList.remove('hidden');
+        const hideCastBadge = () => castBadgeEl.classList.add('hidden');
+        castBtnEl.addEventListener('focus', showCastBadge);
+        castBtnEl.addEventListener('blur', hideCastBadge);
+        castBtnEl.addEventListener('mouseenter', showCastBadge);
+        castBtnEl.addEventListener('mouseleave', hideCastBadge);
+      }
+
       // 1. If running as the receiver on a Chromecast hardware device
       const isCastHardwareReceiver = navigator.userAgent.includes('CrKey');
       if (isCastHardwareReceiver) {
