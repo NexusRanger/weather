@@ -2060,10 +2060,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=148"></script>
+  <script src="traffic-flood.js?v=149"></script>
     <script>
-    const APP_BUILD = 148;
-    const APP_VERSION = '1.9.84';
+    const APP_BUILD = 149;
+    const APP_VERSION = '1.9.85';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -6020,12 +6020,11 @@
       document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
 
-      // Show distinctive Dunkirk Mills icon when location is Dunkirk Mills
+      // Show distinctive Dunkirk Mills icon ONLY when title is exactly "Dunkirk Mills"
       const dunkirkIcon = document.getElementById('dunkirkMillIcon');
       if (dunkirkIcon) {
-        const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').toLowerCase();
-        const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').toLowerCase().replace(/\s+/g, '');
-        const isDunkirk = locName.includes('dunkirk mill') || locName.includes('dunkirk') || locPc === 'gl55hh';
+        const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
+        const isDunkirk = (locName === 'dunkirk mills');
         if (isDunkirk) {
           dunkirkIcon.classList.remove('hidden');
           dunkirkIcon.classList.add('inline-flex');
