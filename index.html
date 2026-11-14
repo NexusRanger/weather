@@ -2124,10 +2124,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=165"></script>
+  <script src="traffic-flood.js?v=166"></script>
     <script>
-    const APP_BUILD = 165;
-    const APP_VERSION = '1.10.01';
+    const APP_BUILD = 166;
+    const APP_VERSION = '1.10.02';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -7850,7 +7850,7 @@
         const row = document.createElement('div');
         row.setAttribute('data-day-index', i);
         row.className = `grid items-center gap-1 py-[2px] px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none`;
-        row.style.gridTemplateColumns = '44px 40px 20px 28px 14px 22px 22px minmax(26px, 1fr) 24px';
+        row.style.gridTemplateColumns = '44px 38px 20px 26px 16px 22px 24px minmax(22px, 1fr) 26px';
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
           setHourlyCompressedMode(true, i);
@@ -7871,14 +7871,14 @@
           </span>
           <span class="text-[9px] text-slate-400 font-mono tabular-nums leading-none whitespace-nowrap">${dateSub}</span>
           <span class="flex items-center justify-center text-[13px] leading-none">${info.icon}</span>
-          <span class="text-right text-[10px] text-sky-400 font-mono tabular-nums leading-none ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
-          <span class="flex items-center justify-center text-[10px] text-cyan-300 font-bold leading-none">${hasFrostRisk ? '❄️' : ''}</span>
-          <span class="flex items-center justify-center cursor-help leading-none" title="${windDot.title}">${windDot.html}</span>
-          <span class="text-right font-mono tabular-nums text-[10px] leading-none ${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${min}°</span>
+          <span class="block w-full text-right text-[10px] text-sky-400 font-mono tabular-nums leading-none ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-35'}">${rainProb}%</span>
+          <span class="flex items-center justify-center text-[10px] text-cyan-300 font-bold leading-none w-full">${hasFrostRisk ? '❄️' : '&nbsp;'}</span>
+          <span class="flex items-center justify-center cursor-help leading-none w-full" title="${windDot.title}">${windDot.html}</span>
+          <span class="block w-full text-right font-mono tabular-nums text-[10px] leading-none ${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${min}°</span>
           <div class="w-full h-1.5 rounded-full bg-slate-800/90 overflow-hidden relative">
             <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${leftPct}%; width: ${widthPct}%"></div>
           </div>
-          <span class="text-right font-mono tabular-nums text-[11px] leading-none ${maxColorClass}">${max}°</span>
+          <span class="block w-full text-right font-mono tabular-nums text-[11px] leading-none ${maxColorClass}">${max}°</span>
         `;
         container.appendChild(row);
       }
