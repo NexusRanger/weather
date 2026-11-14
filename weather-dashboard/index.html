@@ -1898,6 +1898,34 @@
             <span id="trafficEfficiencySub" class="text-[10px] text-slate-400">Optimal throughput</span>
           </div>
         </div>
+
+        <!-- Custom Live Commute Times Strip (Exclusive to Dunkirk Mills) -->
+        <div id="dunkirkCommuteContainer" class="hidden mt-2 pt-2 border-t border-white/10">
+          <div class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-amber-300 mb-1.5">
+            <span class="flex items-center gap-1"><span>🚗</span> Live Drive Times from Dunkirk Mills:</span>
+            <span id="dunkirkCommuteStatus" class="text-[9px] font-mono lowercase text-slate-400">calculating...</span>
+          </div>
+          <div id="dunkirkCommuteCards" class="grid grid-cols-3 gap-2">
+            <!-- Nailsworth -->
+            <div class="p-2 rounded-xl bg-slate-900/70 border border-white/10 text-center flex flex-col justify-between">
+              <div class="text-[10px] font-bold text-slate-300">Nailsworth</div>
+              <div id="driveTimeNailsworth" class="text-base font-extrabold font-mono text-emerald-400 my-0.5">-- min</div>
+              <div id="driveSubNailsworth" class="text-[9px] font-mono text-slate-400">A46 (~1.0 mi)</div>
+            </div>
+            <!-- Stroud -->
+            <div class="p-2 rounded-xl bg-slate-900/70 border border-white/10 text-center flex flex-col justify-between">
+              <div class="text-[10px] font-bold text-slate-300">Stroud</div>
+              <div id="driveTimeStroud" class="text-base font-extrabold font-mono text-emerald-400 my-0.5">-- min</div>
+              <div id="driveSubStroud" class="text-[9px] font-mono text-slate-400">A46 (~3.5 mi)</div>
+            </div>
+            <!-- Cirencester -->
+            <div class="p-2 rounded-xl bg-slate-900/70 border border-white/10 text-center flex flex-col justify-between">
+              <div class="text-[10px] font-bold text-slate-300">Cirencester</div>
+              <div id="driveTimeCirencester" class="text-base font-extrabold font-mono text-emerald-400 my-0.5">-- min</div>
+              <div id="driveSubCirencester" class="text-[9px] font-mono text-slate-400">A419 (~13.4 mi)</div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -2087,10 +2115,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=162"></script>
+  <script src="traffic-flood.js?v=163"></script>
     <script>
-    const APP_BUILD = 162;
-    const APP_VERSION = '1.9.98';
+    const APP_BUILD = 163;
+    const APP_VERSION = '1.9.99';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -9790,6 +9818,103 @@
           weatherSurfaceEl.textContent = 'Standard grip • Frost-free';
         }
       }
+
+      // Check if location is Dunkirk Mills to display custom commute times strip
+      updateDunkirkCommuteTimes();
+    }
+
+    let dunkirkCommuteCache = null;
+    let dunkirkCommuteLastFetch = 0;
+
+    async function updateDunkirkCommuteTimes() {
+      const container = document.getElementById('dunkirkCommuteContainer');
+      if (!container) return;
+
+      const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
+      const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').trim().toUpperCase().replace(/\s+/g, '');
+      const isDunkirk = (locName === 'dunkirk mills' || locPc === 'GL55HH' || locPc === 'GL55HR');
+
+      if (!isDunkirk) {
+        container.classList.add('hidden');
+        return;
+      }
+
+      container.classList.remove('hidden');
+
+      const CACHE_TTL_MS = 3 * 60 * 1000; // 3 min cache to be mindful of quota
+      const now = Date.now();
+      if (dunkirkCommuteCache && (now - dunkirkCommuteLastFetch < CACHE_TTL_MS)) {
+        renderDunkirkCommute(dunkirkCommuteCache);
+        return;
+      }
+
+      const statusEl = document.getElementById('dunkirkCommuteStatus');
+      if (statusEl) statusEl.textContent = 'checking live routes...';
+
+      const keyPool = (Array.isArray(window.TOMTOM_KEYS) && window.TOMTOM_KEYS.length > 0)
+        ? window.TOMTOM_KEYS
+        : [window.TOMTOM_KEY || 'f3pDWnEqphoKGQXQO1qzrvbmRLQaLqnz'];
+      const activeKey = keyPool[0];
+
+      const dests = [
+        { id: 'Nailsworth', name: 'Nailsworth', coords: '51.6953,-2.2227', road: 'A46' },
+        { id: 'Stroud', name: 'Stroud', coords: '51.7456,-2.2178', road: 'A46' },
+        { id: 'Cirencester', name: 'Cirencester', coords: '51.7177,-1.9680', road: 'A419' }
+      ];
+
+      try {
+        const results = await Promise.all(dests.map(async (d) => {
+          const url = `https://api.tomtom.com/routing/1/calculateRoute/51.7032,-2.2266:${d.coords}/json?traffic=true&key=${activeKey}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          const s = data.routes[0].summary;
+          const miles = (s.lengthInMeters * 0.000621371).toFixed(1);
+          const mins = Math.max(1, Math.round(s.travelTimeInSeconds / 60));
+          const delayMins = Math.round((s.trafficDelayInSeconds || 0) / 60);
+          return { id: d.id, miles, mins, delayMins, road: d.road };
+        }));
+
+        dunkirkCommuteCache = results;
+        dunkirkCommuteLastFetch = Date.now();
+        renderDunkirkCommute(results);
+        if (statusEl) statusEl.textContent = 'live tomtom traffic';
+      } catch (err) {
+        console.warn('Dunkirk commute route check issue:', err);
+        if (statusEl) statusEl.textContent = 'typical traffic';
+        renderDunkirkCommute([
+          { id: 'Nailsworth', miles: '1.0', mins: 3, delayMins: 0, road: 'A46' },
+          { id: 'Stroud', miles: '3.5', mins: 9, delayMins: 0, road: 'A46' },
+          { id: 'Cirencester', miles: '13.4', mins: 23, delayMins: 0, road: 'A419' }
+        ]);
+      }
+    }
+
+    function renderDunkirkCommute(results) {
+      if (!Array.isArray(results)) return;
+      results.forEach(r => {
+        const timeEl = document.getElementById(`driveTime${r.id}`);
+        const subEl = document.getElementById(`driveSub${r.id}`);
+        if (timeEl) {
+          timeEl.textContent = `${r.mins} min${r.mins === 1 ? '' : 's'}`;
+          if (r.delayMins >= 5) {
+            timeEl.className = 'text-base font-extrabold font-mono text-rose-400 my-0.5';
+          } else if (r.delayMins >= 2) {
+            timeEl.className = 'text-base font-extrabold font-mono text-amber-300 my-0.5';
+          } else {
+            timeEl.className = 'text-base font-extrabold font-mono text-emerald-400 my-0.5';
+          }
+        }
+        if (subEl) {
+          const delayText = r.delayMins > 0 ? ` (+${r.delayMins}m delay)` : '';
+          subEl.textContent = `${r.road} (~${r.miles} mi)${delayText}`;
+          if (r.delayMins > 0) {
+            subEl.className = (r.delayMins >= 5 ? 'text-[9px] font-mono text-rose-300 font-semibold' : 'text-[9px] font-mono text-amber-300');
+          } else {
+            subEl.className = 'text-[9px] font-mono text-slate-400';
+          }
+        }
+      });
     }
 
     function closeTrafficModal(pop = true) {
