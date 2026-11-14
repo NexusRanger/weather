@@ -836,6 +836,56 @@
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
         <div class="flex items-center gap-2 min-w-0 flex-nowrap">
+          <div id="dunkirkMillIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="Dunkirk Mills, Nailsworth">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)] p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()">
+              <svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background Cotswold Mill Hills & Trees -->
+                <path d="M0 26 C8 21, 16 22, 24 24 C32 21, 40 22, 48 25 L48 36 L0 36 Z" fill="#14532d" opacity="0.6"/>
+                <!-- Historic Tall Mill Chimney -->
+                <rect x="22" y="3" width="3.2" height="21" rx="0.8" fill="#d97706"/>
+                <path d="M21.2 3 L26 3 L25.2 4.5 L22 4.5 Z" fill="#fef08a"/>
+                <rect x="23" y="5" width="1.2" height="17" fill="#b45309" opacity="0.45"/>
+                <!-- Subtle steam/smoke puff from chimney -->
+                <circle cx="23.6" cy="1.6" r="1.1" fill="#f8fafc" opacity="0.65"/>
+                <!-- Main Long Cotswold Stone Mill Building (South & Central Mill blocks) -->
+                <rect x="5" y="14" width="38" height="15" rx="1" fill="#fde68a" stroke="#d97706" stroke-width="0.75"/>
+                <!-- Distinctive Multi-Gabled Roofs (West & East Roof Pitches) -->
+                <path d="M4 14 L10 9 L16 14 L22 9 L28 14 L34 9 L40 14 L44 14 L44 15 L4 15 Z" fill="#475569" stroke="#334155" stroke-width="0.5"/>
+                <!-- Triangular Roof Dormers -->
+                <polygon points="10,9.5 8.5,12 11.5,12" fill="#e2e8f0"/>
+                <polygon points="22,9.5 20.5,12 23.5,12" fill="#e2e8f0"/>
+                <polygon points="34,9.5 32.5,12 35.5,12" fill="#e2e8f0"/>
+                <!-- Regular Mill Sash Windows (Rows of weavers/spinners multi-pane windows) -->
+                <rect x="7" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="11.5" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="16" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="28" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="32.5" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="37" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+
+                <rect x="7" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="11.5" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="16" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="28" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="32.5" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="37" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+
+                <rect x="7" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="11.5" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="16" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="28" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="32.5" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+                <rect x="37" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+
+                <!-- Historic Mill Archway / Mill Race Water Tunnel -->
+                <path d="M20.5 29 A3 3 0 0 1 26.5 29 Z" fill="#0f172a"/>
+                <!-- Nailsworth Stream / Millpond Water reflections -->
+                <rect x="0" y="29.5" width="48" height="6.5" fill="#0284c7" opacity="0.85"/>
+                <path d="M0 31.5 C12 30.5, 24 32.5, 48 31.5" stroke="#38bdf8" stroke-width="0.8" opacity="0.9"/>
+                <path d="M2 34 C16 33, 30 35, 46 34" stroke="#e0f2fe" stroke-width="0.6" opacity="0.75"/>
+              </svg>
+            </span>
+          </div>
           <button id="headerLocationTitle" type="button" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent" style="max-width: min(320px, 30vw); outline: none !important; outline-offset: 0 !important;">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth</span>
           </button>
@@ -2010,10 +2060,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=147"></script>
+  <script src="traffic-flood.js?v=148"></script>
     <script>
-    const APP_BUILD = 147;
-    const APP_VERSION = '1.9.83';
+    const APP_BUILD = 148;
+    const APP_VERSION = '1.9.84';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5969,6 +6019,22 @@
       document.getElementById('headerPostcodeBadge').textContent = CURRENT_LOCATION.postcode;
       document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
+
+      // Show distinctive Dunkirk Mills icon when location is Dunkirk Mills
+      const dunkirkIcon = document.getElementById('dunkirkMillIcon');
+      if (dunkirkIcon) {
+        const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').toLowerCase();
+        const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').toLowerCase().replace(/\s+/g, '');
+        const isDunkirk = locName.includes('dunkirk mill') || locName.includes('dunkirk') || locPc === 'gl55hh';
+        if (isDunkirk) {
+          dunkirkIcon.classList.remove('hidden');
+          dunkirkIcon.classList.add('inline-flex');
+        } else {
+          dunkirkIcon.classList.add('hidden');
+          dunkirkIcon.classList.remove('inline-flex');
+        }
+      }
+
       checkLocationTitleScroll();
     }
 
