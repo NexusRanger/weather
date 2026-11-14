@@ -2060,10 +2060,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=150"></script>
+  <script src="traffic-flood.js?v=151"></script>
     <script>
-    const APP_BUILD = 150;
-    const APP_VERSION = '1.9.86';
+    const APP_BUILD = 151;
+    const APP_VERSION = '1.9.87';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -3533,7 +3533,7 @@
     // =========================================================================
     const LOCATION_PREFERENCES = [
       {
-        aliases: ['gl55hh', 'gl5 5hh', 'dunkirk mills', 'dunkirk mill'],
+        aliases: ['gl55hh', 'gl5 5hh', 'gl5 588', 'gl5588', 'dunkirk mills', 'dunkirk mill', 'dunkirk'],
         name: 'Dunkirk Mills',
         postcode: 'GL5 5HH',
         lat: 51.7032,
@@ -3758,19 +3758,35 @@
       let resolvedName = '';
       let resolvedPostcode = '';
 
+      // Check proximity to Dunkirk Mills (within ~600m: 0.6 km)
+      const DUNKIRK_LAT = 51.7032;
+      const DUNKIRK_LON = -2.2266;
+      if (typeof calculateHaversineKm === 'function' && calculateHaversineKm(lat, lon, DUNKIRK_LAT, DUNKIRK_LON) <= 0.6) {
+        resolvedName = 'Dunkirk Mills';
+        resolvedPostcode = 'GL5 5HH';
+      }
+
       // 1. UK high-accuracy lookup with wideSearch and 1000m radius
-      try {
-        const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`);
-        if (pcRes.ok) {
-          const pcData = await pcRes.json();
-          if (pcData.result && pcData.result.length > 0) {
-            const r = pcData.result[0];
-            const town = r.parish || r.ced || r.admin_ward || r.admin_district || 'Local';
-            resolvedName = shortenPlaceName(town);
-            resolvedPostcode = r.postcode || '';
+      if (!resolvedName) {
+        try {
+          const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`);
+          if (pcRes.ok) {
+            const pcData = await pcRes.json();
+            if (pcData.result && pcData.result.length > 0) {
+              const r = pcData.result[0];
+              const pcClean = String(r.postcode || '').replace(/\s+/g, '').toUpperCase();
+              if (pcClean === 'GL55HH') {
+                resolvedName = 'Dunkirk Mills';
+                resolvedPostcode = 'GL5 5HH';
+              } else {
+                const town = r.parish || r.ced || r.admin_ward || r.admin_district || 'Local';
+                resolvedName = shortenPlaceName(town);
+                resolvedPostcode = r.postcode || '';
+              }
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
+      }
 
       // 2. Global fallback reverse geocoding via BigDataCloud (fast, client-side, zero key)
       if (!resolvedName) {
@@ -5110,8 +5126,7 @@
           const filtered = [];
           for (const q of queries) {
             const shortName = shortenPlaceName(q.name);
-            const curShort = shortenPlaceName(CURRENT_LOCATION.name);
-            if (!uniqueNames.has(shortName.toLowerCase()) && shortName.toLowerCase() !== curShort.toLowerCase()) {
+            if (!uniqueNames.has(shortName.toLowerCase())) {
               uniqueNames.add(shortName.toLowerCase());
               const isUkPc = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(q.postcode || '');
               filtered.push({
@@ -5126,12 +5141,16 @@
             }
           }
           if (filtered.length > 0) {
+            const curShort = shortenPlaceName(CURRENT_LOCATION.name).toLowerCase();
             filtered.forEach(item => {
+              const isCurrent = (item.displayName.toLowerCase() === curShort);
               const btn = document.createElement('button');
-              btn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 hover:text-white transition cursor-pointer select-none focus:outline-none';
+              btn.className = isCurrent
+                ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400/50 text-xs text-emerald-200 font-semibold transition cursor-pointer select-none focus:outline-none flex items-center gap-1 shadow-[0_0_8px_rgba(52,211,153,0.2)]'
+                : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 hover:text-white transition cursor-pointer select-none focus:outline-none';
               btn.tabIndex = 0;
-              btn.textContent = item.displayName;
-              btn.title = 'Tap / OK to open • Hold or Delete key to remove';
+              btn.innerHTML = isCurrent ? `<span>✓</span><span>${item.displayName}</span>` : item.displayName;
+              btn.title = isCurrent ? 'Active Location • Hold or Delete key to remove' : 'Tap / OK to open • Hold or Delete key to remove';
 
               const isSelectKey = (e) => (e.key === 'Enter' || e.key === ' ' || e.key === 'Select' || e.keyCode === 23);
 
