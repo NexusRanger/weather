@@ -2124,10 +2124,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=164"></script>
+  <script src="traffic-flood.js?v=165"></script>
     <script>
-    const APP_BUILD = 164;
-    const APP_VERSION = '1.10.00';
+    const APP_BUILD = 165;
+    const APP_VERSION = '1.10.01';
 
     function handleUpdateBannerKeydown(e) {
       if (e.key === 'ArrowDown') {
@@ -5295,7 +5295,7 @@
                 lon: q.lon,
                 postcode: q.postcode
               });
-              if (filtered.length >= 15) break;
+              if (filtered.length >= 10) break;
             }
           }
           if (filtered.length > 0) {
@@ -5559,7 +5559,7 @@
           nearbyChips.appendChild(gpsBtn);
         }
 
-        const targetCount = lastGps ? 7 : 8;
+        const targetCount = lastGps ? 9 : 10;
 
         // Calculate true geographic distance (km) to all known hubs
         const hubsWithDist = ALL_REGIONAL_HUBS
@@ -5570,7 +5570,7 @@
           }))
           .sort((a, b) => a.distKm - b.distKm);
 
-        // Filter into distance tiers to provide rich variety across 2 full lines (Local, Regional, National)
+        // Filter into distance tiers to provide rich variety across full lines (Local, Regional, National)
         const tier1 = hubsWithDist.filter(h => h.distKm <= 45);
         const tier2 = hubsWithDist.filter(h => h.distKm > 45 && h.distKm <= 150);
         const tier3 = hubsWithDist.filter(h => h.distKm > 150 && h.distKm <= 850);
@@ -5588,9 +5588,9 @@
           }
         };
 
-        // Take 3 local, 3 regional, and 1-2 major/national destinations
-        addPicks(tier1, 3);
-        addPicks(tier2, 3);
+        // Take 4 local, 4 regional, and 1-2 major/national destinations (total 10)
+        addPicks(tier1, 4);
+        addPicks(tier2, 4);
         addPicks(tier3, lastGps ? 1 : 2);
 
         // If any tier was sparse, fill remaining slots up to targetCount
