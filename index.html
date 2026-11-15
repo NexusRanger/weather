@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=190"></script>
+  <script src="qrcode.min.js?v=191"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -947,6 +947,17 @@
             </svg>
           </button>
           <div class="relative inline-flex items-center">
+            <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Up to date • Click to refresh" class="tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0">
+              <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
+            </button>
+            <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
+              <span>✓ Up to date (v1.10.27) &bull; Press OK to refresh</span>
+            </div>
+          </div>
+          <div class="relative inline-flex items-center">
             <button id="castBtn" tabindex="0" onclick="triggerCast()" title="Cast to TV (Chromecast / Google TV / Shield)" class="tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm">
               <svg id="castIcon" class="w-3.5 h-3.5 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
@@ -955,17 +966,6 @@
             </button>
             <div id="castFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/50 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-sky-200 backdrop-blur-md">
               <span>📺 Cast to TV &bull; Stream to Chromecast / Shield</span>
-            </div>
-          </div>
-          <div class="relative inline-flex items-center">
-            <button id="reloadBtn" tabindex="0" onclick="reloadDashboard()" title="Up to date • Click to refresh" class="tv-focus-amber relative p-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 hover:text-emerald-200 transition group focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0">
-              <svg id="refreshIcon" class="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
-            </button>
-            <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.26) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -1334,17 +1334,17 @@
 
     </main>
     
-    <!-- COMPACT LOCAL STATUS STRIP (RADAR, TRAFFIC, RIVERS & SHARE) -->
-    <div id="colLocalInfo" class="relative z-20 flex flex-wrap items-center gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
+    <!-- COMPACT LOCAL STATUS STRIP (RADAR, TRAFFIC, RIVERS, SHARE & FEEDBACK) -->
+    <div id="colLocalInfo" class="relative z-20 flex flex-nowrap items-center gap-1.5 sm:gap-2 my-0.5 flex-shrink-0 overflow-x-auto no-scrollbar" style="min-height: 28px;">
       <!-- Radar Modal Pill -->
-      <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
+      <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
         <span class="text-xs">🛰️</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Radar:</span>
         <span class="text-xs font-bold text-cyan-300 group-hover:text-cyan-200 flex items-center gap-1">Live Map ↗</span>
       </button>
 
       <!-- Traffic Pill Button -->
-      <button id="trafficPill" onclick="openTrafficModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
+      <button id="trafficPill" onclick="openTrafficModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
         <span class="text-xs">🚗</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Traffic:</span>
         <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
@@ -1352,7 +1352,7 @@
       </button>
 
       <!-- River Pill Button -->
-      <button id="riverPill" onclick="openRiverModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="UK Environment Agency Live River &amp; Flood Monitoring (Click to View)" tabindex="0">
+      <button id="riverPill" onclick="openRiverModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="UK Environment Agency Live River &amp; Flood Monitoring (Click to View)" tabindex="0">
         <span class="text-xs">🌊</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Rivers:</span>
         <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
@@ -1360,17 +1360,17 @@
       </button>
 
       <!-- Share Dashboard Pill -->
-      <button id="shareBtn" onclick="openShareModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Share this dashboard or scan QR code" tabindex="0">
+      <button id="shareBtn" onclick="openShareModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Share this dashboard or scan QR code" tabindex="0">
         <span class="text-xs">📲</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Share:</span>
-        <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link / Cast ↗</span>
+        <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link ↗</span>
       </button>
 
       <!-- Feedback & Suggestions Pill (Secret/Code-unlocked by default) -->
-      <button id="feedbackBtn" onclick="openFeedbackModal()" class="tv-focus-amber hidden glass-card rounded-xl px-2.5 py-1 items-center gap-1.5 border border-amber-400/30 hover:border-amber-400/70 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group" title="Submit 5-star rating or suggestions" tabindex="0">
+      <button id="feedbackBtn" onclick="openFeedbackModal()" class="tv-focus-amber hidden glass-card rounded-xl px-2.5 py-1 items-center gap-1.5 border border-amber-400/30 hover:border-amber-400/70 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Submit 5-star rating or suggestions" tabindex="0">
         <span class="text-xs text-amber-300">⭐</span>
         <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Feedback:</span>
-        <span id="feedbackPillText" class="text-xs font-bold text-amber-300 group-hover:text-amber-200 flex items-center gap-1">Rate &amp; Ideas ↗</span>
+        <span id="feedbackPillText" class="text-xs font-bold text-amber-300 group-hover:text-amber-200 flex items-center gap-1">Ideas ↗</span>
       </button>
     </div>
 
@@ -1934,20 +1934,42 @@
 
   <!-- TV EXIT CAST CONFIRMATION MODAL -->
   <div id="tvExitCastModal" onclick="closeTvExitCastModal(true)" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 text-left">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-sm w-full border border-rose-400/40 shadow-2xl relative flex flex-col cursor-default">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-sm sm:max-w-md w-full border border-rose-400/40 shadow-2xl relative flex flex-col cursor-default">
       <div class="flex items-center gap-3 pb-3 border-b border-white/10">
         <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center text-xl flex-shrink-0 border border-rose-400/40">
           🛑
         </div>
         <div>
           <h3 class="text-base font-bold text-white">Exit Cast Session?</h3>
-          <p class="text-[11px] text-slate-400">Close the dashboard and return to TV home</p>
+          <p class="text-[11px] text-slate-400">Close the dashboard and return to TV home launcher</p>
         </div>
       </div>
-      <div class="py-4 space-y-3">
+      <div class="py-3.5 space-y-3">
         <p class="text-xs text-slate-300 leading-snug">
           Close the weather dashboard on this TV and return your screen to the TV home launcher?
         </p>
+
+        <!-- QR Code & Link Card so user can keep/return to weather on their phone -->
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 shadow-inner">
+          <div id="tvExitQrCode" class="w-[96px] h-[96px] bg-white rounded-lg p-1 flex items-center justify-center flex-shrink-0 shadow">
+            <!-- Dynamically generated SVG QR code -->
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold text-sky-300 mb-0.5 flex items-center gap-1.5">
+              <span>📱 Continue on Phone</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-snug">
+              Scan this QR code with your phone or copy this link if you want to come back to the weather.
+            </p>
+            <div id="tvExitLocationName" class="text-[10px] font-mono text-emerald-400 mt-1 truncate">
+              📍 Current Weather
+            </div>
+            <div id="tvExitUrlDisplay" class="text-[9px] font-mono text-slate-400 truncate opacity-75 select-all mt-0.5">
+              https://...
+            </div>
+          </div>
+        </div>
+
         <div class="flex flex-col gap-2 pt-1">
           <button id="tvConfirmExitBtn" tabindex="1" onclick="executeTvExitCast()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('tvCancelExitBtn');if(c)c.focus();}" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
             <span>🛑 Yes, Close &amp; Exit TV App</span>
@@ -2265,10 +2287,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=190"></script>
+  <script src="traffic-flood.js?v=191"></script>
     <script>
-    const APP_BUILD = 190;
-    const APP_VERSION = '1.10.26';
+    const APP_BUILD = 191;
+    const APP_VERSION = '1.10.27';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -2318,8 +2340,8 @@
         document.getElementById('zoomOutBtn'),
         document.getElementById('zoomInBtn'),
         document.getElementById('fullscreenBtn'),
-        document.getElementById('castBtn'),
-        document.getElementById('reloadBtn')
+        document.getElementById('reloadBtn'),
+        document.getElementById('castBtn')
       ];
       return list.filter(el => el && !el.classList.contains('hidden') && el.offsetParent !== null);
     }
@@ -9803,6 +9825,86 @@
           history.pushState({ modal: 'tvExitCastModal' }, '');
         }
       } catch (_) {}
+
+      // Build clean share URL for the current location (stripped of cast_receiver)
+      let shareUrl = window.location.href;
+      let locLabel = 'Current Weather';
+      try {
+        const u = new URL(window.location.href);
+        ['postcode', 'pc', 'location', 'town', 'q', 'lat', 'lon', 'v', 'cast_receiver'].forEach(k => u.searchParams.delete(k));
+
+        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION) {
+          const pc = CURRENT_LOCATION.postcode || '';
+          const placeName = (CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
+
+          if (placeName) {
+            u.searchParams.set('q', placeName);
+            locLabel = placeName;
+          }
+
+          if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
+            u.searchParams.set('postcode', pc);
+            locLabel = placeName ? `${placeName} (${pc})` : pc;
+          } else if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
+            u.searchParams.set('lat', CURRENT_LOCATION.lat);
+            u.searchParams.set('lon', CURRENT_LOCATION.lon);
+          }
+        }
+        shareUrl = u.toString();
+      } catch (_) {}
+
+      const locEl = document.getElementById('tvExitLocationName');
+      if (locEl) locEl.textContent = `📍 ${locLabel}`;
+
+      const urlEl = document.getElementById('tvExitUrlDisplay');
+      if (urlEl) urlEl.textContent = shareUrl;
+
+      // Render QR code
+      const qrContainer = document.getElementById('tvExitQrCode');
+      if (qrContainer) {
+        qrContainer.innerHTML = '';
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(qrContainer, {
+              text: shareUrl,
+              width: 88,
+              height: 88,
+              colorDark: "#0f172a",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+
+            // Ensure pure SVG or Canvas is immediately visible on TV receiver
+            const svg = qrContainer.querySelector('svg');
+            if (svg) {
+              svg.style.display = 'block';
+              svg.style.width = '88px';
+              svg.style.height = '88px';
+              svg.style.borderRadius = '6px';
+            }
+            const canvas = qrContainer.querySelector('canvas');
+            if (canvas) {
+              canvas.style.display = 'block';
+              canvas.style.width = '88px';
+              canvas.style.height = '88px';
+              canvas.style.borderRadius = '6px';
+            }
+            const img = qrContainer.querySelector('img');
+            if (img) img.style.display = 'none';
+
+            setTimeout(() => {
+              const s = qrContainer.querySelector('svg');
+              if (s) { s.style.display = 'block'; s.style.width = '88px'; s.style.height = '88px'; }
+              const c = qrContainer.querySelector('canvas');
+              if (c) { c.style.display = 'block'; c.style.width = '88px'; c.style.height = '88px'; }
+              const i = qrContainer.querySelector('img');
+              if (i) i.style.display = 'none';
+            }, 60);
+          } catch (e) {
+            console.warn('QR code generation failed in tvExitCastModal:', e);
+          }
+        }
+      }
 
       tvExitSeconds = 20;
       updateTvExitCountdown();
