@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=194"></script>
+  <script src="qrcode.min.js?v=195"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -845,6 +845,20 @@
     google-cast-launcher:hover {
       --disconnected-color: #ffffff;
     }
+
+    /* MINIMALIST AMBIENT DISPLAY VIEW OVERRIDES */
+    body.minimalist-view header,
+    body.minimalist-view #mainGrid,
+    body.minimalist-view #colLocalInfo,
+    body.minimalist-view #footerTimeline {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    body.minimalist-view #minimalistDisplay {
+      display: flex !important;
+    }
   </style>
 </head>
 <body>
@@ -975,7 +989,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.30) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.31) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1430,7 +1444,7 @@
     </footer>
 
     <!-- MINIMALIST AMBIENT DISPLAY (GOOGLE NEST HUB / SMART DISPLAY / KIOSK) -->
-    <div id="minimalistDisplay" class="hidden relative z-20 flex-col justify-between w-full h-full p-3 sm:p-6 md:p-8 overflow-hidden select-none">
+    <div id="minimalistDisplay" class="hidden fixed inset-0 z-40 flex flex-col justify-between w-full h-full p-4 sm:p-6 md:p-8 bg-slate-950/95 backdrop-blur-2xl overflow-hidden select-none">
       
       <!-- Top Bar: Live indicator, Location, Postcode, and Top-Right Actions -->
       <div class="flex items-center justify-between w-full pb-2 border-b border-white/10 flex-shrink-0">
@@ -2419,10 +2433,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=194"></script>
+  <script src="traffic-flood.js?v=195"></script>
     <script>
-    const APP_BUILD = 194;
-    const APP_VERSION = '1.10.30';
+    const APP_BUILD = 195;
+    const APP_VERSION = '1.10.31';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10367,13 +10381,14 @@
       if (!minEl || !mainGrid || !header) return;
 
       if (CURRENT_DISPLAY_MODE === 'minimal') {
-        header.classList.add('hidden');
-        mainGrid.classList.add('hidden');
-        if (colLocalInfo) colLocalInfo.classList.add('hidden');
-        if (footerTimeline) footerTimeline.classList.add('hidden');
-        minEl.classList.remove('hidden');
-        minEl.classList.add('flex');
         document.body.classList.add('minimalist-view');
+        header.style.setProperty('display', 'none', 'important');
+        mainGrid.style.setProperty('display', 'none', 'important');
+        if (colLocalInfo) colLocalInfo.style.setProperty('display', 'none', 'important');
+        if (footerTimeline) footerTimeline.style.setProperty('display', 'none', 'important');
+
+        minEl.classList.remove('hidden');
+        minEl.style.setProperty('display', 'flex', 'important');
 
         updateMinimalistClock();
         if (minimalClockInterval) clearInterval(minimalClockInterval);
@@ -10381,13 +10396,14 @@
 
         updateMinimalistDisplay(window._LATEST_WEATHER_DATA);
       } else {
-        minEl.classList.add('hidden');
-        minEl.classList.remove('flex');
-        header.classList.remove('hidden');
-        mainGrid.classList.remove('hidden');
-        if (colLocalInfo) colLocalInfo.classList.remove('hidden');
-        if (footerTimeline) footerTimeline.classList.remove('hidden');
         document.body.classList.remove('minimalist-view');
+        header.style.removeProperty('display');
+        mainGrid.style.removeProperty('display');
+        if (colLocalInfo) colLocalInfo.style.removeProperty('display');
+        if (footerTimeline) footerTimeline.style.removeProperty('display');
+
+        minEl.classList.add('hidden');
+        minEl.style.setProperty('display', 'none', 'important');
 
         if (minimalClockInterval) {
           clearInterval(minimalClockInterval);
