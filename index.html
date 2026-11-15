@@ -965,7 +965,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.21) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.22) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -2156,10 +2156,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=185"></script>
+  <script src="traffic-flood.js?v=186"></script>
     <script>
-    const APP_BUILD = 185;
-    const APP_VERSION = '1.10.21';
+    const APP_BUILD = 186;
+    const APP_VERSION = '1.10.22';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -3546,6 +3546,9 @@
       }
       updateLocationHeader();
       fetchWeatherData();
+      if (typeof broadcastLocationToCast === 'function') {
+        broadcastLocationToCast(CURRENT_LOCATION);
+      }
     }
 
     // Key pool: add additional free TomTom keys here whenever you want to expand quota
@@ -4702,6 +4705,9 @@
       saveSavedLocation();
       recordLocationQuery(CURRENT_LOCATION);
       updateLocationHeader();
+      if (typeof broadcastLocationToCast === 'function') {
+        broadcastLocationToCast(CURRENT_LOCATION);
+      }
 
       if (status) {
         status.style.color = '#38bdf8';
@@ -9294,6 +9300,33 @@
     // GOOGLE CAST INTEGRATION (Application ID: EC255DC2)
     // ============================================================
     const CAST_APP_ID = 'EC255DC2';
+    const CAST_NAMESPACE = 'urn:x-cast:com.nexusranger.weather';
+
+    function broadcastLocationToCast(loc) {
+      if (!loc || !loc.lat || !loc.lon) return;
+      if (typeof cast === 'undefined' || !cast.framework) return;
+      try {
+        const castCtx = cast.framework.CastContext.getInstance();
+        const session = castCtx.getCurrentSession();
+        if (session && typeof session.sendMessage === 'function') {
+          const payload = {
+            type: 'SYNC_LOCATION',
+            location: {
+              name: loc.name || '',
+              geoName: loc.geoName || loc.name || '',
+              lat: loc.lat,
+              lon: loc.lon,
+              postcode: loc.postcode || ''
+            }
+          };
+          session.sendMessage(CAST_NAMESPACE, JSON.stringify(payload)).catch(err => {
+            console.warn('Cast sendMessage warning:', err);
+          });
+        }
+      } catch (err) {
+        console.warn('broadcastLocationToCast error:', err);
+      }
+    }
 
     function initGoogleCast() {
       const castBtnEl = document.getElementById('castBtn');
@@ -9308,7 +9341,7 @@
       }
 
       // 1. If running as the receiver on a Chromecast hardware device
-      const isCastHardwareReceiver = navigator.userAgent.includes('CrKey');
+      const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
       if (isCastHardwareReceiver) {
         const recScript = document.createElement('script');
         recScript.src = '//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js';
@@ -9316,6 +9349,34 @@
           try {
             if (window.cast && cast.framework && cast.framework.CastReceiverContext) {
               const recCtx = cast.framework.CastReceiverContext.getInstance();
+
+              // Listen for custom location sync messages from the sender tablet/phone
+              recCtx.addCustomMessageListener(CAST_NAMESPACE, function(customEvent) {
+                try {
+                  console.log('Received Cast custom message on TV:', customEvent.data);
+                  let msg = customEvent.data;
+                  if (typeof msg === 'string') {
+                    try { msg = JSON.parse(msg); } catch (_) {}
+                  }
+                  if (msg && msg.type === 'SYNC_LOCATION' && msg.location) {
+                    const loc = msg.location;
+                    if (loc.lat && loc.lon) {
+                      applySelectedLocation(loc.name || loc.geoName, loc.lat, loc.lon, loc.postcode || '', false);
+                    }
+                  }
+                } catch (err) {
+                  console.warn('Error handling Cast message on TV:', err);
+                }
+              });
+
+              // When a sender connects, ask it for its current location immediately
+              recCtx.addEventListener(cast.framework.system.EventType.SENDER_CONNECTED, function(e) {
+                console.log('Sender connected to Cast Receiver:', e.senderId);
+                try {
+                  recCtx.sendCustomMessage(CAST_NAMESPACE, e.senderId, JSON.stringify({ type: 'REQUEST_LOCATION' }));
+                } catch (_) {}
+              });
+
               recCtx.start({
                 disableIdleTimeout: true,
                 maxInactivity: 86400
@@ -9348,6 +9409,29 @@
                   event.sessionState === cast.framework.SessionState.SESSION_RESUMED
                 );
                 updateCastButtonState(isConnected);
+                if (isConnected) {
+                  const session = castCtx.getCurrentSession();
+                  if (session) {
+                    // Listen for incoming requests from receiver
+                    try {
+                      session.addMessageListener(CAST_NAMESPACE, function(ns, message) {
+                        let parsed = message;
+                        if (typeof parsed === 'string') {
+                          try { parsed = JSON.parse(parsed); } catch (_) {}
+                        }
+                        if (parsed && parsed.type === 'REQUEST_LOCATION') {
+                          broadcastLocationToCast(CURRENT_LOCATION);
+                        }
+                      });
+                    } catch (_) {}
+
+                    // Immediately beam current location across with staggered retries to ensure receiver receives it once loaded
+                    broadcastLocationToCast(CURRENT_LOCATION);
+                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 800);
+                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 2000);
+                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 4000);
+                  }
+                }
               }
             );
 
