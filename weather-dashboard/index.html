@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=193"></script>
+  <script src="qrcode.min.js?v=194"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -975,7 +975,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.29) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.30) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1428,6 +1428,99 @@
         <div class="text-xs text-slate-400 py-1">Loading hourly forecast...</div>
       </div>
     </footer>
+
+    <!-- MINIMALIST AMBIENT DISPLAY (GOOGLE NEST HUB / SMART DISPLAY / KIOSK) -->
+    <div id="minimalistDisplay" class="hidden relative z-20 flex-col justify-between w-full h-full p-3 sm:p-6 md:p-8 overflow-hidden select-none">
+      
+      <!-- Top Bar: Live indicator, Location, Postcode, and Top-Right Actions -->
+      <div class="flex items-center justify-between w-full pb-2 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
+          <div id="minimalLocationName" class="text-lg sm:text-2xl font-extrabold text-white tracking-tight truncate drop-shadow-md">
+            Nailsworth
+          </div>
+          <span id="minimalPostcode" class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono flex-shrink-0">
+            GL5 5HH
+          </span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 hidden sm:inline-flex items-center gap-1">
+            <span>✨</span> <span>Glance</span>
+          </span>
+        </div>
+
+        <!-- Top-Right Actions -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button id="minimalToggleFullBtn" tabindex="0" onclick="setDisplayMode('full')" title="Switch to Full Dashboard" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md">
+            <span>⛶</span>
+            <span class="hidden sm:inline">Full Dashboard</span>
+          </button>
+          <button id="minimalExitCastBtn" tabindex="0" onclick="openTvExitCastModal()" title="Exit Cast Session" class="hidden tv-focus-amber px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 text-rose-200 font-semibold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md">
+            <span>🛑</span>
+            <span>Exit</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center Hero Area: Clock & Date on Left, Big Temp & Icon on Right -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-center my-auto py-2">
+        <!-- Left: Digital Clock & Rain Nowcast -->
+        <div class="flex flex-col justify-center items-start pl-1 sm:pl-3">
+          <div id="minimalClockTime" class="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white font-mono leading-none drop-shadow-lg">
+            --:--
+          </div>
+          <div id="minimalClockDate" class="text-sm sm:text-lg lg:text-xl font-bold text-sky-300 mt-2 tracking-wide">
+            Loading date...
+          </div>
+          <!-- Rain Nowcast Banner -->
+          <div id="minimalRainBanner" class="mt-3 sm:mt-4 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center gap-2 backdrop-blur-md shadow-md max-w-md w-full">
+            <span id="minimalRainIcon" class="text-base flex-shrink-0 animate-bounce">☔</span>
+            <span id="minimalRainText" class="text-xs sm:text-sm font-semibold text-sky-200 truncate flex-1">
+              Checking rain radar...
+            </span>
+            <span id="minimalRainBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0">
+              --% conf
+            </span>
+          </div>
+        </div>
+
+        <!-- Right: Giant Colorful Temp & Weather Glyph -->
+        <div class="flex items-center justify-start md:justify-end gap-3 sm:gap-6 pr-1 sm:pr-3">
+          <div id="minimalWeatherIcon" class="text-6xl sm:text-7xl lg:text-8xl flex-shrink-0 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform">
+            ☁️
+          </div>
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-baseline gap-2">
+              <span id="minimalTemp" class="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-white font-mono leading-none drop-shadow-xl">
+                --°
+              </span>
+              <span id="minimalFeelsLike" class="text-xs sm:text-sm font-medium text-slate-300 whitespace-nowrap">
+                Feels like --°C
+              </span>
+            </div>
+            <div id="minimalWeatherDesc" class="text-lg sm:text-2xl font-extrabold text-white capitalize mt-1 drop-shadow truncate">
+              Overcast
+            </div>
+            <div id="minimalTempRange" class="text-xs sm:text-sm font-mono text-slate-400 mt-0.5">
+              ▲ --°  ▼ --°
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: 5-Hour Colorful Glance Strip -->
+      <div class="w-full pt-2 sm:pt-3 border-t border-white/10 flex-shrink-0">
+        <div class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>
+            <span>Next 5 Hours Outlook</span>
+          </span>
+          <span id="minimalLastUpdated" class="text-[9px] font-mono text-slate-500 lowercase">syncing...</span>
+        </div>
+        <div id="minimalHourlyGrid" class="grid grid-cols-5 gap-1.5 sm:gap-3 w-full">
+          <!-- 5 dynamic cards populated in JS -->
+        </div>
+      </div>
+
+    </div>
 
   </div>
 
@@ -1892,8 +1985,8 @@
             <p id="castDeviceNameLabel" class="text-[11px] text-sky-300 font-mono">Connected to TV / Shield</p>
           </div>
         </div>
-        <button id="closeCastOptionsBtnTop" tabindex="1" onclick="closeCastOptionsModal(true)" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close (Esc / Back)">
-          <span>✕ Close</span>
+        <button id="closeCastOptionsBtnTop" tabindex="1" onclick="closeCastOptionsModal(true)" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectMinimalBtn');if(b)b.focus();}" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Cancel (Esc / Back)">
+          <span>✕ Cancel</span>
         </button>
       </div>
 
@@ -1903,24 +1996,40 @@
           How would you like to handle this cast session?
         </p>
 
-        <!-- Option 1: Disconnect (Keep TV Running) -->
-        <button id="castDisconnectKeepBtn" tabindex="2" onclick="disconnectCastKeepRunning()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-sky-500/15 border border-sky-400/30 hover:border-sky-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+        <!-- Option 1: Disconnect (Leave Minimalist Display) -->
+        <button id="castDisconnectMinimalBtn" tabindex="2" onclick="disconnectCastKeepRunning('minimal')" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-amber-500/15 border border-amber-400/30 hover:border-amber-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
+            ✨
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-white group-hover:text-amber-200">Disconnect (Leave Minimalist Display)</span>
+              <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">Nest / Hub</span>
+            </div>
+            <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
+              Switches to a large-font clock &amp; weather glance, then leaves it running independently on your Nest Hub or smart display.
+            </p>
+          </div>
+        </button>
+
+        <!-- Option 2: Disconnect (Keep Full Dashboard) -->
+        <button id="castDisconnectKeepBtn" tabindex="3" onclick="disconnectCastKeepRunning('full')" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectMinimalBtn');if(b)b.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-sky-500/15 border border-sky-400/30 hover:border-sky-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             🔓
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-1">
-              <span class="text-xs font-bold text-white group-hover:text-sky-200">Disconnect (Keep TV Running)</span>
+              <span class="text-xs font-bold text-white group-hover:text-sky-200">Disconnect (Keep Full Dashboard)</span>
               <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Leaves TV Active</span>
             </div>
             <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
-              Releases tablet control so you can browse other locations freely. The dashboard continues running independently on your TV.
+              Releases tablet control so you can browse other locations freely. The full dashboard continues running independently on your TV.
             </p>
           </div>
         </button>
 
-        <!-- Option 2: Close Cast Page & Disconnect -->
-        <button id="castStopCloseBtn" tabindex="3" onclick="stopCastAndCloseTv()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castSyncLocBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+        <!-- Option 3: Close Cast Page & Disconnect -->
+        <button id="castStopCloseBtn" tabindex="4" onclick="stopCastAndCloseTv()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castSyncLocBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             ⏹️
           </div>
@@ -1935,8 +2044,8 @@
           </div>
         </button>
 
-        <!-- Option 3: Keep Control & Sync TV to Location -->
-        <button id="castSyncLocBtn" tabindex="4" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+        <!-- Option 4: Keep Control & Sync TV to Location -->
+        <button id="castSyncLocBtn" tabindex="5" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             📡
           </div>
@@ -2310,10 +2419,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=193"></script>
+  <script src="traffic-flood.js?v=194"></script>
     <script>
-    const APP_BUILD = 193;
-    const APP_VERSION = '1.10.29';
+    const APP_BUILD = 194;
+    const APP_VERSION = '1.10.30';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6812,6 +6921,20 @@
       document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
 
+      const minLocName = document.getElementById('minimalLocationName');
+      if (minLocName && CURRENT_LOCATION) {
+        minLocName.textContent = CURRENT_LOCATION.name;
+      }
+      const minPc = document.getElementById('minimalPostcode');
+      if (minPc && CURRENT_LOCATION) {
+        if (CURRENT_LOCATION.postcode) {
+          minPc.textContent = CURRENT_LOCATION.postcode;
+          minPc.classList.remove('hidden');
+        } else {
+          minPc.classList.add('hidden');
+        }
+      }
+
       // Show distinctive Dunkirk Mills icon ONLY when title is exactly "Dunkirk Mills"
       const dunkirkIcon = document.getElementById('dunkirkMillIcon');
       if (dunkirkIcon) {
@@ -8318,6 +8441,11 @@
       evaluateStargazing(hourly, cur.cloud_cover, moon);
       renderSevenDay(daily, hourly);
       renderHourly(hourly);
+
+      window._LATEST_WEATHER_DATA = data;
+      if (typeof updateMinimalistDisplay === 'function') {
+        updateMinimalistDisplay(data);
+      }
     }
 
     function renderSevenDay(daily, hourly) {
@@ -9761,6 +9889,14 @@
                       applySelectedLocation(loc.name || loc.geoName, loc.lat, loc.lon, loc.postcode || '', false);
                     }
                   }
+                  if (msg && msg.type === 'SET_DISPLAY_MODE') {
+                    if (msg.location && msg.location.lat && msg.location.lon) {
+                      applySelectedLocation(msg.location.name || msg.location.geoName, msg.location.lat, msg.location.lon, msg.location.postcode || '', false);
+                    }
+                    if (typeof setDisplayMode === 'function') {
+                      setDisplayMode(msg.mode || 'minimal');
+                    }
+                  }
                 } catch (err) {
                   console.warn('Error handling Cast message on TV:', err);
                 }
@@ -9948,13 +10084,31 @@
       restorePreModalFocus('castBtn');
     }
 
-    function disconnectCastKeepRunning() {
+    function disconnectCastKeepRunning(mode = 'full') {
       if (typeof cast !== 'undefined' && cast.framework) {
         try {
           const ctx = cast.framework.CastContext.getInstance();
-          ctx.endCurrentSession(false); // false = DO NOT stop the receiver app on TV!
+          const session = ctx.getCurrentSession();
+          if (session) {
+            const payload = {
+              type: 'SET_DISPLAY_MODE',
+              mode: mode,
+              location: {
+                name: (typeof CURRENT_LOCATION !== 'undefined' && (CURRENT_LOCATION.name || CURRENT_LOCATION.town)) || '',
+                geoName: (typeof CURRENT_LOCATION !== 'undefined' && (CURRENT_LOCATION.geoName || CURRENT_LOCATION.name)) || '',
+                lat: (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 0,
+                lon: (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || 0,
+                postcode: (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.postcode) || ''
+              }
+            };
+            session.sendMessage(CAST_NAMESPACE, JSON.stringify(payload)).catch(() => {});
+          }
+          setTimeout(() => {
+            try { ctx.endCurrentSession(false); } catch (_) {}
+          }, 250);
         } catch (e) {
           console.warn('disconnectCastKeepRunning error:', e);
+          try { ctx.endCurrentSession(false); } catch (_) {}
         }
       }
       closeCastOptionsModal(true);
@@ -10186,9 +10340,204 @@
         castBadge.innerHTML = `<span>🛑 Exit Cast • Press OK to close TV screen</span>`;
         castBadge.className = 'hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-rose-500/50 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-rose-300 backdrop-blur-md';
       }
+
+      const minExitBtn = document.getElementById('minimalExitCastBtn');
+      if (minExitBtn) {
+        minExitBtn.classList.remove('hidden');
+        minExitBtn.classList.add('flex');
+      }
     }
 
     initGoogleCast();
+
+    // -------------------------------------------------------------
+    // MINIMALIST AMBIENT DISPLAY CONTROLLER (Nest Hub / Smart Display / Glance)
+    // -------------------------------------------------------------
+    let CURRENT_DISPLAY_MODE = 'full';
+    let minimalClockInterval = null;
+
+    function setDisplayMode(mode) {
+      CURRENT_DISPLAY_MODE = (mode === 'minimal') ? 'minimal' : 'full';
+      const minEl = document.getElementById('minimalistDisplay');
+      const mainGrid = document.getElementById('mainGrid');
+      const header = document.querySelector('header');
+      const colLocalInfo = document.getElementById('colLocalInfo');
+      const footerTimeline = document.getElementById('footerTimeline');
+
+      if (!minEl || !mainGrid || !header) return;
+
+      if (CURRENT_DISPLAY_MODE === 'minimal') {
+        header.classList.add('hidden');
+        mainGrid.classList.add('hidden');
+        if (colLocalInfo) colLocalInfo.classList.add('hidden');
+        if (footerTimeline) footerTimeline.classList.add('hidden');
+        minEl.classList.remove('hidden');
+        minEl.classList.add('flex');
+        document.body.classList.add('minimalist-view');
+
+        updateMinimalistClock();
+        if (minimalClockInterval) clearInterval(minimalClockInterval);
+        minimalClockInterval = setInterval(updateMinimalistClock, 1000);
+
+        updateMinimalistDisplay(window._LATEST_WEATHER_DATA);
+      } else {
+        minEl.classList.add('hidden');
+        minEl.classList.remove('flex');
+        header.classList.remove('hidden');
+        mainGrid.classList.remove('hidden');
+        if (colLocalInfo) colLocalInfo.classList.remove('hidden');
+        if (footerTimeline) footerTimeline.classList.remove('hidden');
+        document.body.classList.remove('minimalist-view');
+
+        if (minimalClockInterval) {
+          clearInterval(minimalClockInterval);
+          minimalClockInterval = null;
+        }
+
+        if (typeof radarLeafletMap !== 'undefined' && radarLeafletMap) {
+          setTimeout(() => { try { radarLeafletMap.invalidateSize(); } catch (_) {} }, 250);
+        }
+      }
+    }
+
+    function updateMinimalistClock() {
+      const clockEl = document.getElementById('minimalClockTime');
+      const dateEl = document.getElementById('minimalClockDate');
+      if (!clockEl || !dateEl) return;
+
+      const now = new Date();
+      const tzOptions = (typeof ACTIVE_TIMEZONE !== 'undefined' && ACTIVE_TIMEZONE) ? { timeZone: ACTIVE_TIMEZONE } : {};
+
+      const timeStr = now.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        ...tzOptions
+      });
+
+      const dateStr = now.toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short',
+        ...tzOptions
+      });
+
+      clockEl.textContent = timeStr;
+      dateEl.textContent = dateStr;
+    }
+
+    function updateMinimalistDisplay(data) {
+      const minEl = document.getElementById('minimalistDisplay');
+      if (!minEl) return;
+
+      // Location & Postcode
+      const locName = document.getElementById('minimalLocationName');
+      const postCode = document.getElementById('minimalPostcode');
+      if (locName && typeof CURRENT_LOCATION !== 'undefined') {
+        locName.textContent = CURRENT_LOCATION.name || CURRENT_LOCATION.town || 'Weather';
+      }
+      if (postCode && typeof CURRENT_LOCATION !== 'undefined') {
+        if (CURRENT_LOCATION.postcode) {
+          postCode.textContent = CURRENT_LOCATION.postcode;
+          postCode.classList.remove('hidden');
+        } else {
+          postCode.classList.add('hidden');
+        }
+      }
+
+      // Hero Temp, Condition, Feels Like, Range
+      const minTemp = document.getElementById('minimalTemp');
+      const curTempEl = document.getElementById('currentTemp');
+      if (minTemp && curTempEl) {
+        minTemp.textContent = curTempEl.textContent;
+      }
+
+      const minIcon = document.getElementById('minimalWeatherIcon');
+      const curIconEl = document.getElementById('weatherIconLg');
+      if (minIcon && curIconEl) {
+        minIcon.textContent = curIconEl.textContent;
+      }
+
+      const minDesc = document.getElementById('minimalWeatherDesc');
+      const curDescEl = document.getElementById('weatherDesc');
+      if (minDesc && curDescEl) {
+        minDesc.textContent = curDescEl.textContent;
+      }
+
+      const minFeels = document.getElementById('minimalFeelsLike');
+      const curFeelsEl = document.getElementById('feelsLike');
+      if (minFeels && curFeelsEl) {
+        minFeels.textContent = curFeelsEl.textContent;
+      }
+
+      const minRange = document.getElementById('minimalTempRange');
+      const curRangeEl = document.getElementById('todayRange');
+      if (minRange && curRangeEl) {
+        minRange.textContent = curRangeEl.textContent;
+      }
+
+      // Rain Nowcast Copy
+      const minRainText = document.getElementById('minimalRainText');
+      const rainNowcastText = document.getElementById('rainNowcastText');
+      if (minRainText && rainNowcastText) {
+        minRainText.textContent = rainNowcastText.textContent;
+      }
+
+      const minRainBadge = document.getElementById('minimalRainBadge');
+      const rainNowcastBadge = document.getElementById('rainNowcastBadge');
+      if (minRainBadge && rainNowcastBadge) {
+        minRainBadge.textContent = rainNowcastBadge.textContent;
+      }
+
+      const minUpdated = document.getElementById('minimalLastUpdated');
+      const curUpdatedEl = document.getElementById('lastUpdated');
+      if (minUpdated && curUpdatedEl) {
+        minUpdated.textContent = curUpdatedEl.textContent;
+      }
+
+      // Hourly Forecast Strip (5 slots)
+      const hourlyGrid = document.getElementById('minimalHourlyGrid');
+      const weatherData = data || window._LATEST_WEATHER_DATA;
+      if (hourlyGrid && weatherData && weatherData.hourly && weatherData.hourly.time) {
+        const curTimePrefix = (weatherData.current && weatherData.current.time) ? weatherData.current.time.slice(0, 13) : new Date().toISOString().slice(0, 13);
+        let startIdx = weatherData.hourly.time.findIndex(t => t.startsWith(curTimePrefix));
+        if (startIdx < 0) startIdx = 0;
+
+        let html = '';
+        const maxSlots = Math.min(startIdx + 5, weatherData.hourly.time.length);
+        for (let i = startIdx; i < maxSlots; i++) {
+          const timeIso = weatherData.hourly.time[i];
+          const hourPart = timeIso.slice(11, 16);
+          const temp = Math.round(weatherData.hourly.temperature_2m[i]);
+          const code = weatherData.hourly.weather_code[i];
+          const rainProb = (weatherData.hourly.precipitation_probability && weatherData.hourly.precipitation_probability[i] != null) ? weatherData.hourly.precipitation_probability[i] : 0;
+
+          const hourNum = parseInt(hourPart.slice(0, 2), 10);
+          const isDayHour = hourNum >= 6 && hourNum < 21;
+          const wInfo = (typeof getWeatherInfo === 'function') ? getWeatherInfo(code, isDayHour) : { icon: '🌤️' };
+
+          const rainBadge = rainProb > 0
+            ? `<div class="text-[9px] sm:text-[10px] font-mono font-bold text-sky-300 mt-1 flex items-center justify-center gap-0.5"><span>💧</span><span>${rainProb}%</span></div>`
+            : `<div class="text-[9px] sm:text-[10px] font-mono text-slate-500 mt-1">0%</div>`;
+
+          html += `
+            <div class="glass-card rounded-xl p-2 sm:p-2.5 text-center flex flex-col items-center justify-between border border-white/10 hover:border-sky-400/40 transition">
+              <div class="text-[11px] sm:text-xs font-bold text-slate-300 font-mono">${hourPart}</div>
+              <div class="text-xl sm:text-2xl my-1 filter drop-shadow">${wInfo.icon}</div>
+              <div class="text-xs sm:text-sm font-extrabold text-white font-mono">${temp}°</div>
+              ${rainBadge}
+            </div>
+          `;
+        }
+        hourlyGrid.innerHTML = html;
+      }
+    }
+
+    if (window.location.search.includes('mode=minimal') || window.location.search.includes('display=minimal')) {
+      setTimeout(() => {
+        setDisplayMode('minimal');
+      }, 100);
+    }
 
     // LIVE PRECIPITATION RADAR (CLEAN NATIVE LEAFLET + RAINVIEWER)
     let radarLeafletMap = null;
