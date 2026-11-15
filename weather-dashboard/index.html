@@ -965,7 +965,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.22) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.24) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -1852,6 +1852,79 @@
     </div>
   </div>
 
+  <!-- CAST SESSION OPTIONS MODAL -->
+  <div id="castOptionsModal" onclick="closeCastOptionsModal(true)" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 text-left">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-md w-full border border-sky-400/30 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-lg shadow-md flex-shrink-0 text-white">
+            📺
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              Cast Session Active
+            </h3>
+            <p id="castDeviceNameLabel" class="text-[11px] text-sky-300 font-mono">Connected to TV / Shield</p>
+          </div>
+        </div>
+        <button id="closeCastOptionsBtnTop" tabindex="1" onclick="closeCastOptionsModal(true)" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close (Esc / Back)">
+          <span>✕ Close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body: Action Options -->
+      <div class="py-3.5 space-y-3 overflow-y-auto">
+        <p class="text-xs text-slate-300 leading-snug">
+          How would you like to handle this cast session?
+        </p>
+
+        <!-- Option 1: Disconnect (Keep TV Running) -->
+        <button id="castDisconnectKeepBtn" tabindex="2" onclick="disconnectCastKeepRunning()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-sky-500/15 border border-sky-400/30 hover:border-sky-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
+            🔓
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-white group-hover:text-sky-200">Disconnect (Keep TV Running)</span>
+              <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Leaves TV Active</span>
+            </div>
+            <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
+              Releases tablet control so you can browse other locations freely. The dashboard continues running independently on your TV.
+            </p>
+          </div>
+        </button>
+
+        <!-- Option 2: Close Cast Page & Disconnect -->
+        <button id="castStopCloseBtn" tabindex="3" onclick="stopCastAndCloseTv()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castSyncLocBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
+            ⏹️
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-white group-hover:text-rose-200">Close Cast Page &amp; Disconnect</span>
+              <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30">Exit TV App</span>
+            </div>
+            <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
+              Exits and closes the dashboard on your TV / Shield, returning the screen to your TV home launcher.
+            </p>
+          </div>
+        </button>
+
+        <!-- Option 3: Resync Current Location to TV -->
+        <button id="castSyncLocBtn" tabindex="4" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition group focus:outline-none cursor-pointer flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">📡</span>
+            <span id="castSyncLocLabel" class="text-xs font-semibold text-slate-300 group-hover:text-white">Beam Current Location to TV</span>
+          </div>
+          <span id="castOptionsStatus" class="text-[10px] font-mono text-amber-300"></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- TRAFFIC & CONGESTION BREAKDOWN MODAL -->
   <div id="trafficModal" onclick="closeTrafficModal()" onmousemove="resetTrafficAutoCloseTimer()" onkeydown="resetTrafficAutoCloseTimer()" ontouchstart="resetTrafficAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-2 sm:p-3 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-3.5 max-w-[540px] w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
@@ -2156,17 +2229,17 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=186"></script>
+  <script src="traffic-flood.js?v=188"></script>
     <script>
-    const APP_BUILD = 186;
-    const APP_VERSION = '1.10.22';
+    const APP_BUILD = 188;
+    const APP_VERSION = '1.10.24';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
       if (e.key !== 'ArrowUp') return;
 
       const openModal = document.querySelector(
-        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
       );
       if (!openModal) return;
 
@@ -2218,7 +2291,7 @@
     window.addEventListener('keydown', function handleMainPageDpadNavigation(e) {
       // Ignore if any modal is open
       const modalOpen = document.querySelector(
-        '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+        '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
       );
       if (modalOpen) return;
 
@@ -2348,7 +2421,7 @@
       }
       mainPageFocusIdleTimer = setTimeout(() => {
         const modalOpen = document.querySelector(
-          '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+          '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
         );
         if (!modalOpen) {
           document.body.classList.add('focus-dormant');
@@ -9497,11 +9570,20 @@
       const btn = document.getElementById('castBtn');
       const modalBtn = document.getElementById('modalCastBtn');
       const modalLbl = document.getElementById('modalCastLabel');
+      const launcher = document.getElementById('nativeCastLauncher');
+
+      if (launcher) {
+        launcher.style.pointerEvents = connected ? 'none' : 'auto';
+      }
+      const modalLaunchers = document.querySelectorAll('#modalCastBtn google-cast-launcher');
+      modalLaunchers.forEach(el => {
+        el.style.pointerEvents = connected ? 'none' : 'auto';
+      });
 
       if (btn) {
         if (connected) {
           btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-sky-500/25 hover:bg-sky-500/35 border border-sky-400 text-sky-200 transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-[0_0_10px_rgba(56,189,248,0.4)] animate-pulse';
-          btn.title = 'Connected to TV via Google Cast • Click to disconnect';
+          btn.title = 'Connected to TV via Google Cast • Click for options';
         } else {
           btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7';
           btn.title = 'Cast to TV (Chromecast / Google TV / Shield)';
@@ -9511,7 +9593,7 @@
       if (modalBtn && modalLbl) {
         if (connected) {
           modalBtn.className = 'relative px-3 py-1.5 rounded-xl bg-sky-500/30 border border-sky-400 text-sky-200 font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none cursor-pointer shadow-[0_0_10px_rgba(56,189,248,0.4)]';
-          modalLbl.textContent = 'Disconnect Cast';
+          modalLbl.textContent = 'Cast Options';
         } else {
           modalBtn.className = 'relative px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-200 hover:text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 active:scale-95 cursor-pointer';
           modalLbl.textContent = 'Cast to TV';
@@ -9519,16 +9601,106 @@
       }
     }
 
+    function openCastOptionsModal() {
+      const modal = document.getElementById('castOptionsModal');
+      if (!modal) return;
+      savePreModalFocus('castBtn');
+
+      const devLabel = document.getElementById('castDeviceNameLabel');
+      try {
+        if (typeof cast !== 'undefined' && cast.framework) {
+          const ctx = cast.framework.CastContext.getInstance();
+          const session = ctx.getCurrentSession();
+          if (session && typeof session.getCastDevice === 'function') {
+            const dev = session.getCastDevice();
+            if (dev && dev.friendlyName && devLabel) {
+              devLabel.textContent = `Connected to ${dev.friendlyName}`;
+            }
+          }
+        }
+      } catch (_) {}
+
+      const syncLabel = document.getElementById('castSyncLocLabel');
+      if (syncLabel && CURRENT_LOCATION && CURRENT_LOCATION.name) {
+        syncLabel.textContent = `Beam ${CURRENT_LOCATION.name} to TV`;
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      try {
+        if (!history.state || history.state.modal !== 'castOptionsModal') {
+          history.pushState({ modal: 'castOptionsModal' }, '');
+        }
+      } catch (_) {}
+
+      setTimeout(() => {
+        const topBtn = document.getElementById('closeCastOptionsBtnTop');
+        if (topBtn) topBtn.focus();
+      }, 50);
+    }
+
+    function closeCastOptionsModal(pop = true) {
+      const modal = document.getElementById('castOptionsModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (pop && history.state && history.state.modal === 'castOptionsModal') {
+        try { history.back(); } catch (_) {}
+      }
+      restorePreModalFocus('castBtn');
+    }
+
+    function disconnectCastKeepRunning() {
+      if (typeof cast !== 'undefined' && cast.framework) {
+        try {
+          const ctx = cast.framework.CastContext.getInstance();
+          ctx.endCurrentSession(false); // false = DO NOT stop the receiver app on TV!
+        } catch (e) {
+          console.warn('disconnectCastKeepRunning error:', e);
+        }
+      }
+      closeCastOptionsModal(true);
+    }
+
+    function stopCastAndCloseTv() {
+      if (typeof cast !== 'undefined' && cast.framework) {
+        try {
+          const ctx = cast.framework.CastContext.getInstance();
+          ctx.endCurrentSession(true); // true = TERMINATE receiver app on TV!
+        } catch (e) {
+          console.warn('stopCastAndCloseTv error:', e);
+        }
+      }
+      closeCastOptionsModal(true);
+    }
+
+    function syncCurrentLocationToCast() {
+      if (typeof broadcastLocationToCast === 'function') {
+        broadcastLocationToCast(CURRENT_LOCATION);
+      }
+      const statusEl = document.getElementById('castOptionsStatus');
+      if (statusEl) {
+        statusEl.textContent = `Sent ${CURRENT_LOCATION.name} ✓`;
+        setTimeout(() => {
+          if (statusEl) statusEl.textContent = '';
+          closeCastOptionsModal(true);
+        }, 800);
+      }
+    }
+
     function triggerCast() {
       if (typeof cast !== 'undefined' && cast.framework) {
         try {
           const ctx = cast.framework.CastContext.getInstance();
-          if (!ctx.getCurrentSession()) {
-            ctx.requestSession().catch(() => {});
+          const session = ctx.getCurrentSession();
+          if (session) {
+            // Already connected! Show options dialog
+            openCastOptionsModal();
+            return;
           } else {
-            ctx.endCurrentSession(true);
+            ctx.requestSession().catch(() => {});
+            return;
           }
-          return;
         } catch(e) {}
       }
       openShareModal();
@@ -10611,6 +10783,7 @@
           { modalId: 'historyMapModal', closeBtnId: 'closeMapBtnTop', altCloseBtnId: 'closeMapBtnBottom', closeFn: closeHistoryMapModal },
           { modalId: 'shareModal', closeBtnId: 'closeShareBtnTop', closeFn: closeShareModal },
           { modalId: 'feedbackModal', closeBtnId: 'closeFeedbackBtnTop', closeFn: closeFeedbackModal },
+          { modalId: 'castOptionsModal', closeBtnId: 'closeCastOptionsBtnTop', closeFn: closeCastOptionsModal },
           { modalId: 'locationModal', closeBtnId: 'closeLocationBtnTop', closeFn: closeLocationModal }
         ];
 
@@ -10685,7 +10858,7 @@
 
         // 1. Check for new software build first
         const modalOpen = document.querySelector(
-          '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+          '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
         );
 
         try {
