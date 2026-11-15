@@ -965,7 +965,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.20) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.21) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -1441,7 +1441,7 @@
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
             <div class="relative flex-1 flex items-center">
               <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full h-[34px] bg-black/60 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-500 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
-              <button id="customRenameClearBtn" type="button" tabindex="-1" onclick="clearRenameInput()" class="hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear text">✕</button>
+              <button id="customRenameClearBtn" type="button" tabindex="0" onclick="clearRenameInput()" onkeydown="handleRenameClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear title text">✕</button>
             </div>
             <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onblur="cancelRenameAutoContinue()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber h-[34px] px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
@@ -1535,6 +1535,10 @@
           <span class="hidden sm:inline text-purple-300/80 ml-1">• Pick a live launch or wonder, or spin for a surprise destination!</span>
         </div>
         <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button id="shuffleWondersBtn" tabindex="0" onclick="shuffleAndRepopulateWonders(true)" title="Shuffle for fresh discoveries (Press OK)" class="tv-focus-amber px-2.5 py-1.5 rounded-lg bg-purple-500/25 hover:bg-purple-500/40 border border-purple-400/40 text-purple-200 hover:text-white font-semibold text-xs transition focus:outline-none cursor-pointer flex items-center gap-1">
+            <span>🔀</span>
+            <span>Shuffle</span>
+          </button>
           <button id="surpriseMeBtn" tabindex="0" onclick="pickRandomWonderAndLoad()" class="tv-focus-amber px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-[0_0_12px_rgba(217,70,239,0.45)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
             <span>🎲</span>
             <span>Surprise Me!</span>
@@ -2152,10 +2156,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=184"></script>
+  <script src="traffic-flood.js?v=185"></script>
     <script>
-    const APP_BUILD = 184;
-    const APP_VERSION = '1.10.20';
+    const APP_BUILD = 185;
+    const APP_VERSION = '1.10.21';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -4129,6 +4133,37 @@
       }
     }
 
+    function handleRenameClearBtnKeydown(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        clearRenameInput();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const input = document.getElementById('customRenameInput');
+        if (input) {
+          if (input.value && input.value.trim() && !input.value.endsWith(' ')) {
+            input.value += ' ';
+          }
+          input.focus();
+          try { input.click(); } catch (_) {}
+          const len = input.value.length;
+          try { input.setSelectionRange(len, len); } catch (_) {}
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const renameBtn = document.getElementById('customRenameBtn');
+        if (renameBtn) renameBtn.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const gpsBtn = document.getElementById('gpsModalBtn');
+        if (gpsBtn) gpsBtn.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const searchBtn = document.getElementById('searchLocBtn');
+        if (searchBtn) searchBtn.focus();
+      }
+    }
+
     function handleRenameInputKeydown(e) {
       if (typeof cancelAllLocationAutoContinue === 'function') cancelAllLocationAutoContinue();
       if (e.key === 'Enter') {
@@ -4139,9 +4174,14 @@
         const renameBtn = document.getElementById('customRenameBtn');
         if (renameBtn && typeof renameBtn.focus === 'function') renameBtn.focus();
       } else if (e.key === 'ArrowRight') {
-        // Exit text box to Save Title button
-        const renameBtn = document.getElementById('customRenameBtn');
-        if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
+        const clearBtn = document.getElementById('customRenameClearBtn');
+        if (clearBtn && !clearBtn.classList.contains('hidden')) {
+          e.preventDefault();
+          clearBtn.focus();
+        } else {
+          const renameBtn = document.getElementById('customRenameBtn');
+          if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
+        }
       } else if (e.key === 'ArrowDown') {
         // Step down to GPS button
         const gpsBtn = document.getElementById('gpsModalBtn');
@@ -4155,17 +4195,23 @@
     function handleRenameBtnKeydown(e) {
       if (typeof cancelRenameAutoContinue === 'function') cancelRenameAutoContinue();
       if (e.key === 'ArrowLeft') {
-        // Only enter title rename box when pressing Left from Save Title button
-        const renameInput = document.getElementById('customRenameInput');
-        if (renameInput) {
+        const clearBtn = document.getElementById('customRenameClearBtn');
+        if (clearBtn && !clearBtn.classList.contains('hidden')) {
           e.preventDefault();
-          if (renameInput.value && renameInput.value.trim() && !renameInput.value.endsWith(' ')) {
-            renameInput.value += ' ';
+          clearBtn.focus();
+        } else {
+          // Only enter title rename box when pressing Left from Save Title button
+          const renameInput = document.getElementById('customRenameInput');
+          if (renameInput) {
+            e.preventDefault();
+            if (renameInput.value && renameInput.value.trim() && !renameInput.value.endsWith(' ')) {
+              renameInput.value += ' ';
+            }
+            renameInput.focus();
+            try { renameInput.click(); } catch (_) {}
+            const len = renameInput.value.length;
+            try { renameInput.setSelectionRange(len, len); } catch (_) {}
           }
-          renameInput.focus();
-          try { renameInput.click(); } catch (_) {}
-          const len = renameInput.value.length;
-          try { renameInput.setSelectionRange(len, len); } catch (_) {}
         }
       } else if (e.key === 'ArrowDown') {
         // Scroll down to GPS button
@@ -4683,8 +4729,10 @@
       if (input) {
         input.value = '';
         input.dataset.prefilled = 'false';
+        input.dataset.userCleared = 'true';
         updateRenameClearBtnVisibility();
         input.focus();
+        try { input.click(); } catch (_) {}
       }
     }
 
@@ -4718,6 +4766,7 @@
 
     function handleRenameInputChange(el) {
       if (!el) return;
+      el.dataset.userCleared = 'false';
       const now = Date.now();
       const val = el.value;
 
@@ -4743,8 +4792,8 @@
         clearTimeout(renameSettleTimer);
         renameSettleTimer = null;
       }
-      // If user clicked away without entering a new title, restore current title politely
-      if (!el.value || !el.value.trim()) {
+      // If user clicked away without entering a new title, restore current title politely (unless explicitly cleared)
+      if ((!el.value || !el.value.trim()) && el.dataset.userCleared !== 'true') {
         const curName = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
         el.value = curName;
         el.dataset.prefilled = curName ? 'true' : 'false';
@@ -5669,7 +5718,7 @@
       searchLocationFromModal();
     }
 
-    // Curated Global Wonders, Spaceports & Extreme Weather Catalog
+    // Curated Global Wonders, Spaceports & Extreme Weather Catalog (90+ Hand-Curated Destinations)
     const GLOBAL_WONDERS_CATALOG = [
       // 📰 In The News: Exceptional Floods, Storms & Unusual Events
       { name: 'Valencia Floods', desc: 'Valencia, Spain • Catastrophic "Dana" flash floods and historic deluges', category: 'news', icon: '🌊', lat: 39.4699, lon: -0.3763, country: 'Spain' },
@@ -5680,6 +5729,10 @@
       { name: 'Sicily Deluge', desc: 'Catania, Sicily, Italy • Mediterranean cyclone flash flooding sweeping into sea', category: 'news', icon: '🌊', lat: 37.5079, lon: 15.0830, country: 'Italy' },
       { name: 'Texas Flood Basin', desc: 'Lubbock, TX, USA • Record-shattering November downpours & highway inundations', category: 'news', icon: '⛈️', lat: 33.5779, lon: -101.8552, country: 'USA' },
       { name: 'Reykjanes Fissure', desc: 'Grindavík, Iceland • Active volcanic ground magma dyke and fissures', category: 'news', icon: '🌋', lat: 63.8425, lon: -22.4344, country: 'Iceland' },
+      { name: 'Sahara Snow Anomaly', desc: 'Aïn Séfra, Algeria • Rare high-altitude Atlas snowfall over red desert dunes', category: 'news', icon: '❄️', lat: 32.7500, lon: -0.5833, country: 'Algeria' },
+      { name: 'Atmospheric River', desc: 'Seattle, WA, USA • Heavy pineapple express moisture plume and mountain deluge', category: 'news', icon: '🌧️', lat: 47.6062, lon: -122.3321, country: 'USA' },
+      { name: 'Marburg Storms', desc: 'Queensland, Australia • Violent supercells with giant hail and damaging squalls', category: 'news', icon: '⛈️', lat: -27.5667, lon: 152.6000, country: 'Australia' },
+      { name: 'Rhine Low Water', desc: 'Kaub Chokepoint, Germany • Historic dry riverbed bottleneck halting barge transit', category: 'news', icon: '🚢', lat: 50.0864, lon: 7.7619, country: 'Germany' },
 
       // 🚀 Rocket Launch Sites & Spaceports (SpaceX Starship, NASA Space Coast & Orbital Hubs)
       { name: 'Starbase (SpaceX)', desc: 'Boca Chica, TX • SpaceX Starship Orbital Launch Pad & Starfactory', category: 'space', icon: '🚀', lat: 25.9972, lon: -97.1561, country: 'USA' },
@@ -5688,21 +5741,44 @@
       { name: 'Guiana Space Centre', desc: 'Kourou, French Guiana • European Space Agency (Ariane 6 / Vega)', category: 'space', icon: '🚀', lat: 5.2389, lon: -52.7681, country: 'French Guiana' },
       { name: 'Baikonur Cosmodrome', desc: 'Kazakhstan • Gagarin\'s Start & Historic Manned Orbital Spaceport', category: 'space', icon: '🚀', lat: 45.9650, lon: 63.3050, country: 'Kazakhstan' },
       { name: 'Rocket Lab Mahia', desc: 'New Zealand • Rocket Lab Electron Commercial Orbital Launch Complex 1', category: 'space', icon: '🚀', lat: -39.2604, lon: 177.8647, country: 'New Zealand' },
+      { name: 'Tanegashima Space Center', desc: 'Kagoshima, Japan • JAXA Coastal Spaceport & H3 Heavy Orbital Complex', category: 'space', icon: '🚀', lat: 30.4000, lon: 130.9700, country: 'Japan' },
+      { name: 'Satish Dhawan (ISRO)', desc: 'Sriharikota, India • Indian Space Research Organisation (LVM3/PSLV)', category: 'space', icon: '🚀', lat: 13.7199, lon: 80.2304, country: 'India' },
+      { name: 'Esrange Space Center', desc: 'Kiruna, Sweden • European Arctic Rocket & Suborbital Sounding Base', category: 'space', icon: '🚀', lat: 67.8933, lon: 21.1067, country: 'Sweden' },
+      { name: 'Andøya Space', desc: 'Vesterålen, Norway • Orbital Spaceport Inside the Arctic Circle', category: 'space', icon: '🚀', lat: 69.2942, lon: 16.0208, country: 'Norway' },
 
       // ⚡ Live Extreme Weather Hotspots (Lightning, Winds, Deluges & Scorching Deserts)
-      { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
+      { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms (280/hr)', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
       { name: 'Mount Washington', desc: 'New Hampshire, USA • Extreme Hurricane-Force Winds (372 km/h record)', category: 'weather', icon: '💨', lat: 44.2705, lon: -71.3033, country: 'USA' },
       { name: 'Mawsynram', desc: 'Meghalaya, India • Wettest Place on Earth (~11,872 mm annual rain)', category: 'weather', icon: '🌧️', lat: 25.2975, lon: 91.5826, country: 'India' },
       { name: 'Death Valley', desc: 'Furnace Creek, CA • World Record Hottest Air Temp (56.7°C)', category: 'weather', icon: '🔥', lat: 36.4618, lon: -116.8680, country: 'USA' },
       { name: 'Dallol Acid Springs', desc: 'Danakil Depression, Ethiopia • Hottest Inhabited Volcanic Basin', category: 'weather', icon: '♨️', lat: 14.2417, lon: 40.2989, country: 'Ethiopia' },
       { name: 'Rub\' al Khali', desc: 'Saudi Arabia • The Empty Quarter Vast Continuous Sand Desert', category: 'weather', icon: '🏜️', lat: 20.0000, lon: 50.0000, country: 'Saudi Arabia' },
+      { name: 'Atacama Desert', desc: 'San Pedro, Chile • Driest Non-Polar Desert on Earth (0 rain in centuries)', category: 'weather', icon: '🏜️', lat: -22.9087, lon: -68.1997, country: 'Chile' },
+      { name: 'Commonwealth Bay', desc: 'Antarctica • Windiest Place on Earth (Katabatic Gales to 240 km/h)', category: 'weather', icon: '💨', lat: -67.0000, lon: 142.6667, country: 'Antarctica' },
+      { name: 'Cherrapunji', desc: 'Meghalaya, India • World Record Single-Month Rainfall (9,300 mm)', category: 'weather', icon: '🌧️', lat: 25.2744, lon: 91.7323, country: 'India' },
+      { name: 'Yuma, Arizona', desc: 'USA • Sunniest Inhabited Place on Earth (4,015 hours sun/year)', category: 'weather', icon: '☀️', lat: 32.6927, lon: -114.6277, country: 'USA' },
+      { name: 'Dasht-e Lut', desc: 'Kerman, Iran • Earth\'s Hottest Land Surface Skin Temp (70.7°C)', category: 'weather', icon: '🔥', lat: 30.6000, lon: 58.8000, country: 'Iran' },
+      { name: 'Wellington', desc: 'New Zealand • Windiest Capital City in the World (Cook Strait gales)', category: 'weather', icon: '💨', lat: -41.2865, lon: 174.7762, country: 'New Zealand' },
+      { name: 'Tornado Alley', desc: 'Moore / Oklahoma City, OK • Highest Concentration of Violent F5 Tornadoes', category: 'weather', icon: '🌪️', lat: 35.3395, lon: -97.4867, country: 'USA' },
+      { name: 'Lloró, Chocó', desc: 'Colombia • Relentless Pacific Tropical Rainforest Deluges (12,717 mm/yr)', category: 'weather', icon: '🌧️', lat: 5.5000, lon: -76.5400, country: 'Colombia' },
+      { name: 'Aswan', desc: 'Egypt • Driest City in Africa with Virtually Zero Measurable Rain', category: 'weather', icon: '🏜️', lat: 24.0889, lon: 32.8998, country: 'Egypt' },
+      { name: 'Cape Denison', desc: 'Adélie Coast, Antarctica • Mawson\'s Legendary Home of the Blizzard', category: 'weather', icon: '❄️', lat: -67.0092, lon: 142.6644, country: 'Antarctica' },
 
       // 🌋 Active Volcanology & Seismic Hotspots
       { name: 'Grindavík Volcano', desc: 'Reykjanes Peninsula, Iceland • Active Fissure Eruptions & Blue Lagoon', category: 'volcano', icon: '🌋', lat: 63.8425, lon: -22.4344, country: 'Iceland' },
-      { name: 'Mount Etna', desc: 'Sicily, Italy • Europe\'s Most Active Stratovolcano', category: 'volcano', icon: '🌋', lat: 37.7510, lon: 14.9934, country: 'Italy' },
-      { name: 'Kīlauea Volcano', desc: 'Big Island, Hawaii • Active Halemaʻumaʻu Lava Crater', category: 'volcano', icon: '🌋', lat: 19.4069, lon: -155.2834, country: 'USA' },
+      { name: 'Mount Etna', desc: 'Sicily, Italy • Europe\'s Most Active Stratovolcano with Lava Fountains', category: 'volcano', icon: '🌋', lat: 37.7510, lon: 14.9934, country: 'Italy' },
+      { name: 'Kīlauea Volcano', desc: 'Big Island, Hawaii • Active Halemaʻumaʻu Lava Lake & Crater', category: 'volcano', icon: '🌋', lat: 19.4069, lon: -155.2834, country: 'USA' },
       { name: 'Mount Fuji', desc: 'Honshu, Japan • Iconic Snow-Capped Sacred Volcanic Peak', category: 'volcano', icon: '🗻', lat: 35.3606, lon: 138.7274, country: 'Japan' },
       { name: 'Santorini Caldera', desc: 'Cyclades, Greece • Historic Aegean Volcanic Island Rim', category: 'volcano', icon: '🇬🇷', lat: 36.4166, lon: 25.4324, country: 'Greece' },
+      { name: 'Stromboli', desc: 'Aeolian Islands, Italy • "Lighthouse of the Mediterranean" Continuous Eruptions', category: 'volcano', icon: '🌋', lat: 38.7890, lon: 15.2130, country: 'Italy' },
+      { name: 'Popocatépetl', desc: 'Puebla, Mexico • Smoking Aztec "El Popo" Stratovolcano Plumes', category: 'volcano', icon: '🌋', lat: 19.0228, lon: -98.6278, country: 'Mexico' },
+      { name: 'Mount Merapi', desc: 'Central Java, Indonesia • "Fire Mountain" Active Pyroclastic Flows', category: 'volcano', icon: '🌋', lat: -7.5407, lon: 110.4457, country: 'Indonesia' },
+      { name: 'Sakurajima', desc: 'Kagoshima, Japan • Constant Ash Eruptions Directly Beside City', category: 'volcano', icon: '🌋', lat: 31.5856, lon: 130.6570, country: 'Japan' },
+      { name: 'Eyjafjallajökull', desc: 'South Iceland • Subglacial Volcano that Halted European Air Travel', category: 'volcano', icon: '❄️', lat: 63.6330, lon: -19.6000, country: 'Iceland' },
+      { name: 'Mount Vesuvius', desc: 'Bay of Naples, Italy • Historic Somma-Stratovolcano Towering Over Pompeii', category: 'volcano', icon: '🌋', lat: 40.8214, lon: 14.4260, country: 'Italy' },
+      { name: 'Pacaya', desc: 'Escuintla, Guatemala • Active Basaltic Lava River Volcano', category: 'volcano', icon: '🌋', lat: 14.3817, lon: -90.6014, country: 'Guatemala' },
+      { name: 'Yasur Volcano', desc: 'Tanna Island, Vanuatu • World\'s Most Accessible Active Strombolian Volcano', category: 'volcano', icon: '🌋', lat: -19.5320, lon: 169.4470, country: 'Vanuatu' },
+      { name: 'Piton de la Fournaise', desc: 'Réunion Island, Indian Ocean • One of Earth\'s Most Active Shield Volcanoes', category: 'volcano', icon: '🌋', lat: -21.2425, lon: 55.7088, country: 'France' },
 
       // ❄️ Extreme Cold & Polar Frontier
       { name: 'Yakutsk', desc: 'Siberia, Russia • Coldest Major City Built on Continuous Permafrost', category: 'cold', icon: '❄️', lat: 62.0355, lon: 129.6755, country: 'Russia' },
@@ -5710,6 +5786,17 @@
       { name: 'Longyearbyen', desc: 'Svalbard, High Arctic • World\'s Northernmost Town & Seed Vault', category: 'cold', icon: '🐻‍❄️', lat: 78.2232, lon: 15.6267, country: 'Norway' },
       { name: 'McMurdo Station', desc: 'Ross Island, Antarctica • Main Scientific Base on Frozen Continent', category: 'cold', icon: '🐧', lat: -77.8463, lon: 166.6682, country: 'Antarctica' },
       { name: 'South Pole Station', desc: 'Amundsen-Scott, Antarctica • Geographic South Pole (2,835m)', category: 'cold', icon: '🧭', lat: -90.0000, lon: 0.0000, country: 'Antarctica' },
+      { name: 'Vostok Station', desc: 'Inland Antarctica • Record Coldest Temp on Earth (-89.2°C)', category: 'cold', icon: '🥶', lat: -78.4644, lon: 106.8373, country: 'Antarctica' },
+      { name: 'Alert, Nunavut', desc: 'Ellesmere Island, Canada • Northernmost Permanently Inhabited Place on Earth', category: 'cold', icon: '🇨🇦', lat: 82.5018, lon: -62.3481, country: 'Canada' },
+      { name: 'Utqiaġvik (Barrow)', desc: 'Alaska, USA • Arctic Ocean Coast with 65 Days of Continuous Polar Night', category: 'cold', icon: '🇺🇸', lat: 71.2906, lon: -156.7886, country: 'USA' },
+      { name: 'Summit Camp', desc: 'Greenland Ice Sheet • High-Altitude Arctic Research Camp (3,216m)', category: 'cold', icon: '🏔️', lat: 72.5796, lon: -38.4592, country: 'Greenland' },
+      { name: 'Verkhoyansk', desc: 'Sakha, Russia • Extreme 105°C Annual Temp Range Record (-67.8°C to +38°C)', category: 'cold', icon: '🌡️', lat: 67.5450, lon: 133.3850, country: 'Russia' },
+      { name: 'Yellowknife', desc: 'Northwest Territories, Canada • Subarctic Great Slave Lake Aurora Capital', category: 'cold', icon: '🌌', lat: 62.4540, lon: -114.3718, country: 'Canada' },
+      { name: 'Ulaanbaatar', desc: 'Mongolia • World\'s Coldest National Capital City', category: 'cold', icon: '🇲🇳', lat: 47.8864, lon: 106.9057, country: 'Mongolia' },
+      { name: 'Tromsø', desc: 'Norway • Arctic Gateway, Midnight Sun & Aurora Fjords', category: 'cold', icon: '✨', lat: 69.6492, lon: 18.9553, country: 'Norway' },
+      { name: 'Snag, Yukon', desc: 'Canada • Coldest Recorded Temp in North America (-63.0°C)', category: 'cold', icon: '❄️', lat: 62.3956, lon: -140.4072, country: 'Canada' },
+      { name: 'Mount Erebus', desc: 'Ross Island, Antarctica • Southernmost Active Volcano with Ice Fumaroles', category: 'cold', icon: '🌋', lat: -77.5297, lon: 167.1533, country: 'Antarctica' },
+      { name: 'Eureka', desc: 'Ellesmere Island, Canada • Coldest Annual Mean Temp Weather Station in NA', category: 'cold', icon: '🧊', lat: 79.9889, lon: -85.9406, country: 'Canada' },
 
       // 🏛️ Iconic Landmarks & Wonders
       { name: 'Pyramids of Giza', desc: 'Cairo, Egypt • Great Pyramid & Sphinx in the Desert', category: 'landmark', icon: '🏛️', lat: 29.9792, lon: 31.1342, country: 'Egypt' },
@@ -5717,12 +5804,43 @@
       { name: 'Taj Mahal', desc: 'Agra, India • Monumental White Marble Wonder on the Yamuna', category: 'landmark', icon: '🕌', lat: 27.1751, lon: 78.0421, country: 'India' },
       { name: 'Easter Island', desc: 'Rapa Nui, Pacific • Ancient Moai Monolithic Statues', category: 'landmark', icon: '🗿', lat: -27.1127, lon: -109.3497, country: 'Chile' },
       { name: 'Grand Canyon', desc: 'South Rim, Arizona, USA • Mile-Deep Gorge Carved by Colorado River', category: 'landmark', icon: '🏜️', lat: 36.0544, lon: -112.1401, country: 'USA' },
-      { name: 'Stonehenge', desc: 'Salisbury Plain, Wiltshire, UK • Prehistoric Megalithic Wonder', category: 'landmark', icon: '🪨', lat: 51.1789, lon: -1.8262, country: 'UK' }
+      { name: 'Stonehenge', desc: 'Salisbury Plain, Wiltshire, UK • Prehistoric Megalithic Wonder', category: 'landmark', icon: '🪨', lat: 51.1789, lon: -1.8262, country: 'UK' },
+      { name: 'Petra', desc: 'Ma\'an, Jordan • Ancient Rose-Red Nabataean City Carved in Sandstone', category: 'landmark', icon: '🏛️', lat: 30.3285, lon: 35.4444, country: 'Jordan' },
+      { name: 'Great Wall of China', desc: 'Mutianyu, Beijing • Vast Ancient Mountain Fortification', category: 'landmark', icon: '🏯', lat: 40.4319, lon: 116.5704, country: 'China' },
+      { name: 'Colosseum', desc: 'Rome, Italy • Monumental Imperial Roman Amphitheatre', category: 'landmark', icon: '🏛️', lat: 41.8902, lon: 12.4922, country: 'Italy' },
+      { name: 'Angkor Wat', desc: 'Siem Reap, Cambodia • World\'s Largest Religious Temple Complex', category: 'landmark', icon: '🛕', lat: 13.4125, lon: 103.8670, country: 'Cambodia' },
+      { name: 'Christ the Redeemer', desc: 'Corcovado, Rio de Janeiro • Iconic Art Deco Colossus Overlooking Bay', category: 'landmark', icon: '🇧🇷', lat: -22.9519, lon: -43.2105, country: 'Brazil' },
+      { name: 'Everest Base Camp', desc: 'Khumbu, Nepal • High Himalaya Gateway to Earth\'s Highest Peak (5,364m)', category: 'landmark', icon: '🏔️', lat: 28.0044, lon: 86.8567, country: 'Nepal' },
+      { name: 'Victoria Falls', desc: 'Livingstone / Vic Falls • Mosi-oa-Tunya The Smoke that Thunders', category: 'landmark', icon: '🌊', lat: -17.9243, lon: 25.8572, country: 'Zambia' },
+      { name: 'Iguazu Falls', desc: 'Misiones, Argentina • 275 Roaring Waterfalls in Subtropical Jungle', category: 'landmark', icon: '🌊', lat: -25.6953, lon: -54.4367, country: 'Argentina' },
+      { name: 'Great Barrier Reef', desc: 'Cairns, Coral Sea, Australia • World\'s Largest Living Coral Reef', category: 'landmark', icon: '🪸', lat: -16.9186, lon: 145.7781, country: 'Australia' },
+      { name: 'Mount Kilimanjaro', desc: 'Tanzania • Africa\'s Highest Freestanding Snowcapped Volcanic Peak', category: 'landmark', icon: '🗻', lat: -3.0674, lon: 37.3556, country: 'Tanzania' },
+      { name: 'Giant\'s Causeway', desc: 'County Antrim, Northern Ireland • 40,000 Interlocking Basalt Columns', category: 'landmark', icon: '🇮🇪', lat: 55.2408, lon: -6.5116, country: 'UK' },
+      { name: 'Milford Sound', desc: 'Fiordland, New Zealand • Glacial Fjord with Cascading 1,000m Waterfalls', category: 'landmark', icon: '🇳🇿', lat: -44.6716, lon: 167.9256, country: 'New Zealand' }
     ];
 
     let wondersAutoCloseTimer = null;
     let wondersAutoCloseSecs = 45;
-    let wondersPopulated = false;
+    let lastWondersRotationSlot = -1;
+    let wondersShuffleOffset = 0;
+
+    function getRotatedCategoryWonders(category, count = 6) {
+      const pool = GLOBAL_WONDERS_CATALOG.filter(w => w.category === category);
+      if (pool.length <= count) return pool;
+      // 3-hour deterministic rotation slot (refreshes automatically throughout the day)
+      const slot = Math.floor(Date.now() / (3 * 3600 * 1000)) + wondersShuffleOffset;
+      const copy = [...pool];
+      // Deterministic pseudo-random shuffle seeded by slot
+      let seed = ((slot + 11) * 9301 + 49297) % 233280;
+      for (let i = copy.length - 1; i > 0; i--) {
+        seed = (seed * 9301 + 49297) % 233280;
+        const j = Math.floor((seed / 233280) * (i + 1));
+        const temp = copy[i];
+        copy[i] = copy[j];
+        copy[j] = temp;
+      }
+      return copy.slice(0, count);
+    }
 
     function resetWondersAutoCloseTimer() {
       wondersAutoCloseSecs = 45;
@@ -5903,6 +6021,7 @@
       e.stopPropagation();
 
       const closeBtn = document.getElementById('closeWondersBtnTop');
+      const shuffleBtn = document.getElementById('shuffleWondersBtn');
       const surpriseBtn = document.getElementById('surpriseMeBtn');
       const scrollArea = document.getElementById('wondersContentArea');
 
@@ -5937,23 +6056,45 @@
       // 1. Focus is on Close Button
       if (activeEl === closeBtn) {
         if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
-          if (surpriseBtn) surpriseBtn.focus();
+          if (shuffleBtn) shuffleBtn.focus();
+          else if (surpriseBtn) surpriseBtn.focus();
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-          if (surpriseBtn) surpriseBtn.focus();
+          if (shuffleBtn) shuffleBtn.focus();
+          else if (surpriseBtn) surpriseBtn.focus();
         }
         return;
       }
 
-      // 2. Focus is on Surprise Me Button
-      if (activeEl === surpriseBtn) {
+      // 2. Focus is on Shuffle Button
+      if (activeEl === shuffleBtn) {
         if (e.key === 'ArrowUp' || (isTab && e.shiftKey)) {
           if (closeBtn) closeBtn.focus();
+        } else if (e.key === 'ArrowRight') {
+          if (surpriseBtn) surpriseBtn.focus();
         } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
           if (allChips.length > 0) {
             allChips[0].focus();
             scrollChipIntoView(allChips[0]);
           }
-        } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        } else if (e.key === 'ArrowLeft') {
+          if (closeBtn) closeBtn.focus();
+        }
+        return;
+      }
+
+      // 3. Focus is on Surprise Me Button
+      if (activeEl === surpriseBtn) {
+        if (e.key === 'ArrowUp' || (isTab && e.shiftKey)) {
+          if (closeBtn) closeBtn.focus();
+        } else if (e.key === 'ArrowLeft') {
+          if (shuffleBtn) shuffleBtn.focus();
+          else if (closeBtn) closeBtn.focus();
+        } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
+          if (allChips.length > 0) {
+            allChips[0].focus();
+            scrollChipIntoView(allChips[0]);
+          }
+        } else if (e.key === 'ArrowRight') {
           if (closeBtn) closeBtn.focus();
         }
         return;
@@ -6036,7 +6177,10 @@
           prev.focus();
           scrollChipIntoView(prev);
         } else {
-          if (surpriseBtn) {
+          if (shuffleBtn) {
+            shuffleBtn.focus();
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (surpriseBtn) {
             surpriseBtn.focus();
             if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
           }
@@ -6118,8 +6262,11 @@
           closest.focus();
           scrollChipIntoView(closest);
         } else {
-          // Topmost set and row: move up to Surprise Me button
-          if (surpriseBtn) {
+          // Topmost set and row: move up to Shuffle / Surprise Me button
+          if (shuffleBtn) {
+            shuffleBtn.focus();
+            if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (surpriseBtn) {
             surpriseBtn.focus();
             if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
           }
@@ -6168,9 +6315,10 @@
       restorePreModalFocus('discoverQuickBtn');
     }
 
-    function populateWondersChips() {
-      if (wondersPopulated) return;
-      wondersPopulated = true;
+    function populateWondersChips(force = false) {
+      const currentSlot = Math.floor(Date.now() / (3 * 3600 * 1000)) + wondersShuffleOffset;
+      if (!force && lastWondersRotationSlot === currentSlot) return;
+      lastWondersRotationSlot = currentSlot;
 
       const containerMap = {
         news: document.getElementById('wondersNewsChips'),
@@ -6181,23 +6329,34 @@
         landmark: document.getElementById('wondersLandmarkChips')
       };
 
-      GLOBAL_WONDERS_CATALOG.forEach(w => {
-        const parent = containerMap[w.category];
+      Object.keys(containerMap).forEach(cat => {
+        const parent = containerMap[cat];
         if (!parent) return;
-
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.tabIndex = 0;
-        btn.className = (w.category === 'news')
-          ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 hover:border-amber-400/60 text-xs text-amber-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
-          : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
-        btn.title = `${w.name}: ${w.desc}`;
-        btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
-        btn.onclick = () => {
-          selectWonderLocation(w);
-        };
-        parent.appendChild(btn);
+        parent.innerHTML = '';
+        const items = getRotatedCategoryWonders(cat, 6);
+        items.forEach(w => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.tabIndex = 0;
+          btn.className = (w.category === 'news')
+            ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 hover:border-amber-400/60 text-xs text-amber-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
+            : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
+          btn.title = `${w.name}: ${w.desc}`;
+          btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
+          btn.onclick = () => {
+            selectWonderLocation(w);
+          };
+          parent.appendChild(btn);
+        });
       });
+    }
+
+    function shuffleAndRepopulateWonders(userTriggered = false) {
+      wondersShuffleOffset++;
+      populateWondersChips(true);
+      if (userTriggered) {
+        onWondersModalActivity();
+      }
     }
 
     function selectWonderLocation(wonder) {
@@ -10372,7 +10531,10 @@
     syncMapButtonState();
 
     initLocation();
-    setInterval(fetchWeatherData, 15 * 60 * 1000);
+    setInterval(() => {
+      fetchWeatherData();
+      populateWondersChips();
+    }, 15 * 60 * 1000);
 
     // ============================================================
     // WAKE-UP AUTO-REFRESH (If asleep/hidden > 10 minutes)
@@ -10425,6 +10587,7 @@
 
         // 2. Fetch fresh weather, traffic & flood telemetry
         await fetchWeatherData();
+        populateWondersChips();
       } catch (err) {
         console.warn('Wake-up refresh warning:', err);
       } finally {
