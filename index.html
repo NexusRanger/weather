@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=204"></script>
+  <script src="qrcode.min.js?v=205"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -989,7 +989,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.40) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.41) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2039,7 +2039,7 @@
               <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">TV Runs Standalone</span>
             </div>
             <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
-              Stops tablet sync so the dashboard keeps running independently on your TV / Shield while you browse freely on your tablet.
+              Stops tablet sync so the dashboard keeps running independently on your TV / Shield while you browse locations freely on your tablet.
             </p>
           </div>
         </button>
@@ -2055,7 +2055,7 @@
               <span id="castOptionsStatusBadge" class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">Live Sync</span>
             </div>
             <p id="castSyncLocSubtext" class="text-[11px] text-slate-300 group-hover:text-emerald-200 mt-1 leading-snug">
-              Updates the TV screen to the current location and keeps location changes synced from your tablet.
+              Updates the TV screen to <span class="text-emerald-400 font-semibold">'<span id="castSyncLocName">the current location</span>'</span> on your tablet and keeps location changes synced.
             </p>
           </div>
         </button>
@@ -2064,7 +2064,7 @@
         <div class="rounded-xl bg-slate-900/70 border border-amber-400/25 px-3 py-2.5 text-[11px] text-slate-300 leading-snug flex items-start gap-2">
           <span class="text-amber-300 text-xs flex-shrink-0 mt-0.5">ℹ️</span>
           <p>
-            <strong class="text-amber-200">Casting to a 2nd screen later?</strong> Leaving a TV independent works cleanly on its own, though Android Chrome still remembers the old Cast target until Wi-Fi drops. Toggle <span class="text-white font-medium">Flight Mode / Wi-Fi</span> briefly (or use another browser) before casting elsewhere.
+            <strong class="text-amber-200">Casting to a 2nd screen later?</strong> Leaving a TV independent works cleanly on its own, though Android Chrome still remembers the old Cast target until Wi-Fi drops. Toggle <span class="text-orange-400 font-semibold">Flight Mode</span> / <span class="text-orange-400 font-semibold">Wi-Fi</span> briefly (or use another browser) before casting elsewhere.
           </p>
         </div>
       </div>
@@ -2427,10 +2427,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=204"></script>
+  <script src="traffic-flood.js?v=205"></script>
     <script>
-    const APP_BUILD = 204;
-    const APP_VERSION = '1.10.40';
+    const APP_BUILD = 205;
+    const APP_VERSION = '1.10.41';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10067,8 +10067,11 @@
       if (syncLabel) {
         syncLabel.textContent = 'Keep Control of TV';
       }
-      if (syncSubtext) {
-        syncSubtext.textContent = `Updates the TV screen to ${locName} and keeps location changes synced from your tablet.`;
+      const syncLocNameEl = document.getElementById('castSyncLocName');
+      if (syncLocNameEl) {
+        syncLocNameEl.textContent = locName;
+      } else if (syncSubtext) {
+        syncSubtext.textContent = `Updates the TV screen to '${locName}' on your tablet and keeps location changes synced.`;
       }
 
       modal.classList.remove('hidden');
