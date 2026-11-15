@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=196"></script>
+  <script src="qrcode.min.js?v=197"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -847,10 +847,7 @@
     }
 
     /* MINIMALIST AMBIENT DISPLAY VIEW OVERRIDES */
-    body.minimalist-view header,
-    body.minimalist-view #mainGrid,
-    body.minimalist-view #colLocalInfo,
-    body.minimalist-view #footerTimeline {
+    body.minimalist-view #dashboardRoot {
       display: none !important;
       visibility: hidden !important;
       opacity: 0 !important;
@@ -858,6 +855,7 @@
     }
     body.minimalist-view #minimalistDisplay {
       display: flex !important;
+      pointer-events: auto !important;
     }
   </style>
 </head>
@@ -989,7 +987,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.32) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.33) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1443,97 +1441,97 @@
       </div>
     </footer>
 
-    <!-- MINIMALIST AMBIENT DISPLAY (GOOGLE NEST HUB / SMART DISPLAY / KIOSK) -->
-    <div id="minimalistDisplay" class="hidden fixed inset-0 z-40 flex flex-col justify-between w-full h-full p-4 sm:p-6 md:p-8 bg-slate-950/95 backdrop-blur-2xl overflow-hidden select-none">
-      
-      <!-- Top Bar: Live indicator, Location, Postcode, and Top-Right Actions -->
-      <div class="flex items-center justify-between w-full pb-2 border-b border-white/10 flex-shrink-0">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
-          <div id="minimalLocationName" class="text-lg sm:text-2xl font-extrabold text-white tracking-tight truncate drop-shadow-md">
-            Nailsworth
-          </div>
-          <span id="minimalPostcode" class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono flex-shrink-0">
-            GL5 5HH
-          </span>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 hidden sm:inline-flex items-center gap-1">
-            <span>✨</span> <span>Glance</span>
-          </span>
-        </div>
+  </div>
 
-        <!-- Top-Right Actions -->
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <button id="minimalToggleFullBtn" tabindex="0" onclick="setDisplayMode('full')" title="Switch to Full Dashboard" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md">
-            <span>⛶</span>
-            <span class="hidden sm:inline">Full Dashboard</span>
-          </button>
-          <button id="minimalExitCastBtn" tabindex="0" onclick="openTvExitCastModal()" title="Exit Cast Session" class="hidden tv-focus-amber px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 text-rose-200 font-semibold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md">
-            <span>🛑</span>
-            <span>Exit</span>
-          </button>
+  <!-- MINIMALIST AMBIENT DISPLAY (GOOGLE NEST HUB / SMART DISPLAY / KIOSK) -->
+  <div id="minimalistDisplay" class="hidden fixed inset-0 flex flex-col justify-between w-full h-full p-4 sm:p-6 md:p-8 bg-slate-950/98 backdrop-blur-2xl overflow-hidden select-none" style="z-index: 100; touch-action: manipulation; pointer-events: auto;">
+    
+    <!-- Top Bar: Live indicator, Location, Postcode, and Top-Right Actions -->
+    <div class="flex items-center justify-between w-full pb-2 border-b border-white/10 flex-shrink-0" style="pointer-events: auto;">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0"></div>
+        <div id="minimalLocationName" class="text-lg sm:text-2xl font-extrabold text-white tracking-tight truncate drop-shadow-md">
+          Nailsworth
+        </div>
+        <span id="minimalPostcode" class="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono flex-shrink-0">
+          GL5 5HH
+        </span>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 hidden sm:inline-flex items-center gap-1">
+          <span>✨</span> <span>Glance</span>
+        </span>
+      </div>
+
+      <!-- Top-Right Actions -->
+      <div class="flex items-center gap-2 flex-shrink-0" style="pointer-events: auto;">
+        <button id="minimalToggleFullBtn" tabindex="0" onclick="setDisplayMode('full')" ontouchend="setDisplayMode('full')" title="Switch to Full Dashboard" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/25 text-white font-semibold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md shadow-md" style="touch-action: manipulation; pointer-events: auto;">
+          <span>⛶</span>
+          <span>Full Dashboard</span>
+        </button>
+        <button id="minimalExitCastBtn" tabindex="0" onclick="executeMinimalExit()" ontouchend="executeMinimalExit()" title="Exit Cast Session" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-500/40 active:scale-95 border border-rose-400/50 text-rose-200 font-semibold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer backdrop-blur-md shadow-md" style="touch-action: manipulation; pointer-events: auto;">
+          <span>🛑</span>
+          <span>Exit</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Hero Area: Clock & Date on Left, Big Temp & Icon on Right -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-center my-auto py-2">
+      <!-- Left: Digital Clock & Rain Nowcast -->
+      <div class="flex flex-col justify-center items-start pl-1 sm:pl-3">
+        <div id="minimalClockTime" class="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white font-mono leading-none drop-shadow-lg">
+          --:--
+        </div>
+        <div id="minimalClockDate" class="text-sm sm:text-lg lg:text-xl font-bold text-sky-300 mt-2 tracking-wide">
+          Loading date...
+        </div>
+        <!-- Rain Nowcast Banner -->
+        <div id="minimalRainBanner" class="mt-3 sm:mt-4 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center gap-2 backdrop-blur-md shadow-md max-w-md w-full">
+          <span id="minimalRainIcon" class="text-base flex-shrink-0 animate-bounce">☔</span>
+          <span id="minimalRainText" class="text-xs sm:text-sm font-semibold text-sky-200 truncate flex-1">
+            Checking rain radar...
+          </span>
+          <span id="minimalRainBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0">
+            --% conf
+          </span>
         </div>
       </div>
 
-      <!-- Center Hero Area: Clock & Date on Left, Big Temp & Icon on Right -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 items-center my-auto py-2">
-        <!-- Left: Digital Clock & Rain Nowcast -->
-        <div class="flex flex-col justify-center items-start pl-1 sm:pl-3">
-          <div id="minimalClockTime" class="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tight text-white font-mono leading-none drop-shadow-lg">
-            --:--
-          </div>
-          <div id="minimalClockDate" class="text-sm sm:text-lg lg:text-xl font-bold text-sky-300 mt-2 tracking-wide">
-            Loading date...
-          </div>
-          <!-- Rain Nowcast Banner -->
-          <div id="minimalRainBanner" class="mt-3 sm:mt-4 px-3 py-1.5 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center gap-2 backdrop-blur-md shadow-md max-w-md w-full">
-            <span id="minimalRainIcon" class="text-base flex-shrink-0 animate-bounce">☔</span>
-            <span id="minimalRainText" class="text-xs sm:text-sm font-semibold text-sky-200 truncate flex-1">
-              Checking rain radar...
+      <!-- Right: Giant Colorful Temp & Weather Glyph -->
+      <div class="flex items-center justify-start md:justify-end gap-3 sm:gap-6 pr-1 sm:pr-3">
+        <div id="minimalWeatherIcon" class="text-6xl sm:text-7xl lg:text-8xl flex-shrink-0 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform">
+          ☁️
+        </div>
+        <div class="flex flex-col min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span id="minimalTemp" class="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-white font-mono leading-none drop-shadow-xl">
+              --°
             </span>
-            <span id="minimalRainBadge" class="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-sky-400/20 text-sky-300 border border-sky-400/30 flex-shrink-0">
-              --% conf
+            <span id="minimalFeelsLike" class="text-xs sm:text-sm font-medium text-slate-300 whitespace-nowrap">
+              Feels like --°C
             </span>
           </div>
-        </div>
-
-        <!-- Right: Giant Colorful Temp & Weather Glyph -->
-        <div class="flex items-center justify-start md:justify-end gap-3 sm:gap-6 pr-1 sm:pr-3">
-          <div id="minimalWeatherIcon" class="text-6xl sm:text-7xl lg:text-8xl flex-shrink-0 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform hover:scale-105 transition-transform">
-            ☁️
+          <div id="minimalWeatherDesc" class="text-lg sm:text-2xl font-extrabold text-white capitalize mt-1 drop-shadow truncate">
+            Overcast
           </div>
-          <div class="flex flex-col min-w-0">
-            <div class="flex items-baseline gap-2">
-              <span id="minimalTemp" class="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-white font-mono leading-none drop-shadow-xl">
-                --°
-              </span>
-              <span id="minimalFeelsLike" class="text-xs sm:text-sm font-medium text-slate-300 whitespace-nowrap">
-                Feels like --°C
-              </span>
-            </div>
-            <div id="minimalWeatherDesc" class="text-lg sm:text-2xl font-extrabold text-white capitalize mt-1 drop-shadow truncate">
-              Overcast
-            </div>
-            <div id="minimalTempRange" class="text-xs sm:text-sm font-mono text-slate-400 mt-0.5">
-              ▲ --°  ▼ --°
-            </div>
+          <div id="minimalTempRange" class="text-xs sm:text-sm font-mono text-slate-400 mt-0.5">
+            ▲ --°  ▼ --°
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Bottom: 5-Hour Colorful Glance Strip -->
-      <div class="w-full pt-2 sm:pt-3 border-t border-white/10 flex-shrink-0">
-        <div class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
-          <span class="flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>
-            <span>Next 5 Hours Outlook</span>
-          </span>
-          <span id="minimalLastUpdated" class="text-[9px] font-mono text-slate-500 lowercase">syncing...</span>
-        </div>
-        <div id="minimalHourlyGrid" class="grid grid-cols-5 gap-1.5 sm:gap-3 w-full">
-          <!-- 5 dynamic cards populated in JS -->
-        </div>
+    <!-- Bottom: 5-Hour Colorful Glance Strip -->
+    <div class="w-full pt-2 sm:pt-3 border-t border-white/10 flex-shrink-0">
+      <div class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>
+          <span>Next 5 Hours Outlook</span>
+        </span>
+        <span id="minimalLastUpdated" class="text-[9px] font-mono text-slate-500 lowercase">syncing...</span>
       </div>
-
+      <div id="minimalHourlyGrid" class="grid grid-cols-5 gap-1.5 sm:gap-3 w-full">
+        <!-- 5 dynamic cards populated in JS -->
+      </div>
     </div>
 
   </div>
@@ -2437,10 +2435,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=196"></script>
+  <script src="traffic-flood.js?v=197"></script>
     <script>
-    const APP_BUILD = 196;
-    const APP_VERSION = '1.10.32';
+    const APP_BUILD = 197;
+    const APP_VERSION = '1.10.33';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -9930,7 +9928,11 @@
 
               recCtx.start({
                 disableIdleTimeout: true,
-                maxInactivity: 86400
+                maxInactivity: 86400,
+                touchScreenOptimizedApp: true,
+                uiConfig: {
+                  touchScreenOptimizedApp: true
+                }
               });
               console.log('Google Cast Receiver started for App ID:', CAST_APP_ID);
               configureTvReceiverUI();
@@ -10377,20 +10379,13 @@
     function setDisplayMode(mode) {
       CURRENT_DISPLAY_MODE = (mode === 'minimal') ? 'minimal' : 'full';
       const minEl = document.getElementById('minimalistDisplay');
-      const mainGrid = document.getElementById('mainGrid');
-      const header = document.querySelector('header');
-      const colLocalInfo = document.getElementById('colLocalInfo');
-      const footerTimeline = document.getElementById('footerTimeline');
+      const root = document.getElementById('dashboardRoot');
 
-      if (!minEl || !mainGrid || !header) return;
+      if (!minEl || !root) return;
 
       if (CURRENT_DISPLAY_MODE === 'minimal') {
         document.body.classList.add('minimalist-view');
-        header.style.setProperty('display', 'none', 'important');
-        mainGrid.style.setProperty('display', 'none', 'important');
-        if (colLocalInfo) colLocalInfo.style.setProperty('display', 'none', 'important');
-        if (footerTimeline) footerTimeline.style.setProperty('display', 'none', 'important');
-
+        root.style.setProperty('display', 'none', 'important');
         minEl.classList.remove('hidden');
         minEl.style.setProperty('display', 'flex', 'important');
 
@@ -10401,11 +10396,7 @@
         updateMinimalistDisplay(window._LATEST_WEATHER_DATA);
       } else {
         document.body.classList.remove('minimalist-view');
-        header.style.removeProperty('display');
-        mainGrid.style.removeProperty('display');
-        if (colLocalInfo) colLocalInfo.style.removeProperty('display');
-        if (footerTimeline) footerTimeline.style.removeProperty('display');
-
+        root.style.removeProperty('display');
         minEl.classList.add('hidden');
         minEl.style.setProperty('display', 'none', 'important');
 
@@ -10418,6 +10409,18 @@
           setTimeout(() => { try { radarLeafletMap.invalidateSize(); } catch (_) {} }, 250);
         }
       }
+    }
+
+    function executeMinimalExit() {
+      try {
+        if (window.cast && cast.framework && cast.framework.CastReceiverContext) {
+          const recCtx = cast.framework.CastReceiverContext.getInstance();
+          recCtx.stop();
+          return;
+        }
+      } catch (_) {}
+      try { window.close(); } catch (_) {}
+      setDisplayMode('full');
     }
 
     function updateMinimalistClock() {
