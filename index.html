@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=205"></script>
+  <script src="qrcode.min.js?v=206"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -989,7 +989,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.41) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.42) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1601,7 +1601,7 @@
               </button>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-              <span class="text-[9px] font-normal normal-case text-slate-500">Hold to remove</span>
+              <span class="text-[9px] font-normal normal-case text-slate-500">Hold to lock / remove</span>
               <button id="recentLocationsInfoBtn" type="button" tabindex="0" onclick="toggleRecentLocationsInfo()" onkeydown="handleRecentInfoBtnKeydown(event)" class="tv-focus-amber text-[10px] text-sky-400 hover:text-white bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 rounded-full w-4 h-4 flex items-center justify-center transition focus:outline-none cursor-pointer font-serif font-bold italic" title="Storage & Privacy Info">
                 i
               </button>
@@ -1620,7 +1620,7 @@
                   Locations persist automatically across visits, restarts, and months away. If you return to a saved spot and click <span class="text-sky-300 font-semibold">"Locate Me"</span>, your custom title and settings are recalled automatically!
                 </p>
                 <p class="text-amber-200/90 flex items-center gap-1">
-                  <span>💡</span> Want to wipe them? Use the <span class="font-semibold text-rose-300">"Clear"</span> button anytime.
+                  <span>📌</span> Hold any location (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> regular favourites so they stay pinned at the front and aren't wiped by <span class="font-semibold text-rose-300">"Clear"</span>.
                 </p>
               </div>
               <button type="button" onclick="toggleRecentLocationsInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
@@ -1673,6 +1673,12 @@
             <span>Surprise Me!</span>
           </button>
         </div>
+      </div>
+
+      <!-- Discover Memory Protection Note -->
+      <div class="mb-2.5 px-3 py-1.5 rounded-xl bg-purple-950/50 border border-purple-400/25 text-[11px] text-purple-200/95 flex items-center gap-2 flex-shrink-0">
+        <span class="text-emerald-300 flex-shrink-0">🛡️</span>
+        <span><strong class="text-white">Safe to explore:</strong> Locations opened from Discover are <span class="text-emerald-300 font-medium">never added to your Recent Locations</span>, so they won't clutter or corrupt your saved memories.</span>
       </div>
 
       <!-- Categorized Wonders Content -->
@@ -2427,10 +2433,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=205"></script>
+  <script src="traffic-flood.js?v=206"></script>
     <script>
-    const APP_BUILD = 205;
-    const APP_VERSION = '1.10.41';
+    const APP_BUILD = 206;
+    const APP_VERSION = '1.10.42';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3275,28 +3281,72 @@
       return shortenPlaceName(rawName) || 'Location';
     }
 
+    function loadUserRecentQueries() {
+      try {
+        const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr.filter(q => q && q.name) : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function saveUserRecentQueries(queries) {
+      try {
+        const clean = Array.isArray(queries) ? queries.filter(q => q && q.name) : [];
+        const locked = clean.filter(q => q.locked);
+        const unlocked = clean.filter(q => !q.locked);
+        const maxUnlocked = Math.max(0, Math.max(50, locked.length) - locked.length);
+        // Preserve insertion/recency order for remaining items while never evicting locked entries
+        const keptUnlockedSet = new Set(unlocked.slice(0, maxUnlocked));
+        const finalList = clean.filter(q => q.locked || keptUnlockedSet.has(q));
+
+        if (finalList.length === 0) {
+          localStorage.removeItem(USER_RECENTS_STORAGE_KEY);
+          try { localStorage.removeItem('ambient_location_queries'); } catch (_) {}
+        } else {
+          const serialized = JSON.stringify(finalList);
+          localStorage.setItem(USER_RECENTS_STORAGE_KEY, serialized);
+          try {
+            if (localStorage.getItem('ambient_location_queries') !== null) {
+              localStorage.setItem('ambient_location_queries', serialized);
+            }
+          } catch (_) {}
+        }
+      } catch (err) {
+        console.warn('Could not save user recent locations:', err);
+      }
+    }
+
+    function doesRecentQueryMatch(q, target, coordTolerance = 0.0015) {
+      if (!q || !q.name || !target) return false;
+      const targetFull = (target.fullName || target.name || target.displayName || '').trim().toLowerCase();
+      const targetShort = shortenPlaceName(targetFull).toLowerCase();
+      const qFull = (q.name || '').trim().toLowerCase();
+      const qShort = shortenPlaceName(qFull).toLowerCase();
+      if (targetFull && (qFull === targetFull || qShort === targetShort)) return true;
+      if (typeof target.lat === 'number' && typeof target.lon === 'number' && typeof q.lat === 'number' && typeof q.lon === 'number') {
+        if (Math.abs(q.lat - target.lat) <= coordTolerance && Math.abs(q.lon - target.lon) <= coordTolerance) return true;
+      }
+      return false;
+    }
+
     function recordUserRecentLocation(loc) {
       if (!loc || !loc.lat || !loc.lon) return;
       try {
-        const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
-        let queries = raw ? JSON.parse(raw) : [];
-        if (!Array.isArray(queries)) queries = [];
-        queries = queries.filter(q => {
-          const sameName = (q.name || '').toLowerCase() === (loc.name || '').toLowerCase();
-          const sameCoords = Math.abs(q.lat - loc.lat) < 0.001 && Math.abs(q.lon - loc.lon) < 0.001;
-          return !sameName && !sameCoords;
-        });
+        let queries = loadUserRecentQueries();
+        const preserveLocked = queries.some(q => doesRecentQueryMatch(q, loc, 0.001) && q.locked === true);
+        queries = queries.filter(q => !doesRecentQueryMatch(q, loc, 0.001));
         queries.unshift({
           name: loc.name || 'Location',
           geoName: loc.geoName || '',
           postcode: loc.postcode || '',
           lat: loc.lat,
           lon: loc.lon,
+          locked: preserveLocked,
           timestamp: Date.now()
         });
-        // Retain up to 50 user locations in local persistent memory for smart GPS & return visits
-        if (queries.length > 50) queries = queries.slice(0, 50);
-        localStorage.setItem(USER_RECENTS_STORAGE_KEY, JSON.stringify(queries));
+        saveUserRecentQueries(queries);
       } catch (err) {
         console.warn('Could not record user recent location:', err);
       }
@@ -5558,43 +5608,96 @@
       }
     }
 
+    function showRecentStatusMessage(text, color = '#fbbf24') {
+      const status = document.getElementById('locationSearchStatus');
+      if (!status) return;
+      status.style.color = color;
+      status.textContent = text;
+      setTimeout(() => {
+        if (status.textContent === text) {
+          status.textContent = '';
+          status.style.color = '';
+        }
+      }, 2800);
+    }
+
+    function wireRecentBarActionButton(btnEl, allBtns, parentChipBtn, onEscapeRestoreEl) {
+      const isSelectKey = (e) => (e.key === 'Enter' || e.key === ' ' || e.key === 'Select' || e.keyCode === 23);
+      btnEl.addEventListener('keydown', (e) => {
+        if (isSelectKey(e)) {
+          if (e.repeat || (typeof btnEl._isGuarded === 'function' && btnEl._isGuarded())) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          return;
+        }
+        const idx = allBtns.indexOf(btnEl);
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          allBtns[(idx + 1) % allBtns.length].focus();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          allBtns[(idx - 1 + allBtns.length) % allBtns.length].focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (parentChipBtn) parentChipBtn.focus();
+        } else if (e.key === 'ArrowDown') {
+          const nextRow = document.querySelector('#nearbyLocationChips button');
+          if (nextRow) { e.preventDefault(); nextRow.focus(); }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          hideRecentDeleteBar(onEscapeRestoreEl);
+        }
+      });
+    }
+
+    function toggleRecentLocationLock(item, shouldLock) {
+      window._locModalCloseGuardUntil = Date.now() + 500;
+      hideRecentDeleteBar();
+
+      const queries = loadUserRecentQueries();
+      let updated = false;
+      queries.forEach(q => {
+        if (doesRecentQueryMatch(q, item, 0.002)) {
+          q.locked = !!shouldLock;
+          updated = true;
+        }
+      });
+      if (!updated && shouldLock) {
+        queries.unshift({
+          name: item.fullName || item.displayName || 'Location',
+          geoName: item.geoName || '',
+          postcode: item.postcode || '',
+          lat: item.lat,
+          lon: item.lon,
+          locked: true,
+          timestamp: Date.now()
+        });
+      }
+      saveUserRecentQueries(queries);
+      renderLocationModalPicks();
+
+      const msg = shouldLock
+        ? `Locked "${item.displayName}" — pinned at front of recent locations.`
+        : `Unlocked "${item.displayName}".`;
+      showRecentStatusMessage(msg, shouldLock ? '#34d399' : '#fbbf24');
+
+      const matchingChip = Array.from(document.querySelectorAll('#recentLocationChips button'))
+        .find(b => b.dataset && b.dataset.locKey === (item.displayName || '').toLowerCase());
+      const focusTarget = matchingChip || document.querySelector('#recentLocationChips button, #nearbyLocationChips button, #gpsModalBtn');
+      if (focusTarget) focusTarget.focus();
+    }
+
     function deleteRecentLocationItem(item) {
       window._locModalCloseGuardUntil = Date.now() + 500;
       hideRecentDeleteBar();
 
-      try {
-        const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
-        let queries = raw ? JSON.parse(raw) : [];
-        if (!Array.isArray(queries)) queries = [];
-
-        const targetShort = shortenPlaceName(item.fullName || item.displayName || '').toLowerCase();
-        queries = queries.filter(q => {
-          if (!q || !q.name) return false;
-          const qShort = shortenPlaceName(q.name).toLowerCase();
-          if (qShort === targetShort) return false;
-          if (typeof item.lat === 'number' && typeof item.lon === 'number' && typeof q.lat === 'number' && typeof q.lon === 'number') {
-            if (Math.abs(q.lat - item.lat) <= 0.05 && Math.abs(q.lon - item.lon) <= 0.05) return false;
-          }
-          return true;
-        });
-
-        localStorage.setItem(USER_RECENTS_STORAGE_KEY, JSON.stringify(queries));
-        try { localStorage.setItem('ambient_location_queries', JSON.stringify(queries)); } catch (_) {}
-      } catch (_) {}
-
+      const queries = loadUserRecentQueries().filter(q => !doesRecentQueryMatch(q, item, 0.002));
+      saveUserRecentQueries(queries);
       renderLocationModalPicks();
 
-      const status = document.getElementById('locationSearchStatus');
-      if (status) {
-        status.style.color = '#fbbf24';
-        status.textContent = `Removed "${item.displayName}" from recent locations.`;
-        setTimeout(() => {
-          if (status.textContent.includes('from recent locations')) {
-            status.textContent = '';
-            status.style.color = '';
-          }
-        }, 2500);
-      }
+      showRecentStatusMessage(`Removed "${item.displayName}" from recent locations.`);
 
       // Synchronously move focus to next valid pick or GPS button so focus never falls back to Close!
       const nextChip = document.querySelector('#recentLocationChips button, #nearbyLocationChips button, #gpsModalBtn');
@@ -5662,10 +5765,13 @@
         b.classList.remove('ring-1', 'ring-rose-400', 'border-rose-400/70');
       });
 
+      const lockedCount = loadUserRecentQueries().filter(q => q.locked).length;
       bar.innerHTML = '';
       const label = document.createElement('span');
       label.className = 'text-[11px] text-rose-200 font-medium truncate';
-      label.textContent = 'Clear all recent locations?';
+      label.textContent = lockedCount > 0
+        ? `Clear recent locations? (${lockedCount} locked kept)`
+        : 'Clear all recent locations?';
 
       const actions = document.createElement('div');
       actions.className = 'flex items-center gap-1.5 flex-shrink-0';
@@ -5673,7 +5779,7 @@
       const delBtn = document.createElement('button');
       delBtn.className = 'tv-focus-amber text-[11px] font-bold text-white px-2.5 py-0.5 rounded-lg bg-rose-600/90 hover:bg-rose-500 border border-rose-400/50 transition cursor-pointer focus:outline-none';
       delBtn.tabIndex = 0;
-      delBtn.textContent = '🗑️ Clear All';
+      delBtn.textContent = lockedCount > 0 ? '🗑️ Clear Unlocked' : '🗑️ Clear All';
 
       const keepBtn = document.createElement('button');
       keepBtn.className = 'tv-focus-amber text-[11px] text-slate-200 hover:text-white px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer focus:outline-none';
@@ -5691,43 +5797,8 @@
       delBtn.addEventListener('click', (e) => handleConfirm(e, () => clearAllRecentLocations()));
       keepBtn.addEventListener('click', (e) => handleConfirm(e, () => hideRecentDeleteBar(clearBtn)));
 
-      delBtn.addEventListener('keydown', (e) => {
-        if (isSelectKey(e)) {
-          if (e.repeat) { e.preventDefault(); e.stopPropagation(); return; }
-          return;
-        }
-        if (e.key === 'ArrowRight') { e.preventDefault(); keepBtn.focus(); }
-        else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (clearBtn) clearBtn.focus();
-        } else if (e.key === 'ArrowDown') {
-          const nextRow = document.querySelector('#nearbyLocationChips button');
-          if (nextRow) { e.preventDefault(); nextRow.focus(); }
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          hideRecentDeleteBar(clearBtn);
-        }
-      });
-
-      keepBtn.addEventListener('keydown', (e) => {
-        if (isSelectKey(e)) {
-          if (e.repeat) { e.preventDefault(); e.stopPropagation(); return; }
-          return;
-        }
-        if (e.key === 'ArrowLeft') { e.preventDefault(); delBtn.focus(); }
-        else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (clearBtn) clearBtn.focus();
-        } else if (e.key === 'ArrowDown') {
-          const nextRow = document.querySelector('#nearbyLocationChips button');
-          if (nextRow) { e.preventDefault(); nextRow.focus(); }
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          hideRecentDeleteBar(clearBtn);
-        }
-      });
+      wireRecentBarActionButton(delBtn, [delBtn, keepBtn], clearBtn, clearBtn);
+      wireRecentBarActionButton(keepBtn, [delBtn, keepBtn], clearBtn, clearBtn);
 
       actions.appendChild(delBtn);
       actions.appendChild(keepBtn);
@@ -5741,23 +5812,15 @@
     function clearAllRecentLocations() {
       window._locModalCloseGuardUntil = Date.now() + 500;
       hideRecentDeleteBar();
-      try {
-        localStorage.removeItem(USER_RECENTS_STORAGE_KEY);
-        localStorage.removeItem('ambient_location_queries');
-      } catch (_) {}
+      const lockedOnly = loadUserRecentQueries().filter(q => q.locked);
+      saveUserRecentQueries(lockedOnly);
       renderLocationModalPicks();
-      const status = document.getElementById('locationSearchStatus');
-      if (status) {
-        status.style.color = '#fbbf24';
-        status.textContent = 'Cleared all recent locations.';
-        setTimeout(() => {
-          if (status.textContent && status.textContent.includes('Cleared all recent locations')) {
-            status.textContent = '';
-            status.style.color = '';
-          }
-        }, 2500);
+      if (lockedOnly.length > 0) {
+        showRecentStatusMessage(`Cleared unlocked recent locations (kept ${lockedOnly.length} locked).`, '#34d399');
+      } else {
+        showRecentStatusMessage('Cleared all recent locations.');
       }
-      const nextBtn = document.querySelector('#nearbyLocationChips button, #gpsModalBtn');
+      const nextBtn = document.querySelector('#recentLocationChips button, #nearbyLocationChips button, #gpsModalBtn');
       if (nextBtn) nextBtn.focus();
     }
 
@@ -5797,41 +5860,76 @@
 
       // 1. Render recent searches from ambient_user_recent_locations (personal to device)
       try {
-        const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
-        const queries = raw ? JSON.parse(raw) : [];
+        const queries = loadUserRecentQueries();
         const recentCont = document.getElementById('recentLocationsContainer');
         const recentChips = document.getElementById('recentLocationChips');
         if (recentCont && recentChips) {
           recentChips.innerHTML = '';
-          const uniqueNames = new Set();
-          const filtered = [];
+          const byName = new Map();
           for (const q of queries) {
             const shortName = shortenPlaceName(q.name);
-            if (!uniqueNames.has(shortName.toLowerCase())) {
-              uniqueNames.add(shortName.toLowerCase());
-              const isUkPc = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(q.postcode || '');
-              filtered.push({
+            const key = shortName.toLowerCase();
+            const isUkPc = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(q.postcode || '');
+            const existing = byName.get(key);
+            if (!existing) {
+              byName.set(key, {
                 displayName: shortName,
                 fullName: q.name,
+                geoName: q.geoName || '',
                 query: isUkPc ? q.postcode : q.name,
                 lat: q.lat,
                 lon: q.lon,
-                postcode: q.postcode
+                postcode: q.postcode,
+                locked: !!q.locked
               });
-              if (filtered.length >= 10) break;
+            } else if (q.locked && !existing.locked) {
+              existing.locked = true;
             }
           }
+          const allUnique = Array.from(byName.values());
+          const lockedItems = allUnique.filter(item => item.locked);
+          const unlockedItems = allUnique.filter(item => !item.locked);
+          const maxDisplay = Math.max(10, lockedItems.length + 4);
+          const filtered = lockedItems.concat(unlockedItems.slice(0, Math.max(0, maxDisplay - lockedItems.length)));
+
           if (filtered.length > 0) {
             const curShort = shortenPlaceName(CURRENT_LOCATION.name).toLowerCase();
             filtered.forEach(item => {
               const isCurrent = (item.displayName.toLowerCase() === curShort);
               const btn = document.createElement('button');
-              btn.className = isCurrent
-                ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400/50 text-xs text-emerald-200 font-semibold transition cursor-pointer select-none focus:outline-none flex items-center gap-1 shadow-[0_0_8px_rgba(52,211,153,0.2)]'
-                : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 hover:text-white transition cursor-pointer select-none focus:outline-none';
+              if (isCurrent) {
+                btn.className = item.locked
+                  ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/25 border border-amber-400/60 text-xs text-emerald-200 font-semibold transition cursor-pointer select-none focus:outline-none flex items-center gap-1 shadow-[0_0_8px_rgba(251,191,36,0.2)]'
+                  : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/25 border border-emerald-400/50 text-xs text-emerald-200 font-semibold transition cursor-pointer select-none focus:outline-none flex items-center gap-1 shadow-[0_0_8px_rgba(52,211,153,0.2)]';
+              } else if (item.locked) {
+                btn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/45 text-xs text-amber-200 hover:text-white font-medium transition cursor-pointer select-none focus:outline-none flex items-center gap-1';
+              } else {
+                btn.className = 'tv-focus-amber px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 hover:text-white transition cursor-pointer select-none focus:outline-none';
+              }
               btn.tabIndex = 0;
-              btn.innerHTML = isCurrent ? `<span>✓</span><span>${item.displayName}</span>` : item.displayName;
-              btn.title = isCurrent ? 'Active Location • Hold or Delete key to remove' : 'Tap / OK to open • Hold or Delete key to remove';
+              btn.dataset.locKey = item.displayName.toLowerCase();
+
+              btn.textContent = '';
+              if (isCurrent) {
+                const tick = document.createElement('span');
+                tick.textContent = '✓';
+                btn.appendChild(tick);
+              }
+              if (item.locked) {
+                const lockMark = document.createElement('span');
+                lockMark.textContent = '🔒';
+                lockMark.className = 'text-[10px]';
+                btn.appendChild(lockMark);
+              }
+              const nameSpan = document.createElement('span');
+              nameSpan.textContent = item.displayName;
+              btn.appendChild(nameSpan);
+
+              btn.title = item.locked
+                ? 'Locked • Always kept at front • Hold or Delete key to unlock / remove'
+                : (isCurrent
+                  ? 'Active Location • Hold or Delete key to lock / remove'
+                  : 'Tap / OK to open • Hold or Delete key to lock / remove');
 
               const isSelectKey = (e) => (e.key === 'Enter' || e.key === ' ' || e.key === 'Select' || e.keyCode === 23);
 
@@ -5852,11 +5950,11 @@
               let isKeyDownOnBtn = false;
               let isPtrDownOnBtn = false;
 
-              const showDeletePrompt = () => {
+              const showManagePrompt = () => {
                 const bar = document.getElementById('recentDeleteBar');
                 if (!bar) return;
 
-                // Block accidental activation of Close or Delete while the long-press button is still held down
+                // Block accidental activation of Close, Lock, or Delete while the long-press button is still held down
                 window._locModalCloseGuardUntil = Date.now() + 800;
                 let awaitingRelease = (isKeyDownOnBtn || isPtrDownOnBtn);
                 let releaseCooldownUntil = awaitingRelease ? Date.now() + 800 : 0;
@@ -5881,11 +5979,20 @@
 
                 bar.innerHTML = '';
                 const label = document.createElement('span');
-                label.className = 'text-[11px] text-rose-200 font-medium truncate';
-                label.textContent = `Remove "${item.displayName}"?`;
+                label.className = 'text-[11px] text-slate-200 font-medium truncate';
+                label.textContent = item.locked
+                  ? `"${item.displayName}" (Locked)`
+                  : `Manage "${item.displayName}"`;
 
                 const actions = document.createElement('div');
                 actions.className = 'flex items-center gap-1.5 flex-shrink-0';
+
+                const lockBtn = document.createElement('button');
+                lockBtn.className = item.locked
+                  ? 'tv-focus-amber text-[11px] font-bold text-white px-2.5 py-0.5 rounded-lg bg-sky-600/90 hover:bg-sky-500 border border-sky-400/50 transition cursor-pointer focus:outline-none'
+                  : 'tv-focus-amber text-[11px] font-bold text-slate-950 px-2.5 py-0.5 rounded-lg bg-amber-400/95 hover:bg-amber-300 border border-amber-300/70 transition cursor-pointer focus:outline-none';
+                lockBtn.tabIndex = 0;
+                lockBtn.textContent = item.locked ? '🔓 Unlock' : '🔒 Lock';
 
                 const delBtn = document.createElement('button');
                 delBtn.className = 'tv-focus-amber text-[11px] font-bold text-white px-2.5 py-0.5 rounded-lg bg-rose-600/90 hover:bg-rose-500 border border-rose-400/50 transition cursor-pointer focus:outline-none';
@@ -5895,7 +6002,7 @@
                 const keepBtn = document.createElement('button');
                 keepBtn.className = 'tv-focus-amber text-[11px] text-slate-200 hover:text-white px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 transition cursor-pointer focus:outline-none';
                 keepBtn.tabIndex = 0;
-                keepBtn.textContent = 'Keep';
+                keepBtn.textContent = 'Cancel';
 
                 const handleActionConfirm = (e, fn) => {
                   if (e) {
@@ -5909,57 +6016,26 @@
                   fn();
                 };
 
+                const barBtns = [lockBtn, delBtn, keepBtn];
+                barBtns.forEach(b => { b._isGuarded = isPromptGuarded; });
+
+                lockBtn.addEventListener('click', (e) => handleActionConfirm(e, () => toggleRecentLocationLock(item, !item.locked)));
                 delBtn.addEventListener('click', (e) => handleActionConfirm(e, () => deleteRecentLocationItem(item)));
                 keepBtn.addEventListener('click', (e) => handleActionConfirm(e, () => hideRecentDeleteBar(btn)));
 
-                delBtn.addEventListener('keydown', (e) => {
-                  if (isSelectKey(e)) {
-                    if (e.repeat || isPromptGuarded()) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }
-                    return;
-                  }
-                  if (e.key === 'ArrowRight') { e.preventDefault(); keepBtn.focus(); }
-                  else if (e.key === 'ArrowUp') { e.preventDefault(); btn.focus(); }
-                  else if (e.key === 'ArrowDown') {
-                    const nextRow = document.querySelector('#nearbyLocationChips button');
-                    if (nextRow) { e.preventDefault(); nextRow.focus(); }
-                  } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    hideRecentDeleteBar(btn);
-                  }
-                });
+                wireRecentBarActionButton(lockBtn, barBtns, btn, btn);
+                wireRecentBarActionButton(delBtn, barBtns, btn, btn);
+                wireRecentBarActionButton(keepBtn, barBtns, btn, btn);
 
-                keepBtn.addEventListener('keydown', (e) => {
-                  if (isSelectKey(e)) {
-                    if (e.repeat || isPromptGuarded()) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }
-                    return;
-                  }
-                  if (e.key === 'ArrowLeft') { e.preventDefault(); delBtn.focus(); }
-                  else if (e.key === 'ArrowUp') { e.preventDefault(); btn.focus(); }
-                  else if (e.key === 'ArrowDown') {
-                    const nextRow = document.querySelector('#nearbyLocationChips button');
-                    if (nextRow) { e.preventDefault(); nextRow.focus(); }
-                  } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    hideRecentDeleteBar(btn);
-                  }
-                });
-
+                actions.appendChild(lockBtn);
                 actions.appendChild(delBtn);
                 actions.appendChild(keepBtn);
                 bar.appendChild(label);
                 bar.appendChild(actions);
                 bar.classList.remove('hidden');
 
-                // Focus Delete option safely while chip stays intact in DOM
-                delBtn.focus();
+                // Focus Lock/Unlock first to prevent accidental deletion on quick repeat presses
+                lockBtn.focus();
               };
 
               btn.addEventListener('pointerdown', (e) => {
@@ -5972,7 +6048,7 @@
                 ptrTimer = setTimeout(() => {
                   ptrLongPressed = true;
                   ptrTimer = null;
-                  showDeletePrompt();
+                  showManagePrompt();
                 }, 550);
               });
               btn.addEventListener('pointermove', (e) => {
@@ -5992,7 +6068,7 @@
               btn.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 clearPtrTimer();
-                showDeletePrompt();
+                showManagePrompt();
               });
 
               btn.addEventListener('click', (e) => {
@@ -6008,7 +6084,7 @@
               btn.addEventListener('keydown', (e) => {
                 if (e.key === 'Delete') {
                   e.preventDefault();
-                  showDeletePrompt();
+                  showManagePrompt();
                 } else if (isSelectKey(e)) {
                   e.preventDefault();
                   e.stopPropagation();
@@ -6018,7 +6094,7 @@
                     keyHoldTimer = setTimeout(() => {
                       keyLongPressed = true;
                       keyHoldTimer = null;
-                      showDeletePrompt();
+                      showManagePrompt();
                     }, 550);
                   }
                 }
