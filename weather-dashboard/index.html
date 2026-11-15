@@ -964,7 +964,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.14) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.15) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -2148,10 +2148,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=178"></script>
+  <script src="traffic-flood.js?v=179"></script>
     <script>
-    const APP_BUILD = 178;
-    const APP_VERSION = '1.10.14';
+    const APP_BUILD = 179;
+    const APP_VERSION = '1.10.15';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -4380,6 +4380,43 @@
 
         locSettledValue = input.value;
       });
+
+      // When the on-screen keyboard is dismissed (via virtual keyboard's Hide/Done button, tap away, or remote blur)
+      // smoothly jump focus to the Search button if text has been entered
+      input.addEventListener('blur', () => {
+        setTimeout(() => {
+          const modal = document.getElementById('locationModal');
+          if (!modal || modal.classList.contains('hidden')) return;
+          const active = document.activeElement;
+          const searchBtn = document.getElementById('searchLocBtn');
+          if (!searchBtn) return;
+
+          // If focus is now unassigned (on body/input) and not on another control inside the modal
+          if ((!active || active === document.body || active === input) && input.value.trim().length >= 2) {
+            searchBtn.focus();
+          }
+        }, 80);
+      });
+
+      // VisualViewport detection: when virtual keyboard slides down, viewport height expands
+      if (window.visualViewport) {
+        let lastVpHeight = window.visualViewport.height;
+        window.visualViewport.addEventListener('resize', () => {
+          const currentHeight = window.visualViewport.height;
+          // Viewport height expanded by > 150px (virtual keyboard closed)
+          if (currentHeight > lastVpHeight + 150) {
+            const modal = document.getElementById('locationModal');
+            if (modal && !modal.classList.contains('hidden') && document.activeElement === input) {
+              input.blur();
+              const searchBtn = document.getElementById('searchLocBtn');
+              if (searchBtn && typeof searchBtn.focus === 'function' && input.value.trim().length >= 2) {
+                searchBtn.focus();
+              }
+            }
+          }
+          lastVpHeight = currentHeight;
+        });
+      }
     })();
 
     let locationAutoCloseSecs = 30;
@@ -4661,6 +4698,16 @@
         const curName = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
         el.value = curName;
         el.dataset.prefilled = curName ? 'true' : 'false';
+      } else {
+        setTimeout(() => {
+          const modal = document.getElementById('locationModal');
+          if (!modal || modal.classList.contains('hidden')) return;
+          const active = document.activeElement;
+          const renameBtn = document.getElementById('customRenameBtn');
+          if ((!active || active === document.body || active === el) && renameBtn) {
+            renameBtn.focus();
+          }
+        }, 80);
       }
       setTimeout(updateRenameClearBtnVisibility, 150);
     }
