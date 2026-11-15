@@ -964,7 +964,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.11) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.12) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -2148,10 +2148,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=175"></script>
+  <script src="traffic-flood.js?v=176"></script>
     <script>
-    const APP_BUILD = 175;
-    const APP_VERSION = '1.10.11';
+    const APP_BUILD = 176;
+    const APP_VERSION = '1.10.12';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -7409,6 +7409,7 @@
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
         document.getElementById('lastUpdated').textContent = `Updated ${timeStr}`;
+        lastWeatherFetchTime = Date.now();
         checkForUpdates();
       } catch (err) {
         console.error('Fetch error:', err);
@@ -10315,6 +10316,84 @@
 
     initLocation();
     setInterval(fetchWeatherData, 15 * 60 * 1000);
+
+    // ============================================================
+    // WAKE-UP AUTO-REFRESH (If asleep/hidden > 10 minutes)
+    // ============================================================
+    const TEN_MINUTES_MS = 10 * 60 * 1000;
+    let lastPageActiveTime = Date.now();
+    let lastWeatherFetchTime = Date.now();
+    let isWakingUp = false;
+
+    async function handlePageWakeup() {
+      if (document.visibilityState === 'hidden') return;
+      const now = Date.now();
+      const sleepDuration = now - lastPageActiveTime;
+      const dataAge = now - lastWeatherFetchTime;
+      lastPageActiveTime = now;
+
+      // Only refresh if the page has been asleep or hidden for more than 10 minutes
+      if (sleepDuration < TEN_MINUTES_MS && dataAge < TEN_MINUTES_MS) {
+        return;
+      }
+
+      if (isWakingUp) return;
+      isWakingUp = true;
+
+      try {
+        updateClock();
+
+        // 1. Check for new software build first
+        const modalOpen = document.querySelector(
+          '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden)'
+        );
+
+        try {
+          const updateRes = await fetch(`version.json?_=${now}`, { cache: 'no-store' });
+          if (updateRes.ok) {
+            const data = await updateRes.json();
+            if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
+              if (!modalOpen) {
+                // Instantly reload to upgrade to latest features
+                reloadDashboard();
+                return;
+              } else {
+                setUpdateAvailable(data.version, data.build);
+              }
+            } else {
+              setUpToDate(data && data.version ? data.version : APP_VERSION);
+            }
+          }
+        } catch (_) {}
+
+        // 2. Fetch fresh weather, traffic & flood telemetry
+        await fetchWeatherData();
+      } catch (err) {
+        console.warn('Wake-up refresh warning:', err);
+      } finally {
+        lastPageActiveTime = Date.now();
+        isWakingUp = false;
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        handlePageWakeup();
+      } else {
+        lastPageActiveTime = Date.now();
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      handlePageWakeup();
+    });
+
+    // Update active timestamp every 30 seconds while page is visibly open
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        lastPageActiveTime = Date.now();
+      }
+    }, 30000);
 
     checkForUpdates();
     setInterval(checkForUpdates, 3 * 60 * 1000);
