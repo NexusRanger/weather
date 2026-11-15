@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=207"></script>
+  <script src="qrcode.min.js?v=208"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -989,7 +989,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.43) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.44) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1676,9 +1676,8 @@
       </div>
 
       <!-- Discover Memory Protection Note -->
-      <div class="mb-2.5 px-3 py-1.5 rounded-xl bg-purple-950/50 border border-purple-400/25 text-[11px] text-purple-200/95 flex items-center gap-2 flex-shrink-0">
-        <span class="text-emerald-300 flex-shrink-0">🛡️</span>
-        <span><strong class="text-white">Safe to explore:</strong> Locations opened from Discover are <span class="text-emerald-300 font-medium">never added to your Recent Locations</span>, so they won't clutter or corrupt your saved memories.</span>
+      <div class="mb-2 px-1 text-[11px] text-purple-300/80 flex-shrink-0">
+        Locations opened from Discover are not added to your recent locations
       </div>
 
       <!-- Categorized Wonders Content -->
@@ -2433,10 +2432,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=207"></script>
+  <script src="traffic-flood.js?v=208"></script>
     <script>
-    const APP_BUILD = 207;
-    const APP_VERSION = '1.10.43';
+    const APP_BUILD = 208;
+    const APP_VERSION = '1.10.44';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2539,6 +2538,112 @@
         setTimeout(() => activeClose.classList.remove('ring-2', 'ring-amber-400', 'scale-105'), 350);
       }
     }
+
+    // Press & Hold on any modal close button locks/unlocks the auto-close timer (same as D-pad double-Up)
+    (function setupCloseButtonHoldToLock() {
+      const closeBtnSelectors = [
+        '#closeLocationBtnTop',
+        '#closeWondersBtnTop',
+        '#closeMapBtnTop',
+        '#closeMapBtnBottom',
+        '#closeShareBtnTop',
+        '#closeFeedbackBtnTop',
+        '#closeCastOptionsBtnTop',
+        '#tvCancelExitBtn',
+        '#closeRadarBtnTop',
+        '#closeTrafficBtnTop',
+        '#closeRiverBtnTop'
+      ];
+      const isSelectKey = (e) => (e.key === 'Enter' || e.key === ' ' || e.key === 'Select' || e.keyCode === 23);
+
+      function attachHoldListener(btn) {
+        if (!btn || btn._hasHoldLockAttached) return;
+        btn._hasHoldLockAttached = true;
+
+        let holdTimer = null;
+        let isLongPress = false;
+        let ptrStartX = 0;
+        let ptrStartY = 0;
+
+        const startHold = (modalEl) => {
+          if (!modalEl) return;
+          if (holdTimer) clearTimeout(holdTimer);
+          isLongPress = false;
+          holdTimer = setTimeout(() => {
+            isLongPress = true;
+            holdTimer = null;
+            toggleModalTimerLock(modalEl);
+          }, 650);
+        };
+
+        const cancelHold = () => {
+          if (holdTimer) {
+            clearTimeout(holdTimer);
+            holdTimer = null;
+          }
+        };
+
+        btn.addEventListener('pointerdown', (e) => {
+          if (e.button && e.button !== 0) return;
+          ptrStartX = e.clientX || 0;
+          ptrStartY = e.clientY || 0;
+          const modal = btn.closest('.fixed');
+          startHold(modal);
+        });
+
+        btn.addEventListener('pointermove', (e) => {
+          if (!holdTimer) return;
+          if (Math.abs((e.clientX || 0) - ptrStartX) > 10 || Math.abs((e.clientY || 0) - ptrStartY) > 10) {
+            cancelHold();
+          }
+        });
+
+        btn.addEventListener('pointerup', cancelHold);
+        btn.addEventListener('pointercancel', cancelHold);
+
+        btn.addEventListener('click', (e) => {
+          if (isLongPress) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+            isLongPress = false;
+          }
+        }, true);
+
+        btn.addEventListener('keydown', (e) => {
+          if (isSelectKey(e) && !e.repeat) {
+            const modal = btn.closest('.fixed');
+            startHold(modal);
+          }
+        });
+
+        btn.addEventListener('keyup', (e) => {
+          if (isSelectKey(e)) {
+            cancelHold();
+            if (isLongPress) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+              isLongPress = false;
+            }
+          }
+        }, true);
+      }
+
+      function scanAndAttach() {
+        closeBtnSelectors.forEach(sel => {
+          const btn = document.querySelector(sel);
+          if (btn) attachHoldListener(btn);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', scanAndAttach);
+      } else {
+        scanAndAttach();
+      }
+      window.addEventListener('load', scanAndAttach);
+    })();
 
     window.addEventListener('keydown', function handleModalUpToClose(e) {
       if (e.key !== 'ArrowUp') return;
