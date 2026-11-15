@@ -1796,7 +1796,7 @@
             <p class="text-[11px] text-slate-400">Rate your experience or suggest features for the dashboard</p>
           </div>
         </div>
-        <button id="closeFeedbackBtnTop" tabindex="1" onclick="closeFeedbackModal(true)" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close (Esc / Back)">
+        <button id="closeFeedbackBtnTop" tabindex="1" onclick="closeFeedbackModal(true)" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const s=document.querySelector('.star-btn[data-val=\''+selectedFeedbackRating+'\']')||document.getElementById('feedbackCommentInput');if(s)s.focus();}" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close (Esc / Back)">
           <span>✕ Close</span>
         </button>
       </div>
@@ -1809,11 +1809,11 @@
             <label class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block mb-1">Your Rating</label>
             <div id="starRatingGroup" class="flex items-center gap-2">
               <div class="flex items-center gap-1 text-2xl select-none" id="starContainer">
-                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="1">★</button>
-                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="2">★</button>
-                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="3">★</button>
-                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="4">★</button>
-                <button type="button" class="star-btn hover:scale-125 transition-transform text-slate-600 focus:outline-none" data-val="5">★</button>
+                <button type="button" tabindex="0" class="star-btn tv-focus-amber hover:scale-125 transition-transform text-slate-600 focus:outline-none rounded px-0.5" data-val="1">★</button>
+                <button type="button" tabindex="0" class="star-btn tv-focus-amber hover:scale-125 transition-transform text-slate-600 focus:outline-none rounded px-0.5" data-val="2">★</button>
+                <button type="button" tabindex="0" class="star-btn tv-focus-amber hover:scale-125 transition-transform text-slate-600 focus:outline-none rounded px-0.5" data-val="3">★</button>
+                <button type="button" tabindex="0" class="star-btn tv-focus-amber hover:scale-125 transition-transform text-slate-600 focus:outline-none rounded px-0.5" data-val="4">★</button>
+                <button type="button" tabindex="0" class="star-btn tv-focus-amber hover:scale-125 transition-transform text-slate-600 focus:outline-none rounded px-0.5" data-val="5">★</button>
               </div>
               <span id="starRatingDesc" class="text-xs font-semibold text-amber-300 ml-1">Tap a star to rate</span>
             </div>
@@ -1821,12 +1821,12 @@
 
           <div>
             <label for="feedbackCommentInput" class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider block mb-1">Comment or Feature Request (Optional)</label>
-            <textarea id="feedbackCommentInput" rows="3" placeholder="What works well? What features would you like to see next?" class="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-amber-400 transition resize-none"></textarea>
+            <textarea id="feedbackCommentInput" rows="3" placeholder="What works well? What features would you like to see next?" class="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-amber-400 transition resize-none" onkeydown="if(event.key==='ArrowDown' && (this.selectionStart===this.value.length || event.ctrlKey)){const b=document.getElementById('submitFeedbackBtn');if(b){event.preventDefault();b.focus();}}else if(event.key==='ArrowUp' && this.selectionStart===0){const s=document.querySelector('.star-btn[data-val=\''+selectedFeedbackRating+'\']')||document.querySelector('.star-btn');if(s){event.preventDefault();s.focus();}}"></textarea>
           </div>
 
           <div class="flex items-center justify-between gap-2 pt-1">
             <span id="feedbackSubmitStatus" class="text-[11px] text-slate-400 font-mono"></span>
-            <button id="submitFeedbackBtn" type="button" onclick="submitUserFeedback()" class="tv-focus-amber px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs shadow-md transition transform active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
+            <button id="submitFeedbackBtn" type="button" onclick="submitUserFeedback()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const i=document.getElementById('feedbackCommentInput');if(i)i.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeFeedbackBtnTop');if(c)c.focus();}" class="tv-focus-amber px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs shadow-md transition transform active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
               <span>Send Feedback</span>
               <span>↗</span>
             </button>
@@ -2474,7 +2474,7 @@
     // Feedback & Suggestions Integration (Agent Moderation & Google Sheet)
     // -------------------------------------------------------------
     // Master switch: change to true when you want the Feedback pill visible for everyone
-    const PUBLIC_FEEDBACK_ENABLED = false;
+    const PUBLIC_FEEDBACK_ENABLED = true;
 
     function isFeedbackUnlocked() {
       if (PUBLIC_FEEDBACK_ENABLED) return true;
@@ -2532,7 +2532,8 @@
         if (descEl) descEl.textContent = descs[val] || `${val} Stars`;
       }
 
-      buttons.forEach(btn => {
+      buttons.forEach((btn, idx) => {
+        btn.setAttribute('tabindex', '0');
         btn.onclick = () => {
           const val = parseInt(btn.getAttribute('data-val') || '5', 10);
           selectedFeedbackRating = val;
@@ -2541,6 +2542,42 @@
         btn.onmouseenter = () => {
           const val = parseInt(btn.getAttribute('data-val') || '5', 10);
           updateStarDisplay(val);
+        };
+        btn.onkeydown = (e) => {
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const next = buttons[idx + 1];
+            if (next) {
+              next.focus();
+              const val = parseInt(next.getAttribute('data-val') || '5', 10);
+              selectedFeedbackRating = val;
+              updateStarDisplay(val);
+            }
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const prev = buttons[idx - 1];
+            if (prev) {
+              prev.focus();
+              const val = parseInt(prev.getAttribute('data-val') || '1', 10);
+              selectedFeedbackRating = val;
+              updateStarDisplay(val);
+            }
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const input = document.getElementById('feedbackCommentInput');
+            if (input) input.focus();
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const closeBtn = document.getElementById('closeFeedbackBtnTop');
+            if (closeBtn) closeBtn.focus();
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const val = parseInt(btn.getAttribute('data-val') || '5', 10);
+            selectedFeedbackRating = val;
+            updateStarDisplay(val);
+            const input = document.getElementById('feedbackCommentInput');
+            if (input) input.focus();
+          }
         };
       });
 
@@ -2564,7 +2601,7 @@
           const json = await res.json();
           const items = (json && Array.isArray(json.data)) ? json.data : [];
           // Filter to approved/constructive comments or default examples if sheet is fresh
-          const approved = items.filter(i => (i.status || '').toLowerCase() === 'approved' || i.approved === true);
+          const approved = items.filter(i => !i.status || (i.status || '').toLowerCase() === 'approved' || i.approved === true);
           renderFeedbackItems(approved.length > 0 ? approved : getCuratedFeedbackSeed());
           return;
         }
