@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js"></script>
+  <script src="qrcode.min.js?v=190"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -965,7 +965,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.25) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.26) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -1932,6 +1932,35 @@
     </div>
   </div>
 
+  <!-- TV EXIT CAST CONFIRMATION MODAL -->
+  <div id="tvExitCastModal" onclick="closeTvExitCastModal(true)" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 text-left">
+    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-sm w-full border border-rose-400/40 shadow-2xl relative flex flex-col cursor-default">
+      <div class="flex items-center gap-3 pb-3 border-b border-white/10">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center text-xl flex-shrink-0 border border-rose-400/40">
+          🛑
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-white">Exit Cast Session?</h3>
+          <p class="text-[11px] text-slate-400">Close the dashboard and return to TV home</p>
+        </div>
+      </div>
+      <div class="py-4 space-y-3">
+        <p class="text-xs text-slate-300 leading-snug">
+          Close the weather dashboard on this TV and return your screen to the TV home launcher?
+        </p>
+        <div class="flex flex-col gap-2 pt-1">
+          <button id="tvConfirmExitBtn" tabindex="1" onclick="executeTvExitCast()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('tvCancelExitBtn');if(c)c.focus();}" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
+            <span>🛑 Yes, Close &amp; Exit TV App</span>
+            <span id="tvExitCountdown" class="text-rose-200 font-mono text-[10px] ml-1">(20s)</span>
+          </button>
+          <button id="tvCancelExitBtn" tabindex="2" onclick="closeTvExitCastModal(true)" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('tvConfirmExitBtn');if(b)b.focus();}" class="tv-focus-amber w-full px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-300 hover:text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer">
+            <span>✕ Cancel (Stay on Weather)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TRAFFIC & CONGESTION BREAKDOWN MODAL -->
   <div id="trafficModal" onclick="closeTrafficModal()" onmousemove="resetTrafficAutoCloseTimer()" onkeydown="resetTrafficAutoCloseTimer()" ontouchstart="resetTrafficAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-2 sm:p-3 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-3.5 max-w-[540px] w-full border border-white/20 shadow-2xl relative flex flex-col max-h-[92vh] cursor-default">
@@ -2236,17 +2265,17 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=189"></script>
+  <script src="traffic-flood.js?v=190"></script>
     <script>
-    const APP_BUILD = 189;
-    const APP_VERSION = '1.10.25';
+    const APP_BUILD = 190;
+    const APP_VERSION = '1.10.26';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
       if (e.key !== 'ArrowUp') return;
 
       const openModal = document.querySelector(
-        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
+        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden)'
       );
       if (!openModal) return;
 
@@ -2298,7 +2327,7 @@
     window.addEventListener('keydown', function handleMainPageDpadNavigation(e) {
       // Ignore if any modal is open
       const modalOpen = document.querySelector(
-        '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
+        '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden)'
       );
       if (modalOpen) return;
 
@@ -2428,7 +2457,7 @@
       }
       mainPageFocusIdleTimer = setTimeout(() => {
         const modalOpen = document.querySelector(
-          '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
+          '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden)'
         );
         if (!modalOpen) {
           document.body.classList.add('focus-dormant');
@@ -9286,7 +9315,7 @@
       try {
         const u = new URL(window.location.href);
         // Clear any old/stale query params first
-        ['postcode', 'pc', 'location', 'town', 'q', 'lat', 'lon', 'v'].forEach(k => u.searchParams.delete(k));
+        ['postcode', 'pc', 'location', 'town', 'q', 'lat', 'lon', 'v', 'cast_receiver'].forEach(k => u.searchParams.delete(k));
 
         if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION) {
           const pc = CURRENT_LOCATION.postcode || '';
@@ -9324,7 +9353,15 @@
               correctLevel: QRCode.CorrectLevel.M
             });
 
-            // Ensure the generated HTML5 canvas is immediately visible on TV & Mobile browsers
+            // Ensure pure SVG or Canvas is immediately visible on TV & Mobile browsers
+            const svg = qrContainer.querySelector('svg');
+            if (svg) {
+              svg.style.display = 'block';
+              svg.style.width = '140px';
+              svg.style.height = '140px';
+              svg.style.borderRadius = '8px';
+              qrSuccess = true;
+            }
             const canvas = qrContainer.querySelector('canvas');
             if (canvas) {
               canvas.style.display = 'block';
@@ -9338,22 +9375,20 @@
               img.style.display = 'none';
             }
 
-            // Fallback safety timeout in case any asynchronous script hides the canvas
+            // Fallback safety timeout in case any asynchronous script hides the element
             setTimeout(() => {
+              const s = qrContainer.querySelector('svg');
+              if (s) { s.style.display = 'block'; s.style.width = '140px'; s.style.height = '140px'; }
               const c = qrContainer.querySelector('canvas');
+              if (c) { c.style.display = 'block'; c.style.width = '140px'; c.style.height = '140px'; }
               const i = qrContainer.querySelector('img');
-              if (c) {
-                c.style.display = 'block';
-                c.style.width = '140px';
-                c.style.height = '140px';
-              }
               if (i) i.style.display = 'none';
             }, 60);
           } catch (e) {
             console.warn('QRCode generation failed, using fallback:', e);
           }
         }
-        if (!qrSuccess && !qrContainer.querySelector('canvas')) {
+        if (!qrSuccess && !qrContainer.querySelector('svg') && !qrContainer.querySelector('canvas')) {
           renderQrFallback(qrContainer, shareUrl);
         }
       }
@@ -9488,10 +9523,12 @@
       // 1. If running as the receiver on a Chromecast hardware device
       const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
       if (isCastHardwareReceiver) {
+        configureTvReceiverUI();
         const recScript = document.createElement('script');
         recScript.src = '//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js';
         recScript.onload = () => {
           try {
+            configureTvReceiverUI();
             if (window.cast && cast.framework && cast.framework.CastReceiverContext) {
               const recCtx = cast.framework.CastReceiverContext.getInstance();
 
@@ -9527,6 +9564,7 @@
                 maxInactivity: 86400
               });
               console.log('Google Cast Receiver started for App ID:', CAST_APP_ID);
+              configureTvReceiverUI();
             }
           } catch(e) {
             console.warn('Cast receiver framework initialization:', e);
@@ -9746,6 +9784,105 @@
         } catch(e) {}
       }
       openShareModal();
+    }
+
+    // -------------------------------------------------------------
+    // TV Receiver Exit Cast Controls
+    // -------------------------------------------------------------
+    let tvExitCountdownTimer = null;
+    let tvExitSeconds = 20;
+
+    function openTvExitCastModal() {
+      const modal = document.getElementById('tvExitCastModal');
+      if (!modal) return;
+      savePreModalFocus('castBtn');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      try {
+        if (!history.state || history.state.modal !== 'tvExitCastModal') {
+          history.pushState({ modal: 'tvExitCastModal' }, '');
+        }
+      } catch (_) {}
+
+      tvExitSeconds = 20;
+      updateTvExitCountdown();
+      if (tvExitCountdownTimer) clearInterval(tvExitCountdownTimer);
+      tvExitCountdownTimer = setInterval(() => {
+        tvExitSeconds--;
+        updateTvExitCountdown();
+        if (tvExitSeconds <= 0) {
+          closeTvExitCastModal(true);
+        }
+      }, 1000);
+
+      setTimeout(() => {
+        const confirmBtn = document.getElementById('tvConfirmExitBtn');
+        if (confirmBtn) confirmBtn.focus();
+      }, 50);
+    }
+
+    function updateTvExitCountdown() {
+      const el = document.getElementById('tvExitCountdown');
+      if (el) el.textContent = `(${tvExitSeconds}s)`;
+    }
+
+    function closeTvExitCastModal(pop = true) {
+      if (tvExitCountdownTimer) {
+        clearInterval(tvExitCountdownTimer);
+        tvExitCountdownTimer = null;
+      }
+      const modal = document.getElementById('tvExitCastModal');
+      if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (pop && history.state && history.state.modal === 'tvExitCastModal') {
+        try { history.back(); } catch (_) {}
+      }
+      restorePreModalFocus('castBtn');
+    }
+
+    function executeTvExitCast() {
+      closeTvExitCastModal(false);
+      try {
+        if (window.cast && cast.framework && cast.framework.CastReceiverContext) {
+          const recCtx = cast.framework.CastReceiverContext.getInstance();
+          recCtx.stop();
+          return;
+        }
+      } catch (_) {}
+      try { window.close(); } catch (_) {}
+    }
+
+    function configureTvReceiverUI() {
+      const castBtn = document.getElementById('castBtn');
+      const castIcon = document.getElementById('castIcon');
+      const castBadge = document.getElementById('castFocusBadge');
+      const launcher = document.getElementById('nativeCastLauncher');
+
+      if (launcher) launcher.remove();
+
+      if (castBtn) {
+        castBtn.className = 'tv-focus-amber relative p-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/50 text-rose-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm';
+        castBtn.title = 'Exit Cast (Close on TV)';
+        castBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openTvExitCastModal();
+        };
+      }
+
+      if (castIcon) {
+        castIcon.setAttribute('viewBox', '0 0 24 24');
+        castIcon.setAttribute('fill', 'none');
+        castIcon.innerHTML = `
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/>
+        `;
+      }
+
+      if (castBadge) {
+        castBadge.innerHTML = `<span>🛑 Exit Cast • Press OK to close TV screen</span>`;
+        castBadge.className = 'hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-rose-500/50 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-rose-300 backdrop-blur-md';
+      }
     }
 
     initGoogleCast();
@@ -10826,6 +10963,7 @@
           { modalId: 'shareModal', closeBtnId: 'closeShareBtnTop', closeFn: closeShareModal },
           { modalId: 'feedbackModal', closeBtnId: 'closeFeedbackBtnTop', closeFn: closeFeedbackModal },
           { modalId: 'castOptionsModal', closeBtnId: 'closeCastOptionsBtnTop', closeFn: closeCastOptionsModal },
+          { modalId: 'tvExitCastModal', closeBtnId: 'tvCancelExitBtn', closeFn: closeTvExitCastModal },
           { modalId: 'locationModal', closeBtnId: 'closeLocationBtnTop', closeFn: closeLocationModal }
         ];
 
@@ -10900,7 +11038,7 @@
 
         // 1. Check for new software build first
         const modalOpen = document.querySelector(
-          '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden)'
+          '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden)'
         );
 
         try {
