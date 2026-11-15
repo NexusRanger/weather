@@ -964,7 +964,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.13) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.14) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -2148,10 +2148,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=177"></script>
+  <script src="traffic-flood.js?v=178"></script>
     <script>
-    const APP_BUILD = 177;
-    const APP_VERSION = '1.10.13';
+    const APP_BUILD = 178;
+    const APP_VERSION = '1.10.14';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -4281,7 +4281,7 @@
       }
 
       const firstAddedWord = a.toLowerCase().split(/\s+/)[0];
-      if (['upon', 'on', 'under', 'in', 'by', 'le', 'la', 'de', 'the', 'of', 'and', 'super', 'next', 'cum', 'hotel', 'inn', 'pub', 'arms', 'house', 'hall', 'manor', 'lodge', 'park', 'station', 'castle', 'beach', 'bay', 'valley', 'hill', 'hills', 'wells', 'spa', 'bridge', 'cross', 'green', 'common', 'heath', 'wood', 'forest', 'airport', 'tyne', 'avon', 'wye', 'severn', 'thames', 'trent', 'ouse', 'mersey', 'cotswold', 'cotswolds', 'gloucestershire'].includes(firstAddedWord)) {
+      if (['upon', 'on', 'under', 'in', 'by', 'le', 'la', 'de', 'the', 'of', 'and', 'super', 'next', 'cum', 'hotel', 'inn', 'pub', 'arms', 'house', 'hall', 'manor', 'lodge', 'park', 'station', 'castle', 'beach', 'bay', 'valley', 'hill', 'hills', 'wells', 'spa', 'bridge', 'cross', 'green', 'common', 'heath', 'wood', 'forest', 'airport', 'tyne', 'avon', 'wye', 'severn', 'thames', 'trent', 'ouse', 'mersey', 'cotswold', 'cotswolds', 'gloucestershire', 'mill', 'mills', 'street', 'road', 'lane', 'close', 'avenue', 'way', 'drive'].includes(firstAddedWord)) {
         return true;
       }
 
@@ -4292,50 +4292,23 @@
       const input = document.getElementById('locationInput');
       if (!input) return;
 
-      const VOICE_PAUSE_RESET_MS = 6000;
-
       // Record when focus or a click enters the typing box so an accidental Q (< 4.5s) is swallowed
       input.addEventListener('focus', () => {
         locActivatedAt = Date.now();
         locInitialQSwallowed = false;
       });
 
-      // If the user clicks back into the search box after an earlier entry/voice search settled, start fresh
       input.addEventListener('mousedown', () => {
         locActivatedAt = Date.now();
         locInitialQSwallowed = false;
-        if (locSettledValue && (Date.now() - locLastInputAt > 1800)) {
-          input.value = '';
-          resetSmartLocationInputState();
-        }
       });
 
       input.addEventListener('click', () => {
         locActivatedAt = Date.now();
         locInitialQSwallowed = false;
-        if (locSettledValue && (Date.now() - locLastInputAt > 1800)) {
-          input.value = '';
-          resetSmartLocationInputState();
-        }
-      });
-
-      input.addEventListener('compositionstart', () => {
-        if (locSettledValue && (Date.now() - locLastInputAt > VOICE_PAUSE_RESET_MS)) {
-          locPrefixToStrip = locSettledValue;
-        }
       });
 
       input.addEventListener('compositionend', () => {
-        if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
-          const added = input.value.slice(locPrefixToStrip.length);
-          if (isSpokenContinuation(locPrefixToStrip, added)) {
-            locPrefixToStrip = '';
-          } else {
-            input.value = added.trimStart();
-            locPrefixToStrip = '';
-            locSettledValue = '';
-          }
-        }
         if (!locInitialQSwallowed && (Date.now() - locActivatedAt <= 4500) && input.value.trim().toLowerCase() === 'q') {
           input.value = '';
           locInitialQSwallowed = true;
@@ -4350,37 +4323,8 @@
 
       input.addEventListener('input', (e) => {
         const now = Date.now();
-        const elapsed = now - locLastInputAt;
+        locLastInputAt = now;
         const isDeletion = e && (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward');
-
-        // Detect a new microphone dictation or accidental 'q' when text is already present
-        if (!locPrefixToStrip && locSettledValue && input.value.startsWith(locSettledValue)) {
-          const added = input.value.slice(locSettledValue.length);
-          if (!locInitialQSwallowed && (now - locActivatedAt <= 4500) && added.trim().toLowerCase() === 'q') {
-            input.value = '';
-            locInitialQSwallowed = true;
-            resetSmartLocationInputState();
-            return;
-          }
-          // Only treat as a brand-new microphone search if > 2.5s has passed AND it's not a postcode/place continuation
-          if (elapsed > VOICE_PAUSE_RESET_MS && !isSpokenContinuation(locSettledValue, added)) {
-            if (added.length >= 2 || e.isComposing || e.inputType === 'insertCompositionText' || e.inputType === 'insertFromPaste') {
-              locPrefixToStrip = locSettledValue;
-            }
-          }
-        }
-
-        // Strip previous search prefix when a new microphone dictation arrives (unless it's a postcode/place continuation)
-        if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip) && !e.isComposing) {
-          const added = input.value.slice(locPrefixToStrip.length);
-          if (isSpokenContinuation(locPrefixToStrip, added)) {
-            locPrefixToStrip = '';
-          } else {
-            input.value = added.trimStart();
-            locPrefixToStrip = '';
-            locSettledValue = '';
-          }
-        }
 
         // Only ignore a standalone 'q' if it arrives within 4.5s of focusing/clicking the box
         if (!locInitialQSwallowed && (now - locActivatedAt <= 4500) && input.value.trim().toLowerCase() === 'q') {
@@ -4434,13 +4378,6 @@
           }
         }
 
-        if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
-          const added = input.value.slice(locPrefixToStrip.length);
-          if (!isSpokenContinuation(locPrefixToStrip, added)) {
-            input.value = added.trimStart();
-          }
-          locPrefixToStrip = '';
-        }
         locSettledValue = input.value;
       });
     })();
@@ -4767,10 +4704,6 @@
       const status = document.getElementById('locationSearchStatus');
       const btn = document.getElementById('searchLocBtn');
       if (!input) return;
-      if (locPrefixToStrip && input.value.startsWith(locPrefixToStrip)) {
-        input.value = input.value.slice(locPrefixToStrip.length).trimStart();
-        locPrefixToStrip = '';
-      }
       if (!input.value.trim()) {
         input.value = '';
         return;
@@ -10259,7 +10192,46 @@
     }
 
     function handleGlobalBack(e) {
+      if (e.type !== 'keydown') return;
+
+      const activeEl = document.activeElement;
+      const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+      const isBackspace = (e.keyCode === 8 || (e.key && e.key.toLowerCase() === 'backspace'));
+
+      // If user is editing text in an input or textarea and presses Backspace, allow standard character deletion
+      if (isInputFocused && isBackspace) {
+        return;
+      }
+
       if (isTvBackKey(e)) {
+        // If an input/textarea has focus, the user is pressing TV remote Back / Escape to dismiss the on-screen keyboard
+        if (isInputFocused) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+
+          activeEl.blur();
+
+          // Move focus smoothly to the modal's primary action button so the user can easily press OK or D-pad
+          if (activeEl.id === 'locationInput') {
+            const searchBtn = document.getElementById('searchLocBtn');
+            if (searchBtn && typeof searchBtn.focus === 'function') {
+              searchBtn.focus();
+            }
+          } else if (activeEl.id === 'customRenameInput') {
+            const renameBtn = document.getElementById('customRenameBtn');
+            if (renameBtn && typeof renameBtn.focus === 'function') {
+              renameBtn.focus();
+            }
+          } else if (activeEl.id === 'feedbackCommentInput') {
+            const submitBtn = document.getElementById('submitFeedbackBtn');
+            if (submitBtn && typeof submitBtn.focus === 'function') {
+              submitBtn.focus();
+            }
+          }
+          return false;
+        }
+
         // Modal hierarchy: if any modal is visible, pressing Back jumps focus to its Close button,
         // or if already focused on the Close button, dismisses/closes the dialog!
         const modalConfigs = [
@@ -10282,7 +10254,6 @@
 
             const closeBtn = document.getElementById(cfg.closeBtnId);
             const altCloseBtn = cfg.altCloseBtnId ? document.getElementById(cfg.altCloseBtnId) : null;
-            const activeEl = document.activeElement;
 
             // If focus is ALREADY on the Close button, pressing Back closes the dialog!
             // If focus is anywhere else (e.g. input, list, map, shortcuts), pressing Back jumps focus to the Close button!
@@ -10298,15 +10269,12 @@
         }
       }
       if (e.key === 'f' || e.key === 'F') {
-        if (e.target.tagName !== 'INPUT') toggleFullscreen();
+        if (!isInputFocused) toggleFullscreen();
       }
     }
 
-    // Capture phase listeners on both keydown and keyup (runs before Leaflet or any child can swallow the key)
+    // Capture phase listener on keydown (runs before Leaflet or child elements can swallow the key)
     window.addEventListener('keydown', handleGlobalBack, true);
-    document.addEventListener('keydown', handleGlobalBack, true);
-    window.addEventListener('keyup', handleGlobalBack, true);
-    document.addEventListener('keyup', handleGlobalBack, true);
 
     updateClock();
     setInterval(updateClock, 1000);
