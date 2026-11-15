@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=198"></script>
+  <script src="qrcode.min.js?v=199"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -987,17 +987,16 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.34) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.35) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
-            <button id="castBtn" tabindex="0" onclick="triggerCast(event)" title="Cast to TV (Chromecast / Google TV / Shield)" class="tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm">
+            <button id="castBtn" tabindex="0" onclick="triggerCast()" title="Cast to TV (Chromecast / Google TV / Shield)" class="tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm">
               <svg id="castIcon" class="w-3.5 h-3.5 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
               </svg>
               <span id="castActiveDot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8] animate-ping pointer-events-none"></span>
               <span id="castActiveSolidDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white shadow-[0_0_6px_#38bdf8] pointer-events-none"></span>
-              <google-cast-launcher id="nativeCastLauncher" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"></google-cast-launcher>
             </button>
             <div id="castFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/50 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-sky-200 backdrop-blur-md">
               <span>📺 Cast to TV &bull; Stream to Chromecast / Shield</span>
@@ -1847,12 +1846,11 @@
                 <span id="copyShareIcon">📋</span>
                 <span id="copyShareLabel">Copy Link</span>
               </button>
-              <button id="modalCastBtn" onclick="triggerCast(event)" class="relative px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-200 hover:text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 active:scale-95 cursor-pointer" tabindex="0" title="Cast Dashboard to TV (Google Cast)">
+              <button id="modalCastBtn" onclick="triggerCast()" class="relative px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-200 hover:text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-sky-400 active:scale-95 cursor-pointer" tabindex="0" title="Cast Dashboard to TV (Google Cast)">
                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
                 </svg>
                 <span id="modalCastLabel">Cast</span>
-                <google-cast-launcher class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"></google-cast-launcher>
               </button>
               <button id="nativeShareBtn" onclick="triggerNativeShare()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0" title="Share via phone share menu">
                 <span>↗ Share</span>
@@ -2435,10 +2433,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=198"></script>
+  <script src="traffic-flood.js?v=199"></script>
     <script>
-    const APP_BUILD = 198;
-    const APP_VERSION = '1.10.34';
+    const APP_BUILD = 199;
+    const APP_VERSION = '1.10.35';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10019,15 +10017,6 @@
       const btn = document.getElementById('castBtn');
       const modalBtn = document.getElementById('modalCastBtn');
       const modalLbl = document.getElementById('modalCastLabel');
-      const launcher = document.getElementById('nativeCastLauncher');
-
-      if (launcher) {
-        launcher.style.pointerEvents = connected ? 'none' : 'auto';
-      }
-      const modalLaunchers = document.querySelectorAll('#modalCastBtn google-cast-launcher');
-      modalLaunchers.forEach(el => {
-        el.style.pointerEvents = connected ? 'none' : 'auto';
-      });
 
       const activeDot = document.getElementById('castActiveDot');
       const solidDot = document.getElementById('castActiveSolidDot');
@@ -10037,7 +10026,7 @@
       if (btn) {
         if (connected) {
           btn.className = 'tv-focus-amber relative p-1 rounded-lg border text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-lg cast-active-glowing';
-          btn.title = 'Connected to TV via Google Cast • Click for options';
+          btn.title = 'Connected via Google Cast • Click for options';
         } else {
           btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm';
           btn.title = 'Cast to TV (Chromecast / Google TV / Shield)';
@@ -10126,17 +10115,28 @@
                 postcode: (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.postcode) || ''
               }
             };
-            const endSessionCleanly = () => {
-              try { ctx.endCurrentSession(false); } catch (_) {}
+            const doLeave = () => {
+              try {
+                const sessionObj = (typeof session.getSessionObj === 'function') ? session.getSessionObj() : null;
+                if (sessionObj && typeof sessionObj.leave === 'function') {
+                  sessionObj.leave(() => {}, () => {});
+                }
+              } catch (_) {}
+              try {
+                if (typeof session.endSession === 'function') {
+                  session.endSession(false);
+                }
+              } catch (_) {}
+              try {
+                ctx.endCurrentSession(false);
+              } catch (_) {}
               updateCastButtonState(false);
             };
-            session.sendMessage(CAST_NAMESPACE, JSON.stringify(payload))
-              .then(() => {
-                setTimeout(endSessionCleanly, 100);
-              })
-              .catch(() => {
-                endSessionCleanly();
-              });
+
+            // Send display mode change command to receiver
+            session.sendMessage(CAST_NAMESPACE, JSON.stringify(payload)).catch(() => {});
+            // Allow 150ms for payload transmission before severing sender route cleanly
+            setTimeout(doLeave, 150);
           } else {
             try { ctx.endCurrentSession(false); } catch (_) {}
             updateCastButtonState(false);
@@ -10154,7 +10154,22 @@
       if (typeof cast !== 'undefined' && cast.framework) {
         try {
           const ctx = cast.framework.CastContext.getInstance();
+          const session = ctx.getCurrentSession();
+          if (session) {
+            try {
+              const sessionObj = (typeof session.getSessionObj === 'function') ? session.getSessionObj() : null;
+              if (sessionObj && typeof sessionObj.stop === 'function') {
+                sessionObj.stop(() => {}, () => {});
+              }
+            } catch (_) {}
+            try {
+              if (typeof session.endSession === 'function') {
+                session.endSession(true);
+              }
+            } catch (_) {}
+          }
           ctx.endCurrentSession(true); // true = TERMINATE receiver app on TV!
+          updateCastButtonState(false);
         } catch (e) {
           console.warn('stopCastAndCloseTv error:', e);
         }
@@ -10178,11 +10193,7 @@
       }
     }
 
-    function triggerCast(e) {
-      if (e && e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'google-cast-launcher') {
-        // google-cast-launcher handles opening the Cast dialog natively; avoid duplicate requestSession()
-        return;
-      }
+    function triggerCast() {
       if (typeof cast !== 'undefined' && cast.framework) {
         try {
           const ctx = cast.framework.CastContext.getInstance();
