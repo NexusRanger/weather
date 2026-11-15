@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=191"></script>
+  <script src="qrcode.min.js?v=192"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -539,6 +539,27 @@
       background: rgba(244, 63, 94, 0.18) !important;
     }
 
+    /* Active Google Cast Connected - High-Visibility Vivid Luminous Flash */
+    @keyframes castActivePulse {
+      0%, 100% {
+        background-color: rgba(14, 165, 233, 0.35);
+        border-color: #38bdf8;
+        color: #e0f2fe;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.6), inset 0 0 6px rgba(56, 189, 248, 0.25);
+        transform: scale(1);
+      }
+      50% {
+        background-color: #0284c7;
+        border-color: #ffffff;
+        color: #ffffff;
+        box-shadow: 0 0 24px rgba(56, 189, 248, 1), 0 0 10px #38bdf8, 0 0 6px #ffffff, inset 0 0 10px rgba(255, 255, 255, 0.7);
+        transform: scale(1.08);
+      }
+    }
+    .cast-active-glowing {
+      animation: castActivePulse 1.3s ease-in-out infinite !important;
+    }
+
     /* Atmospheric & Environmental Warning Highlights */
     .aqi-warning-amber,
     .uv-warning-amber,
@@ -954,7 +975,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.27) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.28) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -962,6 +983,8 @@
               <svg id="castIcon" class="w-3.5 h-3.5 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
               </svg>
+              <span id="castActiveDot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-300 shadow-[0_0_8px_#38bdf8] animate-ping pointer-events-none"></span>
+              <span id="castActiveSolidDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white shadow-[0_0_6px_#38bdf8] pointer-events-none"></span>
               <google-cast-launcher id="nativeCastLauncher" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"></google-cast-launcher>
             </button>
             <div id="castFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/50 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-sky-200 backdrop-blur-md">
@@ -1919,11 +1942,11 @@
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-1">
-              <span id="castSyncLocLabel" class="text-xs font-bold text-white group-hover:text-emerald-200">Keep Control of TV &amp; Sync</span>
+              <span id="castSyncLocLabel" class="text-xs font-bold text-white group-hover:text-emerald-200">Keep Control of TV</span>
               <span id="castOptionsStatusBadge" class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">Stay Connected</span>
             </div>
-            <p id="castSyncLocSubtext" class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
-              Keeps this tablet connected as the active TV remote and updates the TV screen to match your current location.
+            <p id="castSyncLocSubtext" class="text-[11px] text-slate-300 group-hover:text-emerald-200 mt-1 leading-snug">
+              Updates the TV screen to the current location of Dunkirk Mills.
             </p>
           </div>
         </button>
@@ -2287,19 +2310,159 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=191"></script>
+  <script src="traffic-flood.js?v=192"></script>
     <script>
-    const APP_BUILD = 191;
-    const APP_VERSION = '1.10.27';
+    const APP_BUILD = 192;
+    const APP_VERSION = '1.10.28';
 
-    // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
+    // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
+    // If the user performs TWO upward clicks while focused on the Close button,
+    // it stops the auto-close countdown timer and locks the modal open at its maximum duration!
+    let lastUpClickTarget = null;
+    let lastUpClickTime = 0;
+    const modalTimerLocks = {};
+
+    function isModalTimerLocked(modalId) {
+      return !!modalTimerLocks[modalId];
+    }
+
+    function toggleModalTimerLock(modalEl) {
+      if (!modalEl) return;
+      const id = modalEl.id;
+      const currentlyLocked = !!modalTimerLocks[id];
+      const newLocked = !currentlyLocked;
+      modalTimerLocks[id] = newLocked;
+
+      if (id === 'trafficModal') {
+        if (newLocked) {
+          if (trafficAutoCloseTimer) clearInterval(trafficAutoCloseTimer);
+          trafficAutoCloseTimer = null;
+          trafficAutoCloseSecs = 20;
+        } else {
+          resetTrafficAutoCloseTimer();
+        }
+        updateTrafficCountdownDisplay();
+      } else if (id === 'riverModal') {
+        if (newLocked) {
+          if (riverAutoCloseTimer) clearInterval(riverAutoCloseTimer);
+          riverAutoCloseTimer = null;
+          riverAutoCloseSecs = 20;
+        } else {
+          resetRiverAutoCloseTimer();
+        }
+        updateRiverCountdownDisplay();
+      } else if (id === 'radarModal') {
+        if (newLocked) {
+          if (radarAutoCloseTimer) clearInterval(radarAutoCloseTimer);
+          radarAutoCloseTimer = null;
+          radarAutoCloseSecs = 30;
+          stopRadarIdleExitFocusTimer();
+        } else {
+          resetRadarAutoCloseTimer();
+        }
+        updateRadarCountdownDisplay();
+      } else if (id === 'shareModal') {
+        if (newLocked) {
+          if (shareAutoCloseTimer) clearInterval(shareAutoCloseTimer);
+          shareAutoCloseTimer = null;
+          shareAutoCloseSecs = 40;
+        } else {
+          resetShareAutoCloseTimer();
+        }
+        updateShareCountdownDisplay();
+      } else if (id === 'historyMapModal') {
+        if (newLocked) {
+          if (historyMapAutoCloseTimer) clearInterval(historyMapAutoCloseTimer);
+          historyMapAutoCloseTimer = null;
+          historyMapAutoCloseSecs = 45;
+        } else {
+          resetHistoryMapAutoCloseTimer();
+        }
+        updateHistoryMapCountdownDisplay();
+      } else if (id === 'locationModal') {
+        if (newLocked) {
+          if (locationAutoCloseTimer) clearInterval(locationAutoCloseTimer);
+          locationAutoCloseTimer = null;
+          locationAutoCloseSecs = 30;
+          stopLocationIdleExitFocusTimer();
+        } else {
+          resetLocationAutoCloseTimer();
+        }
+        updateLocationCountdownDisplay();
+      } else if (id === 'wondersModal') {
+        if (newLocked) {
+          if (wondersAutoCloseTimer) clearInterval(wondersAutoCloseTimer);
+          wondersAutoCloseTimer = null;
+          wondersAutoCloseSecs = 45;
+        } else {
+          resetWondersAutoCloseTimer();
+        }
+        updateWondersCountdownDisplay();
+      } else if (id === 'tvExitCastModal') {
+        if (newLocked) {
+          if (tvExitCountdownTimer) clearInterval(tvExitCountdownTimer);
+          tvExitCountdownTimer = null;
+          tvExitSeconds = 20;
+        } else {
+          tvExitSeconds = 20;
+        }
+        updateTvExitCountdown();
+      }
+
+      // Visual feedback: amber pulse on active close button
+      const activeClose = document.activeElement;
+      if (activeClose) {
+        activeClose.classList.add('ring-2', 'ring-amber-400', 'scale-105');
+        setTimeout(() => activeClose.classList.remove('ring-2', 'ring-amber-400', 'scale-105'), 350);
+      }
+    }
+
     window.addEventListener('keydown', function handleModalUpToClose(e) {
       if (e.key !== 'ArrowUp') return;
 
       const openModal = document.querySelector(
-        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden)'
+        '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden), #wondersModal:not(.hidden)'
       );
       if (!openModal) return;
+
+      const topCloseBtn = openModal.querySelector('button[id^="close"][id$="Top"]') ||
+                          (openModal.id === 'tvExitCastModal' ? document.getElementById('tvCancelExitBtn') : null);
+
+      const activeEl = document.activeElement;
+      const isCloseBtn = (
+        (topCloseBtn && activeEl === topCloseBtn) ||
+        (activeEl && activeEl.id && (
+          activeEl.id === 'closeLocationBtnTop' ||
+          activeEl.id === 'closeMapBtnTop' ||
+          activeEl.id === 'closeMapBtnBottom' ||
+          activeEl.id === 'closeWondersBtnTop' ||
+          activeEl.id === 'tvCancelExitBtn' ||
+          activeEl.id === 'closeRadarBtnTop' ||
+          activeEl.id === 'closeTrafficBtnTop' ||
+          activeEl.id === 'closeRiverBtnTop' ||
+          activeEl.id === 'closeShareBtnTop' ||
+          activeEl.id === 'closeFeedbackBtnTop' ||
+          activeEl.id === 'closeCastOptionsBtnTop'
+        ))
+      );
+
+      // If already on the Close button: detect two upward clicks to lock/unlock timer!
+      if (isCloseBtn) {
+        const now = Date.now();
+        if (lastUpClickTarget === activeEl && (now - lastUpClickTime) < 1500) {
+          e.preventDefault();
+          e.stopPropagation();
+          lastUpClickTarget = null;
+          lastUpClickTime = 0;
+          toggleModalTimerLock(openModal);
+          return;
+        } else {
+          lastUpClickTarget = activeEl;
+          lastUpClickTime = now;
+          e.preventDefault();
+          return;
+        }
+      }
 
       // Location modal has vertical interactive rows (Preferences -> Nearby -> Recent -> GPS -> Search -> Close)
       if (openModal.id === 'locationModal') return;
@@ -2314,14 +2477,9 @@
         }
       }
 
-      const topCloseBtn = openModal.querySelector('button[id^="close"][id$="Top"]');
       if (!topCloseBtn) return;
 
-      // If already on the Close button or top radar Lock Zoom button, prevent jumping away
-      if (
-        document.activeElement === topCloseBtn ||
-        (document.activeElement && document.activeElement.id === 'radarLockZoomBtn')
-      ) {
+      if (document.activeElement && document.activeElement.id === 'radarLockZoomBtn') {
         e.preventDefault();
         return;
       }
@@ -2329,6 +2487,8 @@
       // Jump directly to the top Close button without needing sideways presses!
       e.preventDefault();
       topCloseBtn.focus();
+      lastUpClickTarget = topCloseBtn;
+      lastUpClickTime = 0;
     }, true);
 
     // D-Pad Page Flow: Natural, logical navigation between Header <-> Status Strip <-> Bottom Panel
@@ -3095,19 +3255,26 @@
     let historyMapAutoCloseTimer = null;
 
     function updateHistoryMapCountdownDisplay() {
+      const isLocked = isModalTimerLocked('historyMapModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const topBtnTimer = document.getElementById('mapBtnCountdownTop');
       const bottomBtnTimer = document.getElementById('mapBtnCountdownBottom');
-      if (topBtnTimer) topBtnTimer.textContent = `(${historyMapAutoCloseSecs}s)`;
-      if (bottomBtnTimer) bottomBtnTimer.textContent = `(${historyMapAutoCloseSecs}s)`;
+      if (topBtnTimer) topBtnTimer.textContent = `(${historyMapAutoCloseSecs}s${suffix})`;
+      if (bottomBtnTimer) bottomBtnTimer.textContent = `(${historyMapAutoCloseSecs}s${suffix})`;
     }
 
     function resetHistoryMapAutoCloseTimer() {
+      if (isModalTimerLocked('historyMapModal')) return;
       historyMapAutoCloseSecs = 45;
       updateHistoryMapCountdownDisplay();
       if (historyMapAutoCloseTimer) clearInterval(historyMapAutoCloseTimer);
       historyMapAutoCloseTimer = setInterval(() => {
         historyMapAutoCloseSecs--;
         updateHistoryMapCountdownDisplay();
+        if (historyMapAutoCloseSecs === 5) {
+          const closeBtn = document.getElementById('closeMapBtnTop');
+          if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
+        }
         if (historyMapAutoCloseSecs <= 0) {
           clearInterval(historyMapAutoCloseTimer);
           historyMapAutoCloseTimer = null;
@@ -3158,6 +3325,7 @@
     }
 
     function closeHistoryMapModal(pop = true) {
+      modalTimerLocks['historyMapModal'] = false;
       stopHistoryMapAutoCloseTimer();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -4691,8 +4859,10 @@
     let locationIdleExitTimer = null;
 
     function updateLocationCountdownDisplay() {
+      const isLocked = isModalTimerLocked('locationModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const btnTimerEl = document.getElementById('locationBtnCountdown');
-      if (btnTimerEl) btnTimerEl.textContent = `(${locationAutoCloseSecs}s)`;
+      if (btnTimerEl) btnTimerEl.textContent = `(${locationAutoCloseSecs}s${suffix})`;
     }
 
     function resetLocationIdleExitFocusTimer() {
@@ -4720,6 +4890,7 @@
     }
 
     function resetLocationAutoCloseTimer(customSecs = null) {
+      if (isModalTimerLocked('locationModal')) return;
       const box = document.getElementById('recentLocationsInfoBox');
       const isInfoOpen = box && !box.classList.contains('hidden');
       const defaultSecs = isInfoOpen ? 60 : 30;
@@ -4730,6 +4901,10 @@
       locationAutoCloseTimer = setInterval(() => {
         locationAutoCloseSecs--;
         updateLocationCountdownDisplay();
+        if (locationAutoCloseSecs === 5) {
+          const closeBtn = document.getElementById('closeLocationBtnTop');
+          if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
+        }
         if (locationAutoCloseSecs <= 0) {
           clearInterval(locationAutoCloseTimer);
           locationAutoCloseTimer = null;
@@ -4841,6 +5016,7 @@
     }
 
     function closeLocationModal(pop = true) {
+      modalTimerLocks['locationModal'] = false;
       if (typeof cancelAllLocationAutoContinue === 'function') cancelAllLocationAutoContinue();
       stopLocationAutoCloseTimer();
       const infoBox = document.getElementById('recentLocationsInfoBox');
@@ -6017,6 +6193,7 @@
     }
 
     function resetWondersAutoCloseTimer() {
+      if (isModalTimerLocked('wondersModal')) return;
       wondersAutoCloseSecs = 45;
       updateWondersCountdownDisplay();
       if (wondersAutoCloseTimer) {
@@ -6025,6 +6202,10 @@
       wondersAutoCloseTimer = setInterval(() => {
         wondersAutoCloseSecs--;
         updateWondersCountdownDisplay();
+        if (wondersAutoCloseSecs === 5) {
+          const closeBtn = document.getElementById('closeWondersBtnTop');
+          if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
+        }
         if (wondersAutoCloseSecs <= 0) {
           closeWondersModal();
         }
@@ -6039,8 +6220,10 @@
     }
 
     function updateWondersCountdownDisplay() {
+      const isLocked = isModalTimerLocked('wondersModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const el = document.getElementById('wondersBtnCountdown');
-      if (el) el.textContent = `(${Math.max(0, wondersAutoCloseSecs)}s)`;
+      if (el) el.textContent = `(${Math.max(0, wondersAutoCloseSecs)}s${suffix})`;
     }
 
     function onWondersModalActivity() {
@@ -6477,6 +6660,7 @@
     }
 
     function closeWondersModal(pop = true) {
+      modalTimerLocks['wondersModal'] = false;
       stopWondersAutoCloseTimer();
       const modal = document.getElementById('wondersModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -9267,6 +9451,7 @@
     let shareAutoCloseSecs = 40;
 
     function resetShareAutoCloseTimer() {
+      if (isModalTimerLocked('shareModal')) return;
       if (shareAutoCloseTimer) {
         clearInterval(shareAutoCloseTimer);
         shareAutoCloseTimer = null;
@@ -9276,6 +9461,10 @@
       shareAutoCloseTimer = setInterval(() => {
         shareAutoCloseSecs--;
         updateShareCountdownDisplay();
+        if (shareAutoCloseSecs === 5) {
+          const closeBtn = document.getElementById('closeShareBtnTop');
+          if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
+        }
         if (shareAutoCloseSecs <= 0) {
           stopShareAutoCloseTimer();
           closeShareModal();
@@ -9284,10 +9473,12 @@
     }
 
     function updateShareCountdownDisplay() {
+      const isLocked = isModalTimerLocked('shareModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const secsEl = document.getElementById('shareCountdownSecs');
-      if (secsEl) secsEl.textContent = `${shareAutoCloseSecs}s`;
+      if (secsEl) secsEl.textContent = `${shareAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('shareBtnCountdown');
-      if (btnEl) btnEl.textContent = `(${shareAutoCloseSecs}s)`;
+      if (btnEl) btnEl.textContent = `(${shareAutoCloseSecs}s${suffix})`;
     }
 
     function stopShareAutoCloseTimer() {
@@ -9448,6 +9639,7 @@
     }
 
     function closeShareModal(pop = true) {
+      modalTimerLocks['shareModal'] = false;
       stopShareAutoCloseTimer();
       const modal = document.getElementById('shareModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -9675,12 +9867,17 @@
         el.style.pointerEvents = connected ? 'none' : 'auto';
       });
 
+      const activeDot = document.getElementById('castActiveDot');
+      const solidDot = document.getElementById('castActiveSolidDot');
+      if (activeDot) activeDot.classList.toggle('hidden', !connected);
+      if (solidDot) solidDot.classList.toggle('hidden', !connected);
+
       if (btn) {
         if (connected) {
-          btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-sky-500/25 hover:bg-sky-500/35 border border-sky-400 text-sky-200 transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 shadow-[0_0_10px_rgba(56,189,248,0.4)] animate-pulse';
+          btn.className = 'tv-focus-amber relative p-1 rounded-lg border text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-lg cast-active-glowing';
           btn.title = 'Connected to TV via Google Cast • Click for options';
         } else {
-          btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7';
+          btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm';
           btn.title = 'Cast to TV (Chromecast / Google TV / Shield)';
         }
       }
@@ -9719,10 +9916,10 @@
       const syncSubtext = document.getElementById('castSyncLocSubtext');
       const locName = (CURRENT_LOCATION && CURRENT_LOCATION.name) ? CURRENT_LOCATION.name : 'Current Location';
       if (syncLabel) {
-        syncLabel.textContent = `Keep Control of TV & Sync to ${locName}`;
+        syncLabel.textContent = 'Keep Control of TV';
       }
       if (syncSubtext) {
-        syncSubtext.textContent = `Keeps this tablet connected as the active TV remote and updates the TV screen to ${locName}.`;
+        syncSubtext.textContent = `Updates the TV screen to the current location of ${locName}.`;
       }
 
       modal.classList.remove('hidden');
@@ -9924,11 +10121,14 @@
     }
 
     function updateTvExitCountdown() {
+      const isLocked = isModalTimerLocked('tvExitCastModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const el = document.getElementById('tvExitCountdown');
-      if (el) el.textContent = `(${tvExitSeconds}s)`;
+      if (el) el.textContent = `(${tvExitSeconds}s${suffix})`;
     }
 
     function closeTvExitCastModal(pop = true) {
+      modalTimerLocks['tvExitCastModal'] = false;
       if (tvExitCountdownTimer) {
         clearInterval(tvExitCountdownTimer);
         tvExitCountdownTimer = null;
@@ -10357,6 +10557,7 @@
     }
 
     function resetRadarAutoCloseTimer() {
+      if (isModalTimerLocked('radarModal')) return;
       const modal = document.getElementById('radarModal');
       if (modal && modal.classList.contains('hidden')) return;
       radarAutoCloseSecs = 30;
@@ -10365,6 +10566,10 @@
       radarAutoCloseTimer = setInterval(() => {
         radarAutoCloseSecs--;
         updateRadarCountdownDisplay();
+        if (radarAutoCloseSecs === 5) {
+          const closeBtn = document.getElementById('closeRadarBtnTop');
+          if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
+        }
         if (radarAutoCloseSecs <= 0) {
           clearInterval(radarAutoCloseTimer);
           radarAutoCloseTimer = null;
@@ -10375,10 +10580,12 @@
     }
 
     function updateRadarCountdownDisplay() {
+      const isLocked = isModalTimerLocked('radarModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const secsEl = document.getElementById('radarCountdownSecs');
-      if (secsEl) secsEl.textContent = `${radarAutoCloseSecs}s`;
+      if (secsEl) secsEl.textContent = `${radarAutoCloseSecs}s${suffix}`;
       const btnTimerEl = document.getElementById('radarBtnCountdown');
-      if (btnTimerEl) btnTimerEl.textContent = `(${radarAutoCloseSecs}s)`;
+      if (btnTimerEl) btnTimerEl.textContent = `(${radarAutoCloseSecs}s${suffix})`;
     }
 
     function stopRadarAutoCloseTimer() {
@@ -10522,6 +10729,7 @@
     }
 
     function closeRadarModal(pop = true) {
+      modalTimerLocks['radarModal'] = false;
       stopRadarAnimation();
       stopRadarAutoCloseTimer();
       const modal = document.getElementById('radarModal');
@@ -10539,12 +10747,17 @@
     let trafficAutoCloseTimer = null;
 
     function resetTrafficAutoCloseTimer() {
+      if (isModalTimerLocked('trafficModal')) return;
       trafficAutoCloseSecs = 20;
       updateTrafficCountdownDisplay();
       if (trafficAutoCloseTimer) clearInterval(trafficAutoCloseTimer);
       trafficAutoCloseTimer = setInterval(() => {
         trafficAutoCloseSecs--;
         updateTrafficCountdownDisplay();
+        if (trafficAutoCloseSecs === 5) {
+          const closeBtn = document.getElementById('closeTrafficBtnTop');
+          if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
+        }
         if (trafficAutoCloseSecs <= 0) {
           clearInterval(trafficAutoCloseTimer);
           trafficAutoCloseTimer = null;
@@ -10554,10 +10767,12 @@
     }
 
     function updateTrafficCountdownDisplay() {
+      const isLocked = isModalTimerLocked('trafficModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const secsEl = document.getElementById('trafficCountdownSecs');
-      if (secsEl) secsEl.textContent = `${trafficAutoCloseSecs}s`;
+      if (secsEl) secsEl.textContent = `${trafficAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('trafficBtnCountdown');
-      if (btnEl) btnEl.textContent = `(${trafficAutoCloseSecs}s)`;
+      if (btnEl) btnEl.textContent = `(${trafficAutoCloseSecs}s${suffix})`;
     }
 
     function stopTrafficAutoCloseTimer() {
@@ -10839,6 +11054,7 @@
     }
 
     function closeTrafficModal(pop = true) {
+      modalTimerLocks['trafficModal'] = false;
       stopTrafficAutoCloseTimer();
       const modal = document.getElementById('trafficModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -10855,6 +11071,7 @@
     let riverAutoCloseSecs = 20;
 
     function resetRiverAutoCloseTimer() {
+      if (isModalTimerLocked('riverModal')) return;
       if (riverAutoCloseTimer) {
         clearInterval(riverAutoCloseTimer);
         riverAutoCloseTimer = null;
@@ -10864,6 +11081,10 @@
       riverAutoCloseTimer = setInterval(() => {
         riverAutoCloseSecs--;
         updateRiverCountdownDisplay();
+        if (riverAutoCloseSecs === 5) {
+          const closeBtn = document.getElementById('closeRiverBtnTop');
+          if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
+        }
         if (riverAutoCloseSecs <= 0) {
           stopRiverAutoCloseTimer();
           closeRiverModal();
@@ -10872,10 +11093,12 @@
     }
 
     function updateRiverCountdownDisplay() {
+      const isLocked = isModalTimerLocked('riverModal');
+      const suffix = isLocked ? ' 🔒' : '';
       const secsEl = document.getElementById('riverCountdownSecs');
-      if (secsEl) secsEl.textContent = `${riverAutoCloseSecs}s`;
+      if (secsEl) secsEl.textContent = `${riverAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('riverBtnCountdown');
-      if (btnEl) btnEl.textContent = `(${riverAutoCloseSecs}s)`;
+      if (btnEl) btnEl.textContent = `(${riverAutoCloseSecs}s${suffix})`;
     }
 
     function stopRiverAutoCloseTimer() {
@@ -11002,6 +11225,7 @@
     }
 
     function closeRiverModal(pop = true) {
+      modalTimerLocks['riverModal'] = false;
       stopRiverAutoCloseTimer();
       const modal = document.getElementById('riverModal');
       if (!modal || modal.classList.contains('hidden')) return;
