@@ -965,7 +965,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.24) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.25) &bull; Press OK to refresh</span>
             </div>
           </div>
         </div>
@@ -1912,13 +1912,20 @@
           </div>
         </button>
 
-        <!-- Option 3: Resync Current Location to TV -->
-        <button id="castSyncLocBtn" tabindex="4" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-left transition group focus:outline-none cursor-pointer flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="text-sm">📡</span>
-            <span id="castSyncLocLabel" class="text-xs font-semibold text-slate-300 group-hover:text-white">Beam Current Location to TV</span>
+        <!-- Option 3: Keep Control & Sync TV to Location -->
+        <button id="castSyncLocBtn" tabindex="4" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
+            📡
           </div>
-          <span id="castOptionsStatus" class="text-[10px] font-mono text-amber-300"></span>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span id="castSyncLocLabel" class="text-xs font-bold text-white group-hover:text-emerald-200">Keep Control of TV &amp; Sync</span>
+              <span id="castOptionsStatusBadge" class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30">Stay Connected</span>
+            </div>
+            <p id="castSyncLocSubtext" class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
+              Keeps this tablet connected as the active TV remote and updates the TV screen to match your current location.
+            </p>
+          </div>
         </button>
       </div>
 
@@ -2229,10 +2236,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=188"></script>
+  <script src="traffic-flood.js?v=189"></script>
     <script>
-    const APP_BUILD = 188;
-    const APP_VERSION = '1.10.24';
+    const APP_BUILD = 189;
+    const APP_VERSION = '1.10.25';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button
     window.addEventListener('keydown', function handleModalUpToClose(e) {
@@ -9305,20 +9312,48 @@
       const qrContainer = document.getElementById('shareQrCode');
       if (qrContainer) {
         qrContainer.innerHTML = '';
+        let qrSuccess = false;
         if (typeof QRCode !== 'undefined') {
           try {
             new QRCode(qrContainer, {
               text: shareUrl,
-              width: 150,
-              height: 150,
+              width: 140,
+              height: 140,
               colorDark: "#0f172a",
               colorLight: "#ffffff",
               correctLevel: QRCode.CorrectLevel.M
             });
+
+            // Ensure the generated HTML5 canvas is immediately visible on TV & Mobile browsers
+            const canvas = qrContainer.querySelector('canvas');
+            if (canvas) {
+              canvas.style.display = 'block';
+              canvas.style.width = '140px';
+              canvas.style.height = '140px';
+              canvas.style.borderRadius = '8px';
+              qrSuccess = true;
+            }
+            const img = qrContainer.querySelector('img');
+            if (img) {
+              img.style.display = 'none';
+            }
+
+            // Fallback safety timeout in case any asynchronous script hides the canvas
+            setTimeout(() => {
+              const c = qrContainer.querySelector('canvas');
+              const i = qrContainer.querySelector('img');
+              if (c) {
+                c.style.display = 'block';
+                c.style.width = '140px';
+                c.style.height = '140px';
+              }
+              if (i) i.style.display = 'none';
+            }, 60);
           } catch (e) {
-            renderQrFallback(qrContainer, shareUrl);
+            console.warn('QRCode generation failed, using fallback:', e);
           }
-        } else {
+        }
+        if (!qrSuccess && !qrContainer.querySelector('canvas')) {
           renderQrFallback(qrContainer, shareUrl);
         }
       }
@@ -9621,8 +9656,13 @@
       } catch (_) {}
 
       const syncLabel = document.getElementById('castSyncLocLabel');
-      if (syncLabel && CURRENT_LOCATION && CURRENT_LOCATION.name) {
-        syncLabel.textContent = `Beam ${CURRENT_LOCATION.name} to TV`;
+      const syncSubtext = document.getElementById('castSyncLocSubtext');
+      const locName = (CURRENT_LOCATION && CURRENT_LOCATION.name) ? CURRENT_LOCATION.name : 'Current Location';
+      if (syncLabel) {
+        syncLabel.textContent = `Keep Control of TV & Sync to ${locName}`;
+      }
+      if (syncSubtext) {
+        syncSubtext.textContent = `Keeps this tablet connected as the active TV remote and updates the TV screen to ${locName}.`;
       }
 
       modal.classList.remove('hidden');
@@ -9678,13 +9718,15 @@
       if (typeof broadcastLocationToCast === 'function') {
         broadcastLocationToCast(CURRENT_LOCATION);
       }
-      const statusEl = document.getElementById('castOptionsStatus');
-      if (statusEl) {
-        statusEl.textContent = `Sent ${CURRENT_LOCATION.name} ✓`;
+      const badge = document.getElementById('castOptionsStatusBadge');
+      if (badge) {
+        badge.className = 'text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-400';
+        badge.textContent = 'Synced to TV ✓';
         setTimeout(() => {
-          if (statusEl) statusEl.textContent = '';
           closeCastOptionsModal(true);
-        }, 800);
+        }, 700);
+      } else {
+        closeCastOptionsModal(true);
       }
     }
 
