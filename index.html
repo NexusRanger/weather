@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=195"></script>
+  <script src="qrcode.min.js?v=196"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -989,7 +989,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.31) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.32) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1999,7 +1999,7 @@
             <p id="castDeviceNameLabel" class="text-[11px] text-sky-300 font-mono">Connected to TV / Shield</p>
           </div>
         </div>
-        <button id="closeCastOptionsBtnTop" tabindex="1" onclick="closeCastOptionsModal(true)" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectMinimalBtn');if(b)b.focus();}" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Cancel (Esc / Back)">
+        <button id="closeCastOptionsBtnTop" tabindex="1" onclick="closeCastOptionsModal(true)" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Cancel (Esc / Back)">
           <span>✕ Cancel</span>
         </button>
       </div>
@@ -2010,8 +2010,28 @@
           How would you like to handle this cast session?
         </p>
 
-        <!-- Option 1: Disconnect (Leave Minimalist Display) -->
-        <button id="castDisconnectMinimalBtn" tabindex="2" onclick="disconnectCastKeepRunning('minimal')" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-amber-500/15 border border-amber-400/30 hover:border-amber-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+        <!-- Option 1: Close Cast Page & Disconnect (Power Off Screen) -->
+        <button id="castStopCloseBtn" tabindex="2" onclick="stopCastAndCloseTv()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectMinimalBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-400/40 hover:border-rose-400/80 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3 shadow-[0_0_12px_rgba(244,63,94,0.15)]">
+          <div class="w-8 h-8 rounded-lg bg-rose-500/25 border border-rose-400/50 text-rose-300 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:bg-rose-500/40 transition-transform shadow-[0_0_10px_rgba(244,63,94,0.3)]">
+            <svg class="w-4 h-4 text-rose-300 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-white group-hover:text-rose-200 flex items-center gap-1.5">
+                <span>Close Cast Page &amp; Disconnect</span>
+              </span>
+              <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/40">Turn Off Screen</span>
+            </div>
+            <p class="text-[11px] text-slate-300 group-hover:text-white mt-1 leading-snug">
+              Instantly terminates the cast session and closes the screen on your TV, Shield, or Nest Hub, returning to your home launcher.
+            </p>
+          </div>
+        </button>
+
+        <!-- Option 2: Disconnect (Leave Minimalist Display) -->
+        <button id="castDisconnectMinimalBtn" tabindex="3" onclick="disconnectCastKeepRunning('minimal')" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const c=document.getElementById('castStopCloseBtn');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-amber-500/15 border border-amber-400/30 hover:border-amber-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             ✨
           </div>
@@ -2026,8 +2046,8 @@
           </div>
         </button>
 
-        <!-- Option 2: Disconnect (Keep Full Dashboard) -->
-        <button id="castDisconnectKeepBtn" tabindex="3" onclick="disconnectCastKeepRunning('full')" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectMinimalBtn');if(b)b.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-sky-500/15 border border-sky-400/30 hover:border-sky-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+        <!-- Option 3: Disconnect (Keep Full Dashboard) -->
+        <button id="castDisconnectKeepBtn" tabindex="4" onclick="disconnectCastKeepRunning('full')" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castSyncLocBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectMinimalBtn');if(b)b.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-sky-500/15 border border-sky-400/30 hover:border-sky-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             🔓
           </div>
@@ -2042,24 +2062,8 @@
           </div>
         </button>
 
-        <!-- Option 3: Close Cast Page & Disconnect -->
-        <button id="castStopCloseBtn" tabindex="4" onclick="stopCastAndCloseTv()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castSyncLocBtn');if(b)b.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-rose-500/15 border border-white/10 hover:border-rose-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
-          <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
-            ⏹️
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-xs font-bold text-white group-hover:text-rose-200">Close Cast Page &amp; Disconnect</span>
-              <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30">Exit TV App</span>
-            </div>
-            <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
-              Exits and closes the dashboard on your TV / Shield, returning the screen to your TV home launcher.
-            </p>
-          </div>
-        </button>
-
         <!-- Option 4: Keep Control & Sync TV to Location -->
-        <button id="castSyncLocBtn" tabindex="5" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+        <button id="castSyncLocBtn" tabindex="5" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             📡
           </div>
@@ -2433,10 +2437,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=195"></script>
+  <script src="traffic-flood.js?v=196"></script>
     <script>
-    const APP_BUILD = 195;
-    const APP_VERSION = '1.10.31';
+    const APP_BUILD = 196;
+    const APP_VERSION = '1.10.32';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
