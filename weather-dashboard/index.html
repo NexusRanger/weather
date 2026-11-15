@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=200"></script>
+  <script src="qrcode.min.js?v=201"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -989,7 +989,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.36) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.37) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2061,7 +2061,7 @@
         </button>
 
         <!-- Option 4: Keep Control & Sync TV to Location -->
-        <button id="castSyncLocBtn" tabindex="5" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+        <button id="castSyncLocBtn" tabindex="5" onclick="syncCurrentLocationToCast()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castDisconnectKeepBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('castToAnotherBtn');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-emerald-500/15 border border-white/10 hover:border-emerald-400/60 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
           <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
             📡
           </div>
@@ -2072,6 +2072,22 @@
             </div>
             <p id="castSyncLocSubtext" class="text-[11px] text-slate-300 group-hover:text-emerald-200 mt-1 leading-snug">
               Updates the TV screen to the current location of Dunkirk Mills.
+            </p>
+          </div>
+        </button>
+
+        <!-- Option 5: Cast to Another Screen (TV / Shield) -->
+        <button id="castToAnotherBtn" tabindex="6" onclick="castToAnotherScreen()" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('castSyncLocBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('closeCastOptionsBtnTop');if(c)c.focus();}" class="tv-focus-amber w-full p-3.5 rounded-xl bg-white/5 hover:bg-indigo-500/15 border border-indigo-400/30 hover:border-indigo-400/70 text-left transition group focus:outline-none cursor-pointer flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-110 transition-transform">
+            📺
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-xs font-bold text-white group-hover:text-indigo-200">Cast to Another Screen (TV / Shield)</span>
+              <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">New Screen</span>
+            </div>
+            <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
+              Leaves this display running and opens the device selector to cast to another TV or screen in your home.
             </p>
           </div>
         </button>
@@ -2435,10 +2451,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=200"></script>
+  <script src="traffic-flood.js?v=201"></script>
     <script>
-    const APP_BUILD = 200;
-    const APP_VERSION = '1.10.36';
+    const APP_BUILD = 201;
+    const APP_VERSION = '1.10.37';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -9840,6 +9856,7 @@
     // ============================================================
     const CAST_APP_ID = 'EC255DC2';
     const CAST_NAMESPACE = 'urn:x-cast:com.nexusranger.weather';
+    let isCastConnected = false;
 
     function broadcastLocationToCast(loc) {
       if (!loc || !loc.lat || !loc.lon) return;
@@ -9967,6 +9984,7 @@
                   event.sessionState === cast.framework.SessionState.SESSION_STARTED ||
                   event.sessionState === cast.framework.SessionState.SESSION_RESUMED
                 );
+                isCastConnected = isConnected;
                 updateCastButtonState(isConnected);
                 if (isConnected) {
                   const session = castCtx.getCurrentSession();
@@ -10016,6 +10034,7 @@
     }
 
     function updateCastButtonState(connected) {
+      isCastConnected = !!connected;
       const btn = document.getElementById('castBtn');
       const modalBtn = document.getElementById('modalCastBtn');
       const modalLbl = document.getElementById('modalCastLabel');
@@ -10123,6 +10142,7 @@
               }
             };
             const doLeave = () => {
+              isCastConnected = false;
               try {
                 const sessionObj = (typeof session.getSessionObj === 'function') ? session.getSessionObj() : null;
                 if (sessionObj && typeof sessionObj.leave === 'function') {
@@ -10145,10 +10165,12 @@
             // Allow 150ms for payload transmission before severing sender route cleanly
             setTimeout(doLeave, 150);
           } else {
+            isCastConnected = false;
             try { ctx.endCurrentSession(false); } catch (_) {}
             updateCastButtonState(false);
           }
         } catch (e) {
+          isCastConnected = false;
           console.warn('disconnectCastKeepRunning error:', e);
           try { ctx.endCurrentSession(false); } catch (_) {}
           updateCastButtonState(false);
@@ -10158,6 +10180,7 @@
     }
 
     function stopCastAndCloseTv() {
+      isCastConnected = false;
       if (typeof cast !== 'undefined' && cast.framework) {
         try {
           const ctx = cast.framework.CastContext.getInstance();
@@ -10184,6 +10207,18 @@
       closeCastOptionsModal(true);
     }
 
+    function castToAnotherScreen() {
+      disconnectCastKeepRunning('full');
+      setTimeout(() => {
+        try {
+          if (typeof cast !== 'undefined' && cast.framework) {
+            const ctx = cast.framework.CastContext.getInstance();
+            ctx.requestSession().catch(() => {});
+          }
+        } catch (_) {}
+      }, 350);
+    }
+
     function syncCurrentLocationToCast() {
       if (typeof broadcastLocationToCast === 'function') {
         broadcastLocationToCast(CURRENT_LOCATION);
@@ -10205,11 +10240,18 @@
         try {
           const ctx = cast.framework.CastContext.getInstance();
           const session = ctx.getCurrentSession();
-          if (session) {
-            // Already connected! Show options dialog
+          const sessionState = (session && typeof session.getSessionState === 'function') ? session.getSessionState() : null;
+          const isSessionActive = isCastConnected && session && (
+            sessionState === cast.framework.SessionState.SESSION_STARTED ||
+            sessionState === cast.framework.SessionState.SESSION_RESUMED
+          );
+
+          if (isSessionActive) {
+            // Truly connected to a screen! Show options dialog
             openCastOptionsModal();
             return;
           } else {
+            // Disconnected! Open native Cast device picker to connect to a new screen (e.g. TV)
             ctx.requestSession().catch(() => {});
             return;
           }
