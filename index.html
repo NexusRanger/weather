@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=209"></script>
+  <script src="qrcode.min.js?v=210"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -378,6 +378,15 @@
       background-color: rgba(0, 0, 0, 0.75) !important;
       box-shadow: 0 0 0 0.75px #fbbf24, 0 0 11px rgba(251, 191, 36, 0.42) !important;
       transform: none !important;
+    }
+
+    /* Distinct TV Focus for Gradient Buttons like Surprise Me */
+    body:not(.focus-dormant) #surpriseMeBtn:focus,
+    body:not(.focus-dormant) #surpriseMeBtn:focus-visible {
+      outline: 0 none transparent !important;
+      border: 2px solid #fbbf24 !important;
+      box-shadow: 0 0 0 2px #fbbf24, 0 0 20px rgba(251, 191, 36, 0.95) !important;
+      transform: scale(1.06) !important;
     }
 
     /* Wind Speed Warning Highlights */
@@ -989,7 +998,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.45) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.46) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1651,6 +1660,7 @@
             <span>🧭</span> Discover Global Destinations &amp; Rocket Launches
           </h3>
           <p class="text-[10px] text-purple-300/80 mt-0.5">Live rocket flight countdowns, extreme weather records &amp; legendary landmarks</p>
+          <p class="text-[10px] text-purple-200/90 mt-0.5 font-medium">Locations opened from Discover are not added to your recent locations</p>
         </div>
         <button id="closeWondersBtnTop" tabindex="0" onclick="closeWondersModal()" title="Close (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
           <span>✕ Close <span id="wondersBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
@@ -1668,16 +1678,11 @@
             <span>🔀</span>
             <span>Shuffle</span>
           </button>
-          <button id="surpriseMeBtn" tabindex="0" onclick="pickRandomWonderAndLoad()" class="tv-focus-amber px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-[0_0_12px_rgba(217,70,239,0.45)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5">
+          <button id="surpriseMeBtn" tabindex="0" onclick="pickRandomWonderAndLoad()" class="tv-focus-amber px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-xs shadow-[0_0_12px_rgba(217,70,239,0.45)] transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer flex items-center gap-1.5 ring-2 ring-transparent focus:ring-amber-400 focus:border-amber-400">
             <span>🎲</span>
             <span>Surprise Me!</span>
           </button>
         </div>
-      </div>
-
-      <!-- Discover Memory Protection Note -->
-      <div class="mb-2 px-1 text-[11px] text-purple-300/80 flex-shrink-0">
-        Locations opened from Discover are not added to your recent locations
       </div>
 
       <!-- Categorized Wonders Content -->
@@ -2432,10 +2437,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=209"></script>
+  <script src="traffic-flood.js?v=210"></script>
     <script>
-    const APP_BUILD = 209;
-    const APP_VERSION = '1.10.45';
+    const APP_BUILD = 210;
+    const APP_VERSION = '1.10.46';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2692,8 +2697,8 @@
         }
       }
 
-      // Location modal has vertical interactive rows (Preferences -> Nearby -> Recent -> GPS -> Search -> Close)
-      if (openModal.id === 'locationModal') return;
+      // Location and Discover modals manage their own vertical/grid navigation
+      if (openModal.id === 'locationModal' || openModal.id === 'wondersModal') return;
 
       // If currently on leaflet-control-zoom-out, allow Up arrow to focus leaflet-control-zoom-in!
       if (document.activeElement && document.activeElement.classList.contains('leaflet-control-zoom-out')) {
@@ -6655,6 +6660,12 @@
     function scrollChipIntoView(chip) {
       const scrollArea = document.getElementById('wondersContentArea');
       if (!scrollArea || !chip) return;
+      try {
+        if (typeof chip.scrollIntoView === 'function') {
+          chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+          return;
+        }
+      } catch (_) {}
       const containerRect = scrollArea.getBoundingClientRect();
       const chipRect = chip.getBoundingClientRect();
       const padding = 20;
