@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=192"></script>
+  <script src="qrcode.min.js?v=193"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -853,7 +853,7 @@
   <div id="dashboardRoot">
     
     <!-- HEADER BAR -->
-    <header class="relative z-10 flex flex-nowrap items-center justify-between gap-2 pb-1 border-b border-white/10 flex-shrink-0">
+    <header class="relative z-30 flex flex-nowrap items-center justify-between gap-2 pb-1 border-b border-white/10 flex-shrink-0">
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <div id="liveStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399] flex-shrink-0 transition-colors duration-500 cursor-pointer" title="All data feeds connected (Live)"></div>
         <div class="flex items-center gap-2 min-w-0 flex-nowrap">
@@ -975,7 +975,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.28) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.29) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2310,10 +2310,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=192"></script>
+  <script src="traffic-flood.js?v=193"></script>
     <script>
-    const APP_BUILD = 192;
-    const APP_VERSION = '1.10.28';
+    const APP_BUILD = 193;
+    const APP_VERSION = '1.10.29';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2690,11 +2690,12 @@
     function updateReloadBadge() {
       const badge = document.getElementById('reloadFocusBadge');
       if (!badge) return;
+      const isHidden = badge.classList.contains('hidden');
       if (appUpdateAvailable) {
-        badge.className = 'absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/60 text-sky-200 text-[11px] font-sans font-medium whitespace-nowrap shadow-[0_0_15px_rgba(56,189,248,0.35)] z-50 pointer-events-none backdrop-blur-md flex items-center gap-1.5';
+        badge.className = 'absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/60 text-sky-200 text-[11px] font-sans font-medium whitespace-nowrap shadow-[0_0_15px_rgba(56,189,248,0.35)] z-50 pointer-events-none backdrop-blur-md flex items-center gap-1.5' + (isHidden ? ' hidden' : '');
         badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse inline-block flex-shrink-0"></span> <span>✨ Update available (v' + (appLatestVersion || '') + ') &bull; Press OK to reload</span>';
       } else {
-        badge.className = 'absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-emerald-300 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none backdrop-blur-md flex items-center gap-1.5';
+        badge.className = 'absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-emerald-300 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none backdrop-blur-md flex items-center gap-1.5' + (isHidden ? ' hidden' : '');
         badge.innerHTML = '<span>✓ Up to date (v' + (appLatestVersion || '') + ') &bull; Press OK to refresh</span>';
       }
     }
