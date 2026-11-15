@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=206"></script>
+  <script src="qrcode.min.js?v=207"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -989,7 +989,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.42) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.43) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1620,7 +1620,7 @@
                   Locations persist automatically across visits, restarts, and months away. If you return to a saved spot and click <span class="text-sky-300 font-semibold">"Locate Me"</span>, your custom title and settings are recalled automatically!
                 </p>
                 <p class="text-amber-200/90 flex items-center gap-1">
-                  <span>📌</span> Hold any location (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> regular favourites so they stay pinned at the front and aren't wiped by <span class="font-semibold text-rose-300">"Clear"</span>.
+                  <span>📌</span> Hold any location (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> regular favourites so they never get pushed off the end and aren't wiped by <span class="font-semibold text-rose-300">"Clear"</span>.
                 </p>
               </div>
               <button type="button" onclick="toggleRecentLocationsInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
@@ -2433,10 +2433,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=206"></script>
+  <script src="traffic-flood.js?v=207"></script>
     <script>
-    const APP_BUILD = 206;
-    const APP_VERSION = '1.10.42';
+    const APP_BUILD = 207;
+    const APP_VERSION = '1.10.43';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5679,7 +5679,7 @@
       renderLocationModalPicks();
 
       const msg = shouldLock
-        ? `Locked "${item.displayName}" — pinned at front of recent locations.`
+        ? `Locked "${item.displayName}" — protected from falling off the list.`
         : `Unlocked "${item.displayName}".`;
       showRecentStatusMessage(msg, shouldLock ? '#34d399' : '#fbbf24');
 
@@ -5887,10 +5887,17 @@
             }
           }
           const allUnique = Array.from(byName.values());
-          const lockedItems = allUnique.filter(item => item.locked);
-          const unlockedItems = allUnique.filter(item => !item.locked);
-          const maxDisplay = Math.max(10, lockedItems.length + 4);
-          const filtered = lockedItems.concat(unlockedItems.slice(0, Math.max(0, maxDisplay - lockedItems.length)));
+          const maxDisplay = 15;
+          // When list grows, make sure locked items are preserved while keeping natural recency order
+          let filtered = allUnique.slice(0, maxDisplay);
+          const includedKeys = new Set(filtered.map(x => x.displayName.toLowerCase()));
+          const missingLocked = allUnique.filter(x => x.locked && !includedKeys.has(x.displayName.toLowerCase()));
+          if (missingLocked.length > 0) {
+            // Drop unlocked items from the tail to make room for locked items that fell past position 15
+            const kept = filtered.filter(x => x.locked);
+            const unlockedKept = filtered.filter(x => !x.locked).slice(0, Math.max(0, maxDisplay - kept.length - missingLocked.length));
+            filtered = allUnique.filter(x => kept.includes(x) || unlockedKept.includes(x) || missingLocked.includes(x));
+          }
 
           if (filtered.length > 0) {
             const curShort = shortenPlaceName(CURRENT_LOCATION.name).toLowerCase();
@@ -5926,7 +5933,7 @@
               btn.appendChild(nameSpan);
 
               btn.title = item.locked
-                ? 'Locked • Always kept at front • Hold or Delete key to unlock / remove'
+                ? 'Locked • Protected from removal • Hold or Delete key to unlock / remove'
                 : (isCurrent
                   ? 'Active Location • Hold or Delete key to lock / remove'
                   : 'Tap / OK to open • Hold or Delete key to lock / remove');
