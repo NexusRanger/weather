@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=230"></script>
+  <script src="qrcode.min.js?v=231"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1122,7 +1122,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.66) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.67) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2568,10 +2568,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=230"></script>
+  <script src="traffic-flood.js?v=231"></script>
     <script>
-    const APP_BUILD = 230;
-    const APP_VERSION = '1.10.66';
+    const APP_BUILD = 231;
+    const APP_VERSION = '1.10.67';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3946,17 +3946,18 @@
     let mapLastFocusedChipIndex = 0;
     let currentMapQueries = [];
 
-    // Auto Zoom: Computes bounds so there are always at least 3 distinct nearby locations in view
-    function applyHistoryMapAutoZoom() {
+    // Auto Zoom: Frames at least 3 distinct nearby locations within a continental boundary
+    function applyHistoryMapAutoZoom(isInitialOpen = false) {
       if (!historyLeafletMap) return;
-      const queries = currentMapQueries && currentMapQueries.length > 0 ? currentMapQueries : Object.values(mapMarkerMap).map(e => e.q);
+      const queries = currentMapQueries && currentMapQueries.length > 0 ? currentMapQueries : Object.values(mapMarkerMap).map(e => e.query || e.q);
       if (!queries || queries.length === 0) return;
 
       // 1. Determine reference point: active popup marker, or map center, or current location
       let refLat = 51.7032, refLon = -2.2259;
-      if (mapActivePopupKey && mapMarkerMap[mapActivePopupKey] && mapMarkerMap[mapActivePopupKey].q) {
-        refLat = mapMarkerMap[mapActivePopupKey].q.lat;
-        refLon = mapMarkerMap[mapActivePopupKey].q.lon;
+      if (mapActivePopupKey && mapMarkerMap[mapActivePopupKey] && (mapMarkerMap[mapActivePopupKey].query || mapMarkerMap[mapActivePopupKey].q)) {
+        const activeQ = mapMarkerMap[mapActivePopupKey].query || mapMarkerMap[mapActivePopupKey].q;
+        refLat = activeQ.lat;
+        refLon = activeQ.lon;
       } else {
         const c = historyLeafletMap.getCenter();
         if (c && typeof c.lat === 'number') {
@@ -3983,25 +3984,43 @@
         _d: calculateHaversineKm(refLat, refLon, q.lat, q.lon)
       })).sort((a, b) => a._d - b._d);
 
-      // 4. Select at least 3 locations (or all if fewer than 3 available)
-      const count = Math.min(3, sortedByDist.length);
-      const targetPoints = sortedByDist.slice(0, count);
+      // 4. Stay strictly within a continental boundary (max 2,500 km radius):
+      // Prefer locations within 2,500 km so we never zoom out to ludicrous multi-continent or world levels
+      const continental = sortedByDist.filter(q => q._d <= 2500);
+      const pool = continental.length > 0 ? continental : sortedByDist.slice(0, 1);
+      const count = Math.min(3, pool.length);
+      const targetPoints = pool.slice(0, count);
       if (targetPoints.length === 0) return;
 
-      // 5. Fit bounds with padding and a regional cap (maxZoom: 10) so the user retains geographic context
+      // 5. Compute bounds and determine optimal zoom clamped strictly between 5 (continental limit) and 10 (regional context)
       const bounds = L.latLngBounds(targetPoints.map(p => [p.lat, p.lon]));
-      mapProgrammaticFlyUntil = Date.now() + 1000;
-      historyLeafletMap.flyToBounds(bounds, {
-        padding: [60, 60],
-        maxZoom: 10,
-        duration: 0.75
-      });
+      let targetZoom = 8;
+      try {
+        const bZoom = historyLeafletMap.getBoundsZoom(bounds, false, [60, 60]);
+        if (typeof bZoom === 'number' && !isNaN(bZoom)) {
+          // Continental boundary: never zoom out past 5, never zoom in past 10
+          targetZoom = Math.max(5, Math.min(10, bZoom));
+        }
+      } catch (_) {
+        targetZoom = 8;
+      }
 
-      // 6. Automatically pop up the center pin once the animation settles
-      setTimeout(() => {
-        autoOpenCenterMarkerPopup();
-        stripMapCanvasFocusables();
-      }, 800);
+      const center = count === 1 ? [targetPoints[0].lat, targetPoints[0].lon] : bounds.getCenter();
+
+      mapProgrammaticFlyUntil = Date.now() + (isInitialOpen ? 450 : 950);
+      if (isInitialOpen) {
+        historyLeafletMap.setView(center, targetZoom);
+        setTimeout(() => {
+          autoOpenCenterMarkerPopup();
+          stripMapCanvasFocusables();
+        }, 150);
+      } else {
+        historyLeafletMap.flyTo(center, targetZoom, { duration: 0.75 });
+        setTimeout(() => {
+          autoOpenCenterMarkerPopup();
+          stripMapCanvasFocusables();
+        }, 800);
+      }
     }
 
     function setupHistoryMapZoomDpad() {
@@ -4426,15 +4445,8 @@
 
       if (isInitialOpen && historyLeafletMap) {
         try {
-          mapProgrammaticFlyUntil = Date.now() + 600;
-          const currentRef = getMapCurrentReference();
-          const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
-          // Open centered on user's current location with a focused regional zoom
-          historyLeafletMap.setView([currentRef.lat, currentRef.lon], isNarrow ? 7 : 8);
-          setTimeout(() => {
-            autoOpenCenterMarkerPopup();
-            stripMapCanvasFocusables();
-          }, 250);
+          // Open by default in AUTO zoom mode framing nearby locations within continental bounds
+          applyHistoryMapAutoZoom(true);
         } catch (_) {}
       }
 
