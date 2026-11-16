@@ -1056,7 +1056,7 @@
             </span>
           </div>
           <button id="headerLocationTitle" type="button" tabindex="-1" onclick="openLocationModal()" title="Change location (Press OK)" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent" style="max-width: min(320px, 30vw); outline: none !important; outline-offset: 0 !important;">
-            <span id="headerLocationText" class="inline-block whitespace-nowrap">Nailsworth</span>
+            <span id="headerLocationText" class="inline-block whitespace-nowrap">Dunkirk Mills</span>
           </button>
           <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span id="headerPostcodeBadge">GL5 5HH</span>
@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.84) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.85) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1908,7 +1908,7 @@
         </div>
         <div class="flex items-center gap-2">
           <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
-          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const all=document.querySelectorAll('#mapRecentChips button');const c=all[mapLastFocusedChipIndex]||all[0];if(c){try{c.focus({preventScroll:true});}catch(_){c.focus();}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
+          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const all=document.querySelectorAll('#mapRecentChips button');const c=all[0];if(c){try{c.focus({preventScroll:true});}catch(_){c.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
             <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
           </button>
         </div>
@@ -2608,10 +2608,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=248"></script>
+  <script src="traffic-flood.js?v=249"></script>
     <script>
-    const APP_BUILD = 248;
-    const APP_VERSION = '1.10.84';
+    const APP_BUILD = 249;
+    const APP_VERSION = '1.10.85';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3664,6 +3664,7 @@
     function isPersonalLocationName(name) {
       if (!name) return true;
       const s = String(name).trim().toLowerCase();
+      if (/dunkirk/i.test(s)) return false; // Explicitly allowed: Dunkirk Mills
       if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location') return true;
       if (/['’]s\b/i.test(s)) return true; // e.g. Phil's, Mum's, John's
       if (/^(my|our|the)\s+/i.test(s)) return true; // e.g. My House, The Grand Hotel
@@ -3674,8 +3675,7 @@
         'church', 'hall', 'shop', 'store', 'cafe', 'pub', 'bar', 'restaurant', 'place',
         'retreat', 'hideaway', 'base', 'mum', 'mums', 'mom', 'moms', 'dad', 'dads', 'nan',
         'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'current location',
-        'mill', 'mills', 'millswood', 'dunkirk', 'dentiste', 'pool', 'storr', 'bridge',
-        'tower', 'beach', 'ne40', 'ne66', 'venus'
+        'dentiste', 'pool', 'storr', 'ne40', 'ne66', 'venus'
       ];
       return customWords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(s));
     }
@@ -3719,6 +3719,9 @@
 
     function getDepersonalizedLocationName(loc) {
       if (!loc) return '';
+      if (loc.name && /dunkirk/i.test(loc.name)) return 'Dunkirk Mills';
+      if (loc.geoName && /dunkirk/i.test(loc.geoName)) return 'Dunkirk Mills';
+
       const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
 
@@ -4170,62 +4173,76 @@
       const zoomIn = container.querySelector('.leaflet-control-zoom-in');
       const zoomOut = container.querySelector('.leaflet-control-zoom-out');
 
-      if (zoomIn && !zoomIn._dpadAttached) {
-        zoomIn._dpadAttached = true;
+      if (zoomIn) {
         zoomIn.setAttribute('tabindex', '0');
         zoomIn.classList.add('tv-focus-amber');
-        zoomIn.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            const zOut = container.querySelector('.leaflet-control-zoom-out');
-            if (zOut) zOut.focus();
-          } else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-            e.preventDefault();
-            const topClose = document.getElementById('closeMapBtnTop');
-            if (topClose) topClose.focus();
-          }
-        });
+        zoomIn.setAttribute('role', 'button');
+        zoomIn.setAttribute('aria-label', 'Zoom In (+)');
+        if (!zoomIn._dpadAttached) {
+          zoomIn._dpadAttached = true;
+          zoomIn.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              if (zoomOut) zoomOut.focus();
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+              e.preventDefault();
+              const topClose = document.getElementById('closeMapBtnTop');
+              if (topClose) topClose.focus();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (historyLeafletMap) historyLeafletMap.zoomIn();
+            }
+          });
+        }
       }
 
-      if (zoomOut && !zoomOut._dpadAttached) {
-        zoomOut._dpadAttached = true;
+      if (zoomOut) {
         zoomOut.setAttribute('tabindex', '0');
         zoomOut.classList.add('tv-focus-amber');
-        zoomOut.addEventListener('keydown', (e) => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            const allChips = document.querySelectorAll('#mapRecentChips button');
-            const target = allChips[mapLastFocusedChipIndex] || allChips[0];
-            if (target) {
-              try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+        zoomOut.setAttribute('role', 'button');
+        zoomOut.setAttribute('aria-label', 'Zoom Out (-)');
+        if (!zoomOut._dpadAttached) {
+          zoomOut._dpadAttached = true;
+          zoomOut.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+              // Down from minus (-) moves to the first location (chips[0])
+              e.preventDefault();
+              const allChips = document.querySelectorAll('#mapRecentChips button');
+              const target = allChips[0];
+              if (target) {
+                try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+              }
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              if (zoomIn) zoomIn.focus();
+            } else if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              const topClose = document.getElementById('closeMapBtnTop');
+              if (topClose) topClose.focus();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (historyLeafletMap) historyLeafletMap.zoomOut();
             }
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            const zIn = container.querySelector('.leaflet-control-zoom-in');
-            if (zIn) zIn.focus();
-          } else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            const topClose = document.getElementById('closeMapBtnTop');
-            if (topClose) topClose.focus();
-          }
-        });
+          });
+        }
       }
     }
 
     function getMapCurrentReference() {
       if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') {
+        const isDunkirk = CURRENT_LOCATION.name && /dunkirk/i.test(CURRENT_LOCATION.name);
         return {
-          name: getDepersonalizedLocationName(CURRENT_LOCATION),
-          postcode: getOutwardPostcode(CURRENT_LOCATION.postcode),
+          name: isDunkirk ? 'Dunkirk Mills' : getDepersonalizedLocationName(CURRENT_LOCATION),
+          postcode: isDunkirk ? (CURRENT_LOCATION.postcode || 'GL5 5HH') : (getOutwardPostcode(CURRENT_LOCATION.postcode) || CURRENT_LOCATION.postcode || ''),
           lat: CURRENT_LOCATION.lat,
           lon: CURRENT_LOCATION.lon
         };
       }
       return {
-        name: 'Nailsworth',
-        postcode: 'GL5',
+        name: 'Dunkirk Mills',
+        postcode: 'GL5 5HH',
         lat: 51.7032,
-        lon: -2.2259
+        lon: -2.2266
       };
     }
 
@@ -4233,11 +4250,11 @@
       const container = document.getElementById('historyLeafletMap');
       if (!container) return;
       container.setAttribute('tabindex', '-1');
-      // All canvas elements including Leaflet zoom buttons get tabindex="-1" so TV D-pads stay firmly on location chips!
-      const focusables = container.querySelectorAll('a, button, [tabindex], input');
-      focusables.forEach(el => {
+      setupHistoryMapZoomDpad();
+      // Keep map canvas tiles, links, and attribution at tabindex="-1" while keeping zoom buttons focusable
+      const nonZoomFocusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), button:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out)');
+      nonZoomFocusables.forEach(el => {
         el.setAttribute('tabindex', '-1');
-        el.classList.remove('tv-focused');
       });
     }
 
@@ -4667,17 +4684,22 @@
               }
               // If already on the first chip, stay firmly on the first chip!
             } else if (e.key === 'ArrowDown') {
-              // Deliberate Down press steps down into the bottom controls row
+              // Pressing down from location goes straight to the bottom Close button!
               e.preventDefault();
               e.stopPropagation();
-              const curBtn = document.getElementById('mapReturnCurrentBtn') || document.getElementById('closeMapBtnBottom');
-              if (curBtn) curBtn.focus();
+              const botClose = document.getElementById('closeMapBtnBottom');
+              if (botClose) botClose.focus();
             } else if (e.key === 'ArrowUp') {
-              // Deliberate Up press moves to top Close, NEVER to the minus button!
+              // Pressing up from location goes up to the minus (-) zoom button!
               e.preventDefault();
               e.stopPropagation();
-              const topClose = document.getElementById('closeMapBtnTop');
-              if (topClose) topClose.focus();
+              const zOut = document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');
+              if (zOut && zOut.offsetParent !== null) {
+                zOut.focus();
+              } else {
+                const topClose = document.getElementById('closeMapBtnTop');
+                if (topClose) topClose.focus();
+              }
             }
           };
 
@@ -5008,7 +5030,7 @@
           zoomSnap: 1,
           zoomDelta: 1,
           fadeAnimation: false,
-          minZoom: 3,
+          minZoom: 1,
           maxBounds: [[-85.0511, -180], [85.0511, 180]],
           maxBoundsViscosity: 1.0,
           worldCopyJump: false
@@ -5139,10 +5161,10 @@
     }
 
     let CURRENT_LOCATION = {
-      name: 'Nailsworth',
+      name: 'Dunkirk Mills',
       postcode: 'GL5 5HH',
       lat: 51.7032,
-      lon: -2.2259,
+      lon: -2.2266,
       desc: '51.70°N, 2.23°W • Elev. 120m'
     };
     let ACTIVE_TIMEZONE = 'Europe/London';
@@ -5533,12 +5555,21 @@
       let resolvedName = '';
       let resolvedPostcode = '';
 
-      // Check proximity to Dunkirk Mills (within ~600m: 0.6 km)
+      // Calibrate Shield TV Box / Wi-Fi IP geolocation:
+      // Dunkirk Mills GL5 5HH coordinates are 51.7032, -2.2266.
+      // Accept local Wi-Fi / IP coordinates within ~3.8 km radius (covers Nailsworth, Woodchester, and valley cells)
       const DUNKIRK_LAT = 51.7032;
       const DUNKIRK_LON = -2.2266;
-      if (typeof calculateHaversineKm === 'function' && calculateHaversineKm(lat, lon, DUNKIRK_LAT, DUNKIRK_LON) <= 0.6) {
+      const distToDunkirk = (typeof calculateHaversineKm === 'function')
+        ? calculateHaversineKm(lat, lon, DUNKIRK_LAT, DUNKIRK_LON)
+        : Math.hypot(lat - DUNKIRK_LAT, lon - DUNKIRK_LON) * 111;
+
+      if (distToDunkirk <= 3.8 || (lat >= 51.670 && lat <= 51.735 && lon >= -2.265 && lon <= -2.190)) {
         resolvedName = 'Dunkirk Mills';
         resolvedPostcode = 'GL5 5HH';
+        // Snap to true high-precision coordinates for exact forecast & radar accuracy
+        lat = DUNKIRK_LAT;
+        lon = DUNKIRK_LON;
       }
 
       // Proximity Memory Check: Look through user's saved locations (up to 50 places)
@@ -12302,7 +12333,7 @@
           zoomSnap: 1,        // Strictly snap to whole integer zoom levels to eliminate TV subpixel tile gaps
           zoomDelta: 1,
           fadeAnimation: false, // Avoid GPU texture tearing / ghost tiles on older TV processors
-          minZoom: 3,
+          minZoom: 1,
           maxBounds: [[-85.0511, -180], [85.0511, 180]],
           maxBoundsViscosity: 1.0,
           worldCopyJump: false
