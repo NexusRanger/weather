@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=213"></script>
+  <script src="qrcode.min.js?v=214"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -998,7 +998,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.49) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.50) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1662,7 +1662,7 @@
           <p class="text-[10px] text-purple-300/80 mt-0.5">Live rocket flight countdowns, extreme weather records &amp; legendary landmarks</p>
           <p class="text-[10px] text-purple-200/90 mt-0.5 font-medium">Locations opened from Discover are not added to your recent locations</p>
         </div>
-        <button id="closeWondersBtnTop" tabindex="0" onclick="closeWondersModal()" title="Close (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
+        <button id="closeWondersBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('surpriseMeBtn')||document.getElementById('shuffleWondersBtn');if(b){event.preventDefault();b.focus();}}" onclick="closeWondersModal()" title="Close (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
           <span>✕ Close <span id="wondersBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
         </button>
       </div>
@@ -2437,10 +2437,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=213"></script>
+  <script src="traffic-flood.js?v=214"></script>
     <script>
-    const APP_BUILD = 213;
-    const APP_VERSION = '1.10.49';
+    const APP_BUILD = 214;
+    const APP_VERSION = '1.10.50';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2670,6 +2670,17 @@
                           (openModal.id === 'tvExitCastModal' ? document.getElementById('tvCancelExitBtn') : null);
 
       const activeEl = document.activeElement;
+
+      // If a modal is open and focus has not yet entered the modal, immediately focus its Close button
+      if (topCloseBtn && (!activeEl || activeEl === document.body || !openModal.contains(activeEl))) {
+        e.preventDefault();
+        e.stopPropagation();
+        topCloseBtn.focus();
+        lastUpClickTarget = null;
+        lastUpClickTime = 0;
+        return;
+      }
+
       const isCloseBtn = (
         (topCloseBtn && activeEl === topCloseBtn) ||
         (activeEl && activeEl.id && (
@@ -6748,13 +6759,11 @@
         } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
           lastUpClickTarget = null;
           lastUpClickTime = 0;
-          if (shuffleBtn) shuffleBtn.focus();
-          else if (surpriseBtn) surpriseBtn.focus();
+          e.preventDefault();
+          if (surpriseBtn) surpriseBtn.focus();
+          else if (shuffleBtn) shuffleBtn.focus();
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-          lastUpClickTarget = null;
-          lastUpClickTime = 0;
-          if (shuffleBtn) shuffleBtn.focus();
-          else if (surpriseBtn) surpriseBtn.focus();
+          e.preventDefault();
         }
         return;
       }
@@ -6764,18 +6773,19 @@
         if (e.key === 'ArrowUp' || (isTab && e.shiftKey)) {
           lastUpClickTarget = null;
           lastUpClickTime = 0;
+          e.preventDefault();
           if (closeBtn) closeBtn.focus();
         } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
           if (surpriseBtn) surpriseBtn.focus();
         } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
+          e.preventDefault();
           if (allChips.length > 0) {
             allChips[0].focus();
             scrollChipIntoView(allChips[0]);
           }
         } else if (e.key === 'ArrowLeft') {
-          lastUpClickTarget = null;
-          lastUpClickTime = 0;
-          if (closeBtn) closeBtn.focus();
+          e.preventDefault();
         }
         return;
       }
@@ -6785,23 +6795,19 @@
         if (e.key === 'ArrowUp' || (isTab && e.shiftKey)) {
           lastUpClickTarget = null;
           lastUpClickTime = 0;
+          e.preventDefault();
           if (closeBtn) closeBtn.focus();
         } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
           if (shuffleBtn) shuffleBtn.focus();
-          else if (closeBtn) {
-            lastUpClickTarget = null;
-            lastUpClickTime = 0;
-            closeBtn.focus();
-          }
         } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
+          e.preventDefault();
           if (allChips.length > 0) {
             allChips[0].focus();
             scrollChipIntoView(allChips[0]);
           }
         } else if (e.key === 'ArrowRight') {
-          lastUpClickTarget = null;
-          lastUpClickTime = 0;
-          if (closeBtn) closeBtn.focus();
+          e.preventDefault();
         }
         return;
       }
@@ -7002,14 +7008,22 @@
       resetWondersAutoCloseTimer();
       updateWondersCountdownDisplay();
 
+      // Clear prior focus so the user clearly sees the Close button light up in amber (identical to Location modal & other interfaces)
+      if (document.activeElement && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+
+      // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
+      // and then the Close button prominently highlights unless user already moved focus inside modal.
       setTimeout(() => {
-        const surpriseBtn = document.getElementById('surpriseMeBtn');
-        if (surpriseBtn) {
-          surpriseBtn.focus();
+        const closeBtn = document.getElementById('closeWondersBtnTop');
+        const activeInModal = modal && document.activeElement && modal.contains(document.activeElement);
+        if (closeBtn && modal && !modal.classList.contains('hidden') && !activeInModal) {
+          closeBtn.focus();
           const scrollArea = document.getElementById('wondersContentArea');
           if (scrollArea) scrollArea.scrollTop = 0;
         }
-      }, 100);
+      }, 1200);
     }
 
     function closeWondersModal(pop = true) {
@@ -7163,7 +7177,10 @@
         const t = document.getElementById('headerLocationTitle');
         if (t) t.textContent = CURRENT_LOCATION.name;
       }
-      document.getElementById('headerPostcodeBadge').textContent = CURRENT_LOCATION.postcode;
+      const rawPc = CURRENT_LOCATION.postcode ? CURRENT_LOCATION.postcode.trim() : '';
+      const displayPc = (rawPc && rawPc !== 'undefined' && rawPc !== 'GEO' && rawPc !== 'GPS') ? rawPc : 'Search';
+      const badgeEl = document.getElementById('headerPostcodeBadge');
+      if (badgeEl) badgeEl.textContent = displayPc;
       document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
 
