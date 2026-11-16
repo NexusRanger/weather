@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.93) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.94) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2620,10 +2620,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=257"></script>
+  <script src="traffic-flood.js?v=258"></script>
     <script>
-    const APP_BUILD = 257;
-    const APP_VERSION = '1.10.93';
+    const APP_BUILD = 258;
+    const APP_VERSION = '1.10.94';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4443,18 +4443,19 @@
     // Available World Map Styles
     const HISTORY_MAP_STYLES = {
       physical: {
-        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/{z}/{y}/{x}',
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}?v=258',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}?v=258',
+        maxNativeZoom: 8,
         maxZoom: 16
       },
       satellite: {
-        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?v=258',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}?v=258',
         maxZoom: 16
       },
       dark: {
-        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}?v=258',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}?v=258',
         maxZoom: 16
       }
     };
@@ -4506,7 +4507,8 @@
       // Strictly single-world bounded: noWrap ensures only ONE world is rendered without duplicate instances!
       historyBaseTileLayer = L.tileLayer(conf.base, {
         attribution: '',
-        maxZoom: conf.maxZoom,
+        maxNativeZoom: conf.maxNativeZoom || conf.maxZoom || 16,
+        maxZoom: conf.maxZoom || 16,
         detectRetina: false,
         noWrap: true,
         bounds: [[-85.0511, -180], [85.0511, 180]]
@@ -4515,7 +4517,8 @@
       if (conf.ref) {
         historyRefTileLayer = L.tileLayer(conf.ref, {
           attribution: '',
-          maxZoom: conf.maxZoom,
+          maxNativeZoom: conf.maxRefNativeZoom || conf.maxZoom || 16,
+          maxZoom: conf.maxZoom || 16,
           detectRetina: false,
           noWrap: true,
           bounds: [[-85.0511, -180], [85.0511, 180]]
