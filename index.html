@@ -3627,7 +3627,7 @@
     const USER_RECENTS_STORAGE_KEY = 'ambient_user_recent_locations';
     const PUBLIC_MAP_CACHE_KEY = 'ambient_public_map_cache';
 
-    // One-time startup migration: ensure existing user recents are safely preserved in personal storage
+    // Startup storage sanitization & migration: purge unwanted test queries (Sturgeon County, Iran, IN)
     try {
       if (!localStorage.getItem(USER_RECENTS_STORAGE_KEY)) {
         const legacy = localStorage.getItem('ambient_location_queries');
@@ -3635,14 +3635,26 @@
           localStorage.setItem(USER_RECENTS_STORAGE_KEY, legacy);
         }
       }
-      const rawMem = localStorage.getItem(PUBLIC_MAP_CACHE_KEY) || localStorage.getItem('ambient_location_queries');
-      if (rawMem) {
-        let memArr = JSON.parse(rawMem);
-        if (Array.isArray(memArr)) {
-          memArr = memArr.filter(q => q && q.name && !q.name.toLowerCase().includes('los angeles') && !isPersonalLocationName(q.name));
-          localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(memArr));
-        }
-      }
+      [USER_RECENTS_STORAGE_KEY, PUBLIC_MAP_CACHE_KEY, 'ambient_location_queries'].forEach(k => {
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            let arr = JSON.parse(raw);
+            if (Array.isArray(arr)) {
+              arr = arr.filter(q => {
+                if (!q || !q.name) return false;
+                const n = q.name.trim().toLowerCase();
+                if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
+                if (typeof q.lat === 'number' && typeof q.lon === 'number') {
+                  if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
+                }
+                return true;
+              });
+              localStorage.setItem(k, JSON.stringify(arr));
+            }
+          }
+        } catch (_) {}
+      });
     } catch (_) {}
 
     function getOutwardPostcode(pc) {
@@ -3752,7 +3764,16 @@
       try {
         const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
         const arr = raw ? JSON.parse(raw) : [];
-        return Array.isArray(arr) ? arr.filter(q => q && q.name) : [];
+        if (!Array.isArray(arr)) return [];
+        return arr.filter(q => {
+          if (!q || !q.name) return false;
+          const n = q.name.trim().toLowerCase();
+          if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
+          if (typeof q.lat === 'number' && typeof q.lon === 'number') {
+            if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
+          }
+          return true;
+        });
       } catch (_) {
         return [];
       }
@@ -3831,6 +3852,8 @@
               if (!q || !q.lat || !q.lon || !q.name) return false;
               const n = (q.name || '').toLowerCase().trim();
               if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return false;
+              if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return false;
+              if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
               if (isPersonalLocationName(q.name)) return false;
               return q.timestamp && q.timestamp >= cutoff;
             }).map(q => ({
@@ -5085,13 +5108,16 @@
               if (sq.lat && sq.lon && ts >= cutoff) {
                 const name = (sq.name || '').trim();
                 const nLower = name.toLowerCase();
-                // Filter out any mock test data or country-only entries
-                if (name && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(name)) {
+                // Filter out any mock test data, country-only entries, or purged locations (Sturgeon County, Iran, IN)
+                const latNum = parseFloat(sq.lat);
+                const lonNum = parseFloat(sq.lon);
+                const isPurged = nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64);
+                if (name && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(name)) {
                   sheetQueries.push({
                     name: name,
                     postcode: sq.postcode || '',
-                    lat: parseFloat(sq.lat),
-                    lon: parseFloat(sq.lon),
+                    lat: latNum,
+                    lon: lonNum,
                     timestamp: ts
                   });
                 }
