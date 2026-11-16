@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=231"></script>
+  <script src="qrcode.min.js?v=232"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -733,6 +733,17 @@
       display: none !important;
     }
 
+    /* Bottom Locations Carousel (Smooth Tablet Touch Scroll & Snap) */
+    #mapRecentChips {
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      scroll-snap-type: x proximity;
+      touch-action: pan-x;
+    }
+    #mapRecentChips > button {
+      scroll-snap-align: center;
+    }
+
     /* Location Map: Callout popup positioned to the left of the pin with seamlessly integrated arrow */
     .history-map-tall-popup {
       margin: 0 !important;
@@ -1122,7 +1133,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.67) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.68) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2568,10 +2579,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=231"></script>
+  <script src="traffic-flood.js?v=232"></script>
     <script>
-    const APP_BUILD = 231;
-    const APP_VERSION = '1.10.67';
+    const APP_BUILD = 232;
+    const APP_VERSION = '1.10.68';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3945,6 +3956,49 @@
     let mapProgrammaticFlyUntil = 0;
     let mapLastFocusedChipIndex = 0;
     let currentMapQueries = [];
+    let isProgrammaticChipScroll = false;
+
+    // Locks current zoom level when moving across nearby locations; only zooms out if target would be isolated on screen
+    function getOptimalMoveZoom(targetLat, targetLon) {
+      if (!historyLeafletMap) return 8;
+      const currentZoom = historyLeafletMap.getZoom();
+      const queries = currentMapQueries && currentMapQueries.length > 0 ? currentMapQueries : Object.values(mapMarkerMap).map(e => e.query || e.q);
+
+      // Find distance to the nearest other distinct location
+      let minDistanceKm = Infinity;
+      for (const other of queries) {
+        if (!other || typeof other.lat !== 'number' || typeof other.lon !== 'number') continue;
+        if (Math.abs(other.lat - targetLat) < 0.01 && Math.abs(other.lon - targetLon) < 0.01) continue;
+        const d = calculateHaversineKm(targetLat, targetLon, other.lat, other.lon);
+        if (d < minDistanceKm) {
+          minDistanceKm = d;
+        }
+      }
+
+      // Approximate visible radius from map center at current zoom:
+      // Zoom 10: ~20km, Zoom 9: ~40km, Zoom 8: ~80km, Zoom 7: ~160km, Zoom 6: ~320km, Zoom 5: ~640km
+      const currentVisibleRadiusKm = 20 * Math.pow(2, Math.max(0, 10 - currentZoom));
+
+      // If at least one other location is already in view, lock the current zoom level!
+      if (minDistanceKm <= currentVisibleRadiusKm) {
+        return currentZoom;
+      }
+
+      // If looking at an isolated location with only 1 pin on screen, zoom out just enough to include the nearest neighbor
+      let neededZoom = 8;
+      if (minDistanceKm > 320) {
+        neededZoom = 5; // Continental limit
+      } else if (minDistanceKm > 160) {
+        neededZoom = 6;
+      } else if (minDistanceKm > 80) {
+        neededZoom = 7;
+      } else {
+        neededZoom = 8;
+      }
+
+      // Zoom out to neededZoom, but never zoom in unnecessarily
+      return Math.min(currentZoom, neededZoom);
+    }
 
     // Auto Zoom: Frames at least 3 distinct nearby locations within a continental boundary
     function applyHistoryMapAutoZoom(isInitialOpen = false) {
@@ -4007,17 +4061,18 @@
 
       const center = count === 1 ? [targetPoints[0].lat, targetPoints[0].lon] : bounds.getCenter();
 
-      mapProgrammaticFlyUntil = Date.now() + (isInitialOpen ? 450 : 950);
       if (isInitialOpen) {
+        mapProgrammaticFlyUntil = 0;
         historyLeafletMap.setView(center, targetZoom);
         setTimeout(() => {
-          autoOpenCenterMarkerPopup();
+          autoOpenCenterMarkerPopup(true);
           stripMapCanvasFocusables();
-        }, 150);
+        }, 80);
       } else {
+        mapProgrammaticFlyUntil = Date.now() + 950;
         historyLeafletMap.flyTo(center, targetZoom, { duration: 0.75 });
         setTimeout(() => {
-          autoOpenCenterMarkerPopup();
+          autoOpenCenterMarkerPopup(true);
           stripMapCanvasFocusables();
         }, 800);
       }
@@ -4148,9 +4203,9 @@
       });
     }
 
-    function autoOpenCenterMarkerPopup() {
+    function autoOpenCenterMarkerPopup(force = false) {
       if (!historyLeafletMap) return;
-      if (Date.now() < mapProgrammaticFlyUntil) return;
+      if (!force && Date.now() < mapProgrammaticFlyUntil) return;
 
       const size = historyLeafletMap.getSize();
       if (!size || !size.x || !size.y) return;
@@ -4188,6 +4243,7 @@
     }
 
     function renderHistoryMarkersAndChips(queries, isInitialOpen = false) {
+      const prevActiveKey = mapActivePopupKey;
       if (historyMarkersLayer) {
         historyMarkersLayer.clearLayers();
       }
@@ -4250,22 +4306,39 @@
             : `${q.name} (${chipDistLabel} from current location) — Press OK to load weather`;
           btn.innerHTML = `<span style="font-size:11px;">📍</span><span>${escapeHtml(shortName)}</span><span class="text-[10px] opacity-75 font-mono">• ${chipDistLabel}</span>`;
 
-          const panAndOpenOnMap = () => {
-            try {
-              btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-            } catch (_) {}
+          const panAndOpenOnMap = (fromUserScroll = false) => {
+            if (!fromUserScroll) {
+              isProgrammaticChipScroll = true;
+              try {
+                btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+              } catch (_) {}
+              setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
+            }
             const entry = mapMarkerMap[key];
             if (historyLeafletMap && entry && entry.marker) {
-              mapProgrammaticFlyUntil = Date.now() + 950;
+              mapProgrammaticFlyUntil = Date.now() + 650;
               mapActivePopupKey = key;
-              const targetZoom = Math.max(historyLeafletMap.getZoom(), 7);
-              historyLeafletMap.flyTo([q.lat, q.lon], targetZoom, { duration: 0.75 });
+
+              const currentZoom = historyLeafletMap.getZoom();
+              const targetZoom = getOptimalMoveZoom(q.lat, q.lon);
+
+              if (targetZoom === currentZoom) {
+                // Lock the current zoom level and glide across smoothly without tile rewriting
+                historyLeafletMap.panTo([q.lat, q.lon], { duration: 0.45, easeLinearity: 0.25 });
+              } else {
+                // Smoothly adjust zoom only if looking at an isolated location with 1 pin on screen
+                historyLeafletMap.flyTo([q.lat, q.lon], targetZoom, { duration: 0.6 });
+              }
+
               setTimeout(() => {
                 entry.marker.openPopup();
                 stripMapCanvasFocusables();
-              }, 250);
+              }, 220);
             }
           };
+
+          btn._chipKey = key;
+          btn._panAction = panAndOpenOnMap;
 
           // TV Remote UX: Stepping across the bottom shortcuts automatically flies the map & pops up the info box
           btn.onfocus = () => {
@@ -4321,6 +4394,55 @@
 
           chipsEl.appendChild(btn);
         });
+
+        // Tablet UX: Sliding the bottom list sideways continuously updates the center item and smoothly pans the map
+        let chipScrollTimeout = null;
+        let lastScrolledChipKey = null;
+
+        chipsEl.onscroll = () => {
+          if (isProgrammaticChipScroll) return;
+          if (chipScrollTimeout) clearTimeout(chipScrollTimeout);
+
+          chipScrollTimeout = setTimeout(() => {
+            const containerRect = chipsEl.getBoundingClientRect();
+            const containerCenter = containerRect.left + containerRect.width / 2;
+
+            const allButtons = chipsEl.querySelectorAll('button');
+            let closestBtn = null;
+            let closestDist = Infinity;
+            let closestIdx = 0;
+
+            allButtons.forEach((b, i) => {
+              const r = b.getBoundingClientRect();
+              const bCenter = r.left + r.width / 2;
+              const dist = Math.abs(containerCenter - bCenter);
+              if (dist < closestDist) {
+                closestDist = dist;
+                closestBtn = b;
+                closestIdx = i;
+              }
+            });
+
+            if (closestBtn && closestBtn._chipKey && closestBtn._chipKey !== lastScrolledChipKey) {
+              lastScrolledChipKey = closestBtn._chipKey;
+              mapLastFocusedChipIndex = closestIdx;
+
+              // Visual highlight on tablet without stealing keyboard focus
+              allButtons.forEach(b => b.classList.remove('ring-2', 'ring-amber-400', 'bg-sky-500/40'));
+              closestBtn.classList.add('ring-2', 'ring-amber-400', 'bg-sky-500/40');
+
+              if (typeof closestBtn._panAction === 'function') {
+                closestBtn._panAction(true);
+              }
+            }
+          }, 80);
+        };
+
+        chipsEl.onwheel = (e) => {
+          if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+            chipsEl.scrollLeft += e.deltaY;
+          }
+        };
       }
 
       const bounds = [];
@@ -4442,6 +4564,21 @@
 
         mapMarkerMap[key] = { marker, lat: q.lat, lon: q.lon, query: q };
       });
+
+      // Keep or open the active popup:
+      // If a popup key was already active (or on initial load / current location pin), ensure its popup stays open!
+      const currentKey = `${currentRef.lat.toFixed(4)}_${currentRef.lon.toFixed(4)}`;
+      const keyToOpen = prevActiveKey || currentKey;
+      const entryToOpen = mapMarkerMap[keyToOpen] || mapMarkerMap[currentKey] || Object.values(mapMarkerMap).find(e => e.query && e.query.isCurrent);
+      if (entryToOpen && entryToOpen.marker) {
+        mapActivePopupKey = keyToOpen;
+        setTimeout(() => {
+          if (entryToOpen && entryToOpen.marker) {
+            entryToOpen.marker.openPopup();
+            stripMapCanvasFocusables();
+          }
+        }, 100);
+      }
 
       if (isInitialOpen && historyLeafletMap) {
         try {
