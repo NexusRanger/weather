@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.98) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.99) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2620,10 +2620,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=262"></script>
+  <script src="traffic-flood.js?v=263"></script>
     <script>
-    const APP_BUILD = 262;
-    const APP_VERSION = '1.10.98';
+    const APP_BUILD = 263;
+    const APP_VERSION = '1.10.99';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5738,6 +5738,7 @@
           localStorage.setItem('ambient_last_gps_loc', JSON.stringify(CURRENT_LOCATION));
         } catch (_) {}
       }
+      return true;
     }
 
     function getSavedGpsLocation() {
@@ -6954,21 +6955,19 @@
             status.textContent = `📍 Resolved coordinates: ${parsedLoc.lat.toFixed(4)}, ${parsedLoc.lon.toFixed(4)}`;
           }
           if (parsedLoc.name) pendingCustomLocationName = parsedLoc.name;
-          const coordSuccess = await lookupCoords(parsedLoc.lat, parsedLoc.lon, true);
-          if (coordSuccess) {
-            if (parsedLoc.name) {
-              CURRENT_LOCATION.name = parsedLoc.name;
-              try {
-                saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', parsedLoc.lat, parsedLoc.lon);
-              } catch (_) {}
-              updateWeatherUI();
-            }
-            if (btn) btn.disabled = false;
-            pendingCustomLocationName = '';
-            clearUrlLocationParams();
-            closeLocationModal();
-            return;
+          await lookupCoords(parsedLoc.lat, parsedLoc.lon, true);
+          if (parsedLoc.name) {
+            CURRENT_LOCATION.name = parsedLoc.name;
+            try {
+              saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', parsedLoc.lat, parsedLoc.lon);
+            } catch (_) {}
+            updateWeatherUI();
           }
+          if (btn) btn.disabled = false;
+          pendingCustomLocationName = '';
+          clearUrlLocationParams();
+          closeLocationModal();
+          return;
         } else if (parsedLoc.type === 'text') {
           // Extracted clean place name / address from share text or URL
           q = parsedLoc.query;
@@ -6982,7 +6981,7 @@
           // Step 1: Query CORS-enabled microlink service
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const timeoutId = setTimeout(() => controller.abort(), 4500);
             const mRes = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(parsedLoc.url)}`, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (mRes.ok) {
@@ -6995,19 +6994,17 @@
                 if (subParsed && subParsed.type === 'coords') {
                   const placeNameFinal = subParsed.name || (placeTitle && !placeTitle.includes('Google Maps') ? placeTitle : '');
                   if (placeNameFinal) pendingCustomLocationName = placeNameFinal;
-                  const cOk = await lookupCoords(subParsed.lat, subParsed.lon, true);
-                  if (cOk) {
-                    if (placeNameFinal) {
-                      CURRENT_LOCATION.name = placeNameFinal;
-                      try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', subParsed.lat, subParsed.lon); } catch (_) {}
-                      updateWeatherUI();
-                    }
-                    if (btn) btn.disabled = false;
-                    pendingCustomLocationName = '';
-                    clearUrlLocationParams();
-                    closeLocationModal();
-                    return;
+                  await lookupCoords(subParsed.lat, subParsed.lon, true);
+                  if (placeNameFinal) {
+                    CURRENT_LOCATION.name = placeNameFinal;
+                    try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', subParsed.lat, subParsed.lon); } catch (_) {}
+                    updateWeatherUI();
                   }
+                  if (btn) btn.disabled = false;
+                  pendingCustomLocationName = '';
+                  clearUrlLocationParams();
+                  closeLocationModal();
+                  return;
                 } else if (subParsed && subParsed.type === 'text') {
                   q = subParsed.query;
                   input.value = q;
