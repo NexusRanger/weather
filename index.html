@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=215"></script>
+  <script src="qrcode.min.js?v=216"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -998,7 +998,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.51) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.52) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2437,10 +2437,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=215"></script>
+  <script src="traffic-flood.js?v=216"></script>
     <script>
-    const APP_BUILD = 215;
-    const APP_VERSION = '1.10.51';
+    const APP_BUILD = 216;
+    const APP_VERSION = '1.10.52';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4618,64 +4618,150 @@
       return null;
     }
 
-    function detectCurrentLocation() {
+    let isDetectingLocation = false;
+    let gpsWatchdogTimer = null;
+
+    async function detectCurrentLocation() {
       const gpsBtn = document.getElementById('gpsButtonText');
       const gpsIcon = document.getElementById('gpsButtonIcon');
-      if (gpsIcon) gpsIcon.textContent = '⏳';
-      if (gpsBtn) gpsBtn.textContent = 'Locating...';
+      const statusEl = document.getElementById('locationSearchStatus');
 
-      if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your device or browser.');
+      // If already attempting, a second click cancels the attempt cleanly
+      if (isDetectingLocation) {
+        if (gpsWatchdogTimer) {
+          clearTimeout(gpsWatchdogTimer);
+          gpsWatchdogTimer = null;
+        }
+        isDetectingLocation = false;
         if (gpsIcon) gpsIcon.textContent = '📍';
         if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+        if (statusEl) {
+          statusEl.style.color = '#94a3b8';
+          statusEl.textContent = 'Location search cancelled.';
+          setTimeout(() => { if (statusEl.textContent === 'Location search cancelled.') statusEl.textContent = ''; }, 2500);
+        }
         return;
       }
 
-      // First try standard highAccuracy (fast if satellite chip / warm Wi-Fi cache exists)
-      // but fall back gracefully to network-assisted location after 4.5s so TV boxes (like NVIDIA SHIELD)
-      // don't get stuck waiting for a non-existent satellite GPS chip!
+      if (!navigator.geolocation) {
+        if (gpsIcon) gpsIcon.textContent = '📍';
+        if (gpsBtn) gpsBtn.textContent = 'Unavailable';
+        if (statusEl) {
+          statusEl.style.color = '#f87171';
+          statusEl.textContent = 'Geolocation is not supported on this device/browser.';
+          setTimeout(() => { statusEl.textContent = ''; }, 3000);
+        }
+        setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+        return;
+      }
+
+      // Check permission state beforehand if supported by browser
+      if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+        try {
+          const perm = await navigator.permissions.query({ name: 'geolocation' });
+          if (perm && perm.state === 'denied') {
+            if (gpsIcon) gpsIcon.textContent = '📍';
+            if (gpsBtn) gpsBtn.textContent = 'Denied';
+            if (statusEl) {
+              statusEl.style.color = '#f87171';
+              statusEl.textContent = 'Location access is denied in browser settings.';
+              setTimeout(() => { statusEl.textContent = ''; }, 3000);
+            }
+            setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+            return;
+          }
+        } catch (_) {}
+      }
+
+      isDetectingLocation = true;
+      if (gpsIcon) gpsIcon.textContent = '⏳';
+      if (gpsBtn) gpsBtn.textContent = 'Locating...';
+      if (statusEl) {
+        statusEl.style.color = '#38bdf8';
+        statusEl.textContent = 'Detecting current location...';
+      }
+
       let resolved = false;
+
+      const finishLocationAttempt = (success, message = '') => {
+        if (resolved) return;
+        resolved = true;
+        isDetectingLocation = false;
+        if (gpsWatchdogTimer) {
+          clearTimeout(gpsWatchdogTimer);
+          gpsWatchdogTimer = null;
+        }
+
+        if (success) {
+          if (gpsIcon) gpsIcon.textContent = '📍';
+          if (gpsBtn) gpsBtn.textContent = 'Located!';
+          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
+        } else {
+          // Clean, silent failure with NO browser alerts or popups
+          if (gpsIcon) gpsIcon.textContent = '📍';
+          if (gpsBtn) gpsBtn.textContent = 'Unavailable';
+          if (statusEl) {
+            statusEl.style.color = '#f87171';
+            statusEl.textContent = message || 'Location unavailable.';
+            setTimeout(() => { if (statusEl.textContent === (message || 'Location unavailable.')) statusEl.textContent = ''; }, 3000);
+          }
+          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+        }
+      };
+
+      // Master watchdog: hard cancel after 5.5s so TV / Shield never hangs or triggers browser pop-up warnings
+      gpsWatchdogTimer = setTimeout(() => {
+        finishLocationAttempt(false, 'Location request timed out.');
+      }, 5500);
 
       const onLocationSuccess = async (position) => {
         if (resolved) return;
-        resolved = true;
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+        const lat = position && position.coords ? position.coords.latitude : null;
+        const lon = position && position.coords ? position.coords.longitude : null;
+        if (lat == null || lon == null) {
+          finishLocationAttempt(false, 'Invalid coordinates received.');
+          return;
+        }
+        finishLocationAttempt(true);
         await lookupCoords(lat, lon);
-        if (gpsIcon) gpsIcon.textContent = '📍';
-        if (gpsBtn) gpsBtn.textContent = 'Located!';
-        setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
       };
 
       const tryLowAccuracyFallback = () => {
+        if (resolved) return;
+        try {
+          navigator.geolocation.getCurrentPosition(
+            onLocationSuccess,
+            (error) => {
+              let msg = 'Location unavailable on this network/device.';
+              if (error && error.code === 1) msg = 'Location permission denied.';
+              else if (error && error.code === 3) msg = 'Location request timed out.';
+              finishLocationAttempt(false, msg);
+            },
+            { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
+          );
+        } catch (_) {
+          finishLocationAttempt(false, 'Location query failed.');
+        }
+      };
+
+      try {
         navigator.geolocation.getCurrentPosition(
           onLocationSuccess,
           (error) => {
-            if (resolved) return;
-            resolved = true;
-            console.warn('Geolocation fallback error:', error);
-            let msg = 'Could not access location.';
-            if (error.code === 1) msg = 'Location access was denied in browser settings.';
-            else if (error.code === 2) msg = 'Location unavailable on this network/device.';
-            else if (error.code === 3) msg = 'Location request timed out.';
-            alert(msg);
-            if (gpsIcon) gpsIcon.textContent = '📍';
-            if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+            if (!resolved) {
+              if (error && error.code === 1) {
+                // Permission denied: don't retry, fail cleanly
+                finishLocationAttempt(false, 'Location permission denied.');
+              } else {
+                tryLowAccuracyFallback();
+              }
+            }
           },
-          { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
+          { enableHighAccuracy: true, timeout: 2500, maximumAge: 60000 }
         );
-      };
-
-      navigator.geolocation.getCurrentPosition(
-        onLocationSuccess,
-        (error) => {
-          // If highAccuracy failed or timed out, immediately try network-level location
-          if (!resolved) {
-            tryLowAccuracyFallback();
-          }
-        },
-        { enableHighAccuracy: true, timeout: 4500, maximumAge: 60000 }
-      );
+      } catch (_) {
+        tryLowAccuracyFallback();
+      }
     }
 
     function updateLocationClearBtnVisibility() {
