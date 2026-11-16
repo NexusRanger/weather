@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=219"></script>
+  <script src="qrcode.min.js?v=220"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1049,7 +1049,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.55) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.56) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2488,10 +2488,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=219"></script>
+  <script src="traffic-flood.js?v=220"></script>
     <script>
-    const APP_BUILD = 219;
-    const APP_VERSION = '1.10.55';
+    const APP_BUILD = 220;
+    const APP_VERSION = '1.10.56';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -8941,9 +8941,67 @@
         const min = Math.round(daily.temperature_2m_min[i]);
         const rainProb = daily.precipitation_probability_max[i] || 0;
         const hasFrostRisk = min <= 3.5;
-        const windMax = (daily.wind_speed_10m_max && daily.wind_speed_10m_max[i] != null) ? Math.round(daily.wind_speed_10m_max[i]) : 0;
-        const gustMax = (daily.wind_gusts_10m_max && daily.wind_gusts_10m_max[i] != null) ? Math.round(daily.wind_gusts_10m_max[i]) : windMax;
-        const windDot = getWindDot(windMax, gustMax);
+        let windMax = (daily.wind_speed_10m_max && daily.wind_speed_10m_max[i] != null) ? Math.round(daily.wind_speed_10m_max[i]) : 0;
+        let gustMax = (daily.wind_gusts_10m_max && daily.wind_gusts_10m_max[i] != null) ? Math.round(daily.wind_gusts_10m_max[i]) : windMax;
+        let lateNightSuffix = '';
+
+        if (hourly && Array.isArray(hourly.time) && daily.time && daily.time[i]) {
+          const dayDateStr = daily.time[i];
+          const dayHours = [];
+          for (let h = 0; h < hourly.time.length; h++) {
+            if (hourly.time[h] && hourly.time[h].startsWith(dayDateStr)) {
+              const hourNum = parseInt(hourly.time[h].slice(11, 13), 10);
+              const spd = (hourly.wind_speed_10m && hourly.wind_speed_10m[h] != null) ? hourly.wind_speed_10m[h] : 0;
+              const gst = (hourly.wind_gusts_10m && hourly.wind_gusts_10m[h] != null) ? hourly.wind_gusts_10m[h] : spd;
+              dayHours.push({ hour: hourNum, speed: spd, gust: gst });
+            }
+          }
+
+          if (dayHours.length > 0) {
+            // Core daylight/active hours (07:00 to 18:00) when people are awake and active outdoors
+            const daytimeHours = dayHours.filter(x => x.hour >= 7 && x.hour <= 18);
+            const lateHours = dayHours.filter(x => x.hour >= 19 || x.hour < 7);
+
+            if (daytimeHours.length > 0) {
+              const sortedG = daytimeHours.map(x => x.gust).sort((a, b) => a - b);
+              const sortedS = daytimeHours.map(x => x.speed).sort((a, b) => a - b);
+              const medianG = sortedG[Math.floor(sortedG.length * 0.5)];
+              const medianS = sortedS[Math.floor(sortedS.length * 0.5)];
+              const p75G = sortedG[Math.floor(sortedG.length * 0.75)];
+              const p75S = sortedS[Math.floor(sortedS.length * 0.75)];
+              const maxG = sortedG[sortedG.length - 1];
+              const maxS = sortedS[sortedS.length - 1];
+
+              const severeDaytimeCount = sortedG.filter(g => g >= 35).length;
+              const strongDaytimeCount = sortedG.filter(g => g >= 25).length;
+
+              if (severeDaytimeCount >= 3) {
+                // Sustained severe gale during daylight (at least 3 hours >= 35 mph)
+                windMax = Math.round(maxS);
+                gustMax = Math.round(maxG);
+              } else if (strongDaytimeCount >= 3) {
+                // Sustained strong gusts throughout the day
+                windMax = Math.round(p75S);
+                gustMax = Math.round(p75G);
+              } else {
+                // Predominantly gentle or moderate daytime
+                windMax = Math.round(medianS);
+                gustMax = Math.round(medianG);
+              }
+
+              // Check if late night / overnight has a severe gale that spikes significantly above daytime
+              if (lateHours.length > 0) {
+                const latePeak = lateHours.reduce((max, x) => x.gust > max.gust ? x : max, lateHours[0]);
+                if (latePeak.gust >= 35 && latePeak.gust > gustMax + 10) {
+                  const hourLabel = (latePeak.hour < 10 ? '0' : '') + latePeak.hour + ':00';
+                  lateNightSuffix = `• Gale warning late tonight: gusts up to ${Math.round(latePeak.gust)} mph around ${hourLabel}`;
+                }
+              }
+            }
+          }
+        }
+
+        const windDot = getWindDot(windMax, gustMax, lateNightSuffix);
 
         // Max temperature color coding: orange (amber) at 25°C+, red (rose) at 30°C+
         let maxColorClass = 'text-white font-bold';
@@ -9368,39 +9426,45 @@
       }
     }
 
-    function getWindDot(speed, gust) {
+    function getWindDot(speed, gust, titleSuffix = '') {
       const s = Math.round(speed || 0);
       const g = Math.round(gust || s);
       const maxW = Math.max(s, g);
+      const suffix = titleSuffix ? (' ' + titleSuffix) : '';
       if (maxW < 8) {
+        const title = 'Wind: ' + s + ' mph (Calm)' + suffix;
         return {
           level: 'Calm',
-          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-400/80" title="Max wind: ' + s + ' mph (Calm)"></span>',
-          title: 'Max wind: ' + s + ' mph (Calm)'
+          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-400/80" title="' + title.replace(/"/g, '&quot;') + '"></span>',
+          title: title
         };
       } else if (maxW < 15) {
+        const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Gentle Breeze)' + suffix;
         return {
           level: 'Gentle Breeze',
-          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.6)]" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Gentle Breeze)"></span>',
-          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Gentle breeze)'
+          html: '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.6)]" title="' + title.replace(/"/g, '&quot;') + '"></span>',
+          title: title
         };
       } else if (maxW < 25) {
+        const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)' + suffix;
         return {
           level: 'Moderate',
-          html: '<span class="inline-flex items-center gap-0.5" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span></span>',
-          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate breeze)'
+          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span></span>',
+          title: title
         };
       } else if (maxW < 35) {
+        const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong Gusts)' + suffix;
         return {
           level: 'Strong Gusts',
-          html: '<span class="inline-flex items-center gap-0.5" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong Gusts)"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span></span>',
-          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong gusts)'
+          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span></span>',
+          title: title
         };
       } else {
+        const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Gale Alert)' + suffix;
         return {
           level: 'Severe Gale',
-          html: '<span class="inline-block w-[22px] h-1.5 rounded-sm bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" style="width: 22px;" title="Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Gale Alert)"></span>',
-          title: 'Max wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe gale alert)'
+          html: '<span class="inline-block w-[22px] h-1.5 rounded-sm bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" style="width: 22px;" title="' + title.replace(/"/g, '&quot;') + '"></span>',
+          title: title
         };
       }
     }
