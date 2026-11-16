@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=240"></script>
+  <script src="qrcode.min.js?v=241"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.76) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.77) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1937,15 +1937,15 @@
         <!-- Bottom Controls: Distance Unit (Miles / km) to the left of the Close button -->
         <div class="flex items-center justify-end gap-2.5 px-1 pb-0.5">
           <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5" role="group" aria-label="Distance units">
-            <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
+            <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
               km
             </button>
-            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
+            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
               Miles
             </button>
           </div>
 
-          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc)">
+          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
           </button>
         </div>
@@ -2511,13 +2511,13 @@
 
         <div class="flex items-center gap-2">
           <!-- Lock / Unlock & Reset Zoom Button -->
-          <button id="radarLockZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');event.preventDefault();if(z && z.offsetParent!==null){z.focus();}}else if(event.key==='ArrowRight'){const c=document.getElementById('closeRadarBtnTop');if(c){event.preventDefault();c.focus();}}" onclick="toggleRadarLockZoom()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Zoom Unlocked. Click to lock current zoom level.">
+          <button id="radarLockZoomBtn" onkeydown="if(event.key==='ArrowLeft'){const z=document.querySelector('#radarModal .leaflet-control-zoom-in');event.preventDefault();if(z && z.offsetParent!==null){z.focus();}}else if(event.key==='ArrowRight'){const c=document.getElementById('closeRadarBtnTop');if(c){event.preventDefault();c.focus();}}else if(event.key==='ArrowDown'){event.preventDefault();const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z && z.offsetParent!==null){z.focus();}else{const p=document.getElementById('radarPlayBtn');if(p)p.focus();}}" onclick="toggleRadarLockZoom()" class="tv-focus-amber px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-medium text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Zoom Unlocked. Click to lock current zoom level.">
             <span id="radarLockZoomIcon">🔓</span>
             <span id="radarLockZoomText">Zoom Unlocked</span>
           </button>
 
           <!-- Close Button with visible 30s countdown -->
-          <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const l=document.getElementById('radarLockZoomBtn');if(l){event.preventDefault();l.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
+          <button id="closeRadarBtnTop" tabindex="1" onkeydown="if(event.key==='ArrowLeft'){const l=document.getElementById('radarLockZoomBtn');if(l){event.preventDefault();l.focus();}}else if(event.key==='ArrowDown'){event.preventDefault();const z=document.querySelector('#radarModal .leaflet-control-zoom-in');if(z && z.offsetParent!==null){z.focus();}else{const p=document.getElementById('radarPlayBtn');if(p)p.focus();}}" onclick="closeRadarModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Close Radar (Esc / Back)">
             <span>✕ Close <span id="radarBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
           </button>
         </div>
@@ -2539,7 +2539,7 @@
         <!-- Floating Scrubber & Playback Controls Pill -->
         <div class="absolute bottom-3 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[1000] bg-slate-900/90 backdrop-blur-md border border-white/20 rounded-2xl p-2 px-3 shadow-2xl flex items-center gap-3">
           <!-- Play / Pause -->
-          <button id="radarPlayBtn" onclick="toggleRadarPlayPause()" class="w-8 h-8 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center justify-center text-xs transition shadow-md cursor-pointer" title="Play / Pause Radar Loop">
+          <button id="radarPlayBtn" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const z=document.querySelector('#radarModal .leaflet-control-zoom-out')||document.querySelector('#radarModal .leaflet-control-zoom-in')||document.getElementById('closeRadarBtnTop');if(z && z.offsetParent!==null){z.focus();}else{const c=document.getElementById('closeRadarBtnTop');if(c)c.focus();}}" onclick="toggleRadarPlayPause()" class="w-8 h-8 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold flex items-center justify-center text-xs transition shadow-md cursor-pointer" title="Play / Pause Radar Loop">
             <span id="radarPlayIcon">⏸</span>
           </button>
 
@@ -2584,20 +2584,39 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=240"></script>
+  <script src="traffic-flood.js?v=241"></script>
     <script>
-    const APP_BUILD = 240;
-    const APP_VERSION = '1.10.76';
+    const APP_BUILD = 241;
+    const APP_VERSION = '1.10.77';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
     // it stops the auto-close countdown timer and locks the modal open at its maximum duration!
     let lastUpClickTarget = null;
     let lastUpClickTime = 0;
+    let lastDownClickTarget = null;
+    let lastDownClickTime = 0;
     const modalTimerLocks = {};
 
     function isModalTimerLocked(modalId) {
       return !!modalTimerLocks[modalId];
+    }
+
+    // Handles double-down click on the world map bottom close button to lock/unlock timer
+    function handleBottomCloseDownClick(btn) {
+      if (!btn) return;
+      const now = Date.now();
+      if (lastDownClickTarget === btn && (now - lastDownClickTime) < 1500 && (now - lastDownClickTime) > 80) {
+        lastDownClickTarget = null;
+        lastDownClickTime = 0;
+        const modal = btn.closest('.fixed') || document.getElementById('historyMapModal');
+        if (modal) toggleModalTimerLock(modal);
+      } else {
+        lastDownClickTarget = btn;
+        lastDownClickTime = now;
+        btn.classList.add('ring-1', 'ring-amber-400/60');
+        setTimeout(() => btn.classList.remove('ring-1', 'ring-amber-400/60'), 250);
+      }
     }
 
     function toggleModalTimerLock(modalEl) {
@@ -2911,6 +2930,33 @@
       if (openModal.id === 'historyMapModal') {
         const activeInChips = activeEl && activeEl.closest('#mapRecentChips');
         if (activeInChips) {
+          const zoomOut = openModal.querySelector('.leaflet-control-zoom-out');
+          if (zoomOut && zoomOut.offsetParent !== null) {
+            e.preventDefault();
+            zoomOut.focus();
+            return;
+          }
+        }
+        if (activeEl && activeEl.classList.contains('leaflet-control-zoom-out')) {
+          const zoomIn = openModal.querySelector('.leaflet-control-zoom-in');
+          if (zoomIn && zoomIn.offsetParent !== null) {
+            e.preventDefault();
+            zoomIn.focus();
+            return;
+          }
+        }
+        if (activeEl && activeEl.classList.contains('leaflet-control-zoom-in')) {
+          if (topCloseBtn) {
+            e.preventDefault();
+            topCloseBtn.focus();
+            return;
+          }
+        }
+      }
+
+      // Radar Map D-Pad flow: radarPlayBtn -> Zoom Out -> Zoom In -> Top Close
+      if (openModal.id === 'radarModal') {
+        if (activeEl && activeEl.id === 'radarPlayBtn') {
           const zoomOut = openModal.querySelector('.leaflet-control-zoom-out');
           if (zoomOut && zoomOut.offsetParent !== null) {
             e.preventDefault();
@@ -3883,6 +3929,8 @@
       modalTimerLocks['historyMapModal'] = false;
       lastUpClickTarget = null;
       lastUpClickTime = 0;
+      lastDownClickTarget = null;
+      lastDownClickTime = 0;
       mapLastFocusedChipIndex = 0;
       historyMapAutoCloseSecs = 45;
       savePreModalFocus('headerGlobeBtn');
@@ -3920,6 +3968,8 @@
       modalTimerLocks['historyMapModal'] = false;
       lastUpClickTarget = null;
       lastUpClickTime = 0;
+      lastDownClickTarget = null;
+      lastDownClickTime = 0;
       mapLastFocusedChipIndex = 0;
       lastScrolledChipKey = null;
       if (chipScrollTimeout) { clearTimeout(chipScrollTimeout); chipScrollTimeout = null; }
@@ -11999,6 +12049,10 @@
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 if (zoomOut) zoomOut.focus();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const target = document.getElementById('closeRadarBtnTop');
+                if (target) target.focus();
               } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 const target = document.getElementById('radarLockZoomBtn') || document.getElementById('closeRadarBtnTop');
@@ -12440,6 +12494,8 @@
       modalTimerLocks['radarModal'] = false;
       lastUpClickTarget = null;
       lastUpClickTime = 0;
+      lastDownClickTarget = null;
+      lastDownClickTime = 0;
       radarAutoCloseSecs = 30;
 
       savePreModalFocus('radarBtn');
@@ -12474,6 +12530,8 @@
       modalTimerLocks['radarModal'] = false;
       lastUpClickTarget = null;
       lastUpClickTime = 0;
+      lastDownClickTarget = null;
+      lastDownClickTime = 0;
       stopRadarAnimation();
       stopRadarAutoCloseTimer();
       const modal = document.getElementById('radarModal');
