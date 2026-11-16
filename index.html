@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.80) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.81) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1934,8 +1934,8 @@
         <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 w-full min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
           <!-- Chips injected dynamically -->
         </div>
-        <!-- Bottom Controls: Return to Current, Distance Unit (Miles / km), and Close button -->
-        <div class="flex items-center justify-end gap-2 px-1 pb-0 -mt-0.5">
+        <!-- Bottom Controls: Return to Current, Distance Unit (Miles / km), Map Sea Theme (Ocean / Dark), and Close button -->
+        <div class="flex items-center justify-end gap-2 px-1 pb-0 -mt-0.5 flex-wrap">
           <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Return to Current Location (first item on list)">
             <span>📍 Current</span>
           </button>
@@ -1944,12 +1944,21 @@
             <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const cur=document.getElementById('mapReturnCurrentBtn');if(cur)cur.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
               km
             </button>
-            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
+            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const ob=document.getElementById('mapThemeOceanBtn');if(ob)ob.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
               Miles
             </button>
           </div>
 
-          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
+          <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5" role="group" aria-label="Map theme">
+            <button id="mapThemeOceanBtn" type="button" onclick="applyHistoryMapTheme('ocean')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const db=document.getElementById('mapThemeDarkBtn');if(db)db.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Ocean Blue Sea (Natural marine bathymetry)">
+              🌊 Ocean
+            </button>
+            <button id="mapThemeDarkBtn" type="button" onclick="applyHistoryMapTheme('dark')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const ob=document.getElementById('mapThemeOceanBtn');if(ob)ob.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Stealth Dark Canvas">
+              🌑 Dark
+            </button>
+          </div>
+
+          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const db=document.getElementById('mapThemeDarkBtn');if(db)db.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
           </button>
         </div>
@@ -2588,10 +2597,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=244"></script>
+  <script src="traffic-flood.js?v=245"></script>
     <script>
-    const APP_BUILD = 244;
-    const APP_VERSION = '1.10.80';
+    const APP_BUILD = 245;
+    const APP_VERSION = '1.10.81';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3962,6 +3971,8 @@
       }
 
       initOrRefreshHistoryMap(true);
+      applyHistoryMapTheme(getHistoryMapTheme(), false);
+      updateMapDistances(getMapDistUnit());
       resetHistoryMapAutoCloseTimer();
       updateHistoryMapCountdownDisplay();
 
@@ -4354,6 +4365,78 @@
           }
         }
       }
+    }
+
+    // World Map Sea & Land Rendering Themes
+    const HISTORY_MAP_THEMES = {
+      ocean: {
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
+        maxZoom: 16
+      },
+      dark: {
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        maxZoom: 16
+      }
+    };
+
+    let historyMapBaseLayer = null;
+    let historyMapRefLayer = null;
+
+    function getHistoryMapTheme() {
+      try {
+        return localStorage.getItem('history_map_theme') || 'ocean';
+      } catch (_) {
+        return 'ocean';
+      }
+    }
+
+    function applyHistoryMapTheme(theme, save = true) {
+      const activeTheme = HISTORY_MAP_THEMES[theme] ? theme : 'ocean';
+      if (save) {
+        try { localStorage.setItem('history_map_theme', activeTheme); } catch (_) {}
+      }
+
+      // Update toggle buttons UI in the bottom control bar
+      const oceanBtn = document.getElementById('mapThemeOceanBtn');
+      const darkBtn = document.getElementById('mapThemeDarkBtn');
+      if (oceanBtn && darkBtn) {
+        if (activeTheme === 'ocean') {
+          oceanBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none';
+          darkBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none';
+        } else {
+          darkBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none';
+          oceanBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none';
+        }
+      }
+
+      if (!historyLeafletMap) return;
+
+      const conf = HISTORY_MAP_THEMES[activeTheme];
+      if (historyMapBaseLayer && historyLeafletMap.hasLayer(historyMapBaseLayer)) {
+        historyLeafletMap.removeLayer(historyMapBaseLayer);
+      }
+      if (historyMapRefLayer && historyLeafletMap.hasLayer(historyMapRefLayer)) {
+        historyLeafletMap.removeLayer(historyMapRefLayer);
+      }
+
+      historyMapBaseLayer = L.tileLayer(conf.base, {
+        attribution: '',
+        maxZoom: conf.maxZoom,
+        detectRetina: false
+      }).addTo(historyLeafletMap);
+
+      historyMapRefLayer = L.tileLayer(conf.ref, {
+        attribution: '',
+        maxZoom: conf.maxZoom,
+        detectRetina: false
+      }).addTo(historyLeafletMap);
+
+      if (historyMarkersLayer) {
+        historyMarkersLayer.bringToFront();
+      }
+      stripMapCanvasFocusables();
     }
 
     let mapToastTimer = null;
@@ -4902,21 +4985,8 @@
           stripMapCanvasFocusables();
         });
 
-        // Dark Canvas Base layer (No API key required)
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '',
-          maxZoom: 16,
-          detectRetina: false
-        }).addTo(historyLeafletMap);
-
-        // Dark Labels overlay
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '',
-          maxZoom: 16,
-          detectRetina: false
-        }).addTo(historyLeafletMap);
-
         historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
+        applyHistoryMapTheme(getHistoryMapTheme(), false);
         stripMapCanvasFocusables();
       } else if (isInitialOpen) {
         historyLeafletMap.setView([currentRef.lat, currentRef.lon], defaultZoom);
