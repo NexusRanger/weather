@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=217"></script>
+  <script src="qrcode.min.js?v=218"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -998,7 +998,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.53) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.54) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2437,10 +2437,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=217"></script>
+  <script src="traffic-flood.js?v=218"></script>
     <script>
-    const APP_BUILD = 217;
-    const APP_VERSION = '1.10.53';
+    const APP_BUILD = 218;
+    const APP_VERSION = '1.10.54';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2797,7 +2797,7 @@
         document.getElementById('reloadBtn'),
         document.getElementById('castBtn')
       ];
-      return list.filter(el => el && !el.classList.contains('hidden') && el.offsetParent !== null);
+      return list.filter(el => el && !el.classList.contains('hidden') && el.offsetParent !== null && el.tabIndex !== -1 && !el.classList.contains('pointer-events-none'));
     }
 
     window.addEventListener('keydown', function handleMainPageDpadNavigation(e) {
@@ -9961,7 +9961,7 @@
     function isTvBackKey(e) {
       const code = e.keyCode || e.which;
       const key = (e.key || '').toLowerCase();
-      return (
+      const isTvKey = (
         code === 4 ||                   // Android TV / Fire TV / Shield KEYCODE_BACK
         code === 27 ||                  // Escape
         code === 8 ||                   // Backspace
@@ -9979,6 +9979,15 @@
         key === 'goback' ||
         key === 'browserback'
       );
+      if (isTvKey && (code === 4 || code === 10009 || code === 461 || code === 10182)) {
+        if (!isTvDeviceDetected) {
+          isTvDeviceDetected = true;
+          if (typeof applyCastButtonTvMode === 'function') {
+            applyCastButtonTvMode();
+          }
+        }
+      }
+      return isTvKey;
     }
 
     let shareAutoCloseTimer = null;
@@ -10257,18 +10266,93 @@
       }
     }
 
-    function initGoogleCast() {
-      const castBtnEl = document.getElementById('castBtn');
-      const castBadgeEl = document.getElementById('castFocusBadge');
-      if (castBtnEl && castBadgeEl) {
-        const showCastBadge = () => castBadgeEl.classList.remove('hidden');
-        const hideCastBadge = () => castBadgeEl.classList.add('hidden');
-        castBtnEl.addEventListener('focus', showCastBadge);
-        castBtnEl.addEventListener('blur', hideCastBadge);
-        castBtnEl.addEventListener('mouseenter', showCastBadge);
-        castBtnEl.addEventListener('mouseleave', hideCastBadge);
+    let isTvDeviceDetected = false;
+
+    function isTvOrShieldDevice() {
+      if (isTvDeviceDetected) return true;
+      try {
+        const ua = (navigator.userAgent || '').toLowerCase();
+        const hasTvUa = (
+          ua.includes('shield') ||
+          ua.includes('android tv') ||
+          ua.includes('googletv') ||
+          ua.includes('smarttv') ||
+          ua.includes('smart-tv') ||
+          ua.includes('tv bro') ||
+          ua.includes('crkey') ||
+          ua.includes('aft') ||
+          ua.includes('nexus player') ||
+          ua.includes('mibox') ||
+          ua.includes('bravia') ||
+          ua.includes('apple tv') ||
+          ua.includes('webos') ||
+          ua.includes('tizen') ||
+          (ua.includes('android') && (ua.includes('tv') || ua.includes('large screen'))) ||
+          window.location.search.includes('tv=true') ||
+          window.location.search.includes('tv=1') ||
+          window.location.search.includes('shield=true') ||
+          window.location.search.includes('cast_receiver=true')
+        );
+        if (hasTvUa) {
+          isTvDeviceDetected = true;
+          return true;
+        }
+      } catch (_) {}
+      return false;
+    }
+
+    function applyCastButtonTvMode() {
+      const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
+      if (isCastHardwareReceiver) {
+        // In active Google Cast receiver mode, configureTvReceiverUI() handles turning this into Exit Cast button
+        return;
+      }
+      if (!isTvOrShieldDevice()) return;
+
+      const castBtn = document.getElementById('castBtn');
+      const castBadge = document.getElementById('castFocusBadge');
+      const modalCastBtn = document.getElementById('modalCastBtn');
+      const modalCastLbl = document.getElementById('modalCastLabel');
+      const activeDot = document.getElementById('castActiveDot');
+      const solidDot = document.getElementById('castActiveSolidDot');
+
+      if (activeDot) activeDot.classList.add('hidden');
+      if (solidDot) solidDot.classList.add('hidden');
+
+      if (castBtn) {
+        castBtn.className = 'relative p-1 rounded-lg bg-white/5 border border-white/10 text-slate-500 opacity-40 flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-none cursor-default select-none';
+        castBtn.title = 'Cast not available on TV / Shield display';
+        castBtn.tabIndex = -1;
+        castBtn.onclick = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        };
       }
 
+      if (castBadge) {
+        castBadge.innerHTML = '<span>📺 Cast not available on TV display</span>';
+        castBadge.className = 'hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-slate-700/60 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-slate-400 backdrop-blur-md';
+      }
+
+      if (modalCastBtn) {
+        modalCastBtn.className = 'relative px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-500 font-semibold text-xs transition flex items-center justify-center gap-1.5 opacity-40 cursor-default select-none';
+        modalCastBtn.title = 'Cast not available on TV / Shield display';
+        modalCastBtn.tabIndex = -1;
+        modalCastBtn.onclick = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        };
+      }
+      if (modalCastLbl) {
+        modalCastLbl.textContent = 'Not Available';
+      }
+    }
+
+    function initGoogleCast() {
       // 1. If running as the receiver on a Chromecast hardware device
       const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
       if (isCastHardwareReceiver) {
@@ -10340,6 +10424,23 @@
         return;
       }
 
+      // 2. If running standalone on TV / Shield / external display: gray out Cast button
+      if (isTvOrShieldDevice()) {
+        applyCastButtonTvMode();
+        return;
+      }
+
+      const castBtnEl = document.getElementById('castBtn');
+      const castBadgeEl = document.getElementById('castFocusBadge');
+      if (castBtnEl && castBadgeEl) {
+        const showCastBadge = () => castBadgeEl.classList.remove('hidden');
+        const hideCastBadge = () => castBadgeEl.classList.add('hidden');
+        castBtnEl.addEventListener('focus', showCastBadge);
+        castBtnEl.addEventListener('blur', hideCastBadge);
+        castBtnEl.addEventListener('mouseenter', showCastBadge);
+        castBtnEl.addEventListener('mouseleave', hideCastBadge);
+      }
+
       // 2. Running as Sender (PC, Mac, Phone, Tablet): Initialize Cast Framework
       window['__onGCastApiAvailable'] = function(isAvailable) {
         if (isAvailable && window.cast && cast.framework) {
@@ -10409,6 +10510,11 @@
 
     function updateCastButtonState(connected) {
       isCastConnected = !!connected;
+      const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
+      if (isTvOrShieldDevice() && !isCastHardwareReceiver) {
+        applyCastButtonTvMode();
+        return;
+      }
       const btn = document.getElementById('castBtn');
       const modalBtn = document.getElementById('modalCastBtn');
       const modalLbl = document.getElementById('modalCastLabel');
@@ -10580,6 +10686,10 @@
     }
 
     function triggerCast() {
+      if (isTvOrShieldDevice()) {
+        const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
+        if (!isCastHardwareReceiver) return;
+      }
       if (typeof cast !== 'undefined' && cast.framework) {
         try {
           const ctx = cast.framework.CastContext.getInstance();
@@ -10807,6 +10917,7 @@
     }
 
     initGoogleCast();
+    applyCastButtonTvMode();
 
     // -------------------------------------------------------------
     // MINIMALIST AMBIENT DISPLAY CONTROLLER (Nest Hub / Smart Display / Glance)
