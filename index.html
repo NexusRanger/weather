@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=239"></script>
+  <script src="qrcode.min.js?v=240"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.75) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.76) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1929,13 +1929,23 @@
         <span>📍</span><span id="mapToastMsg">Already at current location • Forecast is active</span>
       </div>
 
-      <!-- Quick Location Shortcuts Bar (Sorted by Distance from Current Location) & Compact TV Close -->
-      <div class="pt-2 border-t border-white/10 flex flex-col gap-1 flex-shrink-0">
+      <!-- Quick Location Shortcuts Bar (Sorted by Distance from Current Location) & Compact Controls -->
+      <div class="pt-2 border-t border-white/10 flex flex-col gap-1.5 flex-shrink-0">
         <div class="flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 w-full min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
           <!-- Chips injected dynamically -->
         </div>
-        <div class="flex items-center justify-end px-1 pb-0.5">
-          <button id="closeMapBtnBottom" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc)">
+        <!-- Bottom Controls: Distance Unit (Miles / km) to the left of the Close button -->
+        <div class="flex items-center justify-end gap-2.5 px-1 pb-0.5">
+          <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5" role="group" aria-label="Distance units">
+            <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
+              km
+            </button>
+            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
+              Miles
+            </button>
+          </div>
+
+          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc)">
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
           </button>
         </div>
@@ -2574,10 +2584,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=239"></script>
+  <script src="traffic-flood.js?v=240"></script>
     <script>
-    const APP_BUILD = 239;
-    const APP_VERSION = '1.10.75';
+    const APP_BUILD = 240;
+    const APP_VERSION = '1.10.76';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4189,24 +4199,67 @@
           mapActivePopupKey = closestKey;
           closestMarker.openPopup();
           stripMapCanvasFocusables();
+        }
+      }
+    }
 
-          // Keep bottom chip visual highlight aligned with center pin when user pans map directly
-          const chipsEl = document.getElementById('mapRecentChips');
-          if (chipsEl) {
-            const allButtons = chipsEl.querySelectorAll('button');
-            allButtons.forEach(b => {
-              if (b._chipKey === closestKey) {
-                b.classList.add('ring-2', 'ring-amber-400', 'bg-sky-500/40');
-                try {
-                  isProgrammaticChipScroll = true;
-                  const targetLeft = Math.max(0, b.offsetLeft - 6);
-                  chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
-                  setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
-                } catch (_) {}
-              } else {
-                b.classList.remove('ring-2', 'ring-amber-400', 'bg-sky-500/40');
-              }
-            });
+    function getMapDistUnit() {
+      try {
+        return localStorage.getItem('map_dist_unit') === 'mi' ? 'mi' : 'km';
+      } catch (_) {
+        return 'km';
+      }
+    }
+
+    function formatMapDistance(distKm) {
+      if (typeof distKm !== 'number' || isNaN(distKm)) return '';
+      const unit = getMapDistUnit();
+      if (unit === 'mi') {
+        const distMi = distKm * 0.621371;
+        return distMi < 10 ? `${distMi.toFixed(1)} mi` : `${Math.round(distMi).toLocaleString()} mi`;
+      }
+      return distKm < 10 ? `${distKm.toFixed(1)} km` : `${Math.round(distKm).toLocaleString()} km`;
+    }
+
+    function updateMapDistances(unit) {
+      const isMi = unit === 'mi';
+      try { localStorage.setItem('map_dist_unit', unit); } catch (_) {}
+
+      // Update unit buttons active styling
+      const kmBtn = document.getElementById('mapUnitKmBtn');
+      const miBtn = document.getElementById('mapUnitMiBtn');
+      if (kmBtn && miBtn) {
+        if (isMi) {
+          miBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none';
+          kmBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none';
+        } else {
+          kmBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none';
+          miBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none';
+        }
+      }
+
+      // Update bottom chips distance text
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (chipsEl) {
+        const btns = chipsEl.querySelectorAll('button');
+        btns.forEach(b => {
+          if (b._distSpan && typeof b._distKm === 'number') {
+            if (b._isCurrent) {
+              b._distSpan.textContent = '• Current';
+            } else {
+              b._distSpan.textContent = '• ' + formatMapDistance(b._distKm);
+            }
+          }
+        });
+      }
+
+      // Update marker popups distance text
+      for (const entry of Object.values(mapMarkerMap)) {
+        if (entry && entry.distEl && typeof entry.distKm === 'number') {
+          if (entry.query && entry.query.isCurrent) {
+            entry.distEl.textContent = '📍 Current Location';
+          } else {
+            entry.distEl.textContent = `${formatMapDistance(entry.distKm)} from current location`;
           }
         }
       }
@@ -4284,17 +4337,20 @@
           const shortName = shortenPlaceName(q.name);
           const chipDistLabel = q.isCurrent
             ? 'Current'
-            : (q.distKm < 10 ? `${q.distKm.toFixed(1)} km` : `${Math.round(q.distKm).toLocaleString()} km`);
+            : formatMapDistance(q.distKm);
 
           const btn = document.createElement('button');
           btn.className = q.isCurrent
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-xs text-emerald-200 hover:text-white font-semibold transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0'
-            : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-sky-500/30 border border-white/15 hover:border-sky-400 text-xs text-sky-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0';
+            : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 hover:border-amber-400 text-xs text-slate-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0';
           btn.tabIndex = 0;
           btn.title = q.isCurrent
             ? `${q.name} (Current Location)`
-            : `${q.name} (${chipDistLabel} from current location) — Press OK to load weather`;
-          btn.innerHTML = `<span style="font-size:11px;">📍</span><span>${escapeHtml(shortName)}</span><span class="text-[10px] opacity-75 font-mono">• ${chipDistLabel}</span>`;
+            : `${q.name} (${chipDistLabel} from current location) — Press OK to view on map`;
+          btn.innerHTML = `<span style="font-size:11px;">📍</span><span>${escapeHtml(shortName)}</span><span class="chip-dist text-[10px] opacity-75 font-mono">• ${chipDistLabel}</span>`;
+          btn._distSpan = btn.querySelector('.chip-dist');
+          btn._distKm = q.distKm;
+          btn._isCurrent = q.isCurrent;
 
           const panAndOpenOnMap = (fromUserScroll = false) => {
             if (!fromUserScroll) {
@@ -4311,8 +4367,8 @@
             }
             if (chipsEl) {
               const allButtons = chipsEl.querySelectorAll('button');
-              allButtons.forEach(b => b.classList.remove('ring-2', 'ring-amber-400', 'bg-sky-500/40'));
-              btn.classList.add('ring-2', 'ring-amber-400', 'bg-sky-500/40');
+              allButtons.forEach(b => b.classList.remove('ring-2', 'ring-amber-400'));
+              btn.classList.add('ring-2', 'ring-amber-400');
             }
             const entry = mapMarkerMap[key];
             if (historyLeafletMap && entry && entry.marker) {
@@ -4417,9 +4473,9 @@
         }
         const allBtns = chipsEl.querySelectorAll('button');
         if (allBtns.length > 0) {
-          allBtns.forEach(b => b.classList.remove('ring-2', 'ring-amber-400', 'bg-sky-500/40'));
+          allBtns.forEach(b => b.classList.remove('ring-2', 'ring-amber-400'));
           const targetBtn = (!isInitialOpen && mapActivePopupKey && Array.from(allBtns).find(b => b._chipKey === mapActivePopupKey)) || allBtns[0];
-          targetBtn.classList.add('ring-2', 'ring-amber-400', 'bg-sky-500/40');
+          targetBtn.classList.add('ring-2', 'ring-amber-400');
 
           // TV D-Pad UX: Keep focus firmly locked on the target button (first location on open, or active location on refresh)
           const modal = document.getElementById('historyMapModal');
@@ -4468,8 +4524,8 @@
               mapLastFocusedChipIndex = closestIdx;
 
               // Visual highlight on tablet without stealing keyboard focus
-              allButtons.forEach(b => b.classList.remove('ring-2', 'ring-amber-400', 'bg-sky-500/40'));
-              closestBtn.classList.add('ring-2', 'ring-amber-400', 'bg-sky-500/40');
+              allButtons.forEach(b => b.classList.remove('ring-2', 'ring-amber-400'));
+              closestBtn.classList.add('ring-2', 'ring-amber-400');
 
               if (typeof closestBtn._panAction === 'function') {
                 closestBtn._panAction(true);
@@ -4492,7 +4548,7 @@
         const isCurrent = q.isCurrent;
         const distLabel = isCurrent
           ? '📍 Current Location'
-          : (q.distKm < 10 ? `${q.distKm.toFixed(1)} km from current location` : `${Math.round(q.distKm).toLocaleString()} km from current location`);
+          : `${formatMapDistance(q.distKm)} from current location`;
 
         // Large, easy-to-hit 36x36 target with pulsating halo (emerald for Current, cyan for others)
         const haloColor = isCurrent ? 'rgba(52, 211, 153, 0.5)' : 'rgba(56, 189, 248, 0.45)';
@@ -4611,7 +4667,7 @@
           historyMarkersLayer.addLayer(marker);
         }
 
-        mapMarkerMap[key] = { marker, lat: q.lat, lon: q.lon, query: q };
+        mapMarkerMap[key] = { marker, lat: q.lat, lon: q.lon, query: q, distEl, distKm: q.distKm };
       });
 
       // Keep or open the active popup:
@@ -4636,6 +4692,7 @@
         } catch (_) {}
       }
 
+      updateMapDistances(getMapDistUnit());
       setTimeout(stripMapCanvasFocusables, 60);
     }
 
