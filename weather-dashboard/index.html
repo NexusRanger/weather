@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=235"></script>
+  <script src="qrcode.min.js?v=236"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.71) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.72) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1900,7 +1900,7 @@
         </div>
         <div class="flex items-center gap-2">
           <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
-          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const all=document.querySelectorAll('#mapRecentChips button');const c=all[mapLastFocusedChipIndex]||all[0];if(c)c.focus();}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
+          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const all=document.querySelectorAll('#mapRecentChips button');const c=all[mapLastFocusedChipIndex]||all[0];if(c){try{c.focus({preventScroll:true});}catch(_){c.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
             <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
           </button>
         </div>
@@ -1930,7 +1930,7 @@
           <!-- Chips injected dynamically -->
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button id="closeMapBtnBottom" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut && zOut.offsetParent!==null){zOut.focus();}else{const topBtn=document.getElementById('closeMapBtnTop');if(topBtn)topBtn.focus();}}else if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[chips.length-1];if(target)target.focus();}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition focus:outline-none flex items-center gap-1 cursor-pointer" tabindex="0">
+          <button id="closeMapBtnBottom" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut && zOut.offsetParent!==null){zOut.focus();}else{const topBtn=document.getElementById('closeMapBtnTop');if(topBtn)topBtn.focus();}}else if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[chips.length-1];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition focus:outline-none flex items-center gap-1 cursor-pointer" tabindex="0">
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-200 font-mono text-[10px] ml-0.5">(45s)</span></span>
           </button>
         </div>
@@ -2569,10 +2569,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=235"></script>
+  <script src="traffic-flood.js?v=236"></script>
     <script>
-    const APP_BUILD = 235;
-    const APP_VERSION = '1.10.71';
+    const APP_BUILD = 236;
+    const APP_VERSION = '1.10.72';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4103,7 +4103,9 @@
             e.preventDefault();
             const allChips = document.querySelectorAll('#mapRecentChips button');
             const target = allChips[mapLastFocusedChipIndex] || allChips[0];
-            if (target) target.focus();
+            if (target) {
+              try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+            }
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             const zIn = container.querySelector('.leaflet-control-zoom-in');
@@ -4185,7 +4187,8 @@
                 b.classList.add('ring-2', 'ring-amber-400', 'bg-sky-500/40');
                 try {
                   isProgrammaticChipScroll = true;
-                  b.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+                  const targetLeft = Math.max(0, b.offsetLeft - 6);
+                  chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
                   setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
                 } catch (_) {}
               } else {
@@ -4270,8 +4273,13 @@
             if (!fromUserScroll) {
               isProgrammaticChipScroll = true;
               try {
-                btn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
-              } catch (_) {}
+                const targetLeft = Math.max(0, btn.offsetLeft - 6);
+                chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+              } catch (_) {
+                try {
+                  btn.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+                } catch (_) {}
+              }
               setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
             }
             if (chipsEl) {
@@ -4330,7 +4338,10 @@
               const allBtns = chipsEl.querySelectorAll('button');
               if (idx < allBtns.length - 1) {
                 e.preventDefault();
-                allBtns[idx + 1].focus();
+                const nextBtn = allBtns[idx + 1];
+                if (nextBtn) {
+                  try { nextBtn.focus({ preventScroll: true }); } catch (_) { nextBtn.focus(); }
+                }
               } else {
                 const botClose = document.getElementById('closeMapBtnBottom');
                 if (botClose) { e.preventDefault(); botClose.focus(); }
@@ -4339,7 +4350,10 @@
               const allBtns = chipsEl.querySelectorAll('button');
               if (idx > 0) {
                 e.preventDefault();
-                allBtns[idx - 1].focus();
+                const prevBtn = allBtns[idx - 1];
+                if (prevBtn) {
+                  try { prevBtn.focus({ preventScroll: true }); } catch (_) { prevBtn.focus(); }
+                }
               }
             }
           };
@@ -4357,6 +4371,12 @@
 
           chipsEl.appendChild(btn);
         });
+
+        // Trailing spacer so the last locations can also smoothly slide all the way to the left-hand position
+        const spacer = document.createElement('div');
+        spacer.style.cssText = 'flex-shrink: 0; width: 60vw; height: 1px; pointer-events: none;';
+        spacer.setAttribute('aria-hidden', 'true');
+        chipsEl.appendChild(spacer);
 
         // Initial setup for the bottom chips bar:
         // Current location (index 0) sits at the far left and is highlighted by default
