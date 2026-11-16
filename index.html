@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.83) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.84) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1908,7 +1908,7 @@
         </div>
         <div class="flex items-center gap-2">
           <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
-          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const all=document.querySelectorAll('#mapRecentChips button');const c=all[mapLastFocusedChipIndex]||all[0];if(c){try{c.focus({preventScroll:true});}catch(_){c.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
+          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const all=document.querySelectorAll('#mapRecentChips button');const c=all[mapLastFocusedChipIndex]||all[0];if(c){try{c.focus({preventScroll:true});}catch(_){c.focus();}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
             <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
           </button>
         </div>
@@ -2608,10 +2608,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=247"></script>
+  <script src="traffic-flood.js?v=248"></script>
     <script>
-    const APP_BUILD = 247;
-    const APP_VERSION = '1.10.83';
+    const APP_BUILD = 248;
+    const APP_VERSION = '1.10.84';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2950,26 +2950,10 @@
       // Location and Discover modals manage their own vertical/grid navigation
       if (openModal.id === 'locationModal' || openModal.id === 'wondersModal') return;
 
-      // History Map D-Pad flow: Chips -> Zoom Out -> Zoom In -> Top Close
+      // History Map D-Pad flow: Chips -> Top Close (Zoom controls never hijack focus)
       if (openModal.id === 'historyMapModal') {
         const activeInChips = activeEl && activeEl.closest('#mapRecentChips');
         if (activeInChips) {
-          const zoomOut = openModal.querySelector('.leaflet-control-zoom-out');
-          if (zoomOut && zoomOut.offsetParent !== null) {
-            e.preventDefault();
-            zoomOut.focus();
-            return;
-          }
-        }
-        if (activeEl && activeEl.classList.contains('leaflet-control-zoom-out')) {
-          const zoomIn = openModal.querySelector('.leaflet-control-zoom-in');
-          if (zoomIn && zoomIn.offsetParent !== null) {
-            e.preventDefault();
-            zoomIn.focus();
-            return;
-          }
-        }
-        if (activeEl && activeEl.classList.contains('leaflet-control-zoom-in')) {
           if (topCloseBtn) {
             e.preventDefault();
             topCloseBtn.focus();
@@ -4249,10 +4233,11 @@
       const container = document.getElementById('historyLeafletMap');
       if (!container) return;
       container.setAttribute('tabindex', '-1');
-      setupHistoryMapZoomDpad();
-      const focusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), button, [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out)');
+      // All canvas elements including Leaflet zoom buttons get tabindex="-1" so TV D-pads stay firmly on location chips!
+      const focusables = container.querySelectorAll('a, button, [tabindex], input');
       focusables.forEach(el => {
         el.setAttribute('tabindex', '-1');
+        el.classList.remove('tv-focused');
       });
     }
 
@@ -4653,42 +4638,46 @@
             setTimeout(updateChipHighlightStates, 20);
           };
 
-          // Keyboard navigation from bottom bar up to Zoom Out, down to bottom Close, or left/right between chips
+          // TV Remote D-Pad Navigation: Keep focus strictly on the locations list while scrolling sideways!
           btn.onkeydown = (e) => {
-            if (e.key === 'ArrowUp') {
-              const zoomOut = document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');
-              if (zoomOut && zoomOut.offsetParent !== null) {
-                e.preventDefault();
-                zoomOut.focus();
-              } else {
-                const topClose = document.getElementById('closeMapBtnTop');
-                if (topClose) { e.preventDefault(); topClose.focus(); }
-              }
-            } else if (e.key === 'ArrowDown') {
+            lastMapInteractionType = 'keyboard';
+            isProgrammaticChipScroll = true;
+            mapProgrammaticChipScrollUntil = Date.now() + 800;
+
+            if (e.key === 'ArrowRight') {
               e.preventDefault();
-              const botClose = document.getElementById('closeMapBtnBottom');
-              if (botClose) botClose.focus();
-            } else if (e.key === 'ArrowRight') {
+              e.stopPropagation();
               const allBtns = chipsEl.querySelectorAll('button');
               if (idx < allBtns.length - 1) {
-                e.preventDefault();
                 const nextBtn = allBtns[idx + 1];
                 if (nextBtn) {
                   try { nextBtn.focus({ preventScroll: true }); } catch (_) { nextBtn.focus(); }
                 }
-              } else {
-                const botClose = document.getElementById('closeMapBtnBottom');
-                if (botClose) { e.preventDefault(); botClose.focus(); }
               }
+              // If already on the last chip, stay firmly on the last chip; do NOT jump to close!
             } else if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              e.stopPropagation();
               const allBtns = chipsEl.querySelectorAll('button');
               if (idx > 0) {
-                e.preventDefault();
                 const prevBtn = allBtns[idx - 1];
                 if (prevBtn) {
                   try { prevBtn.focus({ preventScroll: true }); } catch (_) { prevBtn.focus(); }
                 }
               }
+              // If already on the first chip, stay firmly on the first chip!
+            } else if (e.key === 'ArrowDown') {
+              // Deliberate Down press steps down into the bottom controls row
+              e.preventDefault();
+              e.stopPropagation();
+              const curBtn = document.getElementById('mapReturnCurrentBtn') || document.getElementById('closeMapBtnBottom');
+              if (curBtn) curBtn.focus();
+            } else if (e.key === 'ArrowUp') {
+              // Deliberate Up press moves to top Close, NEVER to the minus button!
+              e.preventDefault();
+              e.stopPropagation();
+              const topClose = document.getElementById('closeMapBtnTop');
+              if (topClose) topClose.focus();
             }
           };
 
@@ -4751,9 +4740,10 @@
         // Tablet / Touch UX: Continuous tracking of the leftmost location as the carousel is scrolled
         let chipScrollDebounceTimer = null;
         let chipScrollSettledTimer = null;
+        let lastMapInteractionType = 'keyboard';
 
         const onUserTouchChips = () => {
-          // Touching or interacting with the chips directly cancels any programmatic suppression
+          lastMapInteractionType = 'touch';
           mapProgrammaticChipScrollUntil = 0;
           isProgrammaticChipScroll = false;
         };
@@ -4769,9 +4759,9 @@
           const allButtons = Array.from(chipsEl.querySelectorAll('button'));
           if (allButtons.length === 0) return;
 
-          // When scrolling the bottom bar on a tablet, clear lingering DOM focus
-          // so the active location lights up in blue without amber keyboard outline interference
-          if (document.activeElement && chipsEl.contains(document.activeElement)) {
+          // ONLY blur lingering DOM focus if explicitly dragged via touch/wheel on a tablet,
+          // NEVER blur during remote control / keyboard D-pad navigation!
+          if (lastMapInteractionType === 'touch' && document.activeElement && chipsEl.contains(document.activeElement)) {
             try { document.activeElement.blur(); } catch (_) {}
           }
 
@@ -4821,20 +4811,20 @@
 
         // Sliding the bottom list sideways continuously tracks the leftmost item and glides the map
         chipsEl.onscroll = () => {
-          // If this scroll was commanded by the map's reticle auto-center, ignore it
-          if (isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
+          // If this scroll was commanded by D-pad or the map's reticle auto-center, ignore it
+          if (lastMapInteractionType === 'keyboard' || isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
 
           // Live tracking as the list scrolls (touch drag & momentum coasting)
           if (chipScrollDebounceTimer) clearTimeout(chipScrollDebounceTimer);
           chipScrollDebounceTimer = setTimeout(() => {
-            if (isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
+            if (lastMapInteractionType === 'keyboard' || isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
             syncLeftmostChipToMap(false);
           }, 35);
 
           // Guaranteed final sync when momentum scrolling completely stops
           if (chipScrollSettledTimer) clearTimeout(chipScrollSettledTimer);
           chipScrollSettledTimer = setTimeout(() => {
-            if (isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
+            if (lastMapInteractionType === 'keyboard' || isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
             syncLeftmostChipToMap(true);
           }, 120);
         };
