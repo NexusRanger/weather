@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=224"></script>
+  <script src="qrcode.min.js?v=225"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -676,43 +676,40 @@
       display: none !important;
     }
 
-    /* Location Map: Long thin luminous pointer connecting popup to map pin without obscuring neighborhood */
-    .history-map-tall-popup .leaflet-popup-content-wrapper {
-      background: rgba(15, 23, 42, 0.94) !important;
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(56, 189, 248, 0.45);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 16px rgba(56, 189, 248, 0.25) !important;
-      border-radius: 14px !important;
+    /* Location Map: Callout popup positioned to the left of the pin with tapering pointer */
+    .history-map-tall-popup {
+      margin: 0 !important;
+      pointer-events: none;
     }
     .history-map-tall-popup .leaflet-popup-tip-container {
-      width: 14px !important;
-      height: 38px !important;
-      margin-top: -1px;
-      overflow: visible;
-    }
-    .history-map-tall-popup .leaflet-popup-tip {
       display: none !important;
     }
-    .history-map-tall-popup .leaflet-popup-tip-container::before {
-      content: '';
-      position: absolute;
-      left: 6px;
-      top: 0;
-      width: 2px;
-      height: 38px;
-      background: linear-gradient(to bottom, #38bdf8, rgba(56, 189, 248, 0.35));
-      box-shadow: 0 0 6px rgba(56, 189, 248, 0.7);
+    .history-map-tall-popup .leaflet-popup-content-wrapper {
+      background: rgba(15, 23, 42, 0.95) !important;
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.25) !important;
+      border-radius: 14px !important;
+      padding: 0 !important;
+      position: relative !important;
+      transform: translate(calc(-50% - 24px), 50%) !important;
+      pointer-events: auto;
+      overflow: visible !important;
     }
-    .history-map-tall-popup .leaflet-popup-tip-container::after {
-      content: '';
+    .history-map-tall-popup .leaflet-popup-content {
+      margin: 10px 14px 12px 14px !important;
+      line-height: 1.35;
+    }
+    .history-map-tall-popup .popup-tapering-pointer {
       position: absolute;
-      left: 4.5px;
-      bottom: -3px;
-      width: 5px;
-      height: 5px;
-      border-radius: 9999px;
-      background: #38bdf8;
-      box-shadow: 0 0 8px #38bdf8;
+      right: -24px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 25px;
+      height: 20px;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
     }
 
     .ambient-glow {
@@ -1049,7 +1046,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.60) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.61) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1835,10 +1832,17 @@
       <!-- Leaflet Map Container -->
       <div class="flex-1 min-h-0 my-2.5 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
         <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
-        <!-- Subtle Center Target Reticle for Tablet/Touch Auto-Popup -->
+        <!-- Luminous Center Target Reticle for Tablet/Touch Auto-Popup -->
         <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
-          <div class="w-7 h-7 rounded-full border border-sky-400/25 flex items-center justify-center shadow-[0_0_8px_rgba(56,189,248,0.15)]">
-            <div class="w-1.5 h-1.5 rounded-full bg-sky-400/40"></div>
+          <div class="relative flex items-center justify-center">
+            <!-- Subtle Crosshair Hairlines extending slightly beyond the ring -->
+            <div class="absolute w-11 h-[1.5px] bg-gradient-to-r from-transparent via-sky-400/80 to-transparent"></div>
+            <div class="absolute h-11 w-[1.5px] bg-gradient-to-b from-transparent via-sky-400/80 to-transparent"></div>
+            <!-- Luminous Outer Ring -->
+            <div class="w-8 h-8 rounded-full border-2 border-sky-400/80 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.55),inset_0_0_8px_rgba(56,189,248,0.25)]">
+              <!-- Crisp Center Dot -->
+              <div class="w-1.5 h-1.5 rounded-full bg-sky-300 shadow-[0_0_8px_#38bdf8]"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2488,10 +2492,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=224"></script>
+  <script src="traffic-flood.js?v=225"></script>
     <script>
-    const APP_BUILD = 224;
-    const APP_VERSION = '1.10.60';
+    const APP_BUILD = 225;
+    const APP_VERSION = '1.10.61';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4038,10 +4042,40 @@
 
         // Safe DOM popup node (immune to string quotes or character escaping)
         const popupWrapper = document.createElement('div');
-        popupWrapper.style.cssText = 'padding: 4px; font-family: sans-serif; min-width: 175px; text-align: left;';
-        
+        popupWrapper.style.cssText = 'position: relative; min-width: 175px; text-align: left; padding-right: 14px;';
+
+        // Tapering pointer extending from right edge of card to pin
+        const pointerEl = document.createElement('div');
+        pointerEl.className = 'popup-tapering-pointer';
+        pointerEl.innerHTML = `
+          <svg width="25" height="20" viewBox="0 0 25 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
+            <path d="M 0 3 L 22 10 L 0 17 Z" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(56, 189, 248, 0.6)" stroke-width="1.2" stroke-linejoin="round" />
+            <line x1="0" y1="3.5" x2="0" y2="16.5" stroke="rgba(15, 23, 42, 0.95)" stroke-width="2" />
+            <circle cx="22" cy="10" r="2.5" fill="#38bdf8" filter="drop-shadow(0 0 4px #38bdf8)" />
+          </svg>
+        `;
+        popupWrapper.appendChild(pointerEl);
+
+        // Sleek Close '✕' Button
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.setAttribute('aria-label', 'Close info box');
+        closeBtn.tabIndex = -1;
+        closeBtn.style.cssText = 'position: absolute; top: -3px; right: -4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #94a3b8; font-size: 11px; cursor: pointer; transition: all 0.2s; line-height: 1; padding: 0;';
+        closeBtn.innerHTML = '✕';
+        closeBtn.onmouseenter = () => { closeBtn.style.color = '#ffffff'; closeBtn.style.background = 'rgba(239, 68, 68, 0.35)'; closeBtn.style.borderColor = 'rgba(239, 68, 68, 0.5)'; };
+        closeBtn.onmouseleave = () => { closeBtn.style.color = '#94a3b8'; closeBtn.style.background = 'rgba(255, 255, 255, 0.08)'; closeBtn.style.borderColor = 'rgba(255, 255, 255, 0.15)'; };
+        closeBtn.onclick = (e) => {
+          if (e) {
+            e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+          }
+          if (historyLeafletMap) historyLeafletMap.closePopup();
+        };
+        popupWrapper.appendChild(closeBtn);
+
         const titleEl = document.createElement('div');
-        titleEl.style.cssText = 'font-weight: 800; color: #ffffff; font-size: 13px; margin-bottom: 2px;';
+        titleEl.style.cssText = 'font-weight: 800; color: #ffffff; font-size: 13px; margin-bottom: 2px; padding-right: 12px;';
         titleEl.textContent = q.name;
         popupWrapper.appendChild(titleEl);
 
@@ -4051,10 +4085,12 @@
         popupWrapper.appendChild(distEl);
 
         const outward = getOutwardPostcode(q.postcode);
-        const subEl = document.createElement('div');
-        subEl.style.cssText = 'font-size: 10px; color: #38bdf8; font-family: monospace; font-weight: 600;';
-        subEl.textContent = `${outward ? outward + ' • ' : ''}${Math.abs(q.lat).toFixed(2)}°${q.lat >= 0 ? 'N' : 'S'}, ${Math.abs(q.lon).toFixed(2)}°${q.lon >= 0 ? 'E' : 'W'}`;
-        popupWrapper.appendChild(subEl);
+        if (outward) {
+          const subEl = document.createElement('div');
+          subEl.style.cssText = 'font-size: 10px; color: #38bdf8; font-family: monospace; font-weight: 600; margin-bottom: 2px;';
+          subEl.textContent = `${outward} Area`;
+          popupWrapper.appendChild(subEl);
+        }
 
         const timeEl = document.createElement('div');
         timeEl.style.cssText = 'font-size: 10px; color: #94a3b8; margin-top: 3px;';
@@ -4081,11 +4117,11 @@
         });
 
         marker.bindPopup(popupWrapper, {
-          closeButton: true,
+          closeButton: false,
           autoPan: false, // Prevents map from jumping when auto-opening popups during tablet finger panning
           closeOnClick: false,
-          minWidth: 185,
-          offset: [0, -48],
+          minWidth: 175,
+          offset: [0, 0],
           className: 'history-map-tall-popup'
         });
 
