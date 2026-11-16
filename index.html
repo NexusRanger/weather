@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.82) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.83) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1943,7 +1943,7 @@
           <!-- Chips injected dynamically -->
         </div>
         <!-- Bottom Controls: Return to Current, Distance Unit (Miles / km), and Close button -->
-        <div class="flex items-center justify-end gap-2 px-1 pb-0 -mt-0.5">
+        <div class="flex items-center justify-end gap-2 px-1 pb-0 -mt-0.5 flex-wrap">
           <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Return to Current Location (first item on list)">
             <span>📍 Current</span>
           </button>
@@ -1952,12 +1952,24 @@
             <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const cur=document.getElementById('mapReturnCurrentBtn');if(cur)cur.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
               km
             </button>
-            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
+            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const pb=document.getElementById('mapStylePhysicalBtn');if(pb)pb.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
               Miles
             </button>
           </div>
 
-          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
+          <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5" role="group" aria-label="Map style">
+            <button id="mapStylePhysicalBtn" type="button" onclick="switchHistoryMapStyle('physical')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const sb=document.getElementById('mapStyleSatelliteBtn');if(sb)sb.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Physical: Clean blue sea, green vegetation & icy wastes">
+              🌍 Physical
+            </button>
+            <button id="mapStyleSatelliteBtn" type="button" onclick="switchHistoryMapStyle('satellite')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const db=document.getElementById('mapStyleDarkBtn');if(db)db.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const pb=document.getElementById('mapStylePhysicalBtn');if(pb)pb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Satellite: True-color Earth surface from space">
+              🛰️ Satellite
+            </button>
+            <button id="mapStyleDarkBtn" type="button" onclick="switchHistoryMapStyle('dark')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const sb=document.getElementById('mapStyleSatelliteBtn');if(sb)sb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Dark: Stealth Dark Canvas">
+              🌑 Dark
+            </button>
+          </div>
+
+          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const db=document.getElementById('mapStyleDarkBtn');if(db)db.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
           </button>
         </div>
@@ -2596,10 +2608,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=246"></script>
+  <script src="traffic-flood.js?v=247"></script>
     <script>
-    const APP_BUILD = 246;
-    const APP_VERSION = '1.10.82';
+    const APP_BUILD = 247;
+    const APP_VERSION = '1.10.83';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3970,6 +3982,7 @@
       }
 
       initOrRefreshHistoryMap(true);
+      switchHistoryMapStyle(getHistoryMapStyle(), false);
       updateMapDistances(getMapDistUnit());
       resetHistoryMapAutoCloseTimer();
       updateHistoryMapCountdownDisplay();
@@ -4365,6 +4378,95 @@
           }
         }
       }
+    }
+
+    // Available World Map Styles
+    const HISTORY_MAP_STYLES = {
+      physical: {
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        maxZoom: 16
+      },
+      satellite: {
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        maxZoom: 16
+      },
+      dark: {
+        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        maxZoom: 16
+      }
+    };
+
+    let historyBaseTileLayer = null;
+    let historyRefTileLayer = null;
+
+    function getHistoryMapStyle() {
+      try {
+        const saved = localStorage.getItem('history_map_style');
+        if (saved && HISTORY_MAP_STYLES[saved]) return saved;
+      } catch (_) {}
+      return 'physical'; // Default to Physical (clean blue sea, green land, icy wastes)
+    }
+
+    function switchHistoryMapStyle(styleKey, save = true) {
+      const activeStyle = HISTORY_MAP_STYLES[styleKey] ? styleKey : 'physical';
+      if (save) {
+        try { localStorage.setItem('history_map_style', activeStyle); } catch (_) {}
+      }
+
+      // Update button highlights
+      const pBtn = document.getElementById('mapStylePhysicalBtn');
+      const sBtn = document.getElementById('mapStyleSatelliteBtn');
+      const dBtn = document.getElementById('mapStyleDarkBtn');
+      [
+        { btn: pBtn, key: 'physical' },
+        { btn: sBtn, key: 'satellite' },
+        { btn: dBtn, key: 'dark' }
+      ].forEach(({ btn, key }) => {
+        if (!btn) return;
+        if (key === activeStyle) {
+          btn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none';
+        } else {
+          btn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none';
+        }
+      });
+
+      if (!historyLeafletMap) return;
+
+      const conf = HISTORY_MAP_STYLES[activeStyle];
+      if (historyBaseTileLayer && historyLeafletMap.hasLayer(historyBaseTileLayer)) {
+        historyLeafletMap.removeLayer(historyBaseTileLayer);
+      }
+      if (historyRefTileLayer && historyLeafletMap.hasLayer(historyRefTileLayer)) {
+        historyLeafletMap.removeLayer(historyRefTileLayer);
+      }
+
+      // Strictly single-world bounded: noWrap ensures only ONE world is rendered without duplicate instances!
+      historyBaseTileLayer = L.tileLayer(conf.base, {
+        attribution: '',
+        maxZoom: conf.maxZoom,
+        detectRetina: false,
+        noWrap: true,
+        bounds: [[-85.0511, -180], [85.0511, 180]]
+      }).addTo(historyLeafletMap);
+
+      if (conf.ref) {
+        historyRefTileLayer = L.tileLayer(conf.ref, {
+          attribution: '',
+          maxZoom: conf.maxZoom,
+          detectRetina: false,
+          noWrap: true,
+          bounds: [[-85.0511, -180], [85.0511, 180]]
+        }).addTo(historyLeafletMap);
+      }
+
+      // Ensure all marker pins always stay on top
+      if (historyMarkersLayer) {
+        historyMarkersLayer.bringToFront();
+      }
+      stripMapCanvasFocusables();
     }
 
     let mapToastTimer = null;
@@ -4916,7 +5018,7 @@
           zoomSnap: 1,
           zoomDelta: 1,
           fadeAnimation: false,
-          minZoom: 2,
+          minZoom: 3,
           maxBounds: [[-85.0511, -180], [85.0511, 180]],
           maxBoundsViscosity: 1.0,
           worldCopyJump: false
@@ -4940,25 +5042,8 @@
           stripMapCanvasFocusables();
         });
 
-        // Dark Canvas Base layer (No API key required, single world boundary)
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '',
-          maxZoom: 16,
-          detectRetina: false,
-          noWrap: true,
-          bounds: [[-85.0511, -180], [85.0511, 180]]
-        }).addTo(historyLeafletMap);
-
-        // Dark Labels overlay
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '',
-          maxZoom: 16,
-          detectRetina: false,
-          noWrap: true,
-          bounds: [[-85.0511, -180], [85.0511, 180]]
-        }).addTo(historyLeafletMap);
-
         historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
+        switchHistoryMapStyle(getHistoryMapStyle(), false);
         stripMapCanvasFocusables();
       } else if (isInitialOpen) {
         historyLeafletMap.setView([currentRef.lat, currentRef.lon], defaultZoom);
@@ -12227,7 +12312,7 @@
           zoomSnap: 1,        // Strictly snap to whole integer zoom levels to eliminate TV subpixel tile gaps
           zoomDelta: 1,
           fadeAnimation: false, // Avoid GPU texture tearing / ghost tiles on older TV processors
-          minZoom: 2,
+          minZoom: 3,
           maxBounds: [[-85.0511, -180], [85.0511, 180]],
           maxBoundsViscosity: 1.0,
           worldCopyJump: false
