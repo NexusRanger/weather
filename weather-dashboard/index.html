@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.97) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.98) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2620,10 +2620,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=261"></script>
+  <script src="traffic-flood.js?v=262"></script>
     <script>
-    const APP_BUILD = 261;
-    const APP_VERSION = '1.10.97';
+    const APP_BUILD = 262;
+    const APP_VERSION = '1.10.98';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6756,7 +6756,7 @@
         }
       }
 
-      // Degrees Minutes Seconds: e.g. 51°42'11.5"N 2°13'35.8"W
+      // Degrees Minutes Seconds (e.g. 51°42'11.5"N 2°13'35.8"W)
       const dmsMatch = str.match(/([0-9]{1,2})°\s*([0-9]{1,2})['′]\s*([0-9]+(?:\.[0-9]+)?)[″"]?\s*([NSns])\s*[, \t/]+\s*([0-9]{1,3})°\s*([0-9]{1,2})['′]\s*([0-9]+(?:\.[0-9]+)?)[″"]?\s*([EWew])/i);
       if (dmsMatch) {
         let lat = parseFloat(dmsMatch[1]) + parseFloat(dmsMatch[2]) / 60 + parseFloat(dmsMatch[3]) / 3600;
@@ -6768,68 +6768,98 @@
         }
       }
 
-      // 2. URLs (Google Maps, Apple Maps, OpenStreetMap)
-      const urlMatch = str.match(/(https?:\/\/[^\s]+)/i);
+      // 2. URLs (Google Maps, Apple Maps, OpenStreetMap) - matches with or without https://
+      const mapUrlRegex = /(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)*(?:maps\.app\.goo\.gl|goo\.gl\/maps|google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|openstreetmap\.org|maps\.apple\.com)[^\s"'<>]*/i;
+      const genericUrlRegex = /https?:\/\/[^\s"'<>]+/i;
+      const urlMatch = str.match(mapUrlRegex) || str.match(genericUrlRegex);
+
       if (urlMatch) {
-        const fullUrl = urlMatch[1];
-        // Any accompanying text before or after the URL (e.g. "Dunkirk Mills, Stroud https://maps.app.goo.gl/...")
+        let fullUrl = urlMatch[0];
         let accompanyingText = str.replace(fullUrl, '').replace(/[\r\n\t]+/g, ' ').replace(/^[, -]+|[, -]+$/g, '').trim();
 
-        // Check Google Maps / Apple Maps / OSM coordinate patterns in URL
-        // Pattern A: @lat,lon (Google Maps standard)
-        const atCoords = fullUrl.match(/@(-?[0-9]{1,2}\.[0-9]+),(-?[0-9]{1,3}\.[0-9]+)/);
-        if (atCoords) {
-          const lat = parseFloat(atCoords[1]);
-          const lon = parseFloat(atCoords[2]);
-          let placeName = '';
-          const placeMatch = fullUrl.match(/\/place\/([^/@?#]+)/);
-          if (placeMatch) {
-            try { placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')); } catch (_) {}
-          }
-          return {
-            type: 'coords',
-            lat,
-            lon,
-            name: accompanyingText || placeName || '',
-            url: fullUrl
-          };
+        // Ensure URL has protocol for consistent parsing
+        let parseableUrl = fullUrl;
+        if (!/^https?:\/\//i.test(parseableUrl)) {
+          parseableUrl = 'https://' + parseableUrl;
         }
 
-        // Pattern B: Query params like ?q=lat,lon or ?query=lat,lon or ?ll=lat,lon or center=lat,lon
-        const queryCoords = fullUrl.match(/[?&](?:q|query|ll|center|daddr|saddr)=(-?[0-9]{1,2}\.[0-9]+)[, ]+(-?[0-9]{1,3}\.[0-9]+)/i);
-        if (queryCoords) {
-          const lat = parseFloat(queryCoords[1]);
-          const lon = parseFloat(queryCoords[2]);
-          return { type: 'coords', lat, lon, name: accompanyingText || '', url: fullUrl };
-        }
+        // A: Protobuf pin coordinates in data param: !3d<lat>!4d<lon>
+        const protoPin = parseableUrl.match(/!3d(-?[0-9]{1,2}\.[0-9]+)!4d(-?[0-9]{1,3}\.[0-9]+)/i);
+        let pinLat = protoPin ? parseFloat(protoPin[1]) : null;
+        let pinLon = protoPin ? parseFloat(protoPin[2]) : null;
 
-        // Pattern C: OpenStreetMap ?mlat=lat&mlon=lon or /#map=zoom/lat/lon
-        const osmCoords = fullUrl.match(/[?&]mlat=(-?[0-9]{1,2}\.[0-9]+)&mlon=(-?[0-9]{1,3}\.[0-9]+)/i)
-          || fullUrl.match(/#map=[0-9]+\/(-?[0-9]{1,2}\.[0-9]+)\/(-?[0-9]{1,3}\.[0-9]+)/i);
-        if (osmCoords) {
-          const lat = parseFloat(osmCoords[1]);
-          const lon = parseFloat(osmCoords[2]);
-          return { type: 'coords', lat, lon, name: accompanyingText || '', url: fullUrl };
-        }
+        // B: Standard @lat,lon viewport / pin
+        const atCoords = parseableUrl.match(/@(-?[0-9]{1,2}\.[0-9]+),(-?[0-9]{1,3}\.[0-9]+)/);
+        let atLat = atCoords ? parseFloat(atCoords[1]) : null;
+        let atLon = atCoords ? parseFloat(atCoords[2]) : null;
 
-        // Pattern D: Place name in /place/Name+Here without @coords
-        const placeMatch = fullUrl.match(/\/place\/([^/@?#]+)/);
+        // C: Query parameters like ?q=lat,lon or ?query=lat,lon or ?ll=lat,lon
+        const queryCoords = parseableUrl.match(/[?&](?:q|query|ll|center|daddr|saddr)=(-?[0-9]{1,2}\.[0-9]+)[, ]+(-?[0-9]{1,3}\.[0-9]+)/i);
+        let qLat = queryCoords ? parseFloat(queryCoords[1]) : null;
+        let qLon = queryCoords ? parseFloat(queryCoords[2]) : null;
+
+        // D: OpenStreetMap coords: ?mlat=lat&mlon=lon or #map=zoom/lat/lon
+        const osmCoords = parseableUrl.match(/[?&]mlat=(-?[0-9]{1,2}\.[0-9]+)&mlon=(-?[0-9]{1,3}\.[0-9]+)/i)
+          || parseableUrl.match(/#map=[0-9]+\/(-?[0-9]{1,2}\.[0-9]+)\/(-?[0-9]{1,3}\.[0-9]+)/i);
+        let osmLat = osmCoords ? parseFloat(osmCoords[1]) : null;
+        let osmLon = osmCoords ? parseFloat(osmCoords[2]) : null;
+
+        // E: Place name in /place/Name
+        let placeName = '';
+        const placeMatch = parseableUrl.match(/\/place\/([^/@?#]+)/i);
         if (placeMatch) {
           try {
-            const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-            if (placeName && !/^[0-9.-]+,[0-9.-]+$/.test(placeName)) {
-              return { type: 'text', query: placeName, url: fullUrl };
+            placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')).replace(/[, ]+$/, '');
+          } catch (_) {}
+        }
+
+        // F: Search slug in /search/Query
+        let searchSlug = '';
+        const searchMatch = parseableUrl.match(/\/maps\/search\/([^/@?#]+)/i);
+        if (searchMatch) {
+          try {
+            searchSlug = decodeURIComponent(searchMatch[1].replace(/\+/g, ' ')).replace(/[, ]+$/, '');
+          } catch (_) {}
+        }
+
+        // G: Query param string in ?q=Query
+        let qStr = '';
+        const qStrMatch = parseableUrl.match(/[?&](?:q|query)=([^&]+)/i);
+        if (qStrMatch) {
+          try {
+            qStr = decodeURIComponent(qStrMatch[1].replace(/\+/g, ' '));
+            const qCoordMatch = qStr.match(/^([-+]?[0-9]{1,2}\.[0-9]+)[, ]+([-+]?[0-9]{1,3}\.[0-9]+)$/);
+            if (qCoordMatch && qLat === null) {
+              qLat = parseFloat(qCoordMatch[1]);
+              qLon = parseFloat(qCoordMatch[2]);
             }
           } catch (_) {}
         }
 
-        // Pattern E: If it's a shortlink with accompanying text (e.g. from mobile share)
-        if (accompanyingText) {
-          return { type: 'text', query: accompanyingText, url: fullUrl };
+        // Pick coordinates (Priority: Pin > Query Coords > OSM > @ Viewport)
+        const finalLat = pinLat !== null ? pinLat : (qLat !== null ? qLat : (osmLat !== null ? osmLat : atLat));
+        const finalLon = pinLon !== null ? pinLon : (qLon !== null ? qLon : (osmLon !== null ? osmLon : atLon));
+
+        if (finalLat !== null && finalLon !== null) {
+          return {
+            type: 'coords',
+            lat: finalLat,
+            lon: finalLon,
+            name: accompanyingText || placeName || (qStr && !/^[0-9., -]+$/.test(qStr) ? qStr : '') || '',
+            url: parseableUrl
+          };
         }
 
-        // Pattern F: Shortlink without accompanying text
-        return { type: 'short_url', url: fullUrl };
+        // Name or query string extraction
+        const nameCandidate = accompanyingText || placeName || searchSlug || (qStr && !/^[0-9., -]+$/.test(qStr) ? qStr : '');
+        if (nameCandidate) {
+          const sub = parseGoogleMapsOrCoordinates(nameCandidate);
+          if (sub && sub.type === 'coords') return sub;
+          return { type: 'text', query: nameCandidate, url: parseableUrl };
+        }
+
+        // Shortlink or bare URL
+        return { type: 'short_url', url: parseableUrl };
       }
 
       return null;
@@ -6940,31 +6970,35 @@
             return;
           }
         } else if (parsedLoc.type === 'text') {
-          // Extracted clean place name / address from share text (e.g. "Dunkirk Mills, Stroud https://maps.app.goo.gl/...")
+          // Extracted clean place name / address from share text or URL
           q = parsedLoc.query;
           input.value = q;
         } else if (parsedLoc.type === 'short_url') {
-          // Attempt unshortening for bare shortlink
           if (status) {
             status.style.color = '#fbbf24';
             status.textContent = 'Expanding Google Maps link...';
           }
           let resolved = false;
+          // Step 1: Query CORS-enabled microlink service
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2500);
-            const unres = await fetch(`https://unshorten.me/json/${encodeURIComponent(parsedLoc.url)}`, { signal: controller.signal });
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const mRes = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(parsedLoc.url)}`, { signal: controller.signal });
             clearTimeout(timeoutId);
-            if (unres.ok) {
-              const uData = await unres.json();
-              if (uData && uData.resolved_url) {
-                const subParsed = parseGoogleMapsOrCoordinates(uData.resolved_url);
+            if (mRes.ok) {
+              const mData = await mRes.json();
+              if (mData && mData.data) {
+                const expandedUrl = mData.data.url || '';
+                const placeTitle = mData.data.title || '';
+                // Try parsing resolved URL
+                const subParsed = parseGoogleMapsOrCoordinates(expandedUrl);
                 if (subParsed && subParsed.type === 'coords') {
-                  if (subParsed.name) pendingCustomLocationName = subParsed.name;
+                  const placeNameFinal = subParsed.name || (placeTitle && !placeTitle.includes('Google Maps') ? placeTitle : '');
+                  if (placeNameFinal) pendingCustomLocationName = placeNameFinal;
                   const cOk = await lookupCoords(subParsed.lat, subParsed.lon, true);
                   if (cOk) {
-                    if (subParsed.name) {
-                      CURRENT_LOCATION.name = subParsed.name;
+                    if (placeNameFinal) {
+                      CURRENT_LOCATION.name = placeNameFinal;
                       try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', subParsed.lat, subParsed.lon); } catch (_) {}
                       updateWeatherUI();
                     }
@@ -6978,15 +7012,22 @@
                   q = subParsed.query;
                   input.value = q;
                   resolved = true;
+                } else if (placeTitle && !placeTitle.includes('Google Maps') && !placeTitle.includes('maps.app.goo.gl')) {
+                  q = placeTitle;
+                  input.value = q;
+                  resolved = true;
                 }
               }
             }
           } catch (_) {}
+
           if (!resolved) {
             if (status) {
               status.style.color = '#fbbf24';
-              status.textContent = 'ℹ️ Tip: Paste coordinates (e.g. 51.7032, -2.2266) or full Google Maps URL with location name.';
+              status.textContent = '📍 Shortlink detected. Please paste the location name, address, or full map link (with coordinates).';
             }
+            if (btn) btn.disabled = false;
+            return;
           }
         }
       }
