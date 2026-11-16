@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=220"></script>
+  <script src="qrcode.min.js?v=221"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1049,7 +1049,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.56) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.57) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2488,10 +2488,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=220"></script>
+  <script src="traffic-flood.js?v=221"></script>
     <script>
-    const APP_BUILD = 220;
-    const APP_VERSION = '1.10.56';
+    const APP_BUILD = 221;
+    const APP_VERSION = '1.10.57';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3689,6 +3689,10 @@
       }
       const modal = document.getElementById('historyMapModal');
       if (!modal) return;
+      modalTimerLocks['historyMapModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
+      historyMapAutoCloseSecs = 45;
       savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -3705,6 +3709,7 @@
 
       initOrRefreshHistoryMap();
       resetHistoryMapAutoCloseTimer();
+      updateHistoryMapCountdownDisplay();
 
       // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
       // and then the Close button prominently highlights in warm amber-yellow.
@@ -3716,6 +3721,8 @@
 
     function closeHistoryMapModal(pop = true) {
       modalTimerLocks['historyMapModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       stopHistoryMapAutoCloseTimer();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -5438,6 +5445,10 @@
         status.textContent = '';
         status.style.color = '';
       }
+      modalTimerLocks['locationModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
+      locationAutoCloseSecs = 30;
       resetSmartLocationInputState();
       savePreModalFocus('headerLocationBtn');
       if (input) {
@@ -5493,6 +5504,8 @@
 
     function closeLocationModal(pop = true) {
       modalTimerLocks['locationModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       if (typeof cancelAllLocationAutoContinue === 'function') cancelAllLocationAutoContinue();
       stopLocationAutoCloseTimer();
       const infoBox = document.getElementById('recentLocationsInfoBox');
@@ -10151,6 +10164,10 @@
     function openShareModal() {
       const modal = document.getElementById('shareModal');
       if (!modal) return;
+      modalTimerLocks['shareModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
+      shareAutoCloseSecs = 40;
       savePreModalFocus('shareBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -10162,6 +10179,7 @@
 
       // Start 40s auto-revert countdown
       resetShareAutoCloseTimer();
+      updateShareCountdownDisplay();
 
       // Populate visual title badge in Share header: e.g. Dashboard Link "Stroud Hotel" (green font/badge)
       const titleBadge = document.getElementById('shareTitleBadge');
@@ -10298,6 +10316,8 @@
 
     function closeShareModal(pop = true) {
       modalTimerLocks['shareModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       stopShareAutoCloseTimer();
       const modal = document.getElementById('shareModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -11729,6 +11749,11 @@
     function openRadarModal() {
       const modal = document.getElementById('radarModal');
       if (!modal) return;
+      modalTimerLocks['radarModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
+      radarAutoCloseSecs = 30;
+
       savePreModalFocus('radarBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -11739,11 +11764,6 @@
         }
       } catch (_) {}
 
-      // Clear prior focus so the user clearly sees the Close button light up in amber
-      if (document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
-      }
-
       const locBadge = document.getElementById('radarLocationLabel');
       if (locBadge && typeof CURRENT_LOCATION !== 'undefined') {
         locBadge.textContent = CURRENT_LOCATION.name || `${CURRENT_LOCATION.lat.toFixed(2)}°N, ${Math.abs(CURRENT_LOCATION.lon).toFixed(2)}°W`;
@@ -11753,20 +11773,19 @@
       updateRadarLockZoomBtn();
       updateRadarRainStatusPill();
       resetRadarAutoCloseTimer();
+      updateRadarCountdownDisplay();
 
-      // TV D-Pad UX: Standardized 1.2s (1200ms) delay so the modal opens smoothly first,
-      // and then the Close button prominently highlights unless user already focused inside modal.
-      setTimeout(() => {
-        const closeBtn = document.getElementById('closeRadarBtnTop');
-        const activeInModal = modal && document.activeElement && modal.contains(document.activeElement);
-        if (closeBtn && modal && !modal.classList.contains('hidden') && !activeInModal) {
-          closeBtn.focus();
-        }
-      }, 1200);
+      // Immediately focus the Close button so the user has prominent amber focus upon opening
+      const closeBtn = document.getElementById('closeRadarBtnTop');
+      if (closeBtn) {
+        closeBtn.focus();
+      }
     }
 
     function closeRadarModal(pop = true) {
       modalTimerLocks['radarModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       stopRadarAnimation();
       stopRadarAutoCloseTimer();
       const modal = document.getElementById('radarModal');
@@ -11824,6 +11843,11 @@
     function openTrafficModal() {
       const modal = document.getElementById('trafficModal');
       if (!modal) return;
+      modalTimerLocks['trafficModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
+      trafficAutoCloseSecs = 20;
+
       savePreModalFocus('trafficPill');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -11834,22 +11858,16 @@
         }
       } catch (_) {}
 
-      // Clear prior focus so the user clearly sees the Close button light up in amber
-      if (document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
-      }
-
       // Populate data from memory (zero extra API calls!)
       populateTrafficModalData();
 
       // Start 20s auto-revert timer
       resetTrafficAutoCloseTimer();
+      updateTrafficCountdownDisplay();
 
-      // Standardized 1.2s (1200ms) delay to prominently highlight the Close button
-      setTimeout(() => {
-        const closeBtn = document.getElementById('closeTrafficBtnTop');
-        if (closeBtn) closeBtn.focus();
-      }, 1200);
+      // Immediately focus the Close button so the user has prominent amber focus upon opening
+      const closeBtn = document.getElementById('closeTrafficBtnTop');
+      if (closeBtn) closeBtn.focus();
     }
 
     function populateTrafficModalData() {
@@ -12092,6 +12110,8 @@
 
     function closeTrafficModal(pop = true) {
       modalTimerLocks['trafficModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       stopTrafficAutoCloseTimer();
       const modal = document.getElementById('trafficModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -12150,6 +12170,11 @@
     function openRiverModal() {
       const modal = document.getElementById('riverModal');
       if (!modal) return;
+      modalTimerLocks['riverModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
+      riverAutoCloseSecs = 20;
+
       savePreModalFocus('riverPill');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -12160,22 +12185,16 @@
         }
       } catch (_) {}
 
-      // Clear prior focus so the user clearly sees the Close button light up in amber
-      if (document.activeElement && document.activeElement.blur) {
-        document.activeElement.blur();
-      }
-
       // Populate data from memory (zero extra API calls!)
       populateRiverModalData();
 
       // Start 20s auto-revert timer
       resetRiverAutoCloseTimer();
+      updateRiverCountdownDisplay();
 
-      // Standardized 1.2s (1200ms) delay to prominently highlight the Close button
-      setTimeout(() => {
-        const closeBtn = document.getElementById('closeRiverBtnTop');
-        if (closeBtn) closeBtn.focus();
-      }, 1200);
+      // Immediately focus the Close button so the user has prominent amber focus upon opening
+      const closeBtn = document.getElementById('closeRiverBtnTop');
+      if (closeBtn) closeBtn.focus();
     }
 
     function populateRiverModalData() {
@@ -12263,6 +12282,8 @@
 
     function closeRiverModal(pop = true) {
       modalTimerLocks['riverModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       stopRiverAutoCloseTimer();
       const modal = document.getElementById('riverModal');
       if (!modal || modal.classList.contains('hidden')) return;
