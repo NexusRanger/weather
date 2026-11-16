@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.89) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.91) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2608,10 +2608,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=253"></script>
+  <script src="traffic-flood.js?v=255"></script>
     <script>
-    const APP_BUILD = 253;
-    const APP_VERSION = '1.10.89';
+    const APP_BUILD = 255;
+    const APP_VERSION = '1.10.91';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3842,32 +3842,55 @@
 
     function getHistoryQueries() {
       const now = Date.now();
+      const cutoff = now - 30 * 24 * 60 * 60 * 1000;
+      const combined = [];
+
+      // 1. Load public map cache
       try {
-        const raw = localStorage.getItem(PUBLIC_MAP_CACHE_KEY) || localStorage.getItem('ambient_location_queries');
-        if (raw) {
-          const arr = JSON.parse(raw);
-          const cutoff = now - 30 * 24 * 60 * 60 * 1000;
-          if (Array.isArray(arr)) {
-            return arr.filter(q => {
-              if (!q || !q.lat || !q.lon || !q.name) return false;
-              const n = (q.name || '').toLowerCase().trim();
-              if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return false;
-              if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return false;
-              if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
-              if (isPersonalLocationName(q.name)) return false;
-              return q.timestamp && q.timestamp >= cutoff;
-            }).map(q => ({
-              ...q,
-              name: getDepersonalizedLocationName(q)
-            })).filter(q => {
-              if (!q.name || isPersonalLocationName(q.name)) return false;
-              const n = q.name.toLowerCase().trim();
-              return n !== 'united kingdom' && n !== 'uk';
-            });
-          }
+        const rawPublic = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+        if (rawPublic) {
+          const arr = JSON.parse(rawPublic);
+          if (Array.isArray(arr)) combined.push(...arr);
         }
       } catch (_) {}
-      return [];
+
+      // 2. Always merge local user recent locations so locations are NEVER missing right after a refresh!
+      try {
+        const userRecents = loadUserRecentQueries();
+        if (Array.isArray(userRecents)) combined.push(...userRecents);
+      } catch (_) {}
+
+      // 3. Fallback legacy queries
+      try {
+        const legacy = localStorage.getItem('ambient_location_queries');
+        if (legacy) {
+          const arr = JSON.parse(legacy);
+          if (Array.isArray(arr)) combined.push(...arr);
+        }
+      } catch (_) {}
+
+      // Deduplicate by coordinates / name and apply filters
+      const deduped = [];
+      combined.forEach(q => {
+        if (!q || typeof q.lat !== 'number' || typeof q.lon !== 'number' || !q.name) return;
+        const n = (q.name || '').toLowerCase().trim();
+        if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
+        if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return;
+        if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
+        if (isPersonalLocationName(q.name)) return;
+
+        const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
+        if (ts < cutoff) return;
+
+        if (!deduped.some(d => Math.abs(d.lat - q.lat) < 0.05 && Math.abs(d.lon - q.lon) < 0.05)) {
+          deduped.push({
+            ...q,
+            name: getDepersonalizedLocationName(q)
+          });
+        }
+      });
+
+      return deduped.filter(q => q.name && !isPersonalLocationName(q.name) && q.name.toLowerCase() !== 'united kingdom' && q.name.toLowerCase() !== 'uk');
     }
 
     function recordLocationQuery(loc) {
@@ -4409,17 +4432,20 @@
     const HISTORY_MAP_STYLES = {
       physical: {
         base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+        subdomains: 'abcd',
         maxZoom: 16
       },
       satellite: {
         base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',
+        subdomains: 'abcd',
         maxZoom: 16
       },
       dark: {
         base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        ref: 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}{r}.png',
+        subdomains: 'abcd',
         maxZoom: 16
       }
     };
@@ -4481,7 +4507,8 @@
         historyRefTileLayer = L.tileLayer(conf.ref, {
           attribution: '',
           maxZoom: conf.maxZoom,
-          detectRetina: false,
+          subdomains: conf.subdomains || 'abcd',
+          detectRetina: true, // Automatically loads @2x high-resolution labels on 4K TVs and high-DPI displays!
           noWrap: true,
           bounds: [[-85.0511, -180], [85.0511, 180]]
         }).addTo(historyLeafletMap);
@@ -5094,7 +5121,11 @@
       let queries = getHistoryQueries();
       renderHistoryMarkersAndChips(queries, isInitialOpen);
 
-      // 2. Fetch shared queries from Google Sheets endpoint in background
+      // 2. Fetch / update shared queries from Google Sheets in background
+      syncPublicHistoryQueriesFromSheet(true);
+    }
+
+    async function syncPublicHistoryQueriesFromSheet(isMapOpen = false) {
       const endpoint = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
       try {
         const res = await fetch(endpoint);
@@ -5108,7 +5139,6 @@
               if (sq.lat && sq.lon && ts >= cutoff) {
                 const name = (sq.name || '').trim();
                 const nLower = name.toLowerCase();
-                // Filter out any mock test data, country-only entries, or purged locations (Sturgeon County, Iran, IN)
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
                 const isPurged = nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64);
@@ -5132,16 +5162,22 @@
                 deduped.push(sq);
               }
             });
+
             // Guarantee depersonalization for public world map rendering
-            queries = deduped
+            const queries = deduped
               .filter(sq => !isPersonalLocationName(sq.name) && sq.name.toLowerCase() !== 'united kingdom' && sq.name.toLowerCase() !== 'uk')
               .map(sq => ({
                 ...sq,
                 name: getDepersonalizedLocationName(sq)
               }))
               .filter(sq => sq.name && !isPersonalLocationName(sq.name) && sq.name.toLowerCase() !== 'united kingdom' && sq.name.toLowerCase() !== 'uk');
+
             try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(queries)); } catch (_) {}
-            renderHistoryMarkersAndChips(queries, false);
+
+            const mapModal = document.getElementById('historyMapModal');
+            if (mapModal && !mapModal.classList.contains('hidden') && historyLeafletMap) {
+              renderHistoryMarkersAndChips(queries, false);
+            }
           }
         }
       } catch (_) {}
@@ -13577,6 +13613,11 @@
 
     checkForUpdates();
     setInterval(checkForUpdates, 3 * 60 * 1000);
+
+    // Prefetch shared 30-day map locations in background so opening the world map is instantaneous
+    setTimeout(() => {
+      syncPublicHistoryQueriesFromSheet(false);
+    }, 1800);
 
     // TV Remote UX: Default focus on location button on startup in dormant state (highlights on first D-pad touch)
     setTimeout(() => {
