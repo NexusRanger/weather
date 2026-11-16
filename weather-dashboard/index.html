@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=216"></script>
+  <script src="qrcode.min.js?v=217"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -998,7 +998,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.52) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.53) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2437,10 +2437,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=216"></script>
+  <script src="traffic-flood.js?v=217"></script>
     <script>
-    const APP_BUILD = 216;
-    const APP_VERSION = '1.10.52';
+    const APP_BUILD = 217;
+    const APP_VERSION = '1.10.53';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2649,6 +2649,23 @@
       }
       window.addEventListener('load', scanAndAttach);
     })();
+
+    // Safety Net: If wondersModal is open and focus ever leaves or is dropped, any D-pad key immediately restores focus!
+    window.addEventListener('keydown', function handleWondersFocusRecovery(e) {
+      const wondersModal = document.getElementById('wondersModal');
+      if (!wondersModal || wondersModal.classList.contains('hidden')) return;
+
+      const active = document.activeElement;
+      if (!active || active === document.body || !wondersModal.contains(active)) {
+        const dpadKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Select'];
+        if (dpadKeys.includes(e.key)) {
+          e.preventDefault();
+          e.stopPropagation();
+          const closeBtn = document.getElementById('closeWondersBtnTop');
+          if (closeBtn) closeBtn.focus();
+        }
+      }
+    }, true);
 
     window.addEventListener('keydown', function handleModalUpToClose(e) {
       if (e.key !== 'ArrowUp') {
@@ -2916,7 +2933,7 @@
       }
       mainPageFocusIdleTimer = setTimeout(() => {
         const modalOpen = document.querySelector(
-          '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden)'
+          '#wondersModal:not(.hidden), #trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden)'
         );
         if (!modalOpen) {
           document.body.classList.add('focus-dormant');
@@ -6670,6 +6687,7 @@
     }
 
     function onWondersModalActivity() {
+      resetMainPageFocusActivity();
       if (isModalTimerLocked('wondersModal')) return;
       resetWondersAutoCloseTimer();
     }
@@ -6728,6 +6746,7 @@
     function renderLiveRocketLaunches(launches) {
       const container = document.getElementById('discoverLiveLaunchesChips');
       if (!container) return;
+      const hadFocusInside = container.contains(document.activeElement);
       container.innerHTML = '';
 
       launches.forEach((l) => {
@@ -6786,6 +6805,15 @@
 
         container.appendChild(btn);
       });
+
+      if (hadFocusInside) {
+        const firstBtn = container.querySelector('button');
+        if (firstBtn) firstBtn.focus();
+        else {
+          const surpriseBtn = document.getElementById('surpriseMeBtn');
+          if (surpriseBtn) surpriseBtn.focus();
+        }
+      }
     }
 
     function scrollChipIntoView(chip) {
@@ -7100,6 +7128,11 @@
     function openWondersModal() {
       const modal = document.getElementById('wondersModal');
       if (!modal) return;
+      // Pause background location modal timers while Discover is active so they don't steal focus
+      stopLocationAutoCloseTimer();
+      stopLocationIdleExitFocusTimer();
+      resetMainPageFocusActivity();
+
       modalTimerLocks['wondersModal'] = false;
       lastUpClickTarget = null;
       lastUpClickTime = 0;
@@ -7141,6 +7174,14 @@
       if (pop && history.state && history.state.modal === 'wondersModal') {
         try { history.back(); } catch (_) {}
       }
+
+      // If location modal is open underneath, resume its timers cleanly
+      const locModal = document.getElementById('locationModal');
+      if (locModal && !locModal.classList.contains('hidden')) {
+        resetLocationAutoCloseTimer();
+        resetLocationIdleExitFocusTimer();
+      }
+
       restorePreModalFocus('discoverQuickBtn');
     }
 
