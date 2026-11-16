@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=221"></script>
+  <script src="qrcode.min.js?v=222"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1049,7 +1049,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.57) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.58) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2488,10 +2488,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=221"></script>
+  <script src="traffic-flood.js?v=222"></script>
     <script>
-    const APP_BUILD = 221;
-    const APP_VERSION = '1.10.57';
+    const APP_BUILD = 222;
+    const APP_VERSION = '1.10.58';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -8303,12 +8303,18 @@
       const dryTileSub = dryHours >= 24 ? 'Dry next 24h+' : (dryHours >= 1 ? `Dry next ${dryHours}h` : 'Dry conditions');
 
       if (tileSub) tileSub.textContent = dryTileSub;
+      const drySlides = [
+        `Dry next ${dryHoursStr}`
+      ];
+      if (window._todayLateWindNotice) {
+        drySlides.push(window._todayLateWindNotice);
+      } else {
+        drySlides.push('No precipitation expected');
+      }
+      drySlides.push(generateClothingAdvice(cur, hourly, false));
+
       setRainNowcastSlides(
-        [
-          `Dry next ${dryHoursStr}`,
-          'No precipitation expected',
-          generateClothingAdvice(cur, hourly, false)
-        ],
+        drySlides,
         '95% conf',
         'text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 flex-shrink-0 ml-1.5',
         'mt-1 px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-between text-xs transition-colors overflow-hidden',
@@ -8606,7 +8612,71 @@
       
       document.getElementById('weatherIconLg').textContent = weatherInfo.icon;
       document.getElementById('weatherDesc').textContent = weatherInfo.desc;
-      
+
+      // Check for late-day or evening wind spikes (e.g. calm daytime, strong wind arriving late tonight)
+      let lateWindNotice = '';
+      let lateWindShort = '';
+      if (hourly && Array.isArray(hourly.time) && hourly.wind_speed_10m && cur) {
+        const curTimeStr = cur.time || '';
+        const todayStr = curTimeStr ? curTimeStr.slice(0, 10) : new Date().toISOString().slice(0, 10);
+        const curHour = curTimeStr ? parseInt(curTimeStr.slice(11, 13), 10) : new Date().getHours();
+        const curGust = Math.round(cur.wind_gusts_10m || cur.wind_speed_10m || 0);
+
+        let peakLateHour = -1;
+        let peakLateGust = 0;
+        let peakLateSpeed = 0;
+
+        for (let h = 0; h < hourly.time.length; h++) {
+          const t = hourly.time[h];
+          if (t && t.startsWith(todayStr)) {
+            const hr = parseInt(t.slice(11, 13), 10);
+            if (hr > curHour) {
+              const spd = Math.round(hourly.wind_speed_10m[h] || 0);
+              const gst = Math.round((hourly.wind_gusts_10m && hourly.wind_gusts_10m[h] != null) ? hourly.wind_gusts_10m[h] : spd);
+              if (gst > peakLateGust) {
+                peakLateGust = gst;
+                peakLateSpeed = spd;
+                peakLateHour = hr;
+              }
+            }
+          }
+        }
+
+        // If late gust peaks at 28+ mph and is noticeably stronger than current daytime wind (or >= 35 mph gale)
+        if (peakLateHour >= 18 && peakLateGust >= 28 && (peakLateGust > curGust + 8 || peakLateGust >= 35)) {
+          const hr12 = peakLateHour === 0 ? '12 AM' : (peakLateHour === 12 ? '12 PM' : (peakLateHour > 12 ? (peakLateHour - 12) + ' PM' : peakLateHour + ' AM'));
+          const descWord = peakLateGust >= 38 ? 'Gale gusts' : 'Strong wind';
+          lateWindShort = `💨 ${descWord} late (~${hr12})`;
+          lateWindNotice = `💨 ${descWord} late tonight (~${hr12}, gusts ${peakLateGust} mph)`;
+        }
+      }
+      window._todayLateWindNotice = lateWindNotice;
+
+      const weatherSubDescEl = document.getElementById('weatherSubDesc');
+      if (weatherSubDescEl) {
+        if (lateWindShort) {
+          weatherSubDescEl.textContent = lateWindShort;
+          weatherSubDescEl.title = lateWindNotice;
+          weatherSubDescEl.className = 'text-[9px] text-amber-300 font-semibold leading-tight truncate';
+        } else {
+          const curSpd = Math.round((cur && cur.wind_speed_10m) || 0);
+          const curGst = Math.round((cur && cur.wind_gusts_10m) || curSpd);
+          if (curGst >= 35) {
+            weatherSubDescEl.textContent = '💨 Severe gale warning';
+            weatherSubDescEl.className = 'text-[9px] text-rose-400 font-semibold leading-tight truncate';
+          } else if (curGst >= 25) {
+            weatherSubDescEl.textContent = '💨 Gusty conditions';
+            weatherSubDescEl.className = 'text-[9px] text-amber-300 font-medium leading-tight truncate';
+          } else if (curSpd <= 5) {
+            weatherSubDescEl.textContent = 'Calm valley air';
+            weatherSubDescEl.className = 'text-[9px] text-slate-400 leading-tight truncate';
+          } else {
+            weatherSubDescEl.textContent = 'Gentle breeze';
+            weatherSubDescEl.className = 'text-[9px] text-slate-400 leading-tight truncate';
+          }
+        }
+      }
+
       // Rain Nowcasting (15-min radar projection)
       evaluateRainNowcast(cur, data.minutely_15, hourly);
       
@@ -8971,44 +9041,14 @@
           }
 
           if (dayHours.length > 0) {
-            // Core daylight/active hours (07:00 to 18:00) when people are awake and active outdoors
-            const daytimeHours = dayHours.filter(x => x.hour >= 7 && x.hour <= 18);
-            const lateHours = dayHours.filter(x => x.hour >= 19 || x.hour < 7);
-
-            if (daytimeHours.length > 0) {
-              const sortedG = daytimeHours.map(x => x.gust).sort((a, b) => a - b);
-              const sortedS = daytimeHours.map(x => x.speed).sort((a, b) => a - b);
-              const medianG = sortedG[Math.floor(sortedG.length * 0.5)];
-              const medianS = sortedS[Math.floor(sortedS.length * 0.5)];
-              const p75G = sortedG[Math.floor(sortedG.length * 0.75)];
-              const p75S = sortedS[Math.floor(sortedS.length * 0.75)];
-              const maxG = sortedG[sortedG.length - 1];
-              const maxS = sortedS[sortedS.length - 1];
-
-              const severeDaytimeCount = sortedG.filter(g => g >= 35).length;
-              const strongDaytimeCount = sortedG.filter(g => g >= 25).length;
-
-              if (severeDaytimeCount >= 3) {
-                // Sustained severe gale during daylight (at least 3 hours >= 35 mph)
-                windMax = Math.round(maxS);
-                gustMax = Math.round(maxG);
-              } else if (strongDaytimeCount >= 3) {
-                // Sustained strong gusts throughout the day
-                windMax = Math.round(p75S);
-                gustMax = Math.round(p75G);
+            // Find peak wind hour so the tooltip clearly specifies exact timing (e.g. peak gusts around 23:00)
+            const peakHourObj = dayHours.reduce((max, x) => x.gust > max.gust ? x : max, dayHours[0]);
+            if (peakHourObj && peakHourObj.gust >= 25) {
+              const hourLabel = (peakHourObj.hour < 10 ? '0' : '') + peakHourObj.hour + ':00';
+              if (peakHourObj.hour >= 20 || peakHourObj.hour < 6) {
+                lateNightSuffix = `• Peak gusts ~${Math.round(peakHourObj.gust)} mph late around ${hourLabel}`;
               } else {
-                // Predominantly gentle or moderate daytime
-                windMax = Math.round(medianS);
-                gustMax = Math.round(medianG);
-              }
-
-              // Check if late night / overnight has a severe gale that spikes significantly above daytime
-              if (lateHours.length > 0) {
-                const latePeak = lateHours.reduce((max, x) => x.gust > max.gust ? x : max, lateHours[0]);
-                if (latePeak.gust >= 35 && latePeak.gust > gustMax + 10) {
-                  const hourLabel = (latePeak.hour < 10 ? '0' : '') + latePeak.hour + ':00';
-                  lateNightSuffix = `• Gale warning late tonight: gusts up to ${Math.round(latePeak.gust)} mph around ${hourLabel}`;
-                }
+                lateNightSuffix = `• Peak gusts ~${Math.round(peakHourObj.gust)} mph around ${hourLabel}`;
               }
             }
           }
