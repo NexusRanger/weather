@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.81) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.82) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1840,6 +1840,14 @@
           <div id="wondersCapitalChips" class="flex flex-wrap gap-1.5"></div>
         </div>
 
+        <!-- 🏖️ Popular Tourist Hotspots -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-rose-300 mb-1 flex items-center gap-1">
+            <span>🏖️</span> Popular Tourist Hotspots (Shuffled Vacation Destinations)
+          </div>
+          <div id="wondersTouristChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
         <!-- ⚡ Live Extreme Weather Hotspots -->
         <div>
           <div class="text-[10px] font-semibold uppercase tracking-wider text-amber-300 mb-1 flex items-center gap-1">
@@ -1934,8 +1942,8 @@
         <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 w-full min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
           <!-- Chips injected dynamically -->
         </div>
-        <!-- Bottom Controls: Return to Current, Distance Unit (Miles / km), Map Sea Theme (Ocean / Dark), and Close button -->
-        <div class="flex items-center justify-end gap-2 px-1 pb-0 -mt-0.5 flex-wrap">
+        <!-- Bottom Controls: Return to Current, Distance Unit (Miles / km), and Close button -->
+        <div class="flex items-center justify-end gap-2 px-1 pb-0 -mt-0.5">
           <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Return to Current Location (first item on list)">
             <span>📍 Current</span>
           </button>
@@ -1944,21 +1952,12 @@
             <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const cur=document.getElementById('mapReturnCurrentBtn');if(cur)cur.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
               km
             </button>
-            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const ob=document.getElementById('mapThemeOceanBtn');if(ob)ob.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
+            <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
               Miles
             </button>
           </div>
 
-          <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5" role="group" aria-label="Map theme">
-            <button id="mapThemeOceanBtn" type="button" onclick="applyHistoryMapTheme('ocean')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const db=document.getElementById('mapThemeDarkBtn');if(db)db.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Ocean Blue Sea (Natural marine bathymetry)">
-              🌊 Ocean
-            </button>
-            <button id="mapThemeDarkBtn" type="button" onclick="applyHistoryMapTheme('dark')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const ob=document.getElementById('mapThemeOceanBtn');if(ob)ob.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Stealth Dark Canvas">
-              🌑 Dark
-            </button>
-          </div>
-
-          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const db=document.getElementById('mapThemeDarkBtn');if(db)db.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
+          <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
           </button>
         </div>
@@ -2597,10 +2596,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=245"></script>
+  <script src="traffic-flood.js?v=246"></script>
     <script>
-    const APP_BUILD = 245;
-    const APP_VERSION = '1.10.81';
+    const APP_BUILD = 246;
+    const APP_VERSION = '1.10.82';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3971,7 +3970,6 @@
       }
 
       initOrRefreshHistoryMap(true);
-      applyHistoryMapTheme(getHistoryMapTheme(), false);
       updateMapDistances(getMapDistUnit());
       resetHistoryMapAutoCloseTimer();
       updateHistoryMapCountdownDisplay();
@@ -4036,6 +4034,7 @@
     let mapLastFocusedChipIndex = 0;
     let currentMapQueries = [];
     let isProgrammaticChipScroll = false;
+    let mapProgrammaticChipScrollUntil = 0;
     let lastScrolledChipKey = null;
     let chipScrollTimeout = null;
 
@@ -4289,6 +4288,7 @@
             });
             if (targetBtn) {
               isProgrammaticChipScroll = true;
+              mapProgrammaticChipScrollUntil = Date.now() + 750;
               try {
                 const targetLeft = Math.max(0, targetBtn.offsetLeft - 6);
                 chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
@@ -4367,78 +4367,6 @@
       }
     }
 
-    // World Map Sea & Land Rendering Themes
-    const HISTORY_MAP_THEMES = {
-      ocean: {
-        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
-        maxZoom: 16
-      },
-      dark: {
-        base: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-        maxZoom: 16
-      }
-    };
-
-    let historyMapBaseLayer = null;
-    let historyMapRefLayer = null;
-
-    function getHistoryMapTheme() {
-      try {
-        return localStorage.getItem('history_map_theme') || 'ocean';
-      } catch (_) {
-        return 'ocean';
-      }
-    }
-
-    function applyHistoryMapTheme(theme, save = true) {
-      const activeTheme = HISTORY_MAP_THEMES[theme] ? theme : 'ocean';
-      if (save) {
-        try { localStorage.setItem('history_map_theme', activeTheme); } catch (_) {}
-      }
-
-      // Update toggle buttons UI in the bottom control bar
-      const oceanBtn = document.getElementById('mapThemeOceanBtn');
-      const darkBtn = document.getElementById('mapThemeDarkBtn');
-      if (oceanBtn && darkBtn) {
-        if (activeTheme === 'ocean') {
-          oceanBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none';
-          darkBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none';
-        } else {
-          darkBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none';
-          oceanBtn.className = 'tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none';
-        }
-      }
-
-      if (!historyLeafletMap) return;
-
-      const conf = HISTORY_MAP_THEMES[activeTheme];
-      if (historyMapBaseLayer && historyLeafletMap.hasLayer(historyMapBaseLayer)) {
-        historyLeafletMap.removeLayer(historyMapBaseLayer);
-      }
-      if (historyMapRefLayer && historyLeafletMap.hasLayer(historyMapRefLayer)) {
-        historyLeafletMap.removeLayer(historyMapRefLayer);
-      }
-
-      historyMapBaseLayer = L.tileLayer(conf.base, {
-        attribution: '',
-        maxZoom: conf.maxZoom,
-        detectRetina: false
-      }).addTo(historyLeafletMap);
-
-      historyMapRefLayer = L.tileLayer(conf.ref, {
-        attribution: '',
-        maxZoom: conf.maxZoom,
-        detectRetina: false
-      }).addTo(historyLeafletMap);
-
-      if (historyMarkersLayer) {
-        historyMarkersLayer.bringToFront();
-      }
-      stripMapCanvasFocusables();
-    }
-
     let mapToastTimer = null;
     function showMapToast(msg) {
       const toast = document.getElementById('mapToast');
@@ -4473,14 +4401,14 @@
         const hasFocus = (activeEl === b);
 
         // Strip previous highlight classes
-        b.classList.remove('ring-2', 'ring-amber-400', 'ring-sky-400', 'bg-sky-500/25');
+        b.classList.remove('ring-2', 'ring-amber-400', 'ring-sky-400', 'bg-sky-500/25', 'border-sky-400/80', 'text-white', 'shadow-[0_0_12px_rgba(56,189,248,0.45)]');
 
         if (hasFocus) {
           // Current keyboard / D-pad focus is ALWAYS amber/yellow
           b.classList.add('ring-2', 'ring-amber-400');
         } else if (isThisActiveLocation) {
           // When focus leaves the location list, the active location on map remains behind highlighted in BLUE!
-          b.classList.add('ring-2', 'ring-sky-400', 'bg-sky-500/25');
+          b.classList.add('ring-2', 'ring-sky-400', 'border-sky-400/80', 'bg-sky-500/25', 'text-white', 'shadow-[0_0_12px_rgba(56,189,248,0.45)]');
         }
       });
     }
@@ -4718,72 +4646,95 @@
           }
         }
 
-        // Tablet UX: Track whether user is actively touching or dragging the bottom carousel directly
-        let isUserTouchingChips = false;
-        let userTouchChipsTimeout = null;
+        // Tablet / Touch UX: Continuous tracking of the leftmost location as the carousel is scrolled
+        let chipScrollDebounceTimer = null;
+        let chipScrollSettledTimer = null;
 
-        const markUserTouchingChips = () => {
-          isUserTouchingChips = true;
-          if (userTouchChipsTimeout) clearTimeout(userTouchChipsTimeout);
-          userTouchChipsTimeout = setTimeout(() => {
-            isUserTouchingChips = false;
-          }, 450);
+        const onUserTouchChips = () => {
+          // Touching or interacting with the chips directly cancels any programmatic suppression
+          mapProgrammaticChipScrollUntil = 0;
+          isProgrammaticChipScroll = false;
         };
 
-        ['pointerdown', 'touchstart', 'wheel'].forEach(evt => {
-          chipsEl.addEventListener(evt, markUserTouchingChips, { passive: true });
+        ['pointerdown', 'touchstart', 'wheel', 'mousedown'].forEach(evt => {
+          chipsEl.addEventListener(evt, onUserTouchChips, { passive: true });
         });
 
-        ['pointerup', 'touchend', 'pointercancel'].forEach(evt => {
-          chipsEl.addEventListener(evt, () => {
-            if (userTouchChipsTimeout) clearTimeout(userTouchChipsTimeout);
-            userTouchChipsTimeout = setTimeout(() => {
-              isUserTouchingChips = false;
-            }, 350);
-          }, { passive: true });
-        });
+        // Determine which location chip is currently sitting at the leftmost position,
+        // pan the map to that location, open its popup, and highlight it in blue.
+        const syncLeftmostChipToMap = (isSettled = false) => {
+          const containerRect = chipsEl.getBoundingClientRect();
+          const allButtons = Array.from(chipsEl.querySelectorAll('button'));
+          if (allButtons.length === 0) return;
 
-        // Tablet UX: Sliding the bottom list sideways continuously tracks the leftmost item and smoothly pans the map
-        // ONLY triggers map pan when the user is actively swiping the bottom list (prevents map jump/flicker when panning the map!)
-        chipsEl.onscroll = () => {
-          if (isProgrammaticChipScroll || !isUserTouchingChips) return;
-          if (chipScrollTimeout) clearTimeout(chipScrollTimeout);
+          // When scrolling the bottom bar on a tablet, clear lingering DOM focus
+          // so the active location lights up in blue without amber keyboard outline interference
+          if (document.activeElement && chipsEl.contains(document.activeElement)) {
+            try { document.activeElement.blur(); } catch (_) {}
+          }
 
-          chipScrollTimeout = setTimeout(() => {
-            if (isProgrammaticChipScroll || !isUserTouchingChips) return;
-            const containerRect = chipsEl.getBoundingClientRect();
-            // Anchor to the left-hand side of the bottom bar (with padding)
-            const anchorLeft = containerRect.left + 24;
+          let leftmostBtn = null;
+          let leftmostIdx = 0;
 
-            const allButtons = chipsEl.querySelectorAll('button');
-            let closestBtn = null;
-            let closestDist = Infinity;
-            let closestIdx = 0;
-
-            allButtons.forEach((b, i) => {
+          // If scrolled at or near the very start of the carousel (<= 10px),
+          // unconditionally select the first item (Current Location)
+          if (chipsEl.scrollLeft <= 10) {
+            leftmostBtn = allButtons[0];
+            leftmostIdx = 0;
+          } else {
+            // Otherwise, find the first button in visual sequence whose right edge is still significantly visible
+            // (at least 40px visible from the left edge of the container)
+            for (let i = 0; i < allButtons.length; i++) {
+              const b = allButtons[i];
               const r = b.getBoundingClientRect();
-              // Only consider chips whose right edge is still visible inside the container
-              if (r.right > containerRect.left + 15) {
-                const dist = Math.abs(r.left - anchorLeft);
-                if (dist < closestDist) {
-                  closestDist = dist;
-                  closestBtn = b;
-                  closestIdx = i;
-                }
+              if (r.right >= containerRect.left + 40) {
+                leftmostBtn = b;
+                leftmostIdx = i;
+                break;
               }
-            });
-
-            if (closestBtn && closestBtn._chipKey && closestBtn._chipKey !== lastScrolledChipKey) {
-              lastScrolledChipKey = closestBtn._chipKey;
-              mapLastFocusedChipIndex = closestIdx;
-              mapActivePopupKey = closestBtn._chipKey;
-
-              if (typeof closestBtn._panAction === 'function') {
-                closestBtn._panAction(true);
-              }
-              updateChipHighlightStates();
             }
-          }, 80);
+          }
+
+          if (!leftmostBtn) {
+            leftmostBtn = allButtons[0];
+            leftmostIdx = 0;
+          }
+
+          const key = leftmostBtn._chipKey;
+          if (!key) return;
+
+          // Trigger pan and popup when a new chip reaches the leftmost position,
+          // or when inertia scrolling has settled
+          if (key !== lastScrolledChipKey || isSettled) {
+            lastScrolledChipKey = key;
+            mapLastFocusedChipIndex = leftmostIdx;
+            mapActivePopupKey = key;
+
+            if (typeof leftmostBtn._panAction === 'function') {
+              leftmostBtn._panAction(true); // true = fromUserScroll, do NOT re-scroll chipsEl
+            }
+            updateChipHighlightStates();
+          }
+        };
+
+        // Sliding the bottom list sideways continuously tracks the leftmost item and glides the map
+        chipsEl.onscroll = () => {
+          // If this scroll was commanded by the map's reticle auto-center, ignore it
+          if (isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
+
+          // Live tracking as the list scrolls (touch drag & momentum coasting)
+          if (chipScrollDebounceTimer) clearTimeout(chipScrollDebounceTimer);
+          chipScrollDebounceTimer = setTimeout(() => {
+            if (isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
+            syncLeftmostChipToMap(false);
+          }, 35);
+
+          // Guaranteed final sync when momentum scrolling completely stops
+          if (chipScrollSettledTimer) clearTimeout(chipScrollSettledTimer);
+          chipScrollSettledTimer = setTimeout(() => {
+            if (isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
+            syncLeftmostChipToMap(true);
+          }, 120);
         };
 
         chipsEl.onwheel = (e) => {
@@ -4964,7 +4915,11 @@
           boxZoom: false,
           zoomSnap: 1,
           zoomDelta: 1,
-          fadeAnimation: false
+          fadeAnimation: false,
+          minZoom: 2,
+          maxBounds: [[-85.0511, -180], [85.0511, 180]],
+          maxBoundsViscosity: 1.0,
+          worldCopyJump: false
         }).setView([currentRef.lat, currentRef.lon], defaultZoom);
 
         // Remove Leaflet map container and controls from D-pad tab order so TV remote only uses bottom shortcuts & Close
@@ -4985,8 +4940,25 @@
           stripMapCanvasFocusables();
         });
 
+        // Dark Canvas Base layer (No API key required, single world boundary)
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '',
+          maxZoom: 16,
+          detectRetina: false,
+          noWrap: true,
+          bounds: [[-85.0511, -180], [85.0511, 180]]
+        }).addTo(historyLeafletMap);
+
+        // Dark Labels overlay
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '',
+          maxZoom: 16,
+          detectRetina: false,
+          noWrap: true,
+          bounds: [[-85.0511, -180], [85.0511, 180]]
+        }).addTo(historyLeafletMap);
+
         historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
-        applyHistoryMapTheme(getHistoryMapTheme(), false);
         stripMapCanvasFocusables();
       } else if (isInitialOpen) {
         historyLeafletMap.setView([currentRef.lat, currentRef.lon], defaultZoom);
@@ -7530,6 +7502,32 @@
       { name: 'Lisbon', desc: 'Portugal • Hilly coastal Atlantic capital, yellow trams & São Jorge Castle', category: 'capitals', icon: '⛵', lat: 38.7223, lon: -9.1393, country: 'Portugal' },
       { name: 'Singapore', desc: 'Singapore • Equatorial island garden city-state and global trade crossroads', category: 'capitals', icon: '🦁', lat: 1.3521, lon: 103.8198, country: 'Singapore' },
 
+            // 🏖️ Popular Tourist Hotspots (Global Holiday & Vacation Destinations)
+      { name: 'Barcelona', desc: 'Catalonia, Spain • Sagrada Família, Park Güell & vibrant Mediterranean beaches', category: 'tourist', icon: '🏖️', lat: 41.3879, lon: 2.1699, country: 'Spain' },
+      { name: 'Venice', desc: 'Italy • Legendary floating city of canals, gondolas & Piazza San Marco', category: 'tourist', icon: '🛶', lat: 45.4408, lon: 12.3155, country: 'Italy' },
+      { name: 'Bali', desc: 'Indonesia • Tropical paradise of cliffside temples, rice terraces & surf beaches', category: 'tourist', icon: '🌴', lat: -8.4095, lon: 115.1889, country: 'Indonesia' },
+      { name: 'Santorini', desc: 'Greece • Cycladic caldera island with whitewashed cliffside villages & Aegean sunsets', category: 'tourist', icon: '🏛️', lat: 36.3932, lon: 25.4615, country: 'Greece' },
+      { name: 'Kyoto', desc: 'Japan • Historic imperial city of 1,000 shrines, bamboo groves & zen gardens', category: 'tourist', icon: '⛩️', lat: 35.0116, lon: 135.7681, country: 'Japan' },
+      { name: 'Cancún', desc: 'Yucatan, Mexico • Premier Caribbean resort coast, turquoise waters & Mayan ruins', category: 'tourist', icon: '🍹', lat: 21.1619, lon: -86.8515, country: 'Mexico' },
+      { name: 'Dubrovnik', desc: 'Croatia • Pearl of the Adriatic with ancient stone sea walls & terracotta roofs', category: 'tourist', icon: '🏰', lat: 42.6507, lon: 18.0944, country: 'Croatia' },
+      { name: 'Phuket', desc: 'Thailand • Andaman coastal haven of limestone karst islands & tropical coves', category: 'tourist', icon: '🏝️', lat: 7.8804, lon: 98.3923, country: 'Thailand' },
+      { name: 'Dubai', desc: 'UAE • Ultra-modern desert playground of Burj Khalifa, luxury resorts & palm islands', category: 'tourist', icon: '🏙️', lat: 25.2048, lon: 55.2708, country: 'UAE' },
+      { name: 'Las Vegas', desc: 'Nevada, USA • World-famous desert entertainment, neon strip & luxury resort spectacles', category: 'tourist', icon: '🎰', lat: 36.1699, lon: -115.1398, country: 'USA' },
+      { name: 'Rio de Janeiro', desc: 'Brazil • The Marvelous City of Copacabana, Sugarloaf & Christ the Redeemer', category: 'tourist', icon: '🏖️', lat: -22.9068, lon: -43.1729, country: 'Brazil' },
+      { name: 'Agra (Taj Mahal)', desc: 'India • The monumental ivory-white marble jewel of Mughal architecture', category: 'tourist', icon: '🕌', lat: 27.1767, lon: 78.0081, country: 'India' },
+      { name: 'Orlando', desc: 'Florida, USA • Global capital of theme parks, magic kingdoms & family entertainment', category: 'tourist', icon: '🎢', lat: 28.5383, lon: -81.3792, country: 'USA' },
+      { name: 'Prague', desc: 'Czech Republic • City of a Hundred Spires, historic Charles Bridge & Old Town Square', category: 'tourist', icon: '🏰', lat: 50.0755, lon: 14.4378, country: 'Czech Republic' },
+      { name: 'Nice', desc: "French Riviera, France • Glamorous Côte d'Azur coastline along the Promenade des Anglais", category: 'tourist', icon: '⛵', lat: 43.7102, lon: 7.2620, country: 'France' },
+      { name: 'Honolulu', desc: 'Hawaii, USA • Iconic Pacific island vacation haven of Waikiki Beach & Diamond Head', category: 'tourist', icon: '🌺', lat: 21.3069, lon: -157.8583, country: 'USA' },
+      { name: 'Queenstown', desc: 'New Zealand • Spectacular alpine adventure haven on the shores of Lake Wakatipu', category: 'tourist', icon: '🏔️', lat: -45.0312, lon: 168.6626, country: 'New Zealand' },
+      { name: 'Cape Town', desc: 'South Africa • Breathtaking Atlantic coastal city overlooked by Table Mountain', category: 'tourist', icon: '🌊', lat: -33.9249, lon: 18.4241, country: 'South Africa' },
+      { name: 'Maldives', desc: 'Indian Ocean • Serene coral atolls, turquoise lagoons & tropical overwater escapes', category: 'tourist', icon: '🏝️', lat: 4.1755, lon: 73.5093, country: 'Maldives' },
+      { name: 'Amalfi Coast', desc: 'Campania, Italy • Dramatic pastel seaside villages clinging to Mediterranean cliffs', category: 'tourist', icon: '🍋', lat: 40.6340, lon: 14.6027, country: 'Italy' },
+      { name: 'Siem Reap', desc: 'Cambodia • Gateway to the monumental jungle temple ruins of ancient Angkor Wat', category: 'tourist', icon: '🛕', lat: 13.3671, lon: 103.8448, country: 'Cambodia' },
+      { name: 'Marrakech', desc: 'Morocco • The historic Red City of bustling medinas, souks & palatial riads', category: 'tourist', icon: '🕌', lat: 31.6295, lon: -7.9811, country: 'Morocco' },
+      { name: 'Cusco', desc: 'Peru • Imperial Incan mountain capital and gateway trail to Machu Picchu', category: 'tourist', icon: '⛰️', lat: -13.5319, lon: -71.9675, country: 'Peru' },
+      { name: 'Miami South Beach', desc: 'Florida, USA • Sun-soaked Art Deco architectural boulevard & white sand shorelines', category: 'tourist', icon: '🌴', lat: 25.7907, lon: -80.1300, country: 'USA' },
+
       // ⚡ Live Extreme Weather Hotspots (Lightning, Winds, Deluges & Scorching Deserts)
       { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms (280/hr)', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
       { name: 'Mount Washington', desc: 'New Hampshire, USA • Extreme Hurricane-Force Winds (372 km/h record)', category: 'weather', icon: '💨', lat: 44.2705, lon: -71.3033, country: 'USA' },
@@ -7838,6 +7836,7 @@
         '#discoverLiveLaunchesChips',
         '#wondersNewsChips',
         '#wondersCapitalChips',
+        '#wondersTouristChips',
         '#wondersWeatherChips',
         '#wondersVolcanoChips',
         '#wondersColdChips',
@@ -8167,6 +8166,7 @@
       const containerMap = {
         news: document.getElementById('wondersNewsChips'),
         capitals: document.getElementById('wondersCapitalChips'),
+        tourist: document.getElementById('wondersTouristChips'),
         weather: document.getElementById('wondersWeatherChips'),
         volcano: document.getElementById('wondersVolcanoChips'),
         cold: document.getElementById('wondersColdChips'),
@@ -8177,7 +8177,7 @@
         const parent = containerMap[cat];
         if (!parent) return;
         parent.innerHTML = '';
-        const items = getRotatedCategoryWonders(cat, (cat === 'capitals' || cat === 'landmark') ? 8 : 6);
+        const items = getRotatedCategoryWonders(cat, (cat === 'capitals' || cat === 'tourist' || cat === 'landmark') ? 8 : 6);
         items.forEach(w => {
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -8186,6 +8186,8 @@
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 hover:border-amber-400/60 text-xs text-amber-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
             : (w.category === 'capitals')
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 hover:border-sky-400/60 text-xs text-sky-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
+            : (w.category === 'tourist')
+            ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 hover:border-rose-400/60 text-xs text-rose-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
             : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
           btn.title = `${w.name}: ${w.desc}`;
           btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
@@ -12224,7 +12226,11 @@
           boxZoom: false,
           zoomSnap: 1,        // Strictly snap to whole integer zoom levels to eliminate TV subpixel tile gaps
           zoomDelta: 1,
-          fadeAnimation: false // Avoid GPU texture tearing / ghost tiles on older TV processors
+          fadeAnimation: false, // Avoid GPU texture tearing / ghost tiles on older TV processors
+          minZoom: 2,
+          maxBounds: [[-85.0511, -180], [85.0511, 180]],
+          maxBoundsViscosity: 1.0,
+          worldCopyJump: false
         }).setView([lat, lon], targetZoom);
 
         // Remove Leaflet map container from D-pad tab order and attach global back handler
@@ -12305,14 +12311,18 @@
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
           maxZoom: 16,
-          detectRetina: false
+          detectRetina: false,
+          noWrap: true,
+          bounds: [[-85.0511, -180], [85.0511, 180]]
         }).addTo(radarLeafletMap);
 
         // Dark Labels overlay (Town names, roads)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
           maxZoom: 16,
-          detectRetina: false
+          detectRetina: false,
+          noWrap: true,
+          bounds: [[-85.0511, -180], [85.0511, 180]]
         }).addTo(radarLeafletMap);
 
         // Pulsing Location Beacon
