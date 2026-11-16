@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=232"></script>
+  <script src="qrcode.min.js?v=233"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -695,17 +695,6 @@
       border-bottom-left-radius: 8px !important;
       border-bottom-right-radius: 8px !important;
     }
-    #historyLeafletMap .leaflet-control-zoom a.leaflet-control-zoom-auto {
-      font-size: 11px !important;
-      font-weight: 800 !important;
-      letter-spacing: -0.2px !important;
-      text-transform: uppercase !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      line-height: 1 !important;
-      font-family: system-ui, -apple-system, sans-serif !important;
-    }
     #historyLeafletMap .leaflet-control-zoom a:hover,
     #radarLeafletMap .leaflet-control-zoom a:hover {
       background: rgba(30, 41, 59, 0.95) !important;
@@ -1133,7 +1122,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.68) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.69) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1940,7 +1929,7 @@
           <!-- Chips injected dynamically -->
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button id="closeMapBtnBottom" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const zAuto=document.querySelector('#historyLeafletMap .leaflet-control-zoom-auto');const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');const targetZ=(zAuto&&zAuto.offsetParent!==null)?zAuto:zOut;if(targetZ&&targetZ.offsetParent!==null){targetZ.focus();}else{const topBtn=document.getElementById('closeMapBtnTop');if(topBtn)topBtn.focus();}}else if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[chips.length-1];if(target)target.focus();}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition focus:outline-none flex items-center gap-1 cursor-pointer" tabindex="0">
+          <button id="closeMapBtnBottom" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut && zOut.offsetParent!==null){zOut.focus();}else{const topBtn=document.getElementById('closeMapBtnTop');if(topBtn)topBtn.focus();}}else if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[chips.length-1];if(target)target.focus();}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition focus:outline-none flex items-center gap-1 cursor-pointer" tabindex="0">
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-200 font-mono text-[10px] ml-0.5">(45s)</span></span>
           </button>
         </div>
@@ -2579,10 +2568,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=232"></script>
+  <script src="traffic-flood.js?v=233"></script>
     <script>
-    const APP_BUILD = 232;
-    const APP_VERSION = '1.10.68';
+    const APP_BUILD = 233;
+    const APP_VERSION = '1.10.69';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2903,20 +2892,10 @@
       // Location and Discover modals manage their own vertical/grid navigation
       if (openModal.id === 'locationModal' || openModal.id === 'wondersModal') return;
 
-      // History Map D-Pad flow: Chips -> Zoom Auto -> Zoom Out -> Zoom In -> Top Close
+      // History Map D-Pad flow: Chips -> Zoom Out -> Zoom In -> Top Close
       if (openModal.id === 'historyMapModal') {
         const activeInChips = activeEl && activeEl.closest('#mapRecentChips');
         if (activeInChips) {
-          const zoomAuto = openModal.querySelector('.leaflet-control-zoom-auto');
-          const zoomOut = openModal.querySelector('.leaflet-control-zoom-out');
-          const targetZoom = (zoomAuto && zoomAuto.offsetParent !== null) ? zoomAuto : zoomOut;
-          if (targetZoom && targetZoom.offsetParent !== null) {
-            e.preventDefault();
-            targetZoom.focus();
-            return;
-          }
-        }
-        if (activeEl && activeEl.classList.contains('leaflet-control-zoom-auto')) {
           const zoomOut = openModal.querySelector('.leaflet-control-zoom-out');
           if (zoomOut && zoomOut.offsetParent !== null) {
             e.preventDefault();
@@ -4081,22 +4060,8 @@
     function setupHistoryMapZoomDpad() {
       const container = document.getElementById('historyLeafletMap');
       if (!container) return;
-      const zoomControl = container.querySelector('.leaflet-control-zoom');
       const zoomIn = container.querySelector('.leaflet-control-zoom-in');
       const zoomOut = container.querySelector('.leaflet-control-zoom-out');
-      let zoomAuto = container.querySelector('.leaflet-control-zoom-auto');
-
-      // Inject the 'Auto' zoom button if not already added to the Leaflet control bar
-      if (zoomControl && !zoomAuto) {
-        zoomAuto = document.createElement('a');
-        zoomAuto.className = 'leaflet-control-zoom-auto';
-        zoomAuto.href = '#';
-        zoomAuto.role = 'button';
-        zoomAuto.setAttribute('aria-label', 'Auto Zoom (Show at least 3 locations)');
-        zoomAuto.title = 'Auto Zoom: Show at least 3 nearby locations for context';
-        zoomAuto.innerHTML = '<span>Auto</span>';
-        zoomControl.appendChild(zoomAuto);
-      }
 
       if (zoomIn && !zoomIn._dpadAttached) {
         zoomIn._dpadAttached = true;
@@ -4122,50 +4087,13 @@
         zoomOut.addEventListener('keydown', (e) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            const zAuto = container.querySelector('.leaflet-control-zoom-auto');
-            if (zAuto) {
-              zAuto.focus();
-            } else {
-              const allChips = document.querySelectorAll('#mapRecentChips button');
-              const target = allChips[mapLastFocusedChipIndex] || allChips[0];
-              if (target) target.focus();
-            }
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            const zIn = container.querySelector('.leaflet-control-zoom-in');
-            if (zIn) zIn.focus();
-          } else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            const topClose = document.getElementById('closeMapBtnTop');
-            if (topClose) topClose.focus();
-          }
-        });
-      }
-
-      if (zoomAuto && !zoomAuto._dpadAttached) {
-        zoomAuto._dpadAttached = true;
-        zoomAuto.setAttribute('tabindex', '0');
-        zoomAuto.classList.add('tv-focus-amber');
-        zoomAuto.onclick = (e) => {
-          if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-          applyHistoryMapAutoZoom();
-        };
-        zoomAuto.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            applyHistoryMapAutoZoom();
-          } else if (e.key === 'ArrowDown') {
-            e.preventDefault();
             const allChips = document.querySelectorAll('#mapRecentChips button');
             const target = allChips[mapLastFocusedChipIndex] || allChips[0];
             if (target) target.focus();
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            const zOut = container.querySelector('.leaflet-control-zoom-out');
-            if (zOut) zOut.focus();
+            const zIn = container.querySelector('.leaflet-control-zoom-in');
+            if (zIn) zIn.focus();
           } else if (e.key === 'ArrowRight') {
             e.preventDefault();
             const topClose = document.getElementById('closeMapBtnTop');
@@ -4197,7 +4125,7 @@
       if (!container) return;
       container.setAttribute('tabindex', '-1');
       setupHistoryMapZoomDpad();
-      const focusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-zoom-auto), button, [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-zoom-auto)');
+      const focusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), button, [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out)');
       focusables.forEach(el => {
         el.setAttribute('tabindex', '-1');
       });
@@ -4346,15 +4274,13 @@
             panAndOpenOnMap();
           };
 
-          // Keyboard navigation from bottom bar up to Zoom Auto, down to bottom Close, or left/right between chips
+          // Keyboard navigation from bottom bar up to Zoom Out, down to bottom Close, or left/right between chips
           btn.onkeydown = (e) => {
             if (e.key === 'ArrowUp') {
-              const zoomAuto = document.querySelector('#historyLeafletMap .leaflet-control-zoom-auto');
               const zoomOut = document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');
-              const targetZoom = (zoomAuto && zoomAuto.offsetParent !== null) ? zoomAuto : zoomOut;
-              if (targetZoom && targetZoom.offsetParent !== null) {
+              if (zoomOut && zoomOut.offsetParent !== null) {
                 e.preventDefault();
-                targetZoom.focus();
+                zoomOut.focus();
               } else {
                 const topClose = document.getElementById('closeMapBtnTop');
                 if (topClose) { e.preventDefault(); topClose.focus(); }
