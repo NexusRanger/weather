@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.101) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.102) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1703,7 +1703,7 @@
           </div>
           <div id="locationSearchStatus" class="text-[10px] text-slate-400 empty:hidden mt-0.5 min-h-[14px]"></div>
           <div class="text-[9px] text-slate-400 mt-1 leading-tight flex items-center gap-1">
-            <span>💡</span> <span><strong class="text-slate-300">GPS &amp; Maps:</strong> Paste coordinates (<span class="text-sky-300 font-mono">51.7032, -2.2266</span> or <span class="text-sky-300 font-mono">51°42'10"N 2°13'33"W</span>) or Google Maps URLs directly.</span>
+            <span>💡</span> <span><strong class="text-slate-300">GPS, Plus Codes &amp; Maps:</strong> Enter Plus Codes (<span class="text-sky-300 font-mono">9C3VPQ3F+79</span>), coordinates (<span class="text-sky-300 font-mono">51.7032, -2.2266</span>), or Google Maps URLs.</span>
           </div>
         </div>
 
@@ -2623,10 +2623,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=265"></script>
+  <script src="traffic-flood.js?v=266"></script>
     <script>
-    const APP_BUILD = 265;
-    const APP_VERSION = '1.10.101';
+    const APP_BUILD = 266;
+    const APP_VERSION = '1.10.102';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5966,7 +5966,7 @@
     }
 
     function handleLocationInputKeydown(e) {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23) {
         e.preventDefault();
         const input = document.getElementById('locationInput');
         if (input && input.blur) input.blur();
@@ -5998,6 +5998,11 @@
 
     function handleSearchBtnKeydown(e) {
       if (typeof cancelSearchAutoContinue === 'function') cancelSearchAutoContinue();
+      if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.key === ' ') {
+        e.preventDefault();
+        searchLocationFromModal();
+        return;
+      }
       if (e.key === 'ArrowLeft') {
         const clearBtn = document.getElementById('locationClearBtn');
         if (clearBtn && !clearBtn.classList.contains('hidden')) {
@@ -6746,7 +6751,91 @@
     }
 
     
-    function parseGoogleMapsOrCoordinates(rawInput) {
+
+    const OLC_CODE_ALPHABET = '23456789CFGHJMPQRVWX';
+    const OLC_ENCODING_BASE = 20;
+
+    function decodeFullOLC(code) {
+      if (!code || typeof code !== 'string') return null;
+      const clean = code.replace(/[^23456789CFGHJMPQRVWX]/gi, '').toUpperCase();
+      if (clean.length < 8) return null;
+      let latVal = -90;
+      let lngVal = -180;
+      let latResolution = 400;
+      let lngResolution = 400;
+
+      for (let i = 0; i < 10 && i < clean.length; i += 2) {
+        latResolution /= OLC_ENCODING_BASE;
+        lngResolution /= OLC_ENCODING_BASE;
+        latVal += OLC_CODE_ALPHABET.indexOf(clean[i]) * latResolution;
+        lngVal += OLC_CODE_ALPHABET.indexOf(clean[i + 1]) * lngResolution;
+      }
+      if (clean.length > 10) {
+        const extra = OLC_CODE_ALPHABET.indexOf(clean[10]);
+        if (extra !== -1) {
+          const row = Math.floor(extra / 4);
+          const col = extra % 4;
+          latVal += (row - 2) * (latResolution / 5);
+          lngVal += (col - 2) * (lngResolution / 4);
+        }
+      }
+      return {
+        lat: Math.round((latVal + latResolution / 2) * 1e6) / 1e6,
+        lon: Math.round((lngVal + lngResolution / 2) * 1e6) / 1e6
+      };
+    }
+
+    function parsePlusCode(inputStr, refLat = 51.7032, refLon = -2.2266) {
+      if (!inputStr || typeof inputStr !== 'string') return null;
+      let str = inputStr.trim();
+      str = str.replace(/^(?:https?:\/\/)?plus\.codes\//i, '').trim();
+
+      // Full Plus Code (e.g. 9C3VPQ3F+79 or 9C3VPQ3F+79, Dunkirk)
+      const fullMatch = str.match(/\b([23456789CFGHJMPQRVWX]{8})\+([23456789CFGHJMPQRVWX]{2,3})\b/i);
+      if (fullMatch) {
+        const code = (fullMatch[1] + '+' + fullMatch[2]).toUpperCase();
+        const coords = decodeFullOLC(code);
+        if (coords) {
+          const locality = str.replace(fullMatch[0], '').replace(/^[, -]+|[, -]+$/g, '').trim();
+          return { type: 'coords', lat: coords.lat, lon: coords.lon, code: code, name: locality || '' };
+        }
+      }
+
+      // Short Plus Code (e.g. PQ3F+79 or PQ3F+79 Nailsworth)
+      const shortMatch = str.match(/\b([23456789CFGHJMPQRVWX]{4,6})\+([23456789CFGHJMPQRVWX]{2,3})\b/i);
+      if (shortMatch) {
+        const shortCode = (shortMatch[1] + '+' + shortMatch[2]).toUpperCase();
+        const locality = str.replace(shortMatch[0], '').replace(/^[, -]+|[, -]+$/g, '').trim();
+        const prefixLen = shortMatch[1].length;
+        const missingChars = 8 - prefixLen;
+        if (missingChars === 2 || missingChars === 4) {
+          const rLat = (CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') ? CURRENT_LOCATION.lat : refLat;
+          const rLon = (CURRENT_LOCATION && typeof CURRENT_LOCATION.lon === 'number') ? CURRENT_LOCATION.lon : refLon;
+          let lat = Math.min(90, Math.max(-90, rLat)) + 90;
+          let lng = Math.min(180, Math.max(-180, rLon)) + 180;
+          let refPrefix = '';
+          let latRes = 400;
+          let lngRes = 400;
+          for (let i = 0; i < missingChars; i += 2) {
+            latRes /= OLC_ENCODING_BASE;
+            lngRes /= OLC_ENCODING_BASE;
+            const latDigit = Math.floor(lat / latRes);
+            const lngDigit = Math.floor(lng / lngRes);
+            lat -= latDigit * latRes;
+            lng -= lngDigit * lngRes;
+            refPrefix += OLC_CODE_ALPHABET[latDigit] + OLC_CODE_ALPHABET[lngDigit];
+          }
+          const candidate = refPrefix + shortCode;
+          const coords = decodeFullOLC(candidate);
+          if (coords) {
+            return { type: 'coords', lat: coords.lat, lon: coords.lon, code: shortCode, name: locality || '' };
+          }
+        }
+      }
+      return null;
+    }
+
+        function parseGoogleMapsOrCoordinates(rawInput) {
       if (!rawInput || typeof rawInput !== 'string') return null;
       const str = rawInput.trim();
       if (!str) return null;
@@ -6894,7 +6983,7 @@
       }
 
       let q = input.value.trim();
-      if (locLastOutwardCode && /^[0-9][A-Z0-9]{2}$/i.test(q.replace(/[\s-]+/g, ''))) {
+      if (locLastOutwardCode && /^[0-9][A-Z0-9]{2}$/i.test(q.replace(/[s-]+/g, ''))) {
         q = `${locLastOutwardCode} ${q}`;
       }
       q = normalizeSpokenUkPostcode(q);
@@ -6920,7 +7009,7 @@
       if (q.toLowerCase() === 'show feedback' || q.toLowerCase() === 'showfeedback') {
         try { localStorage.setItem('ambient_feedback_unlocked', 'true'); } catch (_) {}
         checkFeedbackPillVisibility();
-    syncMapButtonState();
+        syncMapButtonState();
         if (status) {
           status.style.color = '#fbbf24';
           status.textContent = '⭐ Feedback button unlocked on this device!';
@@ -6937,7 +7026,7 @@
       if (q.toLowerCase() === 'hide feedback' || q.toLowerCase() === 'hidefeedback') {
         try { localStorage.removeItem('ambient_feedback_unlocked'); } catch (_) {}
         checkFeedbackPillVisibility();
-    syncMapButtonState();
+        syncMapButtonState();
         if (status) {
           status.style.color = '#94a3b8';
           status.textContent = '🔒 Feedback button hidden.';
@@ -6958,131 +7047,161 @@
         return;
       }
 
-      if (status) status.textContent = 'Searching location...';
+      if (status) {
+        status.style.color = '#94a3b8';
+        status.textContent = 'Searching location...';
+      }
       if (btn) btn.disabled = true;
 
-      // Check for Google Maps URLs, shortcuts, or raw GPS coordinates
-      const parsedLoc = parseGoogleMapsOrCoordinates(q);
-      if (parsedLoc) {
-        if (parsedLoc.type === 'coords') {
+      try {
+        // Check for Plus Code (Open Location Code)
+        const plusCodeLoc = (typeof parsePlusCode === 'function') ? parsePlusCode(q) : null;
+        if (plusCodeLoc && plusCodeLoc.type === 'coords') {
           if (status) {
             status.style.color = '#38bdf8';
-            status.textContent = `📍 Resolved coordinates: ${parsedLoc.lat.toFixed(4)}, ${parsedLoc.lon.toFixed(4)}`;
+            status.textContent = `📍 Resolved Plus Code (${plusCodeLoc.code}): ${plusCodeLoc.lat.toFixed(4)}, ${plusCodeLoc.lon.toFixed(4)}`;
           }
-          if (parsedLoc.name) pendingCustomLocationName = parsedLoc.name;
-          await lookupCoords(parsedLoc.lat, parsedLoc.lon, true);
-          if (parsedLoc.name) {
-            CURRENT_LOCATION.name = parsedLoc.name;
-            try {
-              saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', parsedLoc.lat, parsedLoc.lon);
-            } catch (_) {}
+          if (plusCodeLoc.name) pendingCustomLocationName = plusCodeLoc.name;
+          await lookupCoords(plusCodeLoc.lat, plusCodeLoc.lon, true);
+          if (plusCodeLoc.name) {
+            CURRENT_LOCATION.name = plusCodeLoc.name;
+            try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', plusCodeLoc.lat, plusCodeLoc.lon); } catch (_) {}
             updateWeatherUI();
           }
-          if (btn) btn.disabled = false;
           pendingCustomLocationName = '';
           clearUrlLocationParams();
           closeLocationModal();
           return;
-        } else if (parsedLoc.type === 'text') {
-          // Extracted clean place name / address from share text or URL
-          q = parsedLoc.query;
-          input.value = q;
-        } else if (parsedLoc.type === 'short_url') {
-          if (status) {
-            status.style.color = '#fbbf24';
-            status.textContent = 'Expanding Google Maps link...';
-          }
-          let resolved = false;
-          // Step 1: Query CORS-enabled microlink service
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4500);
-            const mRes = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(parsedLoc.url)}`, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (mRes.ok) {
-              const mData = await mRes.json();
-              if (mData && mData.data) {
-                const expandedUrl = mData.data.url || '';
-                const placeTitle = mData.data.title || '';
-                // Try parsing resolved URL
-                const subParsed = parseGoogleMapsOrCoordinates(expandedUrl);
-                if (subParsed && subParsed.type === 'coords') {
-                  const placeNameFinal = subParsed.name || (placeTitle && !placeTitle.includes('Google Maps') ? placeTitle : '');
-                  if (placeNameFinal) pendingCustomLocationName = placeNameFinal;
-                  await lookupCoords(subParsed.lat, subParsed.lon, true);
-                  if (placeNameFinal) {
-                    CURRENT_LOCATION.name = placeNameFinal;
-                    try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', subParsed.lat, subParsed.lon); } catch (_) {}
-                    updateWeatherUI();
-                  }
-                  if (btn) btn.disabled = false;
-                  pendingCustomLocationName = '';
-                  clearUrlLocationParams();
-                  closeLocationModal();
-                  return;
-                } else if (subParsed && subParsed.type === 'text') {
-                  q = subParsed.query;
-                  input.value = q;
-                  resolved = true;
-                } else if (placeTitle && !placeTitle.includes('Google Maps') && !placeTitle.includes('maps.app.goo.gl')) {
-                  q = placeTitle;
-                  input.value = q;
-                  resolved = true;
-                }
-              }
-            }
-          } catch (_) {}
+        }
 
-          if (!resolved) {
+        // Check for Google Maps URLs, shortcuts, or raw GPS coordinates
+        const parsedLoc = parseGoogleMapsOrCoordinates(q);
+        if (parsedLoc) {
+          if (parsedLoc.type === 'coords') {
+            if (status) {
+              status.style.color = '#38bdf8';
+              status.textContent = `📍 Resolved coordinates: ${parsedLoc.lat.toFixed(4)}, ${parsedLoc.lon.toFixed(4)}`;
+            }
+            if (parsedLoc.name) pendingCustomLocationName = parsedLoc.name;
+            await lookupCoords(parsedLoc.lat, parsedLoc.lon, true);
+            if (parsedLoc.name) {
+              CURRENT_LOCATION.name = parsedLoc.name;
+              try {
+                saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', parsedLoc.lat, parsedLoc.lon);
+              } catch (_) {}
+              updateWeatherUI();
+            }
+            pendingCustomLocationName = '';
+            clearUrlLocationParams();
+            closeLocationModal();
+            return;
+          } else if (parsedLoc.type === 'text') {
+            // Extracted clean place name / address from share text or URL
+            q = parsedLoc.query;
+            input.value = q;
+          } else if (parsedLoc.type === 'short_url') {
             if (status) {
               status.style.color = '#fbbf24';
-              status.textContent = '📍 Shortlink detected. Please paste the location name, address, or full map link (with coordinates).';
+              status.textContent = 'Expanding Google Maps link...';
             }
-            if (btn) btn.disabled = false;
-            return;
+            let resolved = false;
+            // Step 1: Query CORS-enabled microlink service
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 4500);
+              const mRes = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(parsedLoc.url)}`, { signal: controller.signal });
+              clearTimeout(timeoutId);
+              if (mRes.ok) {
+                const mData = await mRes.json();
+                if (mData && mData.data) {
+                  const expandedUrl = mData.data.url || '';
+                  const placeTitle = mData.data.title || '';
+                  // Try parsing resolved URL
+                  const subParsed = parseGoogleMapsOrCoordinates(expandedUrl);
+                  if (subParsed && subParsed.type === 'coords') {
+                    const placeNameFinal = subParsed.name || (placeTitle && !placeTitle.includes('Google Maps') ? placeTitle : '');
+                    if (placeNameFinal) pendingCustomLocationName = placeNameFinal;
+                    await lookupCoords(subParsed.lat, subParsed.lon, true);
+                    if (placeNameFinal) {
+                      CURRENT_LOCATION.name = placeNameFinal;
+                      try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', subParsed.lat, subParsed.lon); } catch (_) {}
+                      updateWeatherUI();
+                    }
+                    pendingCustomLocationName = '';
+                    clearUrlLocationParams();
+                    closeLocationModal();
+                    return;
+                  } else if (subParsed && subParsed.type === 'text') {
+                    q = subParsed.query;
+                    input.value = q;
+                    resolved = true;
+                  } else if (placeTitle && !placeTitle.includes('Google Maps') && !placeTitle.includes('maps.app.goo.gl')) {
+                    q = placeTitle;
+                    input.value = q;
+                    resolved = true;
+                  }
+                }
+              }
+            } catch (_) {}
+
+            if (!resolved) {
+              if (status) {
+                status.style.color = '#fbbf24';
+                status.textContent = '📍 Shortlink detected. Please paste the location name, address, or full map link (with coordinates).';
+              }
+              return;
+            }
           }
         }
-      }
 
-      // Extract custom display name if entered (e.g. "Stroud Hotel GL5 3AP" -> customName: "Stroud Hotel", query: "GL5 3AP")
-      const parsedCustom = parseCustomNameAndLocation(q);
-      if (parsedCustom.customName) {
-        pendingCustomLocationName = parsedCustom.customName;
-        q = parsedCustom.query;
-      }
+        // Extract custom display name if entered (e.g. "Stroud Hotel GL5 3AP" -> customName: "Stroud Hotel", query: "GL5 3AP")
+        const parsedCustom = parseCustomNameAndLocation(q);
+        if (parsedCustom.customName) {
+          pendingCustomLocationName = parsedCustom.customName;
+          q = parsedCustom.query;
+        }
 
-      const prefMatch = matchLocationPreference(q);
-      if (prefMatch && applyLocationPreference(prefMatch)) {
-        pendingCustomLocationName = '';
+        const prefMatch = matchLocationPreference(q);
+        if (prefMatch && applyLocationPreference(prefMatch)) {
+          pendingCustomLocationName = '';
+          clearUrlLocationParams();
+          closeLocationModal();
+          return;
+        }
+
+        const compactPostcode = q.replace(/[\s-]+/g, '');
+        const isPostcode = /^[A-Z]{1,2}[0-9][A-Z0-9]?[0-9][A-Z]{2}$/i.test(compactPostcode);
+        let success = false;
+
+        if (isPostcode) {
+          success = await lookupPostcode(compactPostcode);
+        }
+        if (!success) {
+          success = await lookupTown(q);
+        }
+        if (!success && !isPostcode) {
+          success = await lookupPostcode(compactPostcode);
+        }
+
+        if (success) {
+          pendingCustomLocationName = '';
+          clearUrlLocationParams();
+          closeLocationModal();
+        } else {
+          pendingCustomLocationName = '';
+          if (status) {
+            status.style.color = '#f87171';
+            status.textContent = `Could not find "${input.value.trim()}". Try another city, town or postcode.`;
+          }
+        }
+      } catch (err) {
+        console.error('searchLocationFromModal error:', err);
+        if (status) {
+          status.style.color = '#f87171';
+          status.textContent = 'An error occurred while searching. Please try again.';
+        }
+      } finally {
         if (btn) btn.disabled = false;
-        clearUrlLocationParams();
-        closeLocationModal();
-        return;
-      }
-
-      const compactPostcode = q.replace(/[\s-]+/g, '');
-      const isPostcode = /^[A-Z]{1,2}[0-9][A-Z0-9]?[0-9][A-Z]{2}$/i.test(compactPostcode);
-      let success = false;
-
-      if (isPostcode) {
-        success = await lookupPostcode(compactPostcode);
-      }
-      if (!success) {
-        success = await lookupTown(q);
-      }
-      if (!success && !isPostcode) {
-        success = await lookupPostcode(compactPostcode);
-      }
-
-      if (btn) btn.disabled = false;
-
-      if (success) {
-        pendingCustomLocationName = '';
-        clearUrlLocationParams();
-        closeLocationModal();
-      } else {
-        pendingCustomLocationName = '';
-        if (status) status.textContent = `Could not find "${input.value.trim()}". Try another city, town or postcode.`;
       }
     }
 
