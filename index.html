@@ -26,10 +26,10 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=104">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link rel="manifest" href="manifest.json?v=103">
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+  <link rel="manifest" href="manifest.json?v=265">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=265">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=265">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=265">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.100) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.101) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1691,10 +1691,10 @@
 
       <div class="mt-2 space-y-2">
         <div>
-          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town or City</label>
+          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town, GPS Coordinates or Map Link</label>
           <div class="flex gap-1.5">
             <div class="relative flex-1 flex items-center">
-              <input id="locationInput" tabindex="0" type="text" placeholder="Search (e.g. Tower Bridge SE1 2UP, Edinburgh, Paris)" class="w-full h-[34px] bg-black/50 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-400 focus:outline-none" onkeydown="handleLocationInputKeydown(event)">
+              <input id="locationInput" tabindex="0" type="text" placeholder="Search (e.g. GL5 5HH, Paris, 51.7032, -2.2266 or Google Maps link)" class="w-full h-[34px] bg-black/50 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-400 focus:outline-none" onkeydown="handleLocationInputKeydown(event)">
               <button id="locationClearBtn" type="button" tabindex="0" onclick="clearLocationInput()" onkeydown="handleLocationClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear search text">✕</button>
             </div>
             <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber h-[34px] px-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" onkeydown="handleSearchBtnKeydown(event)">
@@ -1702,6 +1702,9 @@
             </button>
           </div>
           <div id="locationSearchStatus" class="text-[10px] text-slate-400 empty:hidden mt-0.5 min-h-[14px]"></div>
+          <div class="text-[9px] text-slate-400 mt-1 leading-tight flex items-center gap-1">
+            <span>💡</span> <span><strong class="text-slate-300">GPS &amp; Maps:</strong> Paste coordinates (<span class="text-sky-300 font-mono">51.7032, -2.2266</span> or <span class="text-sky-300 font-mono">51°42'10"N 2°13'33"W</span>) or Google Maps URLs directly.</span>
+          </div>
         </div>
 
         <!-- Custom Title Guidance & Direct Rename Box (Compact TV Fit) -->
@@ -2620,10 +2623,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=264"></script>
+  <script src="traffic-flood.js?v=265"></script>
     <script>
-    const APP_BUILD = 264;
-    const APP_VERSION = '1.10.100';
+    const APP_BUILD = 265;
+    const APP_VERSION = '1.10.101';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4382,9 +4385,11 @@
 
     function getMapDistUnit() {
       try {
-        return localStorage.getItem('map_dist_unit') === 'mi' ? 'mi' : 'km';
+        const saved = localStorage.getItem('map_dist_unit');
+        if (saved === 'km') return 'km';
+        return 'mi'; // Default to Miles
       } catch (_) {
-        return 'km';
+        return 'mi';
       }
     }
 
@@ -4467,15 +4472,20 @@
     function getHistoryMapStyle() {
       try {
         const saved = localStorage.getItem('history_map_style');
-        if (saved && HISTORY_MAP_STYLES[saved]) return saved;
+        // If not explicitly set or set to old default physical, default to satellite
+        if (saved && HISTORY_MAP_STYLES[saved] && saved !== 'physical') return saved;
+        if (saved === 'physical' && localStorage.getItem('history_map_style_user_set') === 'true') return 'physical';
       } catch (_) {}
-      return 'physical'; // Default to Physical (clean blue sea, green land, icy wastes)
+      return 'satellite'; // Default to Satellite
     }
 
     function switchHistoryMapStyle(styleKey, save = true) {
-      const activeStyle = HISTORY_MAP_STYLES[styleKey] ? styleKey : 'physical';
+      const activeStyle = HISTORY_MAP_STYLES[styleKey] ? styleKey : 'satellite';
       if (save) {
-        try { localStorage.setItem('history_map_style', activeStyle); } catch (_) {}
+        try {
+          localStorage.setItem('history_map_style', activeStyle);
+          localStorage.setItem('history_map_style_user_set', 'true');
+        } catch (_) {}
       }
 
       // Update button highlights
