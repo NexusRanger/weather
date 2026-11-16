@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=241"></script>
+  <script src="qrcode.min.js?v=242"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.77) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.78) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1907,7 +1907,7 @@
       </div>
 
       <!-- Leaflet Map Container -->
-      <div class="flex-1 min-h-0 my-2.5 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
+      <div class="flex-1 min-h-0 mt-2 mb-1 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
         <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
         <!-- Luminous Center Target Reticle for Tablet/Touch Auto-Popup -->
         <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
@@ -1930,14 +1930,18 @@
       </div>
 
       <!-- Quick Location Shortcuts Bar (Sorted by Distance from Current Location) & Compact Controls -->
-      <div class="pt-2 border-t border-white/10 flex flex-col gap-1.5 flex-shrink-0">
-        <div class="flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 w-full min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
+      <div class="pt-1.5 border-t border-white/10 flex flex-col gap-1 flex-shrink-0">
+        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 w-full min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
           <!-- Chips injected dynamically -->
         </div>
-        <!-- Bottom Controls: Distance Unit (Miles / km) to the left of the Close button -->
-        <div class="flex items-center justify-end gap-2.5 px-1 pb-0.5">
+        <!-- Bottom Controls: Return to Current, Distance Unit (Miles / km), and Close button -->
+        <div class="flex items-center justify-end gap-2 px-1 pb-0 -mt-0.5">
+          <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-300 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center gap-1 cursor-pointer shadow-sm" tabindex="0" title="Return to Current Location (first item on list)">
+            <span>📍 Current</span>
+          </button>
+
           <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5" role="group" aria-label="Distance units">
-            <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
+            <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const cur=document.getElementById('mapReturnCurrentBtn');if(cur)cur.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Kilometres">
               km
             </button>
             <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber px-2 py-0.5 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none" tabindex="0" title="Display distances in Miles">
@@ -2584,10 +2588,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=241"></script>
+  <script src="traffic-flood.js?v=242"></script>
     <script>
-    const APP_BUILD = 241;
-    const APP_VERSION = '1.10.77';
+    const APP_BUILD = 242;
+    const APP_VERSION = '1.10.78';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3818,13 +3822,18 @@
           if (Array.isArray(arr)) {
             return arr.filter(q => {
               if (!q || !q.lat || !q.lon || !q.name) return false;
-              if (q.name.toLowerCase().includes('los angeles')) return false;
+              const n = (q.name || '').toLowerCase().trim();
+              if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return false;
               if (isPersonalLocationName(q.name)) return false;
               return q.timestamp && q.timestamp >= cutoff;
             }).map(q => ({
               ...q,
               name: getDepersonalizedLocationName(q)
-            })).filter(q => q.name && !isPersonalLocationName(q.name));
+            })).filter(q => {
+              if (!q.name || isPersonalLocationName(q.name)) return false;
+              const n = q.name.toLowerCase().trim();
+              return n !== 'united kingdom' && n !== 'uk';
+            });
           }
         }
       } catch (_) {}
@@ -3936,6 +3945,11 @@
       savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      if (!modal._focusSyncAttached) {
+        modal._focusSyncAttached = true;
+        modal.addEventListener('focusin', () => { setTimeout(updateChipHighlightStates, 15); });
+        modal.addEventListener('focusout', () => { setTimeout(updateChipHighlightStates, 15); });
+      }
       try {
         if (!history.state || history.state.modal !== 'historyMap') {
           history.pushState({ modal: 'historyMap' }, '');
@@ -4335,6 +4349,47 @@
       applySelectedLocation(name, lat, lon, (postcode && postcode !== 'undefined') ? postcode : 'GEO');
     }
 
+    // Dynamic TV/Tablet Highlight Sync:
+    // When a chip has focus: prominent amber/yellow ring.
+    // When focus leaves the chips (e.g. down to close/units/zoom): the active location that remains behind is BLUE!
+    function updateChipHighlightStates() {
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (!chipsEl) return;
+      const allButtons = chipsEl.querySelectorAll('button');
+      const activeEl = document.activeElement;
+
+      allButtons.forEach((b, idx) => {
+        const isThisActiveLocation = (b._chipKey && b._chipKey === mapActivePopupKey) || (!mapActivePopupKey && idx === 0);
+        const hasFocus = (activeEl === b);
+
+        // Strip previous highlight classes
+        b.classList.remove('ring-2', 'ring-amber-400', 'ring-sky-400', 'bg-sky-500/25');
+
+        if (hasFocus) {
+          // Current keyboard / D-pad focus is ALWAYS amber/yellow
+          b.classList.add('ring-2', 'ring-amber-400');
+        } else if (isThisActiveLocation) {
+          // When focus leaves the location list, the active location on map remains behind highlighted in BLUE!
+          b.classList.add('ring-2', 'ring-sky-400', 'bg-sky-500/25');
+        }
+      });
+    }
+
+    function returnMapToCurrentLocation() {
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (!chipsEl) return;
+      const firstBtn = chipsEl.querySelector('button');
+      if (firstBtn) {
+        mapLastFocusedChipIndex = 0;
+        try { chipsEl.scrollTo({ left: 0, behavior: 'smooth' }); } catch (_) {}
+        try { firstBtn.focus({ preventScroll: true }); } catch (_) { firstBtn.focus(); }
+        if (typeof firstBtn._panAction === 'function') {
+          firstBtn._panAction(false);
+        }
+        updateChipHighlightStates();
+      }
+    }
+
     function renderHistoryMarkersAndChips(queries, isInitialOpen = false) {
       const prevActiveKey = mapActivePopupKey;
       if (historyMarkersLayer) {
@@ -4343,9 +4398,13 @@
       mapMarkerMap = {};
       mapActivePopupKey = null;
 
-      // 1. Ensure Current Location is always present and sort all locations by distance from Current Location
+      // 1. Ensure Current Location is always present and filter out test or country-only entries (e.g. United Kingdom)
       const currentRef = getMapCurrentReference();
-      const combined = [...queries];
+      const combined = queries.filter(q => {
+        if (!q || !q.name) return false;
+        const n = q.name.toLowerCase().trim();
+        return n !== 'united kingdom' && n !== 'uk';
+      });
       const hasCurrentInList = combined.some(q => Math.abs(q.lat - currentRef.lat) < 0.03 && Math.abs(q.lon - currentRef.lon) < 0.03);
       if (!hasCurrentInList) {
         combined.unshift({
@@ -4392,7 +4451,7 @@
           const btn = document.createElement('button');
           btn.className = q.isCurrent
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-xs text-emerald-200 hover:text-white font-semibold transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0'
-            : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 hover:border-amber-400 text-xs text-slate-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0';
+            : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 hover:border-white/30 text-xs text-slate-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0';
           btn.tabIndex = 0;
           btn.title = q.isCurrent
             ? `${q.name} (Current Location)`
@@ -4415,15 +4474,12 @@
               }
               setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
             }
-            if (chipsEl) {
-              const allButtons = chipsEl.querySelectorAll('button');
-              allButtons.forEach(b => b.classList.remove('ring-2', 'ring-amber-400'));
-              btn.classList.add('ring-2', 'ring-amber-400');
-            }
+            mapActivePopupKey = key;
+            updateChipHighlightStates();
+
             const entry = mapMarkerMap[key];
             if (historyLeafletMap && entry && entry.marker) {
               mapProgrammaticFlyUntil = Date.now() + 650;
-              mapActivePopupKey = key;
 
               const currentZoom = historyLeafletMap.getZoom();
               const targetZoom = getOptimalMoveZoom(q.lat, q.lon);
@@ -4450,6 +4506,10 @@
           btn.onfocus = () => {
             mapLastFocusedChipIndex = idx;
             panAndOpenOnMap();
+            updateChipHighlightStates();
+          };
+          btn.onblur = () => {
+            setTimeout(updateChipHighlightStates, 20);
           };
 
           // Keyboard navigation from bottom bar up to Zoom Out, down to bottom Close, or left/right between chips
@@ -4523,15 +4583,21 @@
         }
         const allBtns = chipsEl.querySelectorAll('button');
         if (allBtns.length > 0) {
-          allBtns.forEach(b => b.classList.remove('ring-2', 'ring-amber-400'));
           const targetBtn = (!isInitialOpen && mapActivePopupKey && Array.from(allBtns).find(b => b._chipKey === mapActivePopupKey)) || allBtns[0];
-          targetBtn.classList.add('ring-2', 'ring-amber-400');
+          mapActivePopupKey = targetBtn._chipKey || null;
+          updateChipHighlightStates();
 
           // TV D-Pad UX: Keep focus firmly locked on the target button (first location on open, or active location on refresh)
           const modal = document.getElementById('historyMapModal');
           if (modal && !modal.classList.contains('hidden')) {
-            const isCloseActive = document.activeElement && (document.activeElement.id === 'closeMapBtnTop' || document.activeElement.id === 'closeMapBtnBottom');
-            if (!isCloseActive) {
+            const isBottomCtrlActive = document.activeElement && (
+              document.activeElement.id === 'closeMapBtnTop' ||
+              document.activeElement.id === 'closeMapBtnBottom' ||
+              document.activeElement.id === 'mapUnitKmBtn' ||
+              document.activeElement.id === 'mapUnitMiBtn' ||
+              document.activeElement.id === 'mapReturnCurrentBtn'
+            );
+            if (!isBottomCtrlActive) {
               try {
                 targetBtn.focus({ preventScroll: true });
               } catch (_) {
@@ -4572,14 +4638,12 @@
             if (closestBtn && closestBtn._chipKey && closestBtn._chipKey !== lastScrolledChipKey) {
               lastScrolledChipKey = closestBtn._chipKey;
               mapLastFocusedChipIndex = closestIdx;
-
-              // Visual highlight on tablet without stealing keyboard focus
-              allButtons.forEach(b => b.classList.remove('ring-2', 'ring-amber-400'));
-              closestBtn.classList.add('ring-2', 'ring-amber-400');
+              mapActivePopupKey = closestBtn._chipKey;
 
               if (typeof closestBtn._panAction === 'function') {
                 closestBtn._panAction(true);
               }
+              updateChipHighlightStates();
             }
           }, 80);
         };
@@ -4826,8 +4890,9 @@
               const ts = sq.timestamp ? new Date(sq.timestamp).getTime() : Date.now();
               if (sq.lat && sq.lon && ts >= cutoff) {
                 const name = (sq.name || '').trim();
-                // Filter out any mock test data
-                if (name && !name.toLowerCase().includes('los angeles') && !isPersonalLocationName(name)) {
+                const nLower = name.toLowerCase();
+                // Filter out any mock test data or country-only entries
+                if (name && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(name)) {
                   sheetQueries.push({
                     name: name,
                     postcode: sq.postcode || '',
@@ -4849,12 +4914,12 @@
             });
             // Guarantee depersonalization for public world map rendering
             queries = deduped
-              .filter(sq => !isPersonalLocationName(sq.name))
+              .filter(sq => !isPersonalLocationName(sq.name) && sq.name.toLowerCase() !== 'united kingdom' && sq.name.toLowerCase() !== 'uk')
               .map(sq => ({
                 ...sq,
                 name: getDepersonalizedLocationName(sq)
               }))
-              .filter(sq => sq.name && !isPersonalLocationName(sq.name));
+              .filter(sq => sq.name && !isPersonalLocationName(sq.name) && sq.name.toLowerCase() !== 'united kingdom' && sq.name.toLowerCase() !== 'uk');
             try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(queries)); } catch (_) {}
             renderHistoryMarkersAndChips(queries, false);
           }
