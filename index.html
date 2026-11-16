@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.102) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.103) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2268,6 +2268,39 @@
     </div>
   </div>
 
+  <!-- TV BRO & SHIELD TV SLEEP / STANDBY OVERLAY -->
+  <div id="tvSleepScreen" onclick="exitTvSleepMode()" class="fixed inset-0 z-[9999] bg-black text-slate-400 hidden flex-col items-center justify-center p-6 text-center select-none cursor-pointer transition-opacity duration-300">
+    <div class="max-w-md w-full flex flex-col items-center gap-4 p-6 rounded-3xl bg-slate-950/90 border border-slate-800/80 shadow-2xl backdrop-blur-xl" onclick="event.stopPropagation()">
+      <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shadow-inner animate-pulse">
+        🌙
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-slate-100 tracking-wide">Screen in Standby</h2>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+          The dashboard is sleeping to save power and protect your display.
+        </p>
+      </div>
+
+      <div class="w-full p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 flex items-center gap-2.5 text-left">
+        <span class="text-lg">🏠</span>
+        <span>Press the <strong>Home</strong> button on your Nvidia Shield remote to return to Android TV Home.</span>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2.5 w-full pt-1">
+        <button id="tvReturnHomeBtn" type="button" tabindex="0" onclick="triggerAndroidHomeIntent()" onkeydown="if(event.key==='ArrowRight'||event.key==='ArrowDown'){event.preventDefault();const w=document.getElementById('tvWakeBtn');if(w)w.focus();}" class="tv-focus-amber flex-1 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
+          <span>🏠 Return to TV Home</span>
+        </button>
+        <button id="tvWakeBtn" type="button" tabindex="0" onclick="exitTvSleepMode()" onkeydown="if(event.key==='ArrowLeft'||event.key==='ArrowUp'){event.preventDefault();const h=document.getElementById('tvReturnHomeBtn');if(h)h.focus();}" class="tv-focus-amber flex-1 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2 focus:outline-none cursor-pointer">
+          <span>☀️ Wake Dashboard</span>
+        </button>
+      </div>
+
+      <p class="text-[10px] text-slate-500 mt-0.5">
+        Press <strong>OK</strong>, <strong>Back</strong>, or any remote button to wake instantly
+      </p>
+    </div>
+  </div>
+
   <!-- TV EXIT CAST CONFIRMATION MODAL -->
   <div id="tvExitCastModal" onclick="closeTvExitCastModal(true)" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 text-left">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-sm sm:max-w-md w-full border border-rose-400/40 shadow-2xl relative flex flex-col cursor-default">
@@ -2307,11 +2340,14 @@
         </div>
 
         <div class="flex flex-col gap-2 pt-1">
-          <button id="tvConfirmExitBtn" tabindex="1" onclick="executeTvExitCast()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('tvCancelExitBtn');if(c)c.focus();}" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
-            <span>🛑 Yes, Close Dashboard</span>
+          <button id="tvConfirmExitBtn" tabindex="1" onclick="executeTvExitCast()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const s=document.getElementById('tvSleepModalBtn')||document.getElementById('tvCancelExitBtn');if(s)s.focus();}" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
+            <span>🏠 Return to TV Home / Standby</span>
             <span id="tvExitCountdown" class="text-rose-200 font-mono text-[10px] ml-1">(20s)</span>
           </button>
-          <button id="tvCancelExitBtn" tabindex="2" onclick="closeTvExitCastModal(true)" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('tvConfirmExitBtn');if(b)b.focus();}" class="tv-focus-amber w-full px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-300 hover:text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer">
+          <button id="tvSleepModalBtn" tabindex="2" onclick="closeTvExitCastModal(false); enterTvSleepMode();" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('tvConfirmExitBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('tvCancelExitBtn');if(c)c.focus();}" class="tv-focus-amber w-full px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2 focus:outline-none cursor-pointer">
+            <span>🌙 Put Screen to Sleep (Standby)</span>
+          </button>
+          <button id="tvCancelExitBtn" tabindex="3" onclick="closeTvExitCastModal(true)" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const s=document.getElementById('tvSleepModalBtn')||document.getElementById('tvConfirmExitBtn');if(s)s.focus();}" class="tv-focus-amber w-full px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-300 hover:text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer">
             <span>✕ Cancel (Keep Watching)</span>
           </button>
         </div>
@@ -2623,10 +2659,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=266"></script>
+  <script src="traffic-flood.js?v=267"></script>
     <script>
-    const APP_BUILD = 266;
-    const APP_VERSION = '1.10.102';
+    const APP_BUILD = 267;
+    const APP_VERSION = '1.10.103';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -12499,6 +12535,51 @@
       restorePreModalFocus('castBtn');
     }
 
+    let isTvSleepModeActive = false;
+
+    function triggerAndroidHomeIntent() {
+      try {
+        if (window.cast && cast.framework && cast.framework.CastReceiverContext) {
+          const recCtx = cast.framework.CastReceiverContext.getInstance();
+          recCtx.stop();
+          return;
+        }
+      } catch (_) {}
+      try {
+        window.location.href = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end';
+      } catch (_) {}
+      try { window.history.back(); } catch (_) {}
+      try { window.close(); } catch (_) {}
+    }
+
+    function enterTvSleepMode() {
+      isTvSleepModeActive = true;
+      const sleepEl = document.getElementById('tvSleepScreen');
+      if (sleepEl) {
+        sleepEl.classList.remove('hidden');
+        sleepEl.classList.add('flex');
+        const wakeBtn = document.getElementById('tvWakeBtn');
+        if (wakeBtn) {
+          try { wakeBtn.focus(); } catch (_) {}
+        }
+      }
+      if (typeof isRadarPlaying !== 'undefined' && isRadarPlaying && typeof stopRadarAnimation === 'function') {
+        stopRadarAnimation();
+      }
+    }
+
+    function exitTvSleepMode() {
+      if (!isTvSleepModeActive) return;
+      isTvSleepModeActive = false;
+      const sleepEl = document.getElementById('tvSleepScreen');
+      if (sleepEl) {
+        sleepEl.classList.add('hidden');
+        sleepEl.classList.remove('flex');
+      }
+      try { updateWeatherUI(); } catch (_) {}
+      restorePreModalFocus('castBtn');
+    }
+
     function executeTvExitCast() {
       closeTvExitCastModal(false);
       try {
@@ -12508,9 +12589,10 @@
           return;
         }
       } catch (_) {}
-      try { window.close(); } catch (_) {}
-      try { window.history.back(); } catch (_) {}
-      try { window.location.href = 'about:blank'; } catch (_) {}
+      // 1. Attempt Android TV Home Intent to return to Shield home screen
+      triggerAndroidHomeIntent();
+      // 2. Put browser into pitch-black standby sleep mode (never leave a white screen!)
+      enterTvSleepMode();
     }
 
     function configureTvReceiverUI() {
@@ -12617,7 +12699,8 @@
           return;
         }
       } catch (_) {}
-      try { window.close(); } catch (_) {}
+      triggerAndroidHomeIntent();
+      enterTvSleepMode();
       setDisplayMode('full');
     }
 
@@ -13827,6 +13910,17 @@
 
     function handleGlobalBack(e) {
       if (e.type !== 'keydown') return;
+
+      if (typeof isTvSleepModeActive !== 'undefined' && isTvSleepModeActive) {
+        if (e.target && e.target.id === 'tvReturnHomeBtn' && (e.key === 'Enter' || e.key === ' ' || e.keyCode === 13 || e.keyCode === 23)) {
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        exitTvSleepMode();
+        return false;
+      }
 
       const activeEl = document.activeElement;
       const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
