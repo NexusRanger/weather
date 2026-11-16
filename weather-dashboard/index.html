@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.94) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.95) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2620,10 +2620,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=258"></script>
+  <script src="traffic-flood.js?v=259"></script>
     <script>
-    const APP_BUILD = 258;
-    const APP_VERSION = '1.10.94';
+    const APP_BUILD = 259;
+    const APP_VERSION = '1.10.95';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4248,7 +4248,9 @@
               if (topClose) topClose.focus();
             } else if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              if (historyLeafletMap) historyLeafletMap.zoomIn();
+              if (historyLeafletMap && historyLeafletMap.getZoom() < historyLeafletMap.getMaxZoom()) {
+                historyLeafletMap.zoomIn();
+              }
             }
           });
         }
@@ -4445,8 +4447,7 @@
       physical: {
         base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Physical_Map/MapServer/tile/{z}/{y}/{x}?v=258',
         ref: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}?v=258',
-        maxNativeZoom: 8,
-        maxZoom: 16
+        maxZoom: 8 // Native ceiling of World_Physical_Map; prevents zooming in beyond available tiles!
       },
       satellite: {
         base: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?v=258',
@@ -4497,6 +4498,12 @@
       if (!historyLeafletMap) return;
 
       const conf = HISTORY_MAP_STYLES[activeStyle];
+      // Strictly prevent zooming in beyond available imagery for the active style
+      const activeMaxZoom = conf.maxZoom || 8;
+      historyLeafletMap.setMaxZoom(activeMaxZoom);
+      if (historyLeafletMap.getZoom() > activeMaxZoom) {
+        historyLeafletMap.setZoom(activeMaxZoom);
+      }
       if (historyBaseTileLayer && historyLeafletMap.hasLayer(historyBaseTileLayer)) {
         historyLeafletMap.removeLayer(historyBaseTileLayer);
       }
@@ -5092,10 +5099,11 @@
           zoomDelta: 1,
           fadeAnimation: false,
           minZoom: 1,
+          maxZoom: (HISTORY_MAP_STYLES[getHistoryMapStyle()] && HISTORY_MAP_STYLES[getHistoryMapStyle()].maxZoom) || 8,
           maxBounds: [[-85.0511, -180], [85.0511, 180]],
           maxBoundsViscosity: 1.0,
           worldCopyJump: false
-        }).setView([currentRef.lat, currentRef.lon], defaultZoom);
+        }).setView([currentRef.lat, currentRef.lon], Math.min(defaultZoom, (HISTORY_MAP_STYLES[getHistoryMapStyle()] && HISTORY_MAP_STYLES[getHistoryMapStyle()].maxZoom) || 8));
 
         // Remove Leaflet map container and controls from D-pad tab order so TV remote only uses bottom shortcuts & Close
         const mapCanvasEl = historyLeafletMap.getContainer();
