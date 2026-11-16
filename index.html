@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=212"></script>
+  <script src="qrcode.min.js?v=213"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -998,7 +998,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.48) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.49) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2437,10 +2437,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=212"></script>
+  <script src="traffic-flood.js?v=213"></script>
     <script>
-    const APP_BUILD = 212;
-    const APP_VERSION = '1.10.48';
+    const APP_BUILD = 213;
+    const APP_VERSION = '1.10.49';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -2651,12 +2651,20 @@
     })();
 
     window.addEventListener('keydown', function handleModalUpToClose(e) {
-      if (e.key !== 'ArrowUp') return;
+      if (e.key !== 'ArrowUp') {
+        lastUpClickTarget = null;
+        lastUpClickTime = 0;
+        return;
+      }
 
       const openModal = document.querySelector(
         '#trafficModal:not(.hidden), #riverModal:not(.hidden), #radarModal:not(.hidden), #locationModal:not(.hidden), #historyMapModal:not(.hidden), #shareModal:not(.hidden), #feedbackModal:not(.hidden), #castOptionsModal:not(.hidden), #tvExitCastModal:not(.hidden), #wondersModal:not(.hidden)'
       );
-      if (!openModal) return;
+      if (!openModal) {
+        lastUpClickTarget = null;
+        lastUpClickTime = 0;
+        return;
+      }
 
       const topCloseBtn = openModal.querySelector('button[id^="close"][id$="Top"]') ||
                           (openModal.id === 'tvExitCastModal' ? document.getElementById('tvCancelExitBtn') : null);
@@ -2682,7 +2690,7 @@
       // If already on the Close button: detect two upward clicks to lock/unlock timer!
       if (isCloseBtn) {
         const now = Date.now();
-        if (lastUpClickTarget === activeEl && (now - lastUpClickTime) < 1500) {
+        if (lastUpClickTarget === activeEl && (now - lastUpClickTime) < 1500 && (now - lastUpClickTime) > 80) {
           e.preventDefault();
           e.stopPropagation();
           lastUpClickTarget = null;
@@ -2693,6 +2701,7 @@
           lastUpClickTarget = activeEl;
           lastUpClickTime = now;
           e.preventDefault();
+          e.stopPropagation();
           return;
         }
       }
@@ -2720,7 +2729,7 @@
       // Jump directly to the top Close button without needing sideways presses!
       e.preventDefault();
       topCloseBtn.focus();
-      lastUpClickTarget = topCloseBtn;
+      lastUpClickTarget = null;
       lastUpClickTime = 0;
     }, true);
 
@@ -6733,22 +6742,17 @@
       // 1. Focus is on Close Button
       if (activeEl === closeBtn) {
         if (e.key === 'ArrowUp') {
-          // Double Up on close button triggers lock/unlock toggle
-          const now = Date.now();
-          if (lastUpClickTarget === closeBtn && (now - lastUpClickTime) < 1500) {
-            lastUpClickTarget = null;
-            lastUpClickTime = 0;
-            const wondersModalEl = document.getElementById('wondersModal');
-            toggleModalTimerLock(wondersModalEl);
-          } else {
-            lastUpClickTarget = closeBtn;
-            lastUpClickTime = now;
-          }
+          // Double Up on close button is handled cleanly by handleModalUpToClose capturing listener
+          e.preventDefault();
           return;
         } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
+          lastUpClickTarget = null;
+          lastUpClickTime = 0;
           if (shuffleBtn) shuffleBtn.focus();
           else if (surpriseBtn) surpriseBtn.focus();
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          lastUpClickTarget = null;
+          lastUpClickTime = 0;
           if (shuffleBtn) shuffleBtn.focus();
           else if (surpriseBtn) surpriseBtn.focus();
         }
@@ -6758,6 +6762,8 @@
       // 2. Focus is on Shuffle Button
       if (activeEl === shuffleBtn) {
         if (e.key === 'ArrowUp' || (isTab && e.shiftKey)) {
+          lastUpClickTarget = null;
+          lastUpClickTime = 0;
           if (closeBtn) closeBtn.focus();
         } else if (e.key === 'ArrowRight') {
           if (surpriseBtn) surpriseBtn.focus();
@@ -6767,6 +6773,8 @@
             scrollChipIntoView(allChips[0]);
           }
         } else if (e.key === 'ArrowLeft') {
+          lastUpClickTarget = null;
+          lastUpClickTime = 0;
           if (closeBtn) closeBtn.focus();
         }
         return;
@@ -6775,16 +6783,24 @@
       // 3. Focus is on Surprise Me Button
       if (activeEl === surpriseBtn) {
         if (e.key === 'ArrowUp' || (isTab && e.shiftKey)) {
+          lastUpClickTarget = null;
+          lastUpClickTime = 0;
           if (closeBtn) closeBtn.focus();
         } else if (e.key === 'ArrowLeft') {
           if (shuffleBtn) shuffleBtn.focus();
-          else if (closeBtn) closeBtn.focus();
+          else if (closeBtn) {
+            lastUpClickTarget = null;
+            lastUpClickTime = 0;
+            closeBtn.focus();
+          }
         } else if (e.key === 'ArrowDown' || (isTab && !e.shiftKey)) {
           if (allChips.length > 0) {
             allChips[0].focus();
             scrollChipIntoView(allChips[0]);
           }
         } else if (e.key === 'ArrowRight') {
+          lastUpClickTarget = null;
+          lastUpClickTime = 0;
           if (closeBtn) closeBtn.focus();
         }
         return;
@@ -6968,6 +6984,9 @@
     function openWondersModal() {
       const modal = document.getElementById('wondersModal');
       if (!modal) return;
+      modalTimerLocks['wondersModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       savePreModalFocus('discoverQuickBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -6981,6 +7000,7 @@
       populateWondersChips();
       loadLiveRocketLaunches();
       resetWondersAutoCloseTimer();
+      updateWondersCountdownDisplay();
 
       setTimeout(() => {
         const surpriseBtn = document.getElementById('surpriseMeBtn');
@@ -6994,7 +7014,10 @@
 
     function closeWondersModal(pop = true) {
       modalTimerLocks['wondersModal'] = false;
+      lastUpClickTarget = null;
+      lastUpClickTime = 0;
       stopWondersAutoCloseTimer();
+      updateWondersCountdownDisplay();
       const modal = document.getElementById('wondersModal');
       if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.add('hidden');
