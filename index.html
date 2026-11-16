@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=223"></script>
+  <script src="qrcode.min.js?v=224"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1049,7 +1049,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.59) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.60) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1821,7 +1821,7 @@
               30-Day Location Map
               <span id="mapQueryCount" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">0 locations</span>
             </h3>
-            <p class="text-[10px] text-slate-400">Sorted by distance from home • TV: Use bottom bar • Touch: Pan map to auto-inspect</p>
+            <p class="text-[10px] text-slate-400">Sorted by distance from current location • TV: Use bottom bar • Touch: Pan map to auto-inspect</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -1843,7 +1843,7 @@
         </div>
       </div>
 
-      <!-- Quick Location Shortcuts Bar (Sorted by Distance from Home) & TV Close -->
+      <!-- Quick Location Shortcuts Bar (Sorted by Distance from Current Location) & TV Close -->
       <div class="pt-2 border-t border-white/10 flex items-center justify-between gap-2 flex-shrink-0">
         <div class="flex items-center gap-1.5 overflow-x-auto py-1 px-0.5 flex-1 min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
           <!-- Chips injected dynamically -->
@@ -2488,10 +2488,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=223"></script>
+  <script src="traffic-flood.js?v=224"></script>
     <script>
-    const APP_BUILD = 223;
-    const APP_VERSION = '1.10.59';
+    const APP_BUILD = 224;
+    const APP_VERSION = '1.10.60';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3384,8 +3384,8 @@
         action: 'addFeedback',
         stars: stars,
         comment: comment,
-        name: CURRENT_LOCATION.name,
-        postcode: CURRENT_LOCATION.postcode || '',
+        name: getDepersonalizedLocationName(CURRENT_LOCATION),
+        postcode: getOutwardPostcode(CURRENT_LOCATION.postcode) || '',
         lat: CURRENT_LOCATION.lat,
         lon: CURRENT_LOCATION.lon,
         timestamp: new Date().toISOString()
@@ -3468,45 +3468,102 @@
       }
     } catch (_) {}
 
+    function getOutwardPostcode(pc) {
+      if (!pc || typeof pc !== 'string') return '';
+      const trimmed = pc.trim().toUpperCase();
+      if (trimmed === 'GEO' || trimmed === 'GPS' || trimmed === 'UNDEFINED') return '';
+      // Full UK postcode pattern: e.g. "GL5 5HH" or "GL55HH" -> returns outward "GL5"
+      const ukFullMatch = trimmed.match(/^([A-Z]{1,2}[0-9][A-Z0-9]?)\s*([0-9][A-Z]{2})$/);
+      if (ukFullMatch) return ukFullMatch[1];
+      // Outward code already: e.g. "GL5"
+      const ukOutwardMatch = trimmed.match(/^([A-Z]{1,2}[0-9][A-Z0-9]?)$/);
+      if (ukOutwardMatch) return ukOutwardMatch[1];
+      // US Zip (5 digits)
+      const usZip = trimmed.match(/^([0-9]{5})(-[0-9]{4})?$/);
+      if (usZip) return usZip[1];
+      return '';
+    }
+
     function isPersonalLocationName(name) {
       if (!name) return false;
       const s = String(name).trim().toLowerCase();
-      const personalRegex = /\b(mum|mums|mum's|mom|moms|mom's|dad|dads|dad's|nan|nana|nanna|nanny|nanny's|grandma|grandpa|gran|granny|granny's|home|my home|our home|house|my house|our house|flat|my flat|our flat|apartment|cottage|my cottage|office|my office|work|my work|desk|cabin|shed)\b/i;
-      if (personalRegex.test(s)) return true;
-      if (/^(my|our)\s+/i.test(s)) return true;
-      return false;
+      if (/['’]s\b/i.test(s)) return true; // e.g. Phil's, Mum's, John's
+      if (/^(my|our|the)\s+/i.test(s)) return true; // e.g. My House, The Grand Hotel
+      const customWords = [
+        'hotel', 'motel', 'inn', 'lodge', 'resort', 'villa', 'stay', 'cottage', 'cabin',
+        'house', 'home', 'flat', 'apartment', 'suite', 'room', 'office', 'work', 'desk',
+        'hq', 'shed', 'garage', 'farm', 'barn', 'yard', 'garden', 'club', 'gym', 'school',
+        'church', 'hall', 'shop', 'store', 'cafe', 'pub', 'bar', 'restaurant', 'place',
+        'retreat', 'hideaway', 'base', 'mum', 'mums', 'mom', 'moms', 'dad', 'dads', 'nan',
+        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'current location'
+      ];
+      const regex = new RegExp(`\\b(${customWords.join('|')})\\b`, 'i');
+      return regex.test(s);
+    }
+    const isCustomOrPersonalLocationName = isPersonalLocationName;
+
+    function getKnownGenericTown(lat, lon) {
+      if (typeof lat !== 'number' || typeof lon !== 'number') return null;
+      const known = [
+        { name: 'Nailsworth', lat: 51.696, lon: -2.224, tol: 0.028 },
+        { name: 'Stroud', lat: 51.745, lon: -2.217, tol: 0.028 },
+        { name: 'Minchinhampton', lat: 51.706, lon: -2.186, tol: 0.02 },
+        { name: 'Stonehouse', lat: 51.748, lon: -2.281, tol: 0.025 },
+        { name: 'Gloucester', lat: 51.864, lon: -2.238, tol: 0.045 },
+        { name: 'Cheltenham', lat: 51.899, lon: -2.078, tol: 0.045 },
+        { name: 'Cirencester', lat: 51.715, lon: -1.970, tol: 0.035 },
+        { name: 'Dursley', lat: 51.682, lon: -2.355, tol: 0.025 },
+        { name: 'Tetbury', lat: 51.637, lon: -2.158, tol: 0.025 },
+        { name: 'Wotton-under-Edge', lat: 51.638, lon: -2.350, tol: 0.025 },
+        { name: 'Bristol', lat: 51.454, lon: -2.588, tol: 0.06 },
+        { name: 'Bath', lat: 51.381, lon: -2.360, tol: 0.04 },
+        { name: 'Swindon', lat: 51.558, lon: -1.780, tol: 0.05 },
+        { name: 'Oxford', lat: 51.752, lon: -1.258, tol: 0.05 },
+        { name: 'London', lat: 51.507, lon: -0.128, tol: 0.08 },
+        { name: 'Birmingham', lat: 52.486, lon: -1.890, tol: 0.06 },
+        { name: 'Manchester', lat: 53.480, lon: -2.242, tol: 0.06 },
+        { name: 'Liverpool', lat: 53.408, lon: -2.991, tol: 0.06 },
+        { name: 'Edinburgh', lat: 55.953, lon: -3.188, tol: 0.06 },
+        { name: 'Cardiff', lat: 51.481, lon: -3.179, tol: 0.06 },
+        { name: 'Sydney', lat: -33.868, lon: 151.209, tol: 0.08 },
+        { name: 'Melbourne', lat: -37.813, lon: 144.963, tol: 0.08 },
+        { name: 'New York', lat: 40.713, lon: -74.006, tol: 0.08 },
+        { name: 'Paris', lat: 48.857, lon: 2.352, tol: 0.08 }
+      ];
+      for (const k of known) {
+        if (Math.abs(lat - k.lat) <= k.tol && Math.abs(lon - k.lon) <= k.tol) {
+          return k.name;
+        }
+      }
+      return null;
     }
 
     function getDepersonalizedLocationName(loc) {
       if (!loc) return 'Location';
-      const rawName = (loc.name || '').trim();
+      const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
+      const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
+
+      // 1. Precise coordinate match to known generic town takes top priority (guarantees generic naming)
+      const knownTown = getKnownGenericTown(lat, lon);
+      if (knownTown) return knownTown;
+
+      // 2. If geoName is clean and not custom/personal, use it
       const geo = (loc.geoName || '').trim();
-
-      // If geoName is clean and verified, use it whenever custom title is personal or custom-labeled
       if (geo && !isPersonalLocationName(geo)) {
-        if (isPersonalLocationName(rawName) || geo.toLowerCase() !== rawName.toLowerCase()) {
-          return shortenPlaceName(geo);
-        }
+        return shortenPlaceName(geo);
       }
 
-      // If rawName is personal, fall back to outward postcode or geographic town
-      if (isPersonalLocationName(rawName)) {
-        if (loc.postcode) {
-          const pcMatch = String(loc.postcode).match(/^([A-Z]{1,2}[0-9][A-Z0-9]?)\s*([0-9][A-Z]{2})$/i);
-          if (pcMatch) {
-            return `${pcMatch[1].toUpperCase()} Area`;
-          }
-          if (loc.postcode !== 'GEO' && loc.postcode !== 'GPS') {
-            return `${String(loc.postcode).trim()} Area`;
-          }
-        }
-        if (geo && !isPersonalLocationName(geo)) {
-          return shortenPlaceName(geo);
-        }
-        return 'Local Forecast';
+      // 3. If rawName is clean and not custom/personal, use it
+      const rawName = (loc.name || '').trim();
+      if (rawName && !isPersonalLocationName(rawName)) {
+        return shortenPlaceName(rawName);
       }
 
-      return shortenPlaceName(rawName) || 'Location';
+      // 4. Safe generic fallback to outward postcode district
+      const outward = getOutwardPostcode(loc.postcode);
+      if (outward) return `${outward} Area`;
+
+      return 'Local Area';
     }
 
     function loadUserRecentQueries() {
@@ -3610,6 +3667,7 @@
       // 2. Generate depersonalized, purely geographic name for the public world map & shared sheet
       try {
         const publicName = getDepersonalizedLocationName(loc);
+        const outwardPostcode = getOutwardPostcode(loc.postcode);
         let mapQueries = getHistoryQueries();
         mapQueries = mapQueries.filter(q => {
           const sameName = (q.name || '').toLowerCase() === publicName.toLowerCase();
@@ -3618,7 +3676,7 @@
         });
         mapQueries.unshift({
           name: publicName,
-          postcode: loc.postcode || '',
+          postcode: outwardPostcode || '',
           lat: loc.lat,
           lon: loc.lon,
           timestamp: Date.now()
@@ -3635,7 +3693,7 @@
             body: JSON.stringify({
               action: 'log',
               name: publicName,
-              postcode: loc.postcode,
+              postcode: outwardPostcode,
               lat: loc.lat,
               lon: loc.lon,
               timestamp: new Date().toISOString()
@@ -3762,32 +3820,20 @@
     let mapActivePopupKey = null;
     let mapProgrammaticFlyUntil = 0;
 
-    function getMapHomeReference() {
-      const gps = (typeof getSavedGpsLocation === 'function') ? getSavedGpsLocation() : null;
-      if (gps && typeof gps.lat === 'number' && typeof gps.lon === 'number') {
-        return {
-          name: getDepersonalizedLocationName(gps),
-          postcode: gps.postcode || 'GPS',
-          lat: gps.lat,
-          lon: gps.lon,
-          isGpsHome: true
-        };
-      }
+    function getMapCurrentReference() {
       if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') {
         return {
           name: getDepersonalizedLocationName(CURRENT_LOCATION),
-          postcode: CURRENT_LOCATION.postcode || '',
+          postcode: getOutwardPostcode(CURRENT_LOCATION.postcode),
           lat: CURRENT_LOCATION.lat,
-          lon: CURRENT_LOCATION.lon,
-          isGpsHome: false
+          lon: CURRENT_LOCATION.lon
         };
       }
       return {
         name: 'Nailsworth',
-        postcode: 'GL5 5HH',
+        postcode: 'GL5',
         lat: 51.7032,
-        lon: -2.2259,
-        isGpsHome: false
+        lon: -2.2259
       };
     }
 
@@ -3848,32 +3894,34 @@
       mapMarkerMap = {};
       mapActivePopupKey = null;
 
-      // 1. Ensure Home reference is always present and sort all locations by distance from Home
-      const homeRef = getMapHomeReference();
+      // 1. Ensure Current Location is always present and sort all locations by distance from Current Location
+      const currentRef = getMapCurrentReference();
       const combined = [...queries];
-      const hasHomeInList = combined.some(q => Math.abs(q.lat - homeRef.lat) < 0.03 && Math.abs(q.lon - homeRef.lon) < 0.03);
-      if (!hasHomeInList) {
+      const hasCurrentInList = combined.some(q => Math.abs(q.lat - currentRef.lat) < 0.03 && Math.abs(q.lon - currentRef.lon) < 0.03);
+      if (!hasCurrentInList) {
         combined.unshift({
-          name: homeRef.name,
-          postcode: homeRef.postcode,
-          lat: homeRef.lat,
-          lon: homeRef.lon,
+          name: currentRef.name,
+          postcode: currentRef.postcode,
+          lat: currentRef.lat,
+          lon: currentRef.lon,
           timestamp: Date.now(),
-          isHomePin: true
+          isCurrentPin: true
         });
       }
 
       const sortedQueries = combined.map(q => {
-        const distKm = calculateHaversineKm(homeRef.lat, homeRef.lon, q.lat, q.lon);
-        const isHome = distKm < 2.5 || !!q.isHomePin;
+        const distKm = calculateHaversineKm(currentRef.lat, currentRef.lon, q.lat, q.lon);
+        const isCurrent = distKm < 2.0 || !!q.isCurrentPin;
         return {
           ...q,
-          distKm: isHome ? 0 : distKm,
-          isHome
+          name: getDepersonalizedLocationName(q),
+          postcode: getOutwardPostcode(q.postcode),
+          distKm: isCurrent ? 0 : distKm,
+          isCurrent
         };
       }).sort((a, b) => {
-        if (a.isHome && !b.isHome) return -1;
-        if (!a.isHome && b.isHome) return 1;
+        if (a.isCurrent && !b.isCurrent) return -1;
+        if (!a.isCurrent && b.isCurrent) return 1;
         return a.distKm - b.distKm;
       });
 
@@ -3886,17 +3934,19 @@
         sortedQueries.forEach((q, idx) => {
           const key = `${q.lat.toFixed(4)}_${q.lon.toFixed(4)}`;
           const shortName = shortenPlaceName(q.name);
-          const distLabel = q.isHome
-            ? 'Home'
+          const chipDistLabel = q.isCurrent
+            ? 'Current'
             : (q.distKm < 10 ? `${q.distKm.toFixed(1)} km` : `${Math.round(q.distKm).toLocaleString()} km`);
 
           const btn = document.createElement('button');
-          btn.className = q.isHome
+          btn.className = q.isCurrent
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-xs text-emerald-200 hover:text-white font-semibold transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0'
             : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-sky-500/30 border border-white/15 hover:border-sky-400 text-xs text-sky-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0';
           btn.tabIndex = 0;
-          btn.title = `${q.name} (${distLabel}) — Press OK to load weather`;
-          btn.innerHTML = `<span style="font-size:11px;">${q.isHome ? '🏠' : '📍'}</span><span>${escapeHtml(shortName)}</span><span class="text-[10px] opacity-75 font-mono">• ${distLabel}</span>`;
+          btn.title = q.isCurrent
+            ? `${q.name} (Current Location)`
+            : `${q.name} (${chipDistLabel} from current location) — Press OK to load weather`;
+          btn.innerHTML = `<span style="font-size:11px;">📍</span><span>${escapeHtml(shortName)}</span><span class="text-[10px] opacity-75 font-mono">• ${chipDistLabel}</span>`;
 
           const panAndOpenOnMap = () => {
             try {
@@ -3962,14 +4012,15 @@
       sortedQueries.forEach(q => {
         bounds.push([q.lat, q.lon]);
         const key = `${q.lat.toFixed(4)}_${q.lon.toFixed(4)}`;
-        const distLabel = q.isHome
-          ? 'Home Location'
-          : (q.distKm < 10 ? `${q.distKm.toFixed(1)} km from home` : `${Math.round(q.distKm).toLocaleString()} km from home`);
+        const isCurrent = q.isCurrent;
+        const distLabel = isCurrent
+          ? '📍 Current Location'
+          : (q.distKm < 10 ? `${q.distKm.toFixed(1)} km from current location` : `${Math.round(q.distKm).toLocaleString()} km from current location`);
 
-        // Large, easy-to-hit 36x36 target with pulsating halo (emerald for Home, cyan for others)
-        const haloColor = q.isHome ? 'rgba(52, 211, 153, 0.5)' : 'rgba(56, 189, 248, 0.45)';
-        const dotBg = q.isHome ? '#10b981' : '#0284c7';
-        const dotShadow = q.isHome ? '#34d399' : '#38bdf8';
+        // Large, easy-to-hit 36x36 target with pulsating halo (emerald for Current, cyan for others)
+        const haloColor = isCurrent ? 'rgba(52, 211, 153, 0.5)' : 'rgba(56, 189, 248, 0.45)';
+        const dotBg = isCurrent ? '#10b981' : '#0284c7';
+        const dotShadow = isCurrent ? '#34d399' : '#38bdf8';
         const iconHtml = `
           <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
             <div style="position: absolute; width: 26px; height: 26px; border-radius: 50%; background: ${haloColor}; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; pointer-events: none;"></div>
@@ -3999,9 +4050,10 @@
         distEl.textContent = distLabel;
         popupWrapper.appendChild(distEl);
 
+        const outward = getOutwardPostcode(q.postcode);
         const subEl = document.createElement('div');
         subEl.style.cssText = 'font-size: 10px; color: #38bdf8; font-family: monospace; font-weight: 600;';
-        subEl.textContent = `${(q.postcode && q.postcode !== 'undefined') ? q.postcode + ' • ' : ''}${q.lat.toFixed(2)}°, ${q.lon.toFixed(2)}°`;
+        subEl.textContent = `${outward ? outward + ' • ' : ''}${Math.abs(q.lat).toFixed(2)}°${q.lat >= 0 ? 'N' : 'S'}, ${Math.abs(q.lon).toFixed(2)}°${q.lon >= 0 ? 'E' : 'W'}`;
         popupWrapper.appendChild(subEl);
 
         const timeEl = document.createElement('div');
