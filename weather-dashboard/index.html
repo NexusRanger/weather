@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=226"></script>
+  <script src="qrcode.min.js?v=227"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1046,7 +1046,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.62) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.63) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2492,10 +2492,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=226"></script>
+  <script src="traffic-flood.js?v=227"></script>
     <script>
-    const APP_BUILD = 226;
-    const APP_VERSION = '1.10.62';
+    const APP_BUILD = 227;
+    const APP_VERSION = '1.10.63';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3466,7 +3466,7 @@
       if (rawMem) {
         let memArr = JSON.parse(rawMem);
         if (Array.isArray(memArr)) {
-          memArr = memArr.filter(q => q && q.name && !q.name.toLowerCase().includes('los angeles'));
+          memArr = memArr.filter(q => q && q.name && !q.name.toLowerCase().includes('los angeles') && !isPersonalLocationName(q.name));
           localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(memArr));
         }
       }
@@ -3489,8 +3489,9 @@
     }
 
     function isPersonalLocationName(name) {
-      if (!name) return false;
+      if (!name) return true;
       const s = String(name).trim().toLowerCase();
+      if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location') return true;
       if (/['’]s\b/i.test(s)) return true; // e.g. Phil's, Mum's, John's
       if (/^(my|our|the)\s+/i.test(s)) return true; // e.g. My House, The Grand Hotel
       const customWords = [
@@ -3499,10 +3500,11 @@
         'hq', 'shed', 'garage', 'farm', 'barn', 'yard', 'garden', 'club', 'gym', 'school',
         'church', 'hall', 'shop', 'store', 'cafe', 'pub', 'bar', 'restaurant', 'place',
         'retreat', 'hideaway', 'base', 'mum', 'mums', 'mom', 'moms', 'dad', 'dads', 'nan',
-        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'current location'
+        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'current location',
+        'mill', 'mills', 'millswood', 'dunkirk', 'dentiste', 'pool', 'storr', 'bridge',
+        'tower', 'beach', 'ne40', 'ne66', 'venus'
       ];
-      const regex = new RegExp(`\\b(${customWords.join('|')})\\b`, 'i');
-      return regex.test(s);
+      return customWords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(s));
     }
     const isCustomOrPersonalLocationName = isPersonalLocationName;
 
@@ -3543,7 +3545,7 @@
     }
 
     function getDepersonalizedLocationName(loc) {
-      if (!loc) return 'Location';
+      if (!loc) return '';
       const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
 
@@ -3567,7 +3569,7 @@
       const outward = getOutwardPostcode(loc.postcode);
       if (outward) return `${outward} Area`;
 
-      return 'Local Area';
+      return '';
     }
 
     function loadUserRecentQueries() {
@@ -3652,11 +3654,12 @@
             return arr.filter(q => {
               if (!q || !q.lat || !q.lon || !q.name) return false;
               if (q.name.toLowerCase().includes('los angeles')) return false;
+              if (isPersonalLocationName(q.name)) return false;
               return q.timestamp && q.timestamp >= cutoff;
             }).map(q => ({
               ...q,
               name: getDepersonalizedLocationName(q)
-            }));
+            })).filter(q => q.name && !isPersonalLocationName(q.name));
           }
         }
       } catch (_) {}
@@ -3671,6 +3674,7 @@
       // 2. Generate depersonalized, purely geographic name for the public world map & shared sheet
       try {
         const publicName = getDepersonalizedLocationName(loc);
+        if (!publicName || isPersonalLocationName(publicName)) return;
         const outwardPostcode = getOutwardPostcode(loc.postcode);
         let mapQueries = getHistoryQueries();
         mapQueries = mapQueries.filter(q => {
@@ -4153,30 +4157,27 @@
         mapMarkerMap[key] = { marker, lat: q.lat, lon: q.lon, query: q };
       });
 
-      if (isInitialOpen && bounds.length > 0 && historyLeafletMap) {
+      if (isInitialOpen && historyLeafletMap) {
         try {
           mapProgrammaticFlyUntil = Date.now() + 600;
-          // Filter bounds to Europe only so overseas locations never blow out the zoom to the whole globe
-          const europeBounds = bounds.filter(([lat, lon]) => lat >= 35 && lat <= 65 && lon >= -12 && lon <= 32);
-          if (europeBounds.length > 1) {
-            historyLeafletMap.fitBounds(europeBounds, { padding: [60, 60], minZoom: 4, maxZoom: 7 });
-          } else {
-            const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
-            historyLeafletMap.setView([50.5, 6.0], isNarrow ? 4 : 5);
-          }
+          const currentRef = getMapCurrentReference();
+          const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
+          // Open centered on user's current location with a focused regional zoom
+          historyLeafletMap.setView([currentRef.lat, currentRef.lon], isNarrow ? 7 : 8);
+          setTimeout(() => {
+            autoOpenCenterMarkerPopup();
+            stripMapCanvasFocusables();
+          }, 250);
         } catch (_) {}
-      } else if (isInitialOpen && historyLeafletMap) {
-        const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
-        historyLeafletMap.setView([50.5, 6.0], isNarrow ? 4 : 5);
       }
 
       setTimeout(stripMapCanvasFocusables, 60);
     }
 
     async function initOrRefreshHistoryMap(isInitialOpen = false) {
+      const currentRef = getMapCurrentReference();
       const isNarrow = typeof window !== 'undefined' && window.innerWidth < 768;
-      const defaultEuropeCenter = [50.5, 6.0];
-      const defaultEuropeZoom = isNarrow ? 4 : 5;
+      const defaultZoom = isNarrow ? 7 : 8;
 
       if (!historyLeafletMap) {
         const container = document.getElementById('historyLeafletMap');
@@ -4190,7 +4191,7 @@
           zoomSnap: 1,
           zoomDelta: 1,
           fadeAnimation: false
-        }).setView(defaultEuropeCenter, defaultEuropeZoom);
+        }).setView([currentRef.lat, currentRef.lon], defaultZoom);
 
         // Remove Leaflet map container and controls from D-pad tab order so TV remote only uses bottom shortcuts & Close
         const mapCanvasEl = historyLeafletMap.getContainer();
@@ -4227,7 +4228,7 @@
         historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
         stripMapCanvasFocusables();
       } else if (isInitialOpen) {
-        historyLeafletMap.setView(defaultEuropeCenter, defaultEuropeZoom);
+        historyLeafletMap.setView([currentRef.lat, currentRef.lon], defaultZoom);
       }
 
       [80, 250, 500].forEach(delay => {
@@ -4254,7 +4255,7 @@
               if (sq.lat && sq.lon && ts >= cutoff) {
                 const name = (sq.name || '').trim();
                 // Filter out any mock test data
-                if (name && !name.toLowerCase().includes('los angeles')) {
+                if (name && !name.toLowerCase().includes('los angeles') && !isPersonalLocationName(name)) {
                   sheetQueries.push({
                     name: name,
                     postcode: sq.postcode || '',
@@ -4275,12 +4276,15 @@
               }
             });
             // Guarantee depersonalization for public world map rendering
-            queries = deduped.map(sq => ({
-              ...sq,
-              name: getDepersonalizedLocationName(sq)
-            }));
+            queries = deduped
+              .filter(sq => !isPersonalLocationName(sq.name))
+              .map(sq => ({
+                ...sq,
+                name: getDepersonalizedLocationName(sq)
+              }))
+              .filter(sq => sq.name && !isPersonalLocationName(sq.name));
             try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(queries)); } catch (_) {}
-            renderHistoryMarkersAndChips(queries);
+            renderHistoryMarkersAndChips(queries, false);
           }
         }
       } catch (_) {}
