@@ -1124,7 +1124,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.106) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.107) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2268,40 +2268,7 @@
     </div>
   </div>
 
-  <!-- TV BRO & SHIELD TV SLEEP / STANDBY OVERLAY -->
-  <div id="tvSleepScreen" onclick="exitTvSleepMode()" class="fixed inset-0 z-[9999] bg-black text-slate-400 hidden flex-col items-center justify-center p-6 text-center select-none cursor-pointer transition-opacity duration-300">
-    <div class="max-w-md w-full flex flex-col items-center gap-4 p-6 rounded-3xl bg-slate-950/90 border border-slate-800/80 shadow-2xl backdrop-blur-xl" onclick="event.stopPropagation()">
-      <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shadow-inner animate-pulse">
-        🌙
-      </div>
-      <div>
-        <h2 class="text-xl font-bold text-slate-100 tracking-wide">Screen in Standby</h2>
-        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-          The dashboard is sleeping to save power and protect your display.
-        </p>
-      </div>
-
-      <div class="w-full p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 flex items-center gap-2.5 text-left">
-        <span class="text-lg">🏠</span>
-        <span>Press the <strong>Home</strong> button on your Nvidia Shield remote to return to Android TV Home.</span>
-      </div>
-
-      <div class="flex flex-col sm:flex-row gap-2.5 w-full pt-1">
-        <button id="tvReturnHomeBtn" type="button" tabindex="0" onclick="triggerAndroidHomeIntent()" onkeydown="if(event.key==='ArrowRight'||event.key==='ArrowDown'){event.preventDefault();const w=document.getElementById('tvWakeBtn');if(w)w.focus();}" class="tv-focus-amber flex-1 py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
-          <span>🏠 Return to TV Home</span>
-        </button>
-        <button id="tvWakeBtn" type="button" tabindex="0" onclick="exitTvSleepMode()" onkeydown="if(event.key==='ArrowLeft'||event.key==='ArrowUp'){event.preventDefault();const h=document.getElementById('tvReturnHomeBtn');if(h)h.focus();}" class="tv-focus-amber flex-1 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 font-semibold text-xs transition flex items-center justify-center gap-2 focus:outline-none cursor-pointer">
-          <span>☀️ Wake Dashboard</span>
-        </button>
-      </div>
-
-      <p class="text-[10px] text-slate-500 mt-0.5">
-        Press <strong>OK</strong>, <strong>Back</strong>, or any remote button to wake instantly
-      </p>
-    </div>
-  </div>
-
-  <!-- TV EXIT CAST CONFIRMATION MODAL -->
+    <!-- TV EXIT CAST CONFIRMATION MODAL -->
   <div id="tvExitCastModal" onclick="closeTvExitCastModal(true)" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 text-left">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 md:p-6 max-w-sm sm:max-w-md w-full border border-rose-400/40 shadow-2xl relative flex flex-col cursor-default">
       <div class="flex items-center gap-3 pb-3 border-b border-white/10">
@@ -2341,7 +2308,7 @@
 
         <div class="flex flex-col gap-2 pt-1">
           <button id="tvConfirmExitBtn" tabindex="1" onclick="executeTvExitCast()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('tvCancelExitBtn');if(c)c.focus();}" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
-            <span>🏠 Return to TV Home / Standby</span>
+            <span>🏠 Return to TV Home</span>
             <span id="tvExitCountdown" class="text-rose-200 font-mono text-[10px] ml-1">(20s)</span>
           </button>
           <button id="tvCancelExitBtn" tabindex="2" onclick="closeTvExitCastModal(true)" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('tvConfirmExitBtn');if(b)b.focus();}" class="tv-focus-amber w-full px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-300 hover:text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer">
@@ -2656,10 +2623,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=270"></script>
+  <script src="traffic-flood.js?v=271"></script>
     <script>
-    const APP_BUILD = 270;
-    const APP_VERSION = '1.10.106';
+    const APP_BUILD = 271;
+    const APP_VERSION = '1.10.107';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3888,6 +3855,25 @@
       }
     }
 
+    const DEFAULT_PUBLIC_MAP_LOCATIONS = [
+      { name: 'Dunkirk Mills', postcode: 'GL5', lat: 51.7032, lon: -2.2266 },
+      { name: 'Nailsworth', postcode: 'GL5', lat: 51.6950, lon: -2.2220 },
+      { name: 'Stroud', postcode: 'GL5', lat: 51.7458, lon: -2.2178 },
+      { name: 'Cirencester', postcode: 'GL7', lat: 51.7180, lon: -1.9680 },
+      { name: 'Gloucester', postcode: 'GL1', lat: 51.8642, lon: -2.2431 },
+      { name: 'Cheltenham', postcode: 'GL50', lat: 51.8994, lon: -2.0783 },
+      { name: 'Bristol', postcode: 'BS1', lat: 51.4545, lon: -2.5879 },
+      { name: 'Bath', postcode: 'BA1', lat: 51.3811, lon: -2.3590 },
+      { name: 'Oxford', postcode: 'OX1', lat: 51.7520, lon: -1.2577 },
+      { name: 'London', postcode: 'WC2R', lat: 51.5085, lon: -0.1254 },
+      { name: 'Blackpool', postcode: 'FY1', lat: 53.8167, lon: -3.0500 },
+      { name: 'Gateshead', postcode: 'NE40', lat: 54.9617, lon: -1.7878 },
+      { name: 'Paris', postcode: '', lat: 48.8566, lon: 2.3522 },
+      { name: 'New York', postcode: '', lat: 40.7128, lon: -74.0060 },
+      { name: 'Starbase (SpaceX)', postcode: '', lat: 25.9972, lon: -97.1561 },
+      { name: 'Sydney', postcode: '', lat: -33.8688, lon: 151.2093 }
+    ];
+
     function getHistoryQueries() {
       const now = Date.now();
       const cutoff = now - 30 * 24 * 60 * 60 * 1000;
@@ -3908,14 +3894,10 @@
         if (Array.isArray(userRecents)) combined.push(...userRecents);
       } catch (_) {}
 
-      // 3. Fallback legacy queries
-      try {
-        const legacy = localStorage.getItem('ambient_location_queries');
-        if (legacy) {
-          const arr = JSON.parse(legacy);
-          if (Array.isArray(arr)) combined.push(...arr);
-        }
-      } catch (_) {}
+      // 4. Always seed from built-in verified default locations so the map is NEVER empty on initial load/refresh!
+      if (typeof DEFAULT_PUBLIC_MAP_LOCATIONS !== 'undefined' && Array.isArray(DEFAULT_PUBLIC_MAP_LOCATIONS)) {
+        combined.push(...DEFAULT_PUBLIC_MAP_LOCATIONS);
+      }
 
       // Deduplicate by coordinates / name and apply filters
       const deduped = [];
@@ -5173,15 +5155,22 @@
         historyLeafletMap.setView([currentRef.lat, currentRef.lon], defaultZoom);
       }
 
-      [80, 250, 500].forEach(delay => {
-        setTimeout(() => {
-          if (historyLeafletMap) historyLeafletMap.invalidateSize();
-        }, delay);
-      });
-
-      // 1. Immediately render existing local queries without network lag
+      // 1. Immediately render queries with seed fallback
       let queries = getHistoryQueries();
       renderHistoryMarkersAndChips(queries, isInitialOpen);
+
+      // 2. Invalidate map size and re-verify markers once container geometry is computed by the browser
+      [80, 150, 350].forEach(delay => {
+        setTimeout(() => {
+          if (historyLeafletMap) {
+            historyLeafletMap.invalidateSize();
+            if (delay === 150) {
+              const currentQueries = getHistoryQueries();
+              renderHistoryMarkersAndChips(currentQueries, isInitialOpen);
+            }
+          }
+        }, delay);
+      });
 
       // 2. Fetch / update shared queries from Google Sheets in background
       syncPublicHistoryQueriesFromSheet(true);
@@ -12614,10 +12603,12 @@
           return;
         }
       } catch (_) {}
-      // 1. Attempt Android TV Home Intent to return to Shield home screen
-      triggerAndroidHomeIntent();
-      // 2. Put browser into pitch-black standby sleep mode (never leave a white screen!)
-      enterTvSleepMode();
+      // Strictly trigger Android Home Intent to return directly to Shield home screen
+      try {
+        window.location.href = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end';
+      } catch (_) {}
+      try { window.history.back(); } catch (_) {}
+      try { window.close(); } catch (_) {}
     }
 
     function configureTvReceiverUI() {
@@ -14126,9 +14117,7 @@
     setInterval(checkForUpdates, 3 * 60 * 1000);
 
     // Prefetch shared 30-day map locations in background so opening the world map is instantaneous
-    setTimeout(() => {
-      syncPublicHistoryQueriesFromSheet(false);
-    }, 1800);
+    syncPublicHistoryQueriesFromSheet(false);
 
     // TV Remote UX: Default focus on location button on startup in dormant state (highlights on first D-pad touch)
     setTimeout(() => {
