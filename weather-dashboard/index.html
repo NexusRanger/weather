@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- QR Code Generator -->
-  <script src="qrcode.min.js?v=243"></script>
+  <script src="qrcode.min.js?v=244"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.79) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.80) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1782,9 +1782,9 @@
       <div class="flex items-center justify-between pb-2 border-b border-white/10 flex-shrink-0">
         <div>
           <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-            <span>🧭</span> Discover Global Destinations &amp; Rocket Launches
+            <span>🧭</span> Discover Global Destinations &amp; World Capitals
           </h3>
-          <p class="text-[10px] text-purple-300/80 mt-0.5">Live rocket flight countdowns, extreme weather records &amp; legendary landmarks</p>
+          <p class="text-[10px] text-purple-300/80 mt-0.5">World capital cities, extreme weather records &amp; legendary landmarks</p>
           <p class="text-[10px] text-purple-200/90 mt-0.5 font-medium">Locations opened from Discover are not added to your recent locations</p>
         </div>
         <button id="closeWondersBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('surpriseMeBtn')||document.getElementById('shuffleWondersBtn');if(b){event.preventDefault();b.focus();}}" onclick="closeWondersModal()" title="Close (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
@@ -1796,7 +1796,7 @@
       <div class="my-2.5 p-2.5 rounded-xl bg-gradient-to-r from-purple-900/50 via-indigo-900/40 to-fuchsia-900/40 border border-purple-400/30 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
         <div class="text-[11px] text-purple-200">
           <span class="font-bold text-white">🧭 Discover Destinations</span>
-          <span class="hidden sm:inline text-purple-300/80 ml-1">• Pick a live launch or wonder, or spin for a surprise destination!</span>
+          <span class="hidden sm:inline text-purple-300/80 ml-1">• Pick a world capital or wonder, or spin for a surprise destination!</span>
         </div>
         <div class="flex items-center gap-1.5 flex-shrink-0">
           <button id="shuffleWondersBtn" tabindex="0" onclick="shuffleAndRepopulateWonders(true)" title="Shuffle for fresh discoveries (Press OK)" class="tv-focus-amber px-2.5 py-1.5 rounded-lg bg-purple-500/25 hover:bg-purple-500/40 border border-purple-400/40 text-purple-200 hover:text-white font-semibold text-xs transition focus:outline-none cursor-pointer flex items-center gap-1">
@@ -1832,12 +1832,12 @@
           <div id="wondersNewsChips" class="flex flex-wrap gap-1.5"></div>
         </div>
 
-        <!-- 🚀 Rocket Launch Sites & Spaceports -->
+        <!-- 🏛️ World Capital Cities -->
         <div>
-          <div class="text-[10px] font-semibold uppercase tracking-wider text-violet-300 mb-1 flex items-center gap-1">
-            <span>🚀</span> Rocket Launch Sites &amp; Spaceports
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-sky-300 mb-1 flex items-center gap-1">
+            <span>🏛️</span> World Capital Cities (Shuffled Global Selection)
           </div>
-          <div id="wondersSpaceChips" class="flex flex-wrap gap-1.5"></div>
+          <div id="wondersCapitalChips" class="flex flex-wrap gap-1.5"></div>
         </div>
 
         <!-- ⚡ Live Extreme Weather Hotspots -->
@@ -2588,10 +2588,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=243"></script>
+  <script src="traffic-flood.js?v=244"></script>
     <script>
-    const APP_BUILD = 243;
-    const APP_VERSION = '1.10.79';
+    const APP_BUILD = 244;
+    const APP_VERSION = '1.10.80';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4261,6 +4261,7 @@
       if (closestMarker && minDistPx <= maxRadiusPx) {
         if (mapActivePopupKey !== closestKey || !closestMarker.isPopupOpen()) {
           mapActivePopupKey = closestKey;
+          lastScrolledChipKey = closestKey;
           closestMarker.openPopup();
           stripMapCanvasFocusables();
 
@@ -4285,7 +4286,7 @@
                   targetBtn.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
                 } catch (_) {}
               }
-              setTimeout(() => { isProgrammaticChipScroll = false; }, 400);
+              setTimeout(() => { isProgrammaticChipScroll = false; }, 600);
             }
           }
           updateChipHighlightStates();
@@ -4501,6 +4502,7 @@
               setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
             }
             mapActivePopupKey = key;
+            lastScrolledChipKey = key;
             updateChipHighlightStates();
 
             const entry = mapMarkerMap[key];
@@ -4633,12 +4635,39 @@
           }
         }
 
+        // Tablet UX: Track whether user is actively touching or dragging the bottom carousel directly
+        let isUserTouchingChips = false;
+        let userTouchChipsTimeout = null;
+
+        const markUserTouchingChips = () => {
+          isUserTouchingChips = true;
+          if (userTouchChipsTimeout) clearTimeout(userTouchChipsTimeout);
+          userTouchChipsTimeout = setTimeout(() => {
+            isUserTouchingChips = false;
+          }, 450);
+        };
+
+        ['pointerdown', 'touchstart', 'wheel'].forEach(evt => {
+          chipsEl.addEventListener(evt, markUserTouchingChips, { passive: true });
+        });
+
+        ['pointerup', 'touchend', 'pointercancel'].forEach(evt => {
+          chipsEl.addEventListener(evt, () => {
+            if (userTouchChipsTimeout) clearTimeout(userTouchChipsTimeout);
+            userTouchChipsTimeout = setTimeout(() => {
+              isUserTouchingChips = false;
+            }, 350);
+          }, { passive: true });
+        });
+
         // Tablet UX: Sliding the bottom list sideways continuously tracks the leftmost item and smoothly pans the map
+        // ONLY triggers map pan when the user is actively swiping the bottom list (prevents map jump/flicker when panning the map!)
         chipsEl.onscroll = () => {
-          if (isProgrammaticChipScroll) return;
+          if (isProgrammaticChipScroll || !isUserTouchingChips) return;
           if (chipScrollTimeout) clearTimeout(chipScrollTimeout);
 
           chipScrollTimeout = setTimeout(() => {
+            if (isProgrammaticChipScroll || !isUserTouchingChips) return;
             const containerRect = chipsEl.getBoundingClientRect();
             // Anchor to the left-hand side of the bottom bar (with padding)
             const anchorLeft = containerRect.left + 24;
@@ -7397,17 +7426,39 @@
       { name: 'Marburg Storms', desc: 'Queensland, Australia • Violent supercells with giant hail and damaging squalls', category: 'news', icon: '⛈️', lat: -27.5667, lon: 152.6000, country: 'Australia' },
       { name: 'Rhine Low Water', desc: 'Kaub Chokepoint, Germany • Historic dry riverbed bottleneck halting barge transit', category: 'news', icon: '🚢', lat: 50.0864, lon: 7.7619, country: 'Germany' },
 
-      // 🚀 Rocket Launch Sites & Spaceports (SpaceX Starship, NASA Space Coast & Orbital Hubs)
-      { name: 'Starbase (SpaceX)', desc: 'Boca Chica, TX • SpaceX Starship Orbital Launch Pad & Starfactory', category: 'space', icon: '🚀', lat: 25.9972, lon: -97.1561, country: 'USA' },
-      { name: 'Cape Canaveral', desc: 'Space Coast, FL • NASA Kennedy Space Center & SpaceX LC-39A / SLC-40', category: 'space', icon: '🚀', lat: 28.5729, lon: -80.6490, country: 'USA' },
-      { name: 'Vandenberg SFB', desc: 'California • SpaceX Falcon 9 West Coast Polar Orbital Launch Base', category: 'space', icon: '🛰️', lat: 34.6321, lon: -120.6106, country: 'USA' },
-      { name: 'Guiana Space Centre', desc: 'Kourou, French Guiana • European Space Agency (Ariane 6 / Vega)', category: 'space', icon: '🚀', lat: 5.2389, lon: -52.7681, country: 'French Guiana' },
-      { name: 'Baikonur Cosmodrome', desc: 'Kazakhstan • Gagarin\'s Start & Historic Manned Orbital Spaceport', category: 'space', icon: '🚀', lat: 45.9650, lon: 63.3050, country: 'Kazakhstan' },
-      { name: 'Rocket Lab Mahia', desc: 'New Zealand • Rocket Lab Electron Commercial Orbital Launch Complex 1', category: 'space', icon: '🚀', lat: -39.2604, lon: 177.8647, country: 'New Zealand' },
-      { name: 'Tanegashima Space Center', desc: 'Kagoshima, Japan • JAXA Coastal Spaceport & H3 Heavy Orbital Complex', category: 'space', icon: '🚀', lat: 30.4000, lon: 130.9700, country: 'Japan' },
-      { name: 'Satish Dhawan (ISRO)', desc: 'Sriharikota, India • Indian Space Research Organisation (LVM3/PSLV)', category: 'space', icon: '🚀', lat: 13.7199, lon: 80.2304, country: 'India' },
-      { name: 'Esrange Space Center', desc: 'Kiruna, Sweden • European Arctic Rocket & Suborbital Sounding Base', category: 'space', icon: '🚀', lat: 67.8933, lon: 21.1067, country: 'Sweden' },
-      { name: 'Andøya Space', desc: 'Vesterålen, Norway • Orbital Spaceport Inside the Arctic Circle', category: 'space', icon: '🚀', lat: 69.2942, lon: 16.0208, country: 'Norway' },
+      // 🏛️ World Capital Cities (Global Hubs from Every Continent)
+      { name: 'London', desc: 'United Kingdom • Capital city on the River Thames, Westminster & Tower Bridge', category: 'capitals', icon: '🏛️', lat: 51.5074, lon: -0.1278, country: 'United Kingdom' },
+      { name: 'Paris', desc: 'France • The City of Light on the Seine, Eiffel Tower & Louvre', category: 'capitals', icon: '🗼', lat: 48.8566, lon: 2.3522, country: 'France' },
+      { name: 'Tokyo', desc: 'Japan • Bustling megacity capital, Imperial Palace & neon skyline', category: 'capitals', icon: '🗾', lat: 35.6762, lon: 139.6503, country: 'Japan' },
+      { name: 'Washington D.C.', desc: 'USA • United States federal capital on the Potomac River & Capitol Hill', category: 'capitals', icon: '🏛️', lat: 38.9072, lon: -77.0369, country: 'USA' },
+      { name: 'Rome', desc: 'Italy • The Eternal City, Colosseum, Vatican & historic Roman hills', category: 'capitals', icon: '🏛️', lat: 41.9028, lon: 12.4964, country: 'Italy' },
+      { name: 'Berlin', desc: 'Germany • Vibrant German capital famed for art, history & Brandenburg Gate', category: 'capitals', icon: '🏛️', lat: 52.5200, lon: 13.4050, country: 'Germany' },
+      { name: 'Canberra', desc: 'Australia • Purpose-designed bush capital centered on Lake Burley Griffin', category: 'capitals', icon: '🦘', lat: -35.2809, lon: 149.1300, country: 'Australia' },
+      { name: 'Ottawa', desc: 'Canada • National capital on the Ottawa River and Parliament Hill', category: 'capitals', icon: '🍁', lat: 45.4215, lon: -75.6972, country: 'Canada' },
+      { name: 'Cairo', desc: 'Egypt • Ancient metropolis on the Nile near the Great Pyramids of Giza', category: 'capitals', icon: '🏺', lat: 30.0444, lon: 31.2357, country: 'Egypt' },
+      { name: 'Buenos Aires', desc: 'Argentina • Grand European-style capital of Argentina on the Río de la Plata', category: 'capitals', icon: '💃', lat: -34.6037, lon: -58.3816, country: 'Argentina' },
+      { name: 'Beijing', desc: 'China • Imperial capital of China, Forbidden City & Great Wall gateway', category: 'capitals', icon: '🏮', lat: 39.9042, lon: 116.4074, country: 'China' },
+      { name: 'New Delhi', desc: 'India • Sprawling national capital territory of India & India Gate', category: 'capitals', icon: '🏛️', lat: 28.6139, lon: 77.2090, country: 'India' },
+      { name: 'Bangkok', desc: 'Thailand • Dynamic capital on the Chao Phraya River, Grand Palace & temples', category: 'capitals', icon: '🛕', lat: 13.7563, lon: 100.5018, country: 'Thailand' },
+      { name: 'Reykjavik', desc: 'Iceland • Earth\'s northernmost sovereign capital powered by geothermal springs', category: 'capitals', icon: '🌋', lat: 64.1466, lon: -21.9426, country: 'Iceland' },
+      { name: 'Nairobi', desc: 'Kenya • Kenya\'s high-elevation safari gateway capital & wildlife park', category: 'capitals', icon: '🦒', lat: -1.2921, lon: 36.8219, country: 'Kenya' },
+      { name: 'Bern', desc: 'Switzerland • Picturesque Swiss federal capital & UNESCO medieval Old Town', category: 'capitals', icon: '⛰️', lat: 46.9480, lon: 7.4474, country: 'Switzerland' },
+      { name: 'Madrid', desc: 'Spain • High-plateau Spanish capital, Royal Palace & Prado Museum', category: 'capitals', icon: '☀️', lat: 40.4168, lon: -3.7038, country: 'Spain' },
+      { name: 'Seoul', desc: 'South Korea • High-tech megacity capital along the Han River & N Seoul Tower', category: 'capitals', icon: '🏯', lat: 37.5665, lon: 126.9780, country: 'South Korea' },
+      { name: 'Brasília', desc: 'Brazil • Planned architectural capital of Brazil shaped like an airplane', category: 'capitals', icon: '🏛️', lat: -15.7975, lon: -47.8919, country: 'Brazil' },
+      { name: 'Santiago', desc: 'Chile • Cosmopolitan capital ringed by the snow-capped Andes mountains', category: 'capitals', icon: '🏔️', lat: -33.4489, lon: -70.6693, country: 'Chile' },
+      { name: 'Ankara', desc: 'Turkey • Cosmopolitan inland capital on the central Anatolian plateau', category: 'capitals', icon: '🏛️', lat: 39.9334, lon: 32.8597, country: 'Turkey' },
+      { name: 'Oslo', desc: 'Norway • Nordic fjord capital surrounded by dense forests and waterways', category: 'capitals', icon: '⛵', lat: 59.9139, lon: 10.7522, country: 'Norway' },
+      { name: 'Wellington', desc: 'New Zealand • Wind-swept harbor capital nestled between hills and Cook Strait', category: 'capitals', icon: '🌊', lat: -41.2865, lon: 174.7762, country: 'New Zealand' },
+      { name: 'Athens', desc: 'Greece • Cradle of Western democracy and philosophy beneath the Parthenon', category: 'capitals', icon: '🏛️', lat: 37.9838, lon: 23.7275, country: 'Greece' },
+      { name: 'Dublin', desc: 'Ireland • Historic literary capital on Dublin Bay and River Liffey', category: 'capitals', icon: '☘️', lat: 53.3498, lon: -6.2603, country: 'Ireland' },
+      { name: 'Stockholm', desc: 'Sweden • Beauty on the Water built across 14 Baltic archipelago islands', category: 'capitals', icon: '👑', lat: 59.3293, lon: 18.0686, country: 'Sweden' },
+      { name: 'Vienna', desc: 'Austria • Imperial cultural capital on the Danube, famed for music & palaces', category: 'capitals', icon: '🎼', lat: 48.2082, lon: 16.3738, country: 'Austria' },
+      { name: 'Mexico City', desc: 'Mexico • High-altitude Aztec valley megacity, Zócalo & historic center', category: 'capitals', icon: '🇲🇽', lat: 19.4326, lon: -99.1332, country: 'Mexico' },
+      { name: 'Jakarta', desc: 'Indonesia • Dynamic Southeast Asian island metropolis & national monument', category: 'capitals', icon: '🌴', lat: -6.2088, lon: 106.8456, country: 'Indonesia' },
+      { name: 'Amsterdam', desc: 'Netherlands • World-famous canal ring capital, bicycles & Rijksmuseum', category: 'capitals', icon: '🚲', lat: 52.3676, lon: 4.9041, country: 'Netherlands' },
+      { name: 'Lisbon', desc: 'Portugal • Hilly coastal Atlantic capital, yellow trams & São Jorge Castle', category: 'capitals', icon: '⛵', lat: 38.7223, lon: -9.1393, country: 'Portugal' },
+      { name: 'Singapore', desc: 'Singapore • Equatorial island garden city-state and global trade crossroads', category: 'capitals', icon: '🦁', lat: 1.3521, lon: 103.8198, country: 'Singapore' },
 
       // ⚡ Live Extreme Weather Hotspots (Lightning, Winds, Deluges & Scorching Deserts)
       { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms (280/hr)', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
@@ -7587,12 +7638,12 @@
           if (statusEl) statusEl.textContent = 'live schedule';
         } else {
           if (statusEl) statusEl.textContent = 'no upcoming launches';
-          container.innerHTML = '<div class="text-[11px] text-slate-400 py-0.5">No imminent launches in feed. Explore launch pads below!</div>';
+          container.innerHTML = '<div class="text-[11px] text-slate-400 py-0.5">No imminent launches in feed right now.</div>';
         }
       } catch (err) {
         console.warn('Failed to fetch live rocket launches:', err);
-        if (statusEl) statusEl.textContent = 'catalog';
-        container.innerHTML = '<div class="text-[11px] text-slate-400 py-0.5">Live launch feed offline. Explore active spaceports below!</div>';
+        if (statusEl) statusEl.textContent = 'feed offline';
+        container.innerHTML = '<div class="text-[11px] text-slate-400 py-0.5">Live launch feed offline. Explore world capitals and weather wonders below!</div>';
       }
     }
 
@@ -7716,7 +7767,7 @@
       const chipShelves = [
         '#discoverLiveLaunchesChips',
         '#wondersNewsChips',
-        '#wondersSpaceChips',
+        '#wondersCapitalChips',
         '#wondersWeatherChips',
         '#wondersVolcanoChips',
         '#wondersColdChips',
@@ -8045,7 +8096,7 @@
 
       const containerMap = {
         news: document.getElementById('wondersNewsChips'),
-        space: document.getElementById('wondersSpaceChips'),
+        capitals: document.getElementById('wondersCapitalChips'),
         weather: document.getElementById('wondersWeatherChips'),
         volcano: document.getElementById('wondersVolcanoChips'),
         cold: document.getElementById('wondersColdChips'),
@@ -8056,13 +8107,15 @@
         const parent = containerMap[cat];
         if (!parent) return;
         parent.innerHTML = '';
-        const items = getRotatedCategoryWonders(cat, 6);
+        const items = getRotatedCategoryWonders(cat, (cat === 'capitals' || cat === 'landmark') ? 8 : 6);
         items.forEach(w => {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.tabIndex = 0;
           btn.className = (w.category === 'news')
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 hover:border-amber-400/60 text-xs text-amber-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
+            : (w.category === 'capitals')
+            ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 hover:border-sky-400/60 text-xs text-sky-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
             : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
           btn.title = `${w.name}: ${w.desc}`;
           btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
@@ -8089,14 +8142,14 @@
       loadLocationDirectly(wonder.name, wonder.lat, wonder.lon, wonder.country || '', false);
     }
 
-    function selectStarbaseDirectly() {
-      const starbase = GLOBAL_WONDERS_CATALOG.find(w => w.name.includes('Starbase')) || {
-        name: 'Starbase (SpaceX)',
-        lat: 25.9972,
-        lon: -97.1561,
-        country: 'USA'
+    function selectCapitalDirectly(name = 'London') {
+      const cap = GLOBAL_WONDERS_CATALOG.find(w => w.name.toLowerCase() === name.toLowerCase()) || {
+        name: 'London',
+        lat: 51.5074,
+        lon: -0.1278,
+        country: 'United Kingdom'
       };
-      selectWonderLocation(starbase);
+      selectWonderLocation(cap);
     }
 
     function pickRandomWonderAndLoad() {
