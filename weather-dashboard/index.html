@@ -1123,7 +1123,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.95) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.97) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2273,8 +2273,8 @@
           🛑
         </div>
         <div>
-          <h3 class="text-base font-bold text-white">Exit Cast Session?</h3>
-          <p class="text-[11px] text-slate-400">Close the dashboard and return to TV home launcher</p>
+          <h3 class="text-base font-bold text-white">Close Weather Dashboard?</h3>
+          <p class="text-[11px] text-slate-400">Exit the dashboard and return to TV home launcher or browser</p>
         </div>
       </div>
       <div class="py-3.5 space-y-3">
@@ -2305,11 +2305,11 @@
 
         <div class="flex flex-col gap-2 pt-1">
           <button id="tvConfirmExitBtn" tabindex="1" onclick="executeTvExitCast()" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const c=document.getElementById('tvCancelExitBtn');if(c)c.focus();}" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
-            <span>🛑 Yes, Close &amp; Exit TV App</span>
+            <span>🛑 Yes, Close Dashboard</span>
             <span id="tvExitCountdown" class="text-rose-200 font-mono text-[10px] ml-1">(20s)</span>
           </button>
           <button id="tvCancelExitBtn" tabindex="2" onclick="closeTvExitCastModal(true)" onkeydown="if(event.key==='ArrowUp'){event.preventDefault();const b=document.getElementById('tvConfirmExitBtn');if(b)b.focus();}" class="tv-focus-amber w-full px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-slate-300 hover:text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer">
-            <span>✕ Cancel (Stay on Weather)</span>
+            <span>✕ Cancel (Keep Watching)</span>
           </button>
         </div>
       </div>
@@ -2620,10 +2620,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=259"></script>
+  <script src="traffic-flood.js?v=261"></script>
     <script>
-    const APP_BUILD = 259;
-    const APP_VERSION = '1.10.95';
+    const APP_BUILD = 261;
+    const APP_VERSION = '1.10.97';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5491,6 +5491,20 @@
         return true;
       }
 
+      // Support coordinates or Google Maps URLs passed directly into lookupTown
+      if (typeof parseGoogleMapsOrCoordinates === 'function') {
+        const townLocParsed = parseGoogleMapsOrCoordinates(cleanName);
+        if (townLocParsed && townLocParsed.type === 'coords') {
+          const cOk = await lookupCoords(townLocParsed.lat, townLocParsed.lon, true);
+          if (cOk && townLocParsed.name) {
+            CURRENT_LOCATION.name = townLocParsed.name;
+            try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', townLocParsed.lat, townLocParsed.lon); } catch (_) {}
+            updateWeatherUI();
+          }
+          return cOk;
+        }
+      }
+
       async function queryGeocoding(qStr) {
         try {
           const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(qStr)}&count=10&language=en&format=json`;
@@ -6720,6 +6734,107 @@
       return name.trim().replace(/\b[a-z]/g, c => c.toUpperCase());
     }
 
+    
+    function parseGoogleMapsOrCoordinates(rawInput) {
+      if (!rawInput || typeof rawInput !== 'string') return null;
+      const str = rawInput.trim();
+      if (!str) return null;
+
+      // 1. Raw GPS coordinates: decimal degrees (e.g. "51.7032, -2.2266" or "51.7032 -2.2266" or "51.7032° N, 2.2266° W")
+      const decimalMatch = str.match(/^([-+]?[0-9]{1,2}(?:\.[0-9]+)?)\s*°?\s*([NSns])?\s*[, \t/]+\s*([-+]?[0-9]{1,3}(?:\.[0-9]+)?)\s*°?\s*([EWew])?$/);
+      if (decimalMatch) {
+        let lat = parseFloat(decimalMatch[1]);
+        const latHemi = (decimalMatch[2] || '').toUpperCase();
+        if (latHemi === 'S' && lat > 0) lat = -lat;
+
+        let lon = parseFloat(decimalMatch[3]);
+        const lonHemi = (decimalMatch[4] || '').toUpperCase();
+        if (lonHemi === 'W' && lon > 0) lon = -lon;
+
+        if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+          return { type: 'coords', lat, lon, raw: str };
+        }
+      }
+
+      // Degrees Minutes Seconds: e.g. 51°42'11.5"N 2°13'35.8"W
+      const dmsMatch = str.match(/([0-9]{1,2})°\s*([0-9]{1,2})['′]\s*([0-9]+(?:\.[0-9]+)?)[″"]?\s*([NSns])\s*[, \t/]+\s*([0-9]{1,3})°\s*([0-9]{1,2})['′]\s*([0-9]+(?:\.[0-9]+)?)[″"]?\s*([EWew])/i);
+      if (dmsMatch) {
+        let lat = parseFloat(dmsMatch[1]) + parseFloat(dmsMatch[2]) / 60 + parseFloat(dmsMatch[3]) / 3600;
+        if (dmsMatch[4].toUpperCase() === 'S') lat = -lat;
+        let lon = parseFloat(dmsMatch[5]) + parseFloat(dmsMatch[6]) / 60 + parseFloat(dmsMatch[7]) / 3600;
+        if (dmsMatch[8].toUpperCase() === 'W') lon = -lon;
+        if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+          return { type: 'coords', lat, lon, raw: str };
+        }
+      }
+
+      // 2. URLs (Google Maps, Apple Maps, OpenStreetMap)
+      const urlMatch = str.match(/(https?:\/\/[^\s]+)/i);
+      if (urlMatch) {
+        const fullUrl = urlMatch[1];
+        // Any accompanying text before or after the URL (e.g. "Dunkirk Mills, Stroud https://maps.app.goo.gl/...")
+        let accompanyingText = str.replace(fullUrl, '').replace(/[\r\n\t]+/g, ' ').replace(/^[, -]+|[, -]+$/g, '').trim();
+
+        // Check Google Maps / Apple Maps / OSM coordinate patterns in URL
+        // Pattern A: @lat,lon (Google Maps standard)
+        const atCoords = fullUrl.match(/@(-?[0-9]{1,2}\.[0-9]+),(-?[0-9]{1,3}\.[0-9]+)/);
+        if (atCoords) {
+          const lat = parseFloat(atCoords[1]);
+          const lon = parseFloat(atCoords[2]);
+          let placeName = '';
+          const placeMatch = fullUrl.match(/\/place\/([^/@?#]+)/);
+          if (placeMatch) {
+            try { placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')); } catch (_) {}
+          }
+          return {
+            type: 'coords',
+            lat,
+            lon,
+            name: accompanyingText || placeName || '',
+            url: fullUrl
+          };
+        }
+
+        // Pattern B: Query params like ?q=lat,lon or ?query=lat,lon or ?ll=lat,lon or center=lat,lon
+        const queryCoords = fullUrl.match(/[?&](?:q|query|ll|center|daddr|saddr)=(-?[0-9]{1,2}\.[0-9]+)[, ]+(-?[0-9]{1,3}\.[0-9]+)/i);
+        if (queryCoords) {
+          const lat = parseFloat(queryCoords[1]);
+          const lon = parseFloat(queryCoords[2]);
+          return { type: 'coords', lat, lon, name: accompanyingText || '', url: fullUrl };
+        }
+
+        // Pattern C: OpenStreetMap ?mlat=lat&mlon=lon or /#map=zoom/lat/lon
+        const osmCoords = fullUrl.match(/[?&]mlat=(-?[0-9]{1,2}\.[0-9]+)&mlon=(-?[0-9]{1,3}\.[0-9]+)/i)
+          || fullUrl.match(/#map=[0-9]+\/(-?[0-9]{1,2}\.[0-9]+)\/(-?[0-9]{1,3}\.[0-9]+)/i);
+        if (osmCoords) {
+          const lat = parseFloat(osmCoords[1]);
+          const lon = parseFloat(osmCoords[2]);
+          return { type: 'coords', lat, lon, name: accompanyingText || '', url: fullUrl };
+        }
+
+        // Pattern D: Place name in /place/Name+Here without @coords
+        const placeMatch = fullUrl.match(/\/place\/([^/@?#]+)/);
+        if (placeMatch) {
+          try {
+            const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+            if (placeName && !/^[0-9.-]+,[0-9.-]+$/.test(placeName)) {
+              return { type: 'text', query: placeName, url: fullUrl };
+            }
+          } catch (_) {}
+        }
+
+        // Pattern E: If it's a shortlink with accompanying text (e.g. from mobile share)
+        if (accompanyingText) {
+          return { type: 'text', query: accompanyingText, url: fullUrl };
+        }
+
+        // Pattern F: Shortlink without accompanying text
+        return { type: 'short_url', url: fullUrl };
+      }
+
+      return null;
+    }
+
     async function searchLocationFromModal() {
       if (typeof cancelSearchAutoContinue === 'function') cancelSearchAutoContinue();
       const input = document.getElementById('locationInput');
@@ -6799,6 +6914,82 @@
 
       if (status) status.textContent = 'Searching location...';
       if (btn) btn.disabled = true;
+
+      // Check for Google Maps URLs, shortcuts, or raw GPS coordinates
+      const parsedLoc = parseGoogleMapsOrCoordinates(q);
+      if (parsedLoc) {
+        if (parsedLoc.type === 'coords') {
+          if (status) {
+            status.style.color = '#38bdf8';
+            status.textContent = `📍 Resolved coordinates: ${parsedLoc.lat.toFixed(4)}, ${parsedLoc.lon.toFixed(4)}`;
+          }
+          if (parsedLoc.name) pendingCustomLocationName = parsedLoc.name;
+          const coordSuccess = await lookupCoords(parsedLoc.lat, parsedLoc.lon, true);
+          if (coordSuccess) {
+            if (parsedLoc.name) {
+              CURRENT_LOCATION.name = parsedLoc.name;
+              try {
+                saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', parsedLoc.lat, parsedLoc.lon);
+              } catch (_) {}
+              updateWeatherUI();
+            }
+            if (btn) btn.disabled = false;
+            pendingCustomLocationName = '';
+            clearUrlLocationParams();
+            closeLocationModal();
+            return;
+          }
+        } else if (parsedLoc.type === 'text') {
+          // Extracted clean place name / address from share text (e.g. "Dunkirk Mills, Stroud https://maps.app.goo.gl/...")
+          q = parsedLoc.query;
+          input.value = q;
+        } else if (parsedLoc.type === 'short_url') {
+          // Attempt unshortening for bare shortlink
+          if (status) {
+            status.style.color = '#fbbf24';
+            status.textContent = 'Expanding Google Maps link...';
+          }
+          let resolved = false;
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
+            const unres = await fetch(`https://unshorten.me/json/${encodeURIComponent(parsedLoc.url)}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (unres.ok) {
+              const uData = await unres.json();
+              if (uData && uData.resolved_url) {
+                const subParsed = parseGoogleMapsOrCoordinates(uData.resolved_url);
+                if (subParsed && subParsed.type === 'coords') {
+                  if (subParsed.name) pendingCustomLocationName = subParsed.name;
+                  const cOk = await lookupCoords(subParsed.lat, subParsed.lon, true);
+                  if (cOk) {
+                    if (subParsed.name) {
+                      CURRENT_LOCATION.name = subParsed.name;
+                      try { saveUserRecentQuery(CURRENT_LOCATION.name, CURRENT_LOCATION.postcode || '', subParsed.lat, subParsed.lon); } catch (_) {}
+                      updateWeatherUI();
+                    }
+                    if (btn) btn.disabled = false;
+                    pendingCustomLocationName = '';
+                    clearUrlLocationParams();
+                    closeLocationModal();
+                    return;
+                  }
+                } else if (subParsed && subParsed.type === 'text') {
+                  q = subParsed.query;
+                  input.value = q;
+                  resolved = true;
+                }
+              }
+            }
+          } catch (_) {}
+          if (!resolved) {
+            if (status) {
+              status.style.color = '#fbbf24';
+              status.textContent = 'ℹ️ Tip: Paste coordinates (e.g. 51.7032, -2.2266) or full Google Maps URL with location name.';
+            }
+          }
+        }
+      }
 
       // Extract custom display name if entered (e.g. "Stroud Hotel GL5 3AP" -> customName: "Stroud Hotel", query: "GL5 3AP")
       const parsedCustom = parseCustomNameAndLocation(q);
@@ -11596,20 +11787,28 @@
       if (solidDot) solidDot.classList.add('hidden');
 
       if (castBtn) {
-        castBtn.className = 'relative p-1 rounded-lg bg-white/5 border border-white/10 text-slate-500 opacity-40 flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-none cursor-default select-none';
-        castBtn.title = 'Cast not available on TV / Shield display';
-        castBtn.tabIndex = -1;
+        castBtn.className = 'tv-focus-amber relative p-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/40 text-rose-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm';
+        castBtn.title = 'Close Dashboard (Exit Screen)';
+        castBtn.tabIndex = 0;
         castBtn.onclick = (e) => {
           if (e) {
             e.preventDefault();
             e.stopPropagation();
           }
+          openTvExitCastModal();
         };
       }
 
+      const castIconEl = document.getElementById('castIcon');
+      if (castIconEl) {
+        castIconEl.setAttribute('viewBox', '0 0 24 24');
+        castIconEl.setAttribute('fill', 'none');
+        castIconEl.innerHTML = `<line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`;
+      }
+
       if (castBadge) {
-        castBadge.innerHTML = '<span>📺 Cast not available on TV display</span>';
-        castBadge.className = 'hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-slate-700/60 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-slate-400 backdrop-blur-md';
+        castBadge.innerHTML = '<span>✕ Close Screen &bull; Press OK to exit</span>';
+        castBadge.className = 'hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-rose-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-rose-300 backdrop-blur-md';
       }
 
       if (modalCastBtn) {
@@ -12138,6 +12337,8 @@
         }
       } catch (_) {}
       try { window.close(); } catch (_) {}
+      try { window.history.back(); } catch (_) {}
+      try { window.location.href = 'about:blank'; } catch (_) {}
     }
 
     function configureTvReceiverUI() {
