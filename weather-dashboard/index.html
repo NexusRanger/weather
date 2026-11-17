@@ -1135,7 +1135,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.115) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.116) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1572,12 +1572,12 @@
 
     <!-- 24-HOUR HOURLY TIMELINE STRIP (WITH OVERNIGHT HISTORY & MULTI-DAY 24H PANORAMIC GLANCE) -->
     <footer id="footerTimeline" tabindex="0" class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer focus:outline-none" title="Press OK, click, or long-press for 24-hour panoramic view • Use Left/Right to scroll or step through days">
-      <div class="flex items-center justify-between gap-2 mb-0.5 px-0.5">
-        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2 whitespace-nowrap flex-shrink-0">
+      <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-1 px-0.5">
+        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 flex flex-wrap items-center gap-2 min-w-0">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400 flex-shrink-0"></span>
-          <span id="timelineTitle" class="whitespace-nowrap">24-Hour Forecast &amp; Rain Probability</span>
+          <span id="timelineTitle">24-Hour Forecast &amp; Rain Probability</span>
           <!-- Multi-Day Panoramic Controls (shown in 24h Glance mode) -->
-          <div id="panoramicDayNav" class="hidden items-center gap-1 whitespace-nowrap">
+          <div id="panoramicDayNav" class="hidden items-center gap-1 flex-wrap">
             <button id="panoramicPrevBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(-1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Previous Day (Yesterday / Left Arrow)">◀</button>
             <span id="panoramicDayLabel" class="text-[9px] font-bold font-mono px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-200 border border-sky-400/35 whitespace-nowrap">Today (24h)</span>
             <button id="panoramicNextBtn" type="button" tabindex="-1" onclick="event.stopPropagation(); stepPanoramicDay(1);" class="px-1.5 py-0.2 rounded bg-white/10 hover:bg-sky-500/30 border border-white/15 text-[9px] font-mono text-sky-300 hover:text-white transition cursor-pointer" title="Next Day (Tomorrow / Right Arrow)">▶</button>
@@ -1587,7 +1587,7 @@
             </button>
           </div>
         </div>
-        <div class="text-[9px] text-slate-400 font-mono flex items-center gap-2 whitespace-nowrap min-w-0 flex-shrink">
+        <div class="text-[9px] text-slate-400 font-mono flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
           <span id="timelineHintText" class="text-[8px] text-slate-400 opacity-85 hidden sm:inline-flex flex-col items-end leading-tight text-right whitespace-nowrap truncate">◀ Scroll left for overnight history • Click / OK for 24h glance</span>
           <span class="flex items-center gap-1 whitespace-nowrap flex-shrink-0"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp</span>
           <span class="flex items-center gap-1 whitespace-nowrap flex-shrink-0"><span class="w-3 h-1.5 rounded-sm bg-sky-400"></span> Rain %</span>
@@ -2652,10 +2652,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=279"></script>
+  <script src="traffic-flood.js?v=280"></script>
     <script>
-    const APP_BUILD = 279;
-    const APP_VERSION = '1.10.115';
+    const APP_BUILD = 280;
+    const APP_VERSION = '1.10.116';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
