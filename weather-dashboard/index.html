@@ -1135,7 +1135,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.114) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.115) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1562,6 +1562,13 @@
       </button>
     </div>
 
+
+    <!-- Portrait Phone Landscape Suggestion Floating Pill -->
+    <div id="portraitRotatePrompt" onclick="dismissPortraitRotatePrompt()" class="hidden pointer-events-auto fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 rounded-2xl bg-slate-900/95 border border-sky-400/50 text-white text-xs font-semibold shadow-[0_10px_25px_rgba(0,0,0,0.8),0_0_15px_rgba(56,189,248,0.3)] backdrop-blur-md transition-all duration-300 opacity-0 translate-y-2 flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
+      <span class="text-base text-sky-300">🔄</span>
+      <span class="text-[11px] text-slate-200">Rotate phone to landscape for widescreen view</span>
+      <span class="text-sm">📱</span>
+    </div>
 
     <!-- 24-HOUR HOURLY TIMELINE STRIP (WITH OVERNIGHT HISTORY & MULTI-DAY 24H PANORAMIC GLANCE) -->
     <footer id="footerTimeline" tabindex="0" class="relative z-10 glass-card rounded-2xl px-2.5 py-1 flex-shrink-0 select-none cursor-pointer focus:outline-none" title="Press OK, click, or long-press for 24-hour panoramic view • Use Left/Right to scroll or step through days">
@@ -2645,10 +2652,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=278"></script>
+  <script src="traffic-flood.js?v=279"></script>
     <script>
-    const APP_BUILD = 278;
-    const APP_VERSION = '1.10.114';
+    const APP_BUILD = 279;
+    const APP_VERSION = '1.10.115';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -11525,6 +11532,57 @@ function joinSpacedLetters(text) {
       }
     }
 
+    let portraitRotateTimer = null;
+
+    function isPhoneInPortrait() {
+      const isPortrait = window.innerHeight > window.innerWidth || (window.matchMedia && window.matchMedia('(orientation: portrait)').matches);
+      const isNarrow = Math.min(window.innerWidth, window.innerHeight) <= 580;
+      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      return isPortrait && isNarrow && isTouch;
+    }
+
+    function showPortraitRotatePrompt() {
+      const promptEl = document.getElementById('portraitRotatePrompt');
+      if (!promptEl) return;
+      promptEl.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        promptEl.classList.remove('opacity-0', 'translate-y-2');
+        promptEl.classList.add('opacity-100', 'translate-y-0');
+      });
+
+      if (portraitRotateTimer) clearTimeout(portraitRotateTimer);
+      portraitRotateTimer = setTimeout(() => {
+        dismissPortraitRotatePrompt();
+      }, 4500);
+    }
+
+    function dismissPortraitRotatePrompt() {
+      if (portraitRotateTimer) {
+        clearTimeout(portraitRotateTimer);
+        portraitRotateTimer = null;
+      }
+      const promptEl = document.getElementById('portraitRotatePrompt');
+      if (!promptEl || promptEl.classList.contains('hidden')) return;
+      promptEl.classList.remove('opacity-100', 'translate-y-0');
+      promptEl.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => {
+        if (promptEl) promptEl.classList.add('hidden');
+      }, 320);
+    }
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= window.innerHeight) {
+        dismissPortraitRotatePrompt();
+      }
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        if (window.innerWidth >= window.innerHeight) {
+          dismissPortraitRotatePrompt();
+        }
+      }, 60);
+    });
+
     function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true, animDirection = null) {
       const prevCompressed = isHourlyCompressed;
       const prevOffset = (typeof panoramicDayOffset === 'number') ? panoramicDayOffset : 0;
@@ -11567,6 +11625,10 @@ function joinSpacedLetters(text) {
         updateTenDayForecastIndicator();
         renderHourly(cachedHourlyData, slideDir);
 
+        if (isPhoneInPortrait()) {
+          showPortraitRotatePrompt();
+        }
+
         // Maintain focus on #footerTimeline so clicking/pressing OK or Left/Right works immediately
         if (shouldFocus && footer) footer.focus({ preventScroll: true });
 
@@ -11576,6 +11638,7 @@ function joinSpacedLetters(text) {
         isPanoramicLocked = false;
         lockedDayOffset = 0;
         try { localStorage.removeItem('ambient_pano_locked'); } catch (_) {}
+        dismissPortraitRotatePrompt();
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
         clearTenDayForecastHighlights();
