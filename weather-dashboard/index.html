@@ -2435,14 +2435,14 @@
           </div>
         </div>
 
-        <div class="flex flex-col gap-2.5 pt-1">
+        <div class="flex flex-col items-center gap-2.5 pt-1">
           <!-- Top Option: Green Stay Here button (default focus on open, press Up to reach) -->
-          <button id="tvCancelExitBtn" tabindex="1" onclick="closeTvExitCastModal(true)" onkeydown="handleTvExitCancelKeydown(event)" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500/90 border border-emerald-400/50 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
+          <button id="tvCancelExitBtn" tabindex="1" onclick="closeTvExitCastModal(true)" onkeydown="handleTvExitCancelKeydown(event)" class="tv-focus-amber w-[70%] px-4 py-2.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500/90 border border-emerald-400/50 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
             <span>✓ Stay Here (Keep Watching)</span>
             <span id="tvExitCountdown" class="text-emerald-200 font-mono text-[10px] ml-1">(20s)</span>
           </button>
           <!-- Bottom Option: Close Window to return to base screen (press Down to reach) -->
-          <button id="tvConfirmExitBtn" tabindex="2" onclick="executeTvExitCast()" onkeydown="handleTvExitConfirmKeydown(event)" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/90 text-slate-200 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-md focus:outline-none cursor-pointer">
+          <button id="tvConfirmExitBtn" tabindex="2" onclick="executeTvExitCast()" onkeydown="handleTvExitConfirmKeydown(event)" class="tv-focus-amber w-[70%] px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/90 text-slate-200 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-md focus:outline-none cursor-pointer">
             <span>🏠 Close Window (Return to TV Home)</span>
           </button>
         </div>
@@ -2814,10 +2814,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=289"></script>
+  <script src="traffic-flood.js?v=290"></script>
     <script>
-    const APP_BUILD = 289;
-    const APP_VERSION = '1.10.125';
+    const APP_BUILD = 290;
+    const APP_VERSION = '1.10.126';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4279,8 +4279,36 @@
     }
 
     function openRadarFromMap() {
+      let targetLat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
+      let targetLon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
+      let targetName = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.name) || 'Current Location';
+
+      const allChips = document.querySelectorAll('#mapRecentChips button');
+      let focusedChip = (typeof mapLastFocusedChipIndex === 'number' && allChips[mapLastFocusedChipIndex])
+        ? allChips[mapLastFocusedChipIndex]
+        : null;
+
+      let entry = null;
+      if (mapActivePopupKey && mapMarkerMap[mapActivePopupKey]) {
+        entry = mapMarkerMap[mapActivePopupKey];
+      } else if (focusedChip && focusedChip._chipKey && mapMarkerMap[focusedChip._chipKey]) {
+        entry = mapMarkerMap[focusedChip._chipKey];
+      } else if (allChips[0] && allChips[0]._chipKey && mapMarkerMap[allChips[0]._chipKey]) {
+        entry = mapMarkerMap[allChips[0]._chipKey];
+      }
+
+      if (entry) {
+        targetLat = entry.lat;
+        targetLon = entry.lon;
+        if (entry.query && entry.query.name) {
+          targetName = entry.query.name;
+        } else if (focusedChip && focusedChip.textContent) {
+          targetName = focusedChip.textContent.trim().replace(/^📍\s*/, '');
+        }
+      }
+
       closeHistoryMapModal(false);
-      openRadarModal();
+      openRadarModal(targetLat, targetLon, targetName, true);
     }
 
     function openCreditsModal() {
@@ -5034,6 +5062,7 @@
 
           // TV Remote UX: Stepping across the bottom shortcuts automatically flies the map & pops up the info box
           btn.onfocus = () => {
+            resetHistoryMapAutoCloseTimer();
             mapLastFocusedChipIndex = idx;
             panAndOpenOnMap();
             updateChipHighlightStates();
@@ -5094,6 +5123,7 @@
           // For the current location, inform the user they are already here so customized settings aren't reset.
           // For other locations, first tap centers & opens the popup; second tap loads the forecast.
           btn.onclick = () => {
+            resetHistoryMapAutoCloseTimer();
             mapLastFocusedChipIndex = idx;
             if (q.isCurrent) {
               showMapToast('Already at current location • Forecast is active');
@@ -5157,6 +5187,7 @@
         let lastMapInteractionType = 'keyboard';
 
         const onUserTouchChips = () => {
+          resetHistoryMapAutoCloseTimer();
           lastMapInteractionType = 'touch';
           mapProgrammaticChipScrollUntil = 0;
           isProgrammaticChipScroll = false;
@@ -5225,6 +5256,7 @@
 
         // Sliding the bottom list sideways continuously tracks the leftmost item and glides the map
         chipsEl.onscroll = () => {
+          resetHistoryMapAutoCloseTimer();
           // If this scroll was commanded by D-pad or the map's reticle auto-center, ignore it
           if (lastMapInteractionType === 'keyboard' || isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
 
@@ -5473,6 +5505,11 @@
           mapCanvasEl.addEventListener('keydown', handleGlobalBack, true);
           mapCanvasEl.addEventListener('keyup', handleGlobalBack, true);
         }
+
+        // Reset idle auto-close timer on direct map interactions
+        historyLeafletMap.on('dragstart zoomstart movestart', () => {
+          resetHistoryMapAutoCloseTimer();
+        });
 
         // Tablet / Touch Gesture UX: As you pan or zoom the map, automatically pop up the info card
         // for whichever location pin is closest to the center of the screen!
@@ -13897,12 +13934,9 @@ function joinSpacedLetters(text) {
           return;
         }
       } catch (_) {}
-      // Android / Shield home intent to exit webview and return directly to Android TV home screen
-      try {
-        window.location.href = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end';
-      } catch (_) {}
-      try { window.history.back(); } catch (_) {}
       try { window.close(); } catch (_) {}
+      try { window.history.back(); } catch (_) {}
+      try { window.location.replace('about:blank'); } catch (_) {}
     }
 
     function configureTvReceiverUI() {
@@ -14163,9 +14197,13 @@ function joinSpacedLetters(text) {
     let radarLocationMarker = null;
     const RADAR_DEFAULT_ZOOM = 9; // Slightly zoomed out to view wider surrounding region
 
-    async function initOrRefreshRadarMap() {
-      const lat = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696;
-      const lon = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224;
+    async function initOrRefreshRadarMap(overrideLat = null, overrideLon = null) {
+      const lat = (overrideLat !== null && overrideLat !== undefined)
+        ? overrideLat
+        : ((typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lat) || 51.696);
+      const lon = (overrideLon !== null && overrideLon !== undefined)
+        ? overrideLon
+        : ((typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION.lon) || -2.224);
 
       if (!radarLeafletMap) {
         const container = document.getElementById('radarLeafletMap');
@@ -14665,7 +14703,10 @@ function joinSpacedLetters(text) {
       pillEl.className = `pointer-events-none absolute top-2.5 ${document.getElementById('radarLeafletMap')?.classList.contains('radar-zoom-locked') ? 'left-3' : 'left-12'} z-[1000] px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border ${borderCls} shadow-lg flex items-center gap-2.5 text-xs font-semibold text-slate-200 max-w-[calc(100%-64px)] transition-all duration-300`;
     }
 
-    function openRadarModal() {
+    let radarReturnToMap = false;
+
+    function openRadarModal(customLat = null, customLon = null, customName = null, returnToMap = false) {
+      radarReturnToMap = !!returnToMap;
       const modal = document.getElementById('radarModal');
       if (!modal) return;
       modalTimerLocks['radarModal'] = false;
@@ -14675,7 +14716,7 @@ function joinSpacedLetters(text) {
       lastDownClickTime = 0;
       radarAutoCloseSecs = 30;
 
-      savePreModalFocus('radarBtn');
+      savePreModalFocus(radarReturnToMap ? 'mapRadarBtn' : 'radarBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
@@ -14686,11 +14727,15 @@ function joinSpacedLetters(text) {
       } catch (_) {}
 
       const locBadge = document.getElementById('radarLocationLabel');
-      if (locBadge && typeof CURRENT_LOCATION !== 'undefined') {
-        locBadge.textContent = CURRENT_LOCATION.name || `${CURRENT_LOCATION.lat.toFixed(2)}°N, ${Math.abs(CURRENT_LOCATION.lon).toFixed(2)}°W`;
+      if (locBadge) {
+        if (customName) {
+          locBadge.textContent = customName;
+        } else if (typeof CURRENT_LOCATION !== 'undefined') {
+          locBadge.textContent = CURRENT_LOCATION.name || `${CURRENT_LOCATION.lat.toFixed(2)}°N, ${Math.abs(CURRENT_LOCATION.lon).toFixed(2)}°W`;
+        }
       }
 
-      initOrRefreshRadarMap();
+      initOrRefreshRadarMap(customLat, customLon);
       updateRadarLockZoomBtn();
       updateRadarRainStatusPill();
       resetRadarAutoCloseTimer();
@@ -14718,7 +14763,12 @@ function joinSpacedLetters(text) {
       if (pop && history.state && history.state.modal === 'radarModal') {
         try { history.back(); } catch (_) {}
       }
-      restorePreModalFocus('radarBtn');
+      if (radarReturnToMap) {
+        radarReturnToMap = false;
+        openHistoryMapModal();
+      } else {
+        restorePreModalFocus('radarBtn');
+      }
     }
 
     // TRAFFIC & CONGESTION MODAL LOGIC (READS BACKGROUND CACHE ONLY - ZERO EXTRA API CALLS)
