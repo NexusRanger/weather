@@ -1147,6 +1147,9 @@
               </svg>
             </span>
           </div>
+          <div id="headerLandmarkIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="World Landmark">
+            <span id="headerLandmarkBadge" class="inline-flex items-center justify-center w-7 h-7 rounded-lg p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()"></span>
+          </div>
           <button id="headerLocationTitle" type="button" tabindex="-1" onclick="openLocationModal()" title="Change location (Press OK)" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent" style="max-width: min(320px, 30vw); outline: none !important; outline-offset: 0 !important;">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Dunkirk Mills</span>
           </button>
@@ -1216,7 +1219,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.123) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.124) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2747,10 +2750,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=287"></script>
+  <script src="traffic-flood.js?v=288"></script>
     <script>
-    const APP_BUILD = 287;
-    const APP_VERSION = '1.10.123';
+    const APP_BUILD = 288;
+    const APP_VERSION = '1.10.124';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3828,7 +3831,10 @@
     function isPersonalLocationName(name) {
       if (!name) return true;
       const s = String(name).trim().toLowerCase();
-      if (/dunkirk|amberley/i.test(s)) return false; // Explicitly allowed: Dunkirk Mills, Amberley Church
+      if (/dunkirk|amberley|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false; // Explicitly allowed landmarks & heritage sites
+      if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
+        if (POPULAR_LANDMARKS_DATABASE.some(lm => (lm.name && s.includes(lm.name.toLowerCase())) || (Array.isArray(lm.aliases) && lm.aliases.some(a => s.includes(a.toLowerCase()))))) return false;
+      }
       if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location') return true;
       if (/['’]s\b/i.test(s)) return true; // e.g. Phil's, Mum's, John's
       if (/^(my|our|the)\s+/i.test(s)) return true; // e.g. My House, The Grand Hotel
@@ -5671,6 +5677,549 @@
     }
 
     // =========================================================================
+    // POPULAR GLOBAL LANDMARKS & CUSTOM PLACES REGISTRY
+    // Embedded directly in GitHub codebase for zero-latency instant recognition
+    // =========================================================================
+    const POPULAR_LANDMARKS_DATABASE = [
+      {
+        id: 'white_house',
+        name: 'The White House',
+        city: 'Washington, D.C.',
+        country: 'United States',
+        postcode: '20500',
+        lat: 38.8977,
+        lon: -77.0365,
+        radiusKm: 25,
+        aliases: ['white house', 'the white house', '1600 pennsylvania ave', '1600 pennsylvania avenue', 'the white house washington'],
+        badgeStyle: 'bg-slate-100/15 border-slate-300/40 shadow-[0_0_10px_rgba(255,255,255,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="26" width="48" height="10" fill="#15803d" opacity="0.6"/>
+          <path d="M0 24 Q24 21 48 24 L48 36 L0 36 Z" fill="#14532d" opacity="0.4"/>
+          <ellipse cx="24" cy="29" rx="14" ry="4" fill="#16a34a" opacity="0.5"/>
+          <rect x="10" y="14" width="28" height="13" rx="0.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.6"/>
+          <polygon points="24,7 15,12 33,12" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.5"/>
+          <rect x="17" y="12" width="1.5" height="15" fill="#f1f5f9"/>
+          <rect x="21" y="12" width="1.5" height="15" fill="#f1f5f9"/>
+          <rect x="25.5" y="12" width="1.5" height="15" fill="#f1f5f9"/>
+          <rect x="29.5" y="12" width="1.5" height="15" fill="#f1f5f9"/>
+          <rect x="12" y="16" width="2.2" height="3" rx="0.3" fill="#0284c7"/>
+          <rect x="12" y="21" width="2.2" height="3" rx="0.3" fill="#0284c7"/>
+          <rect x="33.8" y="16" width="2.2" height="3" rx="0.3" fill="#0284c7"/>
+          <rect x="33.8" y="21" width="2.2" height="3" rx="0.3" fill="#0284c7"/>
+          <line x1="24" y1="2" x2="24" y2="7" stroke="#94a3b8" stroke-width="0.6"/>
+          <rect x="24" y="2.5" width="4" height="2.5" fill="#ef4444"/>
+          <rect x="24" y="2.5" width="2" height="1.4" fill="#3b82f6"/>
+        </svg>`
+      },
+      {
+        id: 'sydney_opera_house',
+        name: 'Sydney Opera House',
+        city: 'Sydney',
+        country: 'Australia',
+        postcode: 'NSW 2000',
+        lat: -33.8568,
+        lon: 151.2153,
+        radiusKm: 25,
+        aliases: ['sydney opera house', 'opera house sydney', 'sydney opera', 'bennelong point'],
+        badgeStyle: 'bg-sky-500/15 border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="24" width="48" height="12" fill="#0369a1" opacity="0.85"/>
+          <path d="M0 26 C12 25, 24 27, 48 26" stroke="#38bdf8" stroke-width="0.7" opacity="0.8"/>
+          <polygon points="4,25 44,25 41,21 7,21" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+          <path d="M9 21 C9 15, 14 13, 16 21 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.5"/>
+          <path d="M14 21 C15 10, 22 7, 26 21 Z" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.6"/>
+          <path d="M22 21 C23 12, 28 10, 31 21 Z" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="0.5"/>
+          <path d="M28 21 C29 14, 34 12, 37 21 Z" fill="#ffffff" stroke="#94a3b8" stroke-width="0.5"/>
+          <polygon points="17,21 21,21 20,13" fill="#0284c7" opacity="0.65"/>
+          <polygon points="25,21 28,21 27,15" fill="#0284c7" opacity="0.65"/>
+        </svg>`
+      },
+      {
+        id: 'london_eye',
+        name: 'London Eye',
+        city: 'London',
+        country: 'United Kingdom',
+        postcode: 'SE1 7PB',
+        lat: 51.5033,
+        lon: -0.1195,
+        radiusKm: 25,
+        aliases: ['london eye', 'the london eye', 'millennium wheel', 'london wheel'],
+        badgeStyle: 'bg-indigo-500/15 border-indigo-400/40 shadow-[0_0_10px_rgba(99,102,241,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="27" width="48" height="9" fill="#0284c7" opacity="0.8"/>
+          <path d="M0 29 C12 28, 24 30, 48 29" stroke="#38bdf8" stroke-width="0.6" opacity="0.75"/>
+          <line x1="24" y1="16" x2="16" y2="28" stroke="#ffffff" stroke-width="1.2"/>
+          <line x1="24" y1="16" x2="32" y2="28" stroke="#ffffff" stroke-width="1.2"/>
+          <circle cx="24" cy="15" r="11" stroke="#e0e7ff" stroke-width="1" fill="none"/>
+          <circle cx="24" cy="15" r="9.8" stroke="#818cf8" stroke-width="0.4" fill="none"/>
+          <circle cx="24" cy="15" r="1.8" fill="#6366f1"/>
+          <line x1="24" y1="4" x2="24" y2="26" stroke="#c7d2fe" stroke-width="0.4"/>
+          <line x1="13" y1="15" x2="35" y2="15" stroke="#c7d2fe" stroke-width="0.4"/>
+          <line x1="16.2" y1="7.2" x2="31.8" y2="22.8" stroke="#c7d2fe" stroke-width="0.4"/>
+          <line x1="16.2" y1="22.8" x2="31.8" y2="7.2" stroke="#c7d2fe" stroke-width="0.4"/>
+          <ellipse cx="24" cy="4" rx="1.2" ry="0.8" fill="#38bdf8"/>
+          <ellipse cx="35" cy="15" rx="0.8" ry="1.2" fill="#38bdf8"/>
+          <ellipse cx="24" cy="26" rx="1.2" ry="0.8" fill="#38bdf8"/>
+          <ellipse cx="13" cy="15" rx="0.8" ry="1.2" fill="#38bdf8"/>
+          <ellipse cx="31.8" cy="7.2" rx="1" ry="1" fill="#38bdf8"/>
+          <ellipse cx="31.8" cy="22.8" rx="1" ry="1" fill="#38bdf8"/>
+          <ellipse cx="16.2" cy="7.2" rx="1" ry="1" fill="#38bdf8"/>
+          <ellipse cx="16.2" cy="22.8" rx="1" ry="1" fill="#38bdf8"/>
+        </svg>`
+      },
+      {
+        id: 'taj_mahal',
+        name: 'Taj Mahal',
+        city: 'Agra',
+        country: 'India',
+        postcode: '282001',
+        lat: 27.1751,
+        lon: 78.0421,
+        radiusKm: 25,
+        aliases: ['taj mahal', 'the taj mahal', 'taj mahal agra', 'agra taj mahal'],
+        badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="27" width="48" height="9" fill="#0284c7" opacity="0.6"/>
+          <polygon points="18,27 30,27 33,36 15,36" fill="#38bdf8" opacity="0.4"/>
+          <rect x="8" y="23" width="32" height="4" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.5"/>
+          <rect x="9" y="9" width="1.4" height="15" fill="#f1f5f9"/>
+          <polygon points="9.7,7 8.5,9 10.9,9" fill="#e2e8f0"/>
+          <rect x="37.6" y="9" width="1.4" height="15" fill="#f1f5f9"/>
+          <polygon points="38.3,7 37.1,9 39.5,9" fill="#e2e8f0"/>
+          <rect x="14" y="14" width="20" height="10" rx="0.5" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.5"/>
+          <path d="M21 24 L21 17 C21 15 27 15 27 17 L27 24 Z" fill="#1e293b"/>
+          <path d="M19 14 C19 7, 24 5, 24 3 C24 5, 29 7, 29 14 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.6"/>
+          <line x1="24" y1="1" x2="24" y2="4" stroke="#eab308" stroke-width="0.7"/>
+          <path d="M16 14 C16 11, 19 11, 19 14 Z" fill="#f1f5f9"/>
+          <path d="M29 14 C29 11, 32 11, 32 14 Z" fill="#f1f5f9"/>
+        </svg>`
+      },
+      {
+        id: 'eiffel_tower',
+        name: 'Eiffel Tower',
+        city: 'Paris',
+        country: 'France',
+        postcode: '75007',
+        lat: 48.8584,
+        lon: 2.2945,
+        radiusKm: 25,
+        aliases: ['eiffel tower', 'tour eiffel', 'the eiffel tower', 'eiffel tower paris', 'paris eiffel tower'],
+        badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="29" width="48" height="7" fill="#15803d" opacity="0.6"/>
+          <path d="M17 29 L20 18 L28 18 L31 29 L27 29 L26 21 C26 20 22 20 22 21 L21 29 Z" fill="#b45309" stroke="#78350f" stroke-width="0.4"/>
+          <rect x="19" y="18" width="10" height="1.6" fill="#fde047" stroke="#b45309" stroke-width="0.4"/>
+          <polygon points="21,18 22.5,10 25.5,10 27,18" fill="#d97706" stroke="#78350f" stroke-width="0.4"/>
+          <rect x="22" y="9.5" width="4" height="1.2" fill="#fde047"/>
+          <polygon points="22.8,10 23.5,3 24.5,3 25.2,10" fill="#b45309"/>
+          <line x1="24" y1="1" x2="24" y2="4" stroke="#fef08a" stroke-width="0.7"/>
+          <circle cx="24" cy="1" r="0.8" fill="#fbbf24"/>
+        </svg>`
+      },
+      {
+        id: 'statue_of_liberty',
+        name: 'Statue of Liberty',
+        city: 'New York',
+        country: 'United States',
+        postcode: '10004',
+        lat: 40.6892,
+        lon: -74.0445,
+        radiusKm: 25,
+        aliases: ['statue of liberty', 'the statue of liberty', 'liberty island', 'lady liberty'],
+        badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="27" width="48" height="9" fill="#0284c7" opacity="0.8"/>
+          <polygon points="18,28 30,28 28,19 20,19" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.5"/>
+          <rect x="21" y="17" width="6" height="2.5" fill="#cbd5e1"/>
+          <path d="M21.5 17 L22 9 C22 8 26 8 26 9 L26.5 17 Z" fill="#34d399" stroke="#059669" stroke-width="0.5"/>
+          <circle cx="24" cy="7.5" r="1.5" fill="#6ee7b7"/>
+          <path d="M22 6.5 L24 4.5 L26 6.5" stroke="#34d399" stroke-width="0.6"/>
+          <path d="M25.5 10 L28 4" stroke="#34d399" stroke-width="1.2" stroke-linecap="round"/>
+          <circle cx="28.2" cy="3.2" r="1" fill="#f59e0b"/>
+          <circle cx="28.2" cy="2.5" r="0.6" fill="#fef08a"/>
+          <rect x="20.5" y="10" width="1.6" height="2.4" fill="#a7f3d0" stroke="#059669" stroke-width="0.3"/>
+        </svg>`
+      },
+      {
+        id: 'big_ben',
+        name: 'Big Ben & Parliament',
+        city: 'London',
+        country: 'United Kingdom',
+        postcode: 'SW1A 0AA',
+        lat: 51.5007,
+        lon: -0.1246,
+        radiusKm: 25,
+        aliases: ['big ben', 'elizabeth tower', 'houses of parliament', 'palace of westminster', 'westminster clock tower', 'big ben & parliament'],
+        badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="28" width="48" height="8" fill="#0284c7" opacity="0.8"/>
+          <rect x="22" y="16" width="24" height="13" fill="#fde68a" stroke="#d97706" stroke-width="0.6"/>
+          <path d="M22 16 L25 12 L28 16 L31 12 L34 16 L37 12 L40 16 L43 12 L46 16 Z" fill="#64748b"/>
+          <rect x="12" y="9" width="8" height="20" fill="#fef3c7" stroke="#d97706" stroke-width="0.6"/>
+          <circle cx="16" cy="12.5" r="2.6" fill="#ffffff" stroke="#1e293b" stroke-width="0.5"/>
+          <line x1="16" y1="12.5" x2="16" y2="10.8" stroke="#1e293b" stroke-width="0.5"/>
+          <line x1="16" y1="12.5" x2="17.4" y2="12.5" stroke="#1e293b" stroke-width="0.5"/>
+          <polygon points="12,9 16,1.5 20,9" fill="#475569" stroke="#334155" stroke-width="0.5"/>
+          <line x1="16" y1="0.5" x2="16" y2="2" stroke="#eab308" stroke-width="0.8"/>
+        </svg>`
+      },
+      {
+        id: 'colosseum',
+        name: 'The Colosseum',
+        city: 'Rome',
+        country: 'Italy',
+        postcode: '00184',
+        lat: 41.8902,
+        lon: 12.4922,
+        radiusKm: 25,
+        aliases: ['colosseum', 'the colosseum', 'colosseo', 'flavian amphitheatre', 'colosseum rome', 'rome colosseum'],
+        badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="28" width="48" height="8" fill="#ca8a04" opacity="0.5"/>
+          <path d="M8 28 L8 10 L28 10 L30 16 L40 18 L40 28 Z" fill="#fed7aa" stroke="#c2410c" stroke-width="0.6"/>
+          <rect x="10" y="11.5" width="1.6" height="1.8" fill="#1e293b"/>
+          <rect x="13.5" y="11.5" width="1.6" height="1.8" fill="#1e293b"/>
+          <rect x="17" y="11.5" width="1.6" height="1.8" fill="#1e293b"/>
+          <rect x="20.5" y="11.5" width="1.6" height="1.8" fill="#1e293b"/>
+          <rect x="24" y="11.5" width="1.6" height="1.8" fill="#1e293b"/>
+          <path d="M10 18 A1.2 1.2 0 0 1 12.4 18 L12.4 20 L10 20 Z" fill="#1e293b"/>
+          <path d="M14 18 A1.2 1.2 0 0 1 16.4 18 L16.4 20 L14 20 Z" fill="#1e293b"/>
+          <path d="M18 18 A1.2 1.2 0 0 1 20.4 18 L20.4 20 L18 20 Z" fill="#1e293b"/>
+          <path d="M22 18 A1.2 1.2 0 0 1 24.4 18 L24.4 20 L22 20 Z" fill="#1e293b"/>
+          <path d="M26 18 A1.2 1.2 0 0 1 28.4 18 L28.4 20 L26 20 Z" fill="#1e293b"/>
+          <path d="M31 20 A1.2 1.2 0 0 1 33.4 20 L33.4 22 L31 22 Z" fill="#1e293b"/>
+          <path d="M35 20 A1.2 1.2 0 0 1 37.4 20 L37.4 22 L35 22 Z" fill="#1e293b"/>
+          <path d="M10 24 A1.2 1.2 0 0 1 12.4 24 L12.4 28 L10 28 Z" fill="#1e293b"/>
+          <path d="M14 24 A1.2 1.2 0 0 1 16.4 24 L16.4 28 L14 28 Z" fill="#1e293b"/>
+          <path d="M18 24 A1.2 1.2 0 0 1 20.4 24 L20.4 28 L18 28 Z" fill="#1e293b"/>
+          <path d="M22 24 A1.2 1.2 0 0 1 24.4 24 L24.4 28 L22 28 Z" fill="#1e293b"/>
+          <path d="M26 24 A1.2 1.2 0 0 1 28.4 24 L28.4 28 L26 28 Z" fill="#1e293b"/>
+          <path d="M31 24 A1.2 1.2 0 0 1 33.4 24 L33.4 28 L31 28 Z" fill="#1e293b"/>
+          <path d="M35 24 A1.2 1.2 0 0 1 37.4 24 L37.4 28 L35 28 Z" fill="#1e293b"/>
+        </svg>`
+      },
+      {
+        id: 'pyramids_giza',
+        name: 'Pyramids of Giza',
+        city: 'Cairo',
+        country: 'Egypt',
+        postcode: 'Giza',
+        lat: 29.9792,
+        lon: 31.1342,
+        radiusKm: 25,
+        aliases: ['pyramids', 'pyramids of giza', 'giza pyramids', 'great pyramid', 'great pyramid of giza'],
+        badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="25" width="48" height="11" fill="#d97706" opacity="0.6"/>
+          <circle cx="39" cy="8" r="4" fill="#fbbf24"/>
+          <polygon points="12,27 24,10 36,27" fill="#fde68a" stroke="#b45309" stroke-width="0.6"/>
+          <polygon points="24,10 36,27 28,27" fill="#f59e0b" opacity="0.5"/>
+          <polygon points="4,27 15,13 26,27" fill="#fef08a" stroke="#b45309" stroke-width="0.5"/>
+          <polygon points="15,13 26,27 20,27" fill="#f59e0b" opacity="0.4"/>
+          <polygon points="15,13 13.5,16 16.5,16" fill="#ffffff" opacity="0.9"/>
+          <polygon points="32,27 39,18 46,27" fill="#fde68a"/>
+        </svg>`
+      },
+      {
+        id: 'golden_gate',
+        name: 'Golden Gate Bridge',
+        city: 'San Francisco',
+        country: 'United States',
+        postcode: '94129',
+        lat: 37.8199,
+        lon: -122.4783,
+        radiusKm: 25,
+        aliases: ['golden gate', 'golden gate bridge', 'the golden gate bridge', 'san francisco golden gate'],
+        badgeStyle: 'bg-red-500/15 border-red-400/40 shadow-[0_0_10px_rgba(239,68,68,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="24" width="48" height="12" fill="#0284c7" opacity="0.85"/>
+          <path d="M0 27 C12 26 24 28 48 27" stroke="#38bdf8" stroke-width="0.7"/>
+          <path d="M0 24 Q10 18 20 22 Q34 16 48 21 L48 25 L0 25 Z" fill="#15803d" opacity="0.45"/>
+          <rect x="0" y="21" width="48" height="2" fill="#ef4444"/>
+          <rect x="14" y="6" width="3.5" height="20" fill="#dc2626"/>
+          <polygon points="14,6 15.7,3 17.5,6" fill="#b91c1c"/>
+          <rect x="32" y="6" width="3.5" height="20" fill="#dc2626"/>
+          <polygon points="32,6 33.7,3 35.5,6" fill="#b91c1c"/>
+          <path d="M0 13 Q8 21 15 7 Q24 21 33 7 Q40 21 48 13" stroke="#fca5a5" stroke-width="1.2" fill="none"/>
+        </svg>`
+      },
+      {
+        id: 'christ_redeemer',
+        name: 'Christ the Redeemer',
+        city: 'Rio de Janeiro',
+        country: 'Brazil',
+        postcode: '22241-125',
+        lat: -22.9519,
+        lon: -43.2105,
+        radiusKm: 25,
+        aliases: ['christ the redeemer', 'corcovado', 'cristo redentor', 'rio christ the redeemer'],
+        badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="28" width="48" height="8" fill="#0284c7" opacity="0.7"/>
+          <path d="M10 36 L24 20 L38 36 Z" fill="#15803d"/>
+          <rect x="22" y="17" width="4" height="4" fill="#64748b"/>
+          <rect x="22.8" y="7" width="2.4" height="11" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.4"/>
+          <path d="M12 9.5 L36 9.5" stroke="#f8fafc" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="24" cy="5.5" r="1.5" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.3"/>
+        </svg>`
+      },
+      {
+        id: 'stonehenge',
+        name: 'Stonehenge',
+        city: 'Wiltshire',
+        country: 'United Kingdom',
+        postcode: 'SP4 7DE',
+        lat: 51.1789,
+        lon: -1.8262,
+        radiusKm: 25,
+        aliases: ['stonehenge', 'the stonehenge', 'salisbury plain stonehenge'],
+        badgeStyle: 'bg-slate-500/15 border-slate-400/40 shadow-[0_0_10px_rgba(148,163,184,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="26" width="48" height="10" fill="#15803d" opacity="0.6"/>
+          <path d="M0 24 C16 22 32 25 48 24 L48 36 L0 36 Z" fill="#166534" opacity="0.4"/>
+          <rect x="8" y="16" width="3" height="12" fill="#64748b" stroke="#334155" stroke-width="0.4"/>
+          <rect x="13" y="16" width="3" height="12" fill="#64748b" stroke="#334155" stroke-width="0.4"/>
+          <rect x="7" y="13" width="10" height="3.2" rx="0.5" fill="#94a3b8" stroke="#334155" stroke-width="0.4"/>
+          <rect x="19" y="12" width="3.5" height="16" fill="#475569" stroke="#1e293b" stroke-width="0.5"/>
+          <rect x="25.5" y="12" width="3.5" height="16" fill="#475569" stroke="#1e293b" stroke-width="0.5"/>
+          <rect x="18" y="8.5" width="12" height="3.5" rx="0.5" fill="#cbd5e1" stroke="#334155" stroke-width="0.5"/>
+          <rect x="32" y="16" width="3" height="12" fill="#64748b" stroke="#334155" stroke-width="0.4"/>
+          <rect x="37" y="16" width="3" height="12" fill="#64748b" stroke="#334155" stroke-width="0.4"/>
+          <rect x="31" y="13" width="10" height="3.2" rx="0.5" fill="#94a3b8" stroke="#334155" stroke-width="0.4"/>
+        </svg>`
+      },
+      {
+        id: 'mount_fuji',
+        name: 'Mount Fuji',
+        city: 'Honshu',
+        country: 'Japan',
+        postcode: '418-0112',
+        lat: 35.3606,
+        lon: 138.7274,
+        radiusKm: 40,
+        aliases: ['mount fuji', 'fuji', 'mt fuji', 'fujisan', 'fuji-san'],
+        badgeStyle: 'bg-rose-500/15 border-rose-400/40 shadow-[0_0_10px_rgba(244,63,94,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="14" r="7" fill="#ef4444" opacity="0.85"/>
+          <polygon points="6,32 42,32 29,10 19,10" fill="#1e3a8a"/>
+          <polygon points="19,10 29,10 32,16 29,14 26,17 24,14 22,17 19,14 16,16" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.4"/>
+          <rect x="0" y="30" width="48" height="6" fill="#0284c7" opacity="0.8"/>
+        </svg>`
+      },
+      {
+        id: 'burj_khalifa',
+        name: 'Burj Khalifa',
+        city: 'Dubai',
+        country: 'United Arab Emirates',
+        postcode: 'Dubai',
+        lat: 25.1972,
+        lon: 55.2744,
+        radiusKm: 25,
+        aliases: ['burj khalifa', 'the burj khalifa', 'burj dubai', 'burj khalifa dubai'],
+        badgeStyle: 'bg-cyan-500/15 border-cyan-400/40 shadow-[0_0_10px_rgba(6,182,212,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="29" width="48" height="7" fill="#0284c7" opacity="0.75"/>
+          <rect x="18" y="24" width="12" height="6" fill="#94a3b8"/>
+          <rect x="19.5" y="19" width="9" height="5" fill="#cbd5e1"/>
+          <rect x="21" y="14" width="6" height="5" fill="#e2e8f0"/>
+          <rect x="22" y="9" width="4" height="5" fill="#f1f5f9"/>
+          <rect x="23" y="4" width="2" height="5" fill="#ffffff"/>
+          <line x1="24" y1="0.5" x2="24" y2="4" stroke="#ffffff" stroke-width="0.8"/>
+          <circle cx="24" cy="0.5" r="0.6" fill="#38bdf8"/>
+        </svg>`
+      },
+      {
+        id: 'tower_bridge',
+        name: 'Tower Bridge',
+        city: 'London',
+        country: 'United Kingdom',
+        postcode: 'SE1 2UP',
+        lat: 51.5055,
+        lon: -0.0754,
+        radiusKm: 25,
+        aliases: ['tower bridge', 'london tower bridge', 'tower bridge london'],
+        badgeStyle: 'bg-sky-500/15 border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="24" width="48" height="12" fill="#0284c7" opacity="0.85"/>
+          <rect x="12" y="10" width="7" height="16" fill="#e2e8f0" stroke="#475569" stroke-width="0.5"/>
+          <polygon points="12,10 15.5,5 19,10" fill="#3b82f6"/>
+          <rect x="29" y="10" width="7" height="16" fill="#e2e8f0" stroke="#475569" stroke-width="0.5"/>
+          <polygon points="29,10 32.5,5 36,10" fill="#3b82f6"/>
+          <rect x="19" y="11" width="10" height="1.8" fill="#38bdf8"/>
+          <rect x="19" y="14" width="10" height="1.4" fill="#38bdf8"/>
+          <rect x="0" y="21" width="48" height="2" fill="#0284c7"/>
+          <path d="M0 13 Q6 21 12 18" stroke="#3b82f6" stroke-width="1" fill="none"/>
+          <path d="M36 18 Q42 21 48 13" stroke="#3b82f6" stroke-width="1" fill="none"/>
+        </svg>`
+      },
+      {
+        id: 'amberley_church',
+        name: 'Amberley Church',
+        city: 'Amberley, Stroud',
+        country: 'United Kingdom',
+        postcodes: ['GL5 5QG', 'GL5 5JG', 'GL5 5AZ', 'GL5 5BA', 'GL5'],
+        lat: 51.7093,
+        lon: -2.2241,
+        radiusKm: 8,
+        aliases: ['amberley church', 'amberley', 'amberley shop and cafe', 'amberley shop & cafe', 'ambleside', 'holy trinity church amberley', 'holy trinity amberley', 'holy trinity church'],
+        badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 24 C10 20, 22 22, 34 20 C40 21, 44 23, 48 24 L48 36 L0 36 Z" fill="#15803d" opacity="0.6"/>
+          <circle cx="6" cy="18" r="6" fill="#166534" opacity="0.75"/>
+          <circle cx="3" cy="22" r="5" fill="#14532d" opacity="0.7"/>
+          <path d="M7 29 L7 19 L13 15.5 L13 29 Z" fill="#e2d4be" stroke="#bfa068" stroke-width="0.6"/>
+          <path d="M29 29 L29 15.5 L35 19 L35 29 Z" fill="#e2d4be" stroke="#bfa068" stroke-width="0.6"/>
+          <path d="M13 29 L13 15 L21 6.5 L29 15 L29 29 Z" fill="#fdf6ec" stroke="#bfa068" stroke-width="0.75"/>
+          <path d="M12.2 15.6 L21 6.2 L29.8 15.6" stroke="#8c6d37" stroke-width="0.8" fill="none"/>
+          <rect x="20.4" y="2.2" width="1.2" height="4.5" rx="0.3" fill="#f8fafc" stroke="#8c6d37" stroke-width="0.35"/>
+          <rect x="19.2" y="3.4" width="3.6" height="1" rx="0.3" fill="#f8fafc" stroke="#8c6d37" stroke-width="0.35"/>
+          <path d="M20 17 L20 11.8 C20 10.3, 22 10.3, 22 11.8 L22 17 Z" fill="#0284c7" stroke="#1e293b" stroke-width="0.35"/>
+          <path d="M17.2 17 L17.2 12.8 C17.2 11.7, 19 11.7, 19 12.8 L19 17 Z" fill="#0369a1" stroke="#1e293b" stroke-width="0.35"/>
+          <path d="M23 17 L23 12.8 C23 11.7, 24.8 11.7, 24.8 12.8 L24.8 17 Z" fill="#0369a1" stroke="#1e293b" stroke-width="0.35"/>
+          <path d="M9 25 L9 20 C9 18.8, 11 18.8, 11 20 L11 25 Z" fill="#0284c7" stroke="#1e293b" stroke-width="0.35"/>
+          <path d="M18.2 29 L18.2 21 C18.2 18.8, 23.8 18.8, 23.8 21 L23.8 29 Z" fill="#cbb287"/>
+          <path d="M19 29 L19 22 C19 20.2, 23 20.2, 23 22 L23 29 Z" fill="#0f172a"/>
+          <rect x="18" y="27" width="6" height="0.8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.25"/>
+          <rect x="17.2" y="27.8" width="7.6" height="0.8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="0.25"/>
+          <rect x="16.5" y="28.6" width="9" height="0.9" fill="#cbd5e1" stroke="#94a3b8" stroke-width="0.25"/>
+          <rect x="0" y="29.5" width="48" height="6.5" fill="#d1c7b7"/>
+          <path d="M0 29.5 L48 29.5" stroke="#a89f91" stroke-width="0.5"/>
+          <rect x="31" y="9.5" width="1.6" height="21" rx="0.3" fill="#5c3826" stroke="#3e2723" stroke-width="0.3"/>
+          <rect x="23.8" y="10.5" width="8.8" height="1.3" rx="0.3" fill="#5c3826"/>
+          <line x1="31" y1="14.5" x2="27.5" y2="11.8" stroke="#3e2723" stroke-width="1.1" stroke-linecap="round"/>
+          <rect x="24.2" y="12.5" width="6.6" height="5.8" rx="0.5" fill="#fef9c3" stroke="#78350f" stroke-width="0.5"/>
+          <circle cx="27.5" cy="15" r="1" fill="#854d0e"/>
+          <path d="M26.4 14.3 Q27.5 13.8 28.6 14.3" stroke="#854d0e" stroke-width="0.4" fill="none"/>
+          <rect x="25" y="16.6" width="5" height="0.7" rx="0.2" fill="#15803d"/>
+          <line x1="42.5" y1="23" x2="42.5" y2="31" stroke="#475569" stroke-width="0.8"/>
+          <path d="M38 24.5 Q42.5 20.5 47 24.5 Z" fill="#16a34a" stroke="#14532d" stroke-width="0.4"/>
+          <rect x="39.5" y="27.8" width="6" height="1.1" rx="0.3" fill="#78350f"/>
+          <rect x="40.5" y="28.9" width="4" height="2.2" fill="#451a03"/>
+        </svg>`
+      },
+      {
+        id: 'dunkirk_mills',
+        name: 'Dunkirk Mills',
+        city: 'Nailsworth, Stroud',
+        country: 'United Kingdom',
+        postcodes: ['GL5 5HH', 'GL5 5HR', 'GL5'],
+        lat: 51.7032,
+        lon: -2.2266,
+        radiusKm: 5,
+        aliases: ['dunkirk mills', 'dunkirk mill', 'dunkirk', 'gl55hh', 'gl5 5hh'],
+        badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 26 C8 21, 16 22, 24 24 C32 21, 40 22, 48 25 L48 36 L0 36 Z" fill="#14532d" opacity="0.6"/>
+          <rect x="22" y="3" width="3.2" height="21" rx="0.8" fill="#d97706"/>
+          <path d="M21.2 3 L26 3 L25.2 4.5 L22 4.5 Z" fill="#fef08a"/>
+          <rect x="23" y="5" width="1.2" height="17" fill="#b45309" opacity="0.45"/>
+          <circle cx="23.6" cy="1.6" r="1.1" fill="#f8fafc" opacity="0.65"/>
+          <rect x="5" y="14" width="38" height="15" rx="1" fill="#fde68a" stroke="#d97706" stroke-width="0.75"/>
+          <path d="M4 14 L10 9 L16 14 L22 9 L28 14 L34 9 L40 14 L44 14 L44 15 L4 15 Z" fill="#475569" stroke="#334155" stroke-width="0.5"/>
+          <polygon points="10,9.5 8.5,12 11.5,12" fill="#e2e8f0"/>
+          <polygon points="22,9.5 20.5,12 23.5,12" fill="#e2e8f0"/>
+          <polygon points="34,9.5 32.5,12 35.5,12" fill="#e2e8f0"/>
+          <rect x="7" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="11.5" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="16" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="28" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="32.5" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="37" y="16.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="7" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="11.5" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="16" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="28" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="32.5" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="37" y="21" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="7" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="11.5" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="16" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="28" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="32.5" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <rect x="37" y="25.5" width="2" height="2.5" rx="0.3" fill="#0284c7"/>
+          <path d="M20.5 29 A3 3 0 0 1 26.5 29 Z" fill="#0f172a"/>
+          <rect x="0" y="29.5" width="48" height="6.5" fill="#0284c7" opacity="0.85"/>
+          <path d="M0 31.5 C12 30.5, 24 32.5, 48 31.5" stroke="#38bdf8" stroke-width="0.8" opacity="0.9"/>
+          <path d="M2 34 C16 33, 30 35, 46 34" stroke="#e0f2fe" stroke-width="0.6" opacity="0.75"/>
+        </svg>`
+      }
+    ];
+
+    function matchActiveLandmark(loc) {
+      if (!loc) return null;
+      const rawName = String(loc.name || '').trim().toLowerCase();
+      const cleanName = rawName.replace(/[\s,.-]+/g, ' ').trim();
+      const rawPc = String(loc.postcode || '').trim().toUpperCase().replace(/\s+/g, '');
+      const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
+      const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
+      const hasCoords = !isNaN(lat) && !isNaN(lon);
+
+      // Pass 1: Name / Alias Match (+ geo-validation / postcode validation)
+      for (const lm of POPULAR_LANDMARKS_DATABASE) {
+        const isAliasMatch = lm.aliases.some(alias => {
+          const aClean = alias.replace(/[\s,.-]+/g, ' ').trim().toLowerCase();
+          return cleanName === aClean || cleanName.includes(aClean) || (aClean.length >= 5 && aClean.includes(cleanName));
+        });
+
+        if (isAliasMatch) {
+          // Check postcode if present
+          if (rawPc && Array.isArray(lm.postcodes) && lm.postcodes.length > 0) {
+            const pcMatch = lm.postcodes.some(p => {
+              const pNorm = p.toUpperCase().replace(/\s+/g, '');
+              return rawPc === pNorm || rawPc.startsWith(pNorm) || pNorm.startsWith(rawPc);
+            });
+            if (pcMatch) return lm;
+          }
+
+          // Geo-validation if coordinates are available
+          if (hasCoords) {
+            const distKm = (typeof calculateHaversineKm === 'function')
+              ? calculateHaversineKm(lat, lon, lm.lat, lm.lon)
+              : Math.hypot(lat - lm.lat, lon - lm.lon) * 111;
+            if (distKm <= (lm.radiusKm || 30)) {
+              return lm;
+            }
+          } else {
+            return lm;
+          }
+        }
+      }
+
+      // Pass 2: Postcode-specific match for custom sites (e.g. Amberley Church GL5 5QG)
+      if (rawPc) {
+        for (const lm of POPULAR_LANDMARKS_DATABASE) {
+          if (Array.isArray(lm.postcodes) && lm.postcodes.length > 0) {
+            const exactPcMatch = lm.postcodes.some(p => {
+              const pNorm = p.toUpperCase().replace(/\s+/g, '');
+              return rawPc === pNorm;
+            });
+            if (exactPcMatch) {
+              if (!hasCoords) return lm;
+              const distKm = (typeof calculateHaversineKm === 'function')
+                ? calculateHaversineKm(lat, lon, lm.lat, lm.lon)
+                : Math.hypot(lat - lm.lat, lon - lm.lon) * 111;
+              if (distKm <= (lm.radiusKm || 10)) return lm;
+            }
+          }
+        }
+      }
+
+      // Pass 3: Immediate high-accuracy GPS proximity (< 350m)
+      if (hasCoords) {
+        for (const lm of POPULAR_LANDMARKS_DATABASE) {
+          const distKm = (typeof calculateHaversineKm === 'function')
+            ? calculateHaversineKm(lat, lon, lm.lat, lm.lon)
+            : Math.hypot(lat - lm.lat, lon - lm.lon) * 111;
+          if (distKm <= 0.35) {
+            return lm;
+          }
+        }
+      }
+
+      return null;
+    }
+
+    // =========================================================================
     // LOCATION PREFERENCES LIST (Silent search mappings & disambiguation)
     // Checked automatically whenever loading or searching for a location.
     // =========================================================================
@@ -5715,14 +6264,36 @@
       const qCompact = compactPreferenceKey(query);
       if (!qNorm) return null;
 
-      return LOCATION_PREFERENCES.find(pref => {
+      const hardcoded = LOCATION_PREFERENCES.find(pref => {
         const aliases = Array.isArray(pref.aliases) ? pref.aliases : [];
         return aliases.some(alias => {
           const aNorm = normalizePreferenceKey(alias);
           const aCompact = compactPreferenceKey(alias);
           return (aNorm && aNorm === qNorm) || (aCompact && aCompact === qCompact);
         });
-      }) || null;
+      });
+      if (hardcoded) return hardcoded;
+
+      if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
+        const matchedLm = POPULAR_LANDMARKS_DATABASE.find(lm => {
+          const aliases = Array.isArray(lm.aliases) ? lm.aliases : [];
+          return aliases.some(alias => {
+            const aNorm = normalizePreferenceKey(alias);
+            const aCompact = compactPreferenceKey(alias);
+            return (aNorm && (aNorm === qNorm || qNorm.includes(aNorm))) || (aCompact && (aCompact === qCompact || qCompact.includes(aCompact)));
+          });
+        });
+        if (matchedLm) {
+          return {
+            name: matchedLm.name,
+            postcode: matchedLm.postcode || (Array.isArray(matchedLm.postcodes) ? matchedLm.postcodes[0] : ''),
+            lat: matchedLm.lat,
+            lon: matchedLm.lon
+          };
+        }
+      }
+
+      return null;
     }
 
     function applyLocationPreference(pref) {
@@ -6974,6 +7545,15 @@ function joinSpacedLetters(text) {
       CURRENT_LOCATION.name = cleanNewName;
       if (!CURRENT_LOCATION.geoName) {
         CURRENT_LOCATION.geoName = cleanNewName;
+      }
+      // If renamed to a known landmark/custom site that has a definitive postcode, pair it if generic
+      if (typeof matchActiveLandmark === 'function') {
+        const lm = matchActiveLandmark(CURRENT_LOCATION);
+        if (lm && Array.isArray(lm.postcodes) && lm.postcodes.length > 0) {
+          if (!CURRENT_LOCATION.postcode || CURRENT_LOCATION.postcode === 'GPS' || CURRENT_LOCATION.postcode === 'GEO') {
+            CURRENT_LOCATION.postcode = lm.postcodes[0];
+          }
+        }
       }
       saveSavedLocation();
       recordLocationQuery(CURRENT_LOCATION);
@@ -9244,11 +9824,17 @@ function joinSpacedLetters(text) {
         }
       }
 
-      // Show distinctive Dunkirk Mills icon ONLY when title is exactly "Dunkirk Mills"
+      // Dynamic Landmark & Custom Place Recognition
       const dunkirkIcon = document.getElementById('dunkirkMillIcon');
+      const amberleyIcon = document.getElementById('amberleyChurchIcon');
+      const landmarkIconCont = document.getElementById('headerLandmarkIcon');
+      const landmarkBadge = document.getElementById('headerLandmarkBadge');
+
+      const activeLandmark = (typeof matchActiveLandmark === 'function') ? matchActiveLandmark(CURRENT_LOCATION) : null;
+
+      // Handle Dunkirk Mills
       if (dunkirkIcon) {
-        const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
-        const isDunkirk = (locName === 'dunkirk mills');
+        const isDunkirk = (activeLandmark && activeLandmark.id === 'dunkirk_mills') || (String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase() === 'dunkirk mills');
         if (isDunkirk) {
           dunkirkIcon.classList.remove('hidden');
           dunkirkIcon.classList.add('inline-flex');
@@ -9258,12 +9844,11 @@ function joinSpacedLetters(text) {
         }
       }
 
-      // Show distinctive Amberley Church icon when location is Amberley Church
-      const amberleyIcon = document.getElementById('amberleyChurchIcon');
+      // Handle Amberley Church
       if (amberleyIcon) {
         const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
         const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').trim().toUpperCase().replace(/\s+/g, '');
-        const isAmberley = (
+        const isAmberley = (activeLandmark && activeLandmark.id === 'amberley_church') || (
           locName.includes('amberley') ||
           (locName.includes('ambleside') && (locPc.startsWith('GL5') || !locPc)) ||
           locName === 'holy trinity church' ||
@@ -9278,6 +9863,21 @@ function joinSpacedLetters(text) {
         } else {
           amberleyIcon.classList.add('hidden');
           amberleyIcon.classList.remove('inline-flex');
+        }
+      }
+
+      // Handle Global Landmarks in dynamic badge container
+      if (landmarkIconCont && landmarkBadge) {
+        if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church') {
+          landmarkBadge.className = `inline-flex items-center justify-center w-7 h-7 rounded-lg ${activeLandmark.badgeStyle || 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]'} p-0.5 transform hover:scale-110 transition cursor-pointer`;
+          landmarkBadge.innerHTML = activeLandmark.svg;
+          landmarkIconCont.title = `${activeLandmark.name} • ${activeLandmark.city ? activeLandmark.city + ', ' : ''}${activeLandmark.country}`;
+          landmarkIconCont.classList.remove('hidden');
+          landmarkIconCont.classList.add('inline-flex');
+        } else {
+          landmarkIconCont.classList.add('hidden');
+          landmarkIconCont.classList.remove('inline-flex');
+          landmarkBadge.innerHTML = '';
         }
       }
 
