@@ -230,8 +230,8 @@ async function fetchFloodData() {
     window.CACHED_FLOOD_DATA = {
       timestamp: Date.now(),
       statusLabel: alerts.length > 0 ? (isSevere ? 'Severe Flood Warning' : 'Flood Alert Active') : 'Normal River Levels',
-      statusIcon: alerts.length > 0 ? (isSevere ? '🚨' : '🟡') : '🟢',
-      statusColor: alerts.length > 0 ? (isSevere ? 'text-rose-400' : 'text-amber-300') : 'text-emerald-400',
+      statusIcon: alerts.length > 0 ? (isSevere ? '🚨' : '⚠️') : '🟢',
+      statusColor: alerts.length > 0 ? (isSevere ? 'text-rose-400' : 'text-rose-300') : 'text-emerald-400',
       statusDesc: alerts.length > 0 
         ? `${alerts.length} active flood alert${alerts.length > 1 ? 's' : ''} reported within 10 km. Low-lying land, fields, or footpaths may be affected.`
         : 'All monitored waterways within 8 km are flowing within typical seasonal bounds. No flood alerts reported by the Environment Agency.',
@@ -253,8 +253,8 @@ async function fetchFloodData() {
     };
 
     if (alerts.length > 0) {
-      card.innerHTML = `<span class="${isSevere ? 'text-rose-300' : 'text-amber-300'} font-bold flex items-center gap-1"><span>⚠️</span> ${alerts.length} Alert${alerts.length > 1 ? 's' : ''}</span>`;
-      card.className = `text-xs font-bold ${isSevere ? 'text-rose-300' : 'text-amber-300'}`;
+      card.innerHTML = `<span class="text-rose-300 font-bold flex items-center gap-1"><span>⚠️</span> ${alerts.length} Alert${alerts.length > 1 ? 's' : ''}</span>`;
+      card.className = `text-xs font-bold text-rose-300`;
       if (riverPill) {
         riverPill.classList.add(isSevere ? 'river-alert-red-pulse' : 'river-alert-amber-pulse');
       }

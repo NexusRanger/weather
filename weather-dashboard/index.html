@@ -509,26 +509,26 @@
         box-shadow: 0 0 14px rgba(249, 115, 22, 0.52);
       }
     }
-    .traffic-alert-amber-pulse {
+    .traffic-alert-amber-pulse:not(:focus):not(:focus-visible) {
       animation: orangeTrafficPulse 2.2s ease-in-out infinite;
       border: 1.5px solid #f97316 !important;
       background: rgba(234, 88, 12, 0.2) !important;
     }
 
-    @keyframes amberAlertPulse {
+    @keyframes riverAlertPulse {
       0%, 100% {
-        border-color: rgba(245, 158, 11, 0.45);
-        box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
+        border-color: rgba(244, 63, 94, 0.5);
+        box-shadow: 0 0 8px rgba(244, 63, 94, 0.25);
       }
       50% {
-        border-color: rgba(251, 191, 36, 0.95);
-        box-shadow: 0 0 16px rgba(251, 191, 36, 0.5);
+        border-color: rgba(251, 113, 133, 0.95);
+        box-shadow: 0 0 15px rgba(244, 63, 94, 0.5);
       }
     }
-    .river-alert-amber-pulse {
-      animation: amberAlertPulse 2.2s ease-in-out infinite;
-      border: 1.5px solid #f59e0b !important;
-      background: rgba(245, 158, 11, 0.16) !important;
+    .river-alert-amber-pulse:not(:focus):not(:focus-visible) {
+      animation: riverAlertPulse 2.2s ease-in-out infinite;
+      border: 1.5px solid #f43f5e !important;
+      background: rgba(244, 63, 94, 0.18) !important;
     }
 
     @keyframes redAlertPulse {
@@ -541,8 +541,8 @@
         box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
       }
     }
-    .traffic-alert-red-pulse,
-    .river-alert-red-pulse {
+    .traffic-alert-red-pulse:not(:focus):not(:focus-visible),
+    .river-alert-red-pulse:not(:focus):not(:focus-visible) {
       animation: redAlertPulse 2.0s ease-in-out infinite;
       border: 1.5px solid #f43f5e !important;
       background: rgba(244, 63, 94, 0.18) !important;
@@ -2077,16 +2077,12 @@
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const r=document.getElementById('mapRadarBtn');if(r)r.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-[26px] px-2.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center justify-center gap-1 cursor-pointer shadow-sm box-border whitespace-nowrap leading-none" tabindex="0" title="Return to Current Location (first item on list)">
+            <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-[26px] px-2.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center justify-center gap-1 cursor-pointer shadow-sm box-border whitespace-nowrap leading-none" tabindex="0" title="Return to Current Location (first item on list)">
               <span>📍 Current</span>
             </button>
 
-            <button id="mapRadarBtn" type="button" onclick="openRadarFromMap()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const cur=document.getElementById('mapReturnCurrentBtn');if(cur)cur.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-[26px] px-2.5 rounded-md bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center justify-center gap-1 cursor-pointer shadow-sm box-border whitespace-nowrap leading-none" tabindex="0" title="Open Weather Radar & Wind Streamlines">
-              <span>🌧️ Radar</span>
-            </button>
-
             <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5 h-[26px] box-border" role="group" aria-label="Distance units">
-              <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const rad=document.getElementById('mapRadarBtn');if(rad)rad.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Display distances in Kilometres">
+              <button id="mapUnitKmBtn" type="button" onclick="updateMapDistances('km')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const cur=document.getElementById('mapReturnCurrentBtn');if(cur)cur.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Display distances in Kilometres">
                 km
               </button>
               <button id="mapUnitMiBtn" type="button" onclick="updateMapDistances('mi')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const pb=document.getElementById('mapStylePhysicalBtn');if(pb)pb.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Display distances in Miles">
@@ -2436,14 +2432,10 @@
         </div>
 
         <div class="flex flex-col items-center gap-2.5 pt-1">
-          <!-- Top Option: Green Stay Here button (default focus on open, press Up to reach) -->
+          <!-- Stay Here button (default focus on open) -->
           <button id="tvCancelExitBtn" tabindex="1" onclick="closeTvExitCastModal(true)" onkeydown="handleTvExitCancelKeydown(event)" class="tv-focus-amber w-[70%] px-4 py-2.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500/90 border border-emerald-400/50 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
             <span>✓ Stay Here (Keep Watching)</span>
             <span id="tvExitCountdown" class="text-emerald-200 font-mono text-[10px] ml-1">(20s)</span>
-          </button>
-          <!-- Bottom Option: Close Window to return to base screen (press Down to reach) -->
-          <button id="tvConfirmExitBtn" tabindex="2" onclick="executeTvExitCast()" onkeydown="handleTvExitConfirmKeydown(event)" class="tv-focus-amber w-[70%] px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/90 text-slate-200 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-md focus:outline-none cursor-pointer">
-            <span>🏠 Close Window (Return to TV Home)</span>
           </button>
         </div>
       </div>
@@ -2840,10 +2832,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=292"></script>
+  <script src="traffic-flood.js?v=293"></script>
     <script>
-    const APP_BUILD = 292;
-    const APP_VERSION = '1.10.128';
+    const APP_BUILD = 293;
+    const APP_VERSION = '1.10.129';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -11052,70 +11044,41 @@ function joinSpacedLetters(text) {
 
       const baseClass = 'flex items-center gap-1.5 p-1 glass-tile rounded-lg transition-all duration-700';
 
-      // STRICTLY ONE BOX HIGHLIGHTED AT A TIME:
-      // 1. Light At: active from dawn UNTIL sunrise arrives (superseded immediately by Sunrise)
-      const isLightActive = (nowMs >= lightMs && nowMs < sunMs);
-      
-      // 2. Sunrise: active from sunrise for 45 minutes
-      const isSunActive = (nowMs >= sunMs && nowMs < (sunMs + 45 * 60000));
+      // Reset all 4 tiles to unshaded base state first so strictly only ONE box is ever shaded at a time
+      if (tileLight) tileLight.className = baseClass;
+      if (tileSun) tileSun.className = baseClass;
+      if (tileSunset) tileSunset.className = baseClass;
+      if (tileDark) tileDark.className = baseClass;
+      if (lightBadge) lightBadge.classList.add('hidden');
+      if (sunBadge) sunBadge.classList.add('hidden');
+      if (sunsetBadge) sunsetBadge.classList.add('hidden');
+      if (darkBadge) darkBadge.classList.add('hidden');
 
-      // 3. Sunset: active from sunset UNTIL dark arrives (superseded immediately by Dark By)
-      const isSunsetActive = (nowMs >= sunsetMs && nowMs < darkMs);
+      const sunEndMs = Math.min(sunsetMs, sunMs + 45 * 60000);
 
-      // 4. Dark By: active from dark arrival for 45 minutes
-      const isDarkActive = (nowMs >= darkMs && nowMs < (darkMs + 45 * 60000));
-
-      // Overall location diurnal state:
-      // Daytime: from First Light (dawn) until Dark By (actual dark arrival)
-      // Nighttime: from Dark By until First Light
-      const isDaytime = (nowMs >= lightMs && nowMs < darkMs);
-
-      if (tileLight) {
-        if (isLightActive) {
-          tileLight.className = baseClass + ' milestone-active-light';
-          if (lightBadge) { lightBadge.textContent = 'LIGHT NOW'; lightBadge.classList.remove('hidden'); }
-        } else if (isDaytime) {
-          // Subtle resting amber shading on First Light to indicate it is currently daytime at this location
-          tileLight.className = baseClass + ' milestone-resting-light';
-          if (lightBadge) lightBadge.classList.add('hidden');
-        } else {
-          tileLight.className = baseClass;
-          if (lightBadge) lightBadge.classList.add('hidden');
-        }
-      }
-
-      if (tileSun) {
-        if (isSunActive) {
-          tileSun.className = baseClass + ' milestone-active-sun';
-          if (sunBadge) { sunBadge.textContent = 'SUN UP'; sunBadge.classList.remove('hidden'); }
-        } else {
-          tileSun.className = baseClass;
-          if (sunBadge) sunBadge.classList.add('hidden');
-        }
-      }
-
-      if (tileSunset) {
-        if (isSunsetActive) {
-          tileSunset.className = baseClass + ' milestone-active-sunset';
-          if (sunsetBadge) { sunsetBadge.textContent = 'SUNSET'; sunsetBadge.classList.remove('hidden'); }
-        } else {
-          tileSunset.className = baseClass;
-          if (sunsetBadge) sunsetBadge.classList.add('hidden');
-        }
-      }
-
-      if (tileDark) {
-        if (isDarkActive) {
-          tileDark.className = baseClass + ' milestone-active-dark';
-          if (darkBadge) { darkBadge.textContent = 'DARK NOW'; darkBadge.classList.remove('hidden'); }
-        } else if (!isDaytime) {
-          // Subtle resting indigo shading on Dark By to indicate it is currently nighttime at this location
-          tileDark.className = baseClass + ' milestone-resting-dark';
-          if (darkBadge) darkBadge.classList.add('hidden');
-        } else {
-          tileDark.className = baseClass;
-          if (darkBadge) darkBadge.classList.add('hidden');
-        }
+      // STRICTLY ONE BOX SHADED AT A TIME ACROSS THE ENTIRE 24-HOUR CYCLE:
+      if (nowMs >= lightMs && nowMs < sunMs) {
+        // 1. Dawn: First Light active until Sunrise arrives
+        if (tileLight) tileLight.className = baseClass + ' milestone-active-light';
+        if (lightBadge) { lightBadge.textContent = 'LIGHT NOW'; lightBadge.classList.remove('hidden'); }
+      } else if (nowMs >= sunMs && nowMs < sunEndMs) {
+        // 2. Sunrise: Sunrise active for 45 minutes (First Light unshaded)
+        if (tileSun) tileSun.className = baseClass + ' milestone-active-sun';
+        if (sunBadge) { sunBadge.textContent = 'SUN UP'; sunBadge.classList.remove('hidden'); }
+      } else if (nowMs >= sunEndMs && nowMs < sunsetMs) {
+        // 3. Daytime: Subtle resting amber shading on First Light until Sunset begins
+        if (tileLight) tileLight.className = baseClass + ' milestone-resting-light';
+      } else if (nowMs >= sunsetMs && nowMs < darkMs) {
+        // 4. Dusk: Sunset active from Sunset until Dark By arrives (First Light unshaded)
+        if (tileSunset) tileSunset.className = baseClass + ' milestone-active-sunset';
+        if (sunsetBadge) { sunsetBadge.textContent = 'SUNSET'; sunsetBadge.classList.remove('hidden'); }
+      } else if (nowMs >= darkMs && nowMs < (darkMs + 45 * 60000)) {
+        // 5. Nightfall: Dark By active for 45 minutes (Sunset unshaded)
+        if (tileDark) tileDark.className = baseClass + ' milestone-active-dark';
+        if (darkBadge) { darkBadge.textContent = 'DARK NOW'; darkBadge.classList.remove('hidden'); }
+      } else {
+        // 6. Nighttime: Subtle resting indigo shading on Dark By until First Light
+        if (tileDark) tileDark.className = baseClass + ' milestone-resting-dark';
       }
 
       // Update Dark By countdown in brackets: e.g. "(in 45m)" or "(in 12m)"
@@ -13341,28 +13304,14 @@ function joinSpacedLetters(text) {
       if (solidDot) solidDot.classList.add('hidden');
 
       if (castBtn) {
-        castBtn.className = 'tv-focus-amber relative p-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/40 text-rose-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm';
-        castBtn.title = 'Close Dashboard (Exit Screen)';
-        castBtn.tabIndex = 0;
-        castBtn.onclick = (e) => {
-          if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-          openTvExitCastModal();
-        };
+        castBtn.classList.add('hidden');
+        castBtn.tabIndex = -1;
+        if (castBtn.parentElement) {
+          castBtn.parentElement.classList.add('hidden');
+        }
       }
-
-      const castIconEl = document.getElementById('castIcon');
-      if (castIconEl) {
-        castIconEl.setAttribute('viewBox', '0 0 24 24');
-        castIconEl.setAttribute('fill', 'none');
-        castIconEl.innerHTML = `<line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>`;
-      }
-
       if (castBadge) {
-        castBadge.innerHTML = '<span>✕ Close Screen &bull; Press OK to exit</span>';
-        castBadge.className = 'hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-rose-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-rose-300 backdrop-blur-md';
+        castBadge.classList.add('hidden');
       }
 
       if (modalCastBtn) {
