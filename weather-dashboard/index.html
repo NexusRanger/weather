@@ -1124,7 +1124,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.108) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.109) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1917,7 +1917,7 @@
         </div>
         <div class="flex items-center gap-2">
           <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
-          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const all=document.querySelectorAll('#mapRecentChips button');const c=all[0];if(c){try{c.focus({preventScroll:true});}catch(_){c.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
+          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const target=typeof getActiveOrLastFocusedChip==='function'?getActiveOrLastFocusedChip():document.querySelector('#mapRecentChips button');if(target){try{const cEl=document.getElementById('mapRecentChips');if(cEl){cEl.scrollTo({left:Math.max(0,target.offsetLeft-6),behavior:'smooth'});}}catch(_){}try{target.focus({preventScroll:true});}catch(_){target.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
             <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
           </button>
         </div>
@@ -2623,10 +2623,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=272"></script>
+  <script src="traffic-flood.js?v=273"></script>
     <script>
-    const APP_BUILD = 272;
-    const APP_VERSION = '1.10.108';
+    const APP_BUILD = 273;
+    const APP_VERSION = '1.10.109';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4108,6 +4108,19 @@
     let mapActivePopupKey = null;
     let mapProgrammaticFlyUntil = 0;
     let mapLastFocusedChipIndex = 0;
+
+    function getActiveOrLastFocusedChip() {
+      const allChips = document.querySelectorAll('#mapRecentChips button');
+      if (!allChips || allChips.length === 0) return null;
+      if (mapActivePopupKey) {
+        const activeBtn = Array.from(allChips).find(b => b._chipKey === mapActivePopupKey);
+        if (activeBtn) return activeBtn;
+      }
+      if (typeof mapLastFocusedChipIndex === 'number' && allChips[mapLastFocusedChipIndex]) {
+        return allChips[mapLastFocusedChipIndex];
+      }
+      return allChips[0];
+    }
     let currentMapQueries = [];
     let isProgrammaticChipScroll = false;
     let mapProgrammaticChipScrollUntil = 0;
@@ -4283,11 +4296,17 @@
           zoomOut._dpadAttached = true;
           zoomOut.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown') {
-              // Down from minus (-) moves to the first location (chips[0])
+              // Down from minus (-) moves to the active/last-focused location
               e.preventDefault();
-              const allChips = document.querySelectorAll('#mapRecentChips button');
-              const target = allChips[0];
+              const target = getActiveOrLastFocusedChip();
               if (target) {
+                try {
+                  const chipsEl = document.getElementById('mapRecentChips');
+                  if (chipsEl) {
+                    const targetLeft = Math.max(0, target.offsetLeft - 6);
+                    chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                  }
+                } catch (_) {}
                 try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
               }
             } else if (e.key === 'ArrowUp') {
@@ -4697,6 +4716,7 @@
           btn._isCurrent = q.isCurrent;
 
           const panAndOpenOnMap = (fromUserScroll = false) => {
+            mapLastFocusedChipIndex = idx;
             if (!fromUserScroll) {
               isProgrammaticChipScroll = true;
               try {
@@ -4709,6 +4729,7 @@
               }
               setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
             }
+            const isSameLocation = (mapActivePopupKey === key);
             mapActivePopupKey = key;
             lastScrolledChipKey = key;
             updateChipHighlightStates();
@@ -4720,7 +4741,7 @@
               const currentZoom = historyLeafletMap.getZoom();
               const targetZoom = getOptimalMoveZoom(q.lat, q.lon);
 
-              if (targetZoom === currentZoom) {
+              if (isSameLocation || targetZoom === currentZoom) {
                 // Lock the current zoom level and glide across smoothly without tile rewriting
                 historyLeafletMap.panTo([q.lat, q.lon], { duration: 0.45, easeLinearity: 0.25 });
               } else {
@@ -4800,6 +4821,7 @@
           // For the current location, inform the user they are already here so customized settings aren't reset.
           // For other locations, first tap centers & opens the popup; second tap loads the forecast.
           btn.onclick = () => {
+            mapLastFocusedChipIndex = idx;
             if (q.isCurrent) {
               showMapToast('Already at current location • Forecast is active');
               return;
@@ -5069,6 +5091,22 @@
             L.DomEvent.stopPropagation(e.originalEvent);
           }
           mapActivePopupKey = key;
+          const allChips = document.querySelectorAll('#mapRecentChips button');
+          const chipIdx = Array.from(allChips).findIndex(b => b._chipKey === key);
+          if (chipIdx !== -1) {
+            mapLastFocusedChipIndex = chipIdx;
+            const targetChip = allChips[chipIdx];
+            if (targetChip) {
+              try {
+                const chipsEl = document.getElementById('mapRecentChips');
+                if (chipsEl) {
+                  const targetLeft = Math.max(0, targetChip.offsetLeft - 6);
+                  chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                }
+              } catch (_) {}
+            }
+          }
+          updateChipHighlightStates();
           marker.openPopup();
           stripMapCanvasFocusables();
         });
