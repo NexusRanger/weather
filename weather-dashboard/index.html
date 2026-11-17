@@ -610,6 +610,17 @@
       box-shadow: 0 0 14px rgba(99, 102, 241, 0.45) !important;
       transform: scale(1.02);
     }
+    /* Resting Day/Night Indicator Shading (shows whether it is currently daytime or nighttime around the world) */
+    .milestone-resting-light {
+      background: rgba(245, 158, 11, 0.08) !important;
+      border: 1px solid rgba(251, 191, 36, 0.32) !important;
+      box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.06);
+    }
+    .milestone-resting-dark {
+      background: rgba(99, 102, 241, 0.10) !important;
+      border: 1px solid rgba(129, 140, 248, 0.32) !important;
+      box-shadow: inset 0 0 10px rgba(99, 102, 241, 0.06);
+    }
 
     /* Hide Leaflet bottom-right attribution & flag link completely */
     .leaflet-control-attribution {
@@ -1124,7 +1135,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.112) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.113) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2625,10 +2636,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=276"></script>
+  <script src="traffic-flood.js?v=277"></script>
     <script>
-    const APP_BUILD = 276;
-    const APP_VERSION = '1.10.112';
+    const APP_BUILD = 277;
+    const APP_VERSION = '1.10.113';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -9979,10 +9990,19 @@ function joinSpacedLetters(text) {
       // 4. Dark By: active from dark arrival for 45 minutes
       const isDarkActive = (nowMs >= darkMs && nowMs < (darkMs + 45 * 60000));
 
+      // Overall location diurnal state:
+      // Daytime: from First Light (dawn) until Dark By (actual dark arrival)
+      // Nighttime: from Dark By until First Light
+      const isDaytime = (nowMs >= lightMs && nowMs < darkMs);
+
       if (tileLight) {
         if (isLightActive) {
           tileLight.className = baseClass + ' milestone-active-light';
           if (lightBadge) { lightBadge.textContent = 'LIGHT NOW'; lightBadge.classList.remove('hidden'); }
+        } else if (isDaytime) {
+          // Subtle resting amber shading on First Light to indicate it is currently daytime at this location
+          tileLight.className = baseClass + ' milestone-resting-light';
+          if (lightBadge) lightBadge.classList.add('hidden');
         } else {
           tileLight.className = baseClass;
           if (lightBadge) lightBadge.classList.add('hidden');
@@ -10013,6 +10033,10 @@ function joinSpacedLetters(text) {
         if (isDarkActive) {
           tileDark.className = baseClass + ' milestone-active-dark';
           if (darkBadge) { darkBadge.textContent = 'DARK NOW'; darkBadge.classList.remove('hidden'); }
+        } else if (!isDaytime) {
+          // Subtle resting indigo shading on Dark By to indicate it is currently nighttime at this location
+          tileDark.className = baseClass + ' milestone-resting-dark';
+          if (darkBadge) darkBadge.classList.add('hidden');
         } else {
           tileDark.className = baseClass;
           if (darkBadge) darkBadge.classList.add('hidden');
