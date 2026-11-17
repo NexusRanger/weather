@@ -847,6 +847,14 @@
       }
     }
 
+    /* 1b. TABLET IN LANDSCAPE (Moderate widescreen with height >= 520px): Adjust oversized TV bezel padding so all 5 pills fit */
+    @media (orientation: landscape) and (min-height: 520px) and (max-width: 1100px) {
+      #dashboardRoot {
+        padding-left: max(14px, env(safe-area-inset-left)) !important;
+        padding-right: max(14px, env(safe-area-inset-right)) !important;
+      }
+    }
+
     /* 2. PHONE IN LANDSCAPE (Short screens: height <= 519px - e.g. phone sideways) */
     @media (orientation: landscape) and (max-height: 519px) {
       html, body {
@@ -883,6 +891,10 @@
         height: auto !important;
         flex: none !important;
         margin-top: 4px !important;
+      }
+      #colLocalInfo {
+        flex-wrap: wrap !important;
+        overflow: visible !important;
       }
     }
 
@@ -951,14 +963,27 @@
         gap: 6px !important;
       }
       #colLocalInfo {
-        flex-wrap: wrap !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        flex-wrap: nowrap !important;
         overflow-x: visible !important;
-        gap: 6px 8px !important;
+        gap: 6px !important;
         min-height: auto !important;
+        width: 100% !important;
       }
+      #colLocalInfo button,
       #colLocalInfo .glass-card {
-        padding: 6px 10px !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 7px 12px !important;
         flex-shrink: 0 !important;
+        box-sizing: border-box !important;
+      }
+      #colLocalInfo button.hidden {
+        display: none !important;
       }
       #mainGrid {
         display: flex !important;
@@ -1135,7 +1160,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.116) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.117) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1517,48 +1542,62 @@
     </main>
     
     <!-- COMPACT LOCAL STATUS STRIP (RADAR, TRAFFIC, RIVERS, SHARE & FEEDBACK) -->
-    <div id="colLocalInfo" class="relative z-20 flex flex-nowrap items-center gap-1.5 sm:gap-2 my-0.5 flex-shrink-0 overflow-x-auto no-scrollbar" style="min-height: 28px;">
+    <div id="colLocalInfo" class="relative z-20 flex flex-wrap items-center gap-1.5 sm:gap-2 my-0.5 flex-shrink-0" style="min-height: 28px;">
       <!-- Radar Modal Pill -->
-      <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
-        <span class="text-xs">🛰️</span>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Radar:</span>
-        <span class="text-xs font-bold text-cyan-300 group-hover:text-cyan-200 flex items-center gap-1">Live Map ↗</span>
+      <button id="radarBtn" onclick="openRadarModal()" class="tv-focus-amber glass-card rounded-xl px-2 sm:px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Live Weather Radar, Wind Streamlines & Clouds" tabindex="0">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-xs">🛰️</span>
+          <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Radar:</span>
+        </div>
+        <span class="text-xs font-bold text-cyan-300 group-hover:text-cyan-200 flex items-center gap-1 flex-shrink-0">Live Map ↗</span>
       </button>
 
       <!-- Traffic Pill Button -->
-      <button id="trafficPill" onclick="openTrafficModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
-        <span class="text-xs">🚗</span>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Traffic:</span>
-        <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
-        <span class="text-[10px] text-slate-500 group-hover:text-emerald-300 transition-colors ml-0.5">ℹ️</span>
+      <button id="trafficPill" onclick="openTrafficModal()" class="tv-focus-amber glass-card rounded-xl px-2 sm:px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-emerald-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Live Traffic Flow &amp; Congestion Breakdown (Click to View)" tabindex="0">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-xs">🚗</span>
+          <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Traffic:</span>
+        </div>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <span id="trafficCard" class="text-xs font-bold text-emerald-400">Syncing...</span>
+          <span class="text-[10px] text-slate-500 group-hover:text-emerald-300 transition-colors ml-0.5">ℹ️</span>
+        </div>
       </button>
 
       <!-- River Pill Button -->
-      <button id="riverPill" onclick="openRiverModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="UK Environment Agency Live River &amp; Flood Monitoring (Click to View)" tabindex="0">
-        <span class="text-xs">🌊</span>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Rivers:</span>
-        <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
-        <span class="text-[10px] text-slate-500 group-hover:text-cyan-300 transition-colors ml-0.5">ℹ️</span>
+      <button id="riverPill" onclick="openRiverModal()" class="tv-focus-amber glass-card rounded-xl px-2 sm:px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-cyan-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="UK Environment Agency Live River &amp; Flood Monitoring (Click to View)" tabindex="0">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-xs">🌊</span>
+          <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Rivers:</span>
+        </div>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <span id="floodCard" class="text-xs font-bold text-emerald-400">Normal</span>
+          <span class="text-[10px] text-slate-500 group-hover:text-cyan-300 transition-colors ml-0.5">ℹ️</span>
+        </div>
       </button>
 
       <!-- Share Dashboard Pill -->
-      <button id="shareBtn" onclick="openShareModal()" class="tv-focus-amber glass-card rounded-xl px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Share this dashboard or scan QR code" tabindex="0">
-        <svg class="w-3.5 h-3.5 text-sky-400 group-hover:text-sky-300 transition-colors flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="18" cy="5" r="3"/>
-          <circle cx="6" cy="12" r="3"/>
-          <circle cx="18" cy="19" r="3"/>
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-        </svg>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Share:</span>
-        <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1">Scan / Link ↗</span>
+      <button id="shareBtn" onclick="openShareModal()" class="tv-focus-amber glass-card rounded-xl px-2 sm:px-2.5 py-1 inline-flex items-center gap-1.5 border border-white/10 hover:border-sky-400/50 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Share this dashboard or scan QR code" tabindex="0">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <svg class="w-3.5 h-3.5 text-sky-400 group-hover:text-sky-300 transition-colors flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Share:</span>
+        </div>
+        <span class="text-xs font-bold text-sky-300 group-hover:text-sky-200 flex items-center gap-1 flex-shrink-0"><span class="hidden xl:inline">Scan / </span>Link ↗</span>
       </button>
 
       <!-- Feedback & Suggestions Pill (Secret/Code-unlocked by default) -->
-      <button id="feedbackBtn" onclick="openFeedbackModal()" class="tv-focus-amber hidden glass-card rounded-xl px-2.5 py-1 items-center gap-1.5 border border-amber-400/30 hover:border-amber-400/70 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Submit 5-star rating or suggestions" tabindex="0">
-        <span class="text-xs text-amber-300">⭐</span>
-        <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Feedback</span>
-        <span id="feedbackPillText" class="text-xs font-bold text-amber-300 group-hover:text-amber-200 flex items-center gap-1">↗</span>
+      <button id="feedbackBtn" onclick="openFeedbackModal()" class="tv-focus-amber hidden glass-card rounded-xl px-2 sm:px-2.5 py-1 items-center gap-1.5 border border-amber-400/30 hover:border-amber-400/70 shadow-sm transition transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer text-left group flex-shrink-0 whitespace-nowrap" title="Submit 5-star rating or suggestions" tabindex="0">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-xs text-amber-300">⭐</span>
+          <span class="text-[10px] uppercase tracking-wider text-slate-400 group-hover:text-slate-300 font-semibold">Feedback</span>
+        </div>
+        <span id="feedbackPillText" class="text-xs font-bold text-amber-300 group-hover:text-amber-200 flex items-center gap-1 flex-shrink-0">↗</span>
       </button>
     </div>
 
@@ -2652,10 +2691,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=280"></script>
+  <script src="traffic-flood.js?v=281"></script>
     <script>
-    const APP_BUILD = 280;
-    const APP_VERSION = '1.10.116';
+    const APP_BUILD = 281;
+    const APP_VERSION = '1.10.117';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3129,7 +3168,13 @@
         // From status strip pills down to Lock Pano button (if visible) or bottom panel
         else if (pills.includes(active)) {
           e.preventDefault();
-          if (footer) footer.focus();
+          const isPortraitMode = (window.innerHeight > window.innerWidth) || (window.matchMedia && window.matchMedia('(orientation: portrait)').matches);
+          const pIdx = pills.indexOf(active);
+          if (isPortraitMode && pIdx >= 0 && pIdx < pills.length - 1) {
+            pills[pIdx + 1].focus();
+          } else {
+            if (footer) footer.focus();
+          }
         }
         // From Lock Pano button down to bottom panel
         else if (active === panoLockBtn) {
@@ -3140,18 +3185,25 @@
         // From bottom panel up to Lock Pano button (if visible on Today/Tomorrow) or status strip pills
         if (active === footer) {
           e.preventDefault();
-          const target = isPanoLockVisible ? panoLockBtn : (pills[0] || locBtn);
+          const isPortraitMode = (window.innerHeight > window.innerWidth) || (window.matchMedia && window.matchMedia('(orientation: portrait)').matches);
+          const target = isPanoLockVisible ? panoLockBtn : (isPortraitMode && pills.length > 0 ? pills[pills.length - 1] : (pills[0] || locBtn));
           if (target) target.focus();
         }
         // From Lock Pano button up to status strip pills
         else if (active === panoLockBtn) {
           e.preventDefault();
-          const target = pills[0] || locBtn;
+          const isPortraitMode = (window.innerHeight > window.innerWidth) || (window.matchMedia && window.matchMedia('(orientation: portrait)').matches);
+          const target = (isPortraitMode && pills.length > 0) ? pills[pills.length - 1] : (pills[0] || locBtn);
           if (target) target.focus();
         }
         // From status strip pills up to header location button
         else if (pills.includes(active)) {
-          if (locBtn) {
+          const isPortraitMode = (window.innerHeight > window.innerWidth) || (window.matchMedia && window.matchMedia('(orientation: portrait)').matches);
+          const pIdx = pills.indexOf(active);
+          if (isPortraitMode && pIdx > 0) {
+            e.preventDefault();
+            pills[pIdx - 1].focus();
+          } else if (locBtn) {
             e.preventDefault();
             locBtn.focus();
           }
