@@ -2450,6 +2450,32 @@
     </div>
   </div>
 
+  <!-- TV STANDBY / SLEEP SCREEN (Pitch Black OLED Mode for Android TV / Shield) -->
+  <div id="tvSleepScreen" onclick="exitTvSleepMode()" class="fixed inset-0 z-[9999] bg-black text-slate-400 hidden flex-col items-center justify-center p-6 text-center select-none cursor-pointer transition-opacity duration-300">
+    <div class="max-w-md w-full flex flex-col items-center gap-4 p-6 rounded-3xl bg-slate-950/90 border border-slate-800/80 shadow-2xl backdrop-blur-xl" onclick="event.stopPropagation()">
+      <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-3xl shadow-inner animate-pulse">
+        🌙
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-slate-100 tracking-wide">Screen in Standby</h2>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+          The dashboard is sleeping to save power and protect your display.
+        </p>
+      </div>
+
+      <div class="w-full p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 flex items-center gap-2.5 text-left">
+        <span class="text-lg">🏠</span>
+        <span>Press the <strong>Home</strong> button on your Nvidia Shield remote to return to Android TV Home.</span>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-2.5 w-full pt-1">
+        <button id="tvWakeBtn" type="button" tabindex="0" onclick="exitTvSleepMode()" onkeydown="if(event.key==='Enter'||event.key===' '||event.keyCode===13||event.keyCode===23){event.preventDefault();exitTvSleepMode();}" class="tv-focus-amber w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
+          <span>☀️ Wake Dashboard</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- CREDITS EASTER EGG MODAL ("who wrote this" / "who made this") -->
   <div id="creditsModal" onclick="closeCreditsModal(true)" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 text-left cursor-pointer">
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-5 sm:p-6 max-w-md w-full border border-sky-400/30 shadow-[0_0_35px_rgba(56,189,248,0.2)] relative flex flex-col max-h-[92vh] cursor-default">
@@ -2814,10 +2840,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=291"></script>
+  <script src="traffic-flood.js?v=292"></script>
     <script>
-    const APP_BUILD = 291;
-    const APP_VERSION = '1.10.127';
+    const APP_BUILD = 292;
+    const APP_VERSION = '1.10.128';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13934,11 +13960,18 @@ function joinSpacedLetters(text) {
           return;
         }
       } catch (_) {}
-      try {
-        window.open('', '_self');
-        window.close();
-      } catch (_) {}
       try { window.close(); } catch (_) {}
+      try {
+        if (window.history.length > 1) {
+          window.history.go(-(window.history.length - 1));
+        } else {
+          window.history.back();
+        }
+      } catch (_) {}
+      try { window.history.back(); } catch (_) {}
+      setTimeout(() => {
+        enterTvSleepMode();
+      }, 250);
     }
 
     function configureTvReceiverUI() {
