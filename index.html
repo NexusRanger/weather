@@ -1219,7 +1219,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.132) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.133) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2840,10 +2840,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=296"></script>
+  <script src="traffic-flood.js?v=297"></script>
     <script>
-    const APP_BUILD = 296;
-    const APP_VERSION = '1.10.132';
+    const APP_BUILD = 297;
+    const APP_VERSION = '1.10.133';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -9215,6 +9215,12 @@ function joinSpacedLetters(text) {
       { name: 'Atmospheric River', desc: 'Seattle, WA, USA • Heavy pineapple express moisture plume and mountain deluge', category: 'news', icon: '🌧️', lat: 47.6062, lon: -122.3321, country: 'USA' },
       { name: 'Marburg Storms', desc: 'Queensland, Australia • Violent supercells with giant hail and damaging squalls', category: 'news', icon: '⛈️', lat: -27.5667, lon: 152.6000, country: 'Australia' },
       { name: 'Rhine Low Water', desc: 'Kaub Chokepoint, Germany • Historic dry riverbed bottleneck halting barge transit', category: 'news', icon: '🚢', lat: 50.0864, lon: 7.7619, country: 'Germany' },
+      { name: 'Iceland Magma Dyke', desc: 'Reykjanes, Iceland • Ongoing ground fissures and active basalt magma flows', category: 'news', icon: '🌋', lat: 63.8500, lon: -22.4000, country: 'Iceland' },
+      { name: 'California Deluge', desc: 'Los Angeles, CA, USA • Historic Pacific atmospheric river downpours & mudslides', category: 'news', icon: '🌧️', lat: 34.0522, lon: -118.2437, country: 'USA' },
+      { name: 'Amazon River Drought', desc: 'Manaus, Brazil • Severe record low water levels along the Rio Negro waterway', category: 'news', icon: '🏜️', lat: -3.1190, lon: -60.0217, country: 'Brazil' },
+      { name: 'Lake Como Floods', desc: 'Lombardy, Italy • Violent alpine supercell storms and lakeshore inundations', category: 'news', icon: '🌊', lat: 45.8081, lon: 9.0852, country: 'Italy' },
+      { name: 'Danube High Water', desc: 'Budapest, Hungary • Historic Central European river surge cresting city quays', category: 'news', icon: '🌊', lat: 47.4979, lon: 19.0402, country: 'Hungary' },
+      { name: 'Alps Blizzard Dump', desc: 'Innsbruck, Austria • Unseasonal high-elevation early snowfall blanketing valleys', category: 'news', icon: '❄️', lat: 47.2692, lon: 11.4041, country: 'Austria' },
 
       // 🏛️ World Capital Cities (Global Hubs from Every Continent)
       { name: 'London', desc: 'United Kingdom • Capital city on the River Thames, Westminster & Tower Bridge', category: 'capitals', icon: '🏛️', lat: 51.5074, lon: -0.1278, country: 'United Kingdom' },
@@ -9275,6 +9281,12 @@ function joinSpacedLetters(text) {
       { name: 'Marrakech', desc: 'Morocco • The historic Red City of bustling medinas, souks & palatial riads', category: 'tourist', icon: '🕌', lat: 31.6295, lon: -7.9811, country: 'Morocco' },
       { name: 'Cusco', desc: 'Peru • Imperial Incan mountain capital and gateway trail to Machu Picchu', category: 'tourist', icon: '⛰️', lat: -13.5319, lon: -71.9675, country: 'Peru' },
       { name: 'Miami South Beach', desc: 'Florida, USA • Sun-soaked Art Deco architectural boulevard & white sand shorelines', category: 'tourist', icon: '🌴', lat: 25.7907, lon: -80.1300, country: 'USA' },
+      { name: 'Florence', desc: 'Tuscany, Italy • Cradle of the Renaissance, Santa Maria del Fiore & Uffizi Gallery', category: 'tourist', icon: '🏛️', lat: 43.7696, lon: 11.2558, country: 'Italy' },
+      { name: 'San Francisco', desc: 'California, USA • Golden Gate Bridge, historic cable cars & Alcatraz Island', category: 'tourist', icon: '🌉', lat: 37.7749, lon: -122.4194, country: 'USA' },
+      { name: 'Sydney Harbour', desc: 'Australia • Iconic Opera House sails, Harbour Bridge & Bondi Beach coastal walk', category: 'tourist', icon: '🦘', lat: -33.8568, lon: 151.2153, country: 'Australia' },
+      { name: 'Seville', desc: 'Andalusia, Spain • Plaza de España, Alcázar royal palace & historic flamenco alleys', category: 'tourist', icon: '💃', lat: 37.3891, lon: -5.9845, country: 'Spain' },
+      { name: 'Cannes', desc: 'French Riviera, France • Glamorous Boulevard de la Croisette & world-famous Film Festival', category: 'tourist', icon: '⛵', lat: 43.5528, lon: 7.0174, country: 'France' },
+      { name: 'Edinburgh', desc: 'Scotland, UK • Royal Mile medieval wynds, historic castle rock & Arthur\'s Seat peak', category: 'tourist', icon: '🏰', lat: 55.9486, lon: -3.1999, country: 'UK' },
 
       // 🎿 World-Class Ski Resorts & Alpine Slopes
       { name: 'Whistler Blackcomb', desc: 'British Columbia, Canada • Largest ski resort in North America with Peak 2 Peak Gondola', category: 'ski', icon: '🎿', lat: 50.1163, lon: -122.9574, country: 'Canada' },
@@ -9293,6 +9305,14 @@ function joinSpacedLetters(text) {
       { name: 'Park City Mountain', desc: 'Utah, USA • Massive interconnected Wasatch mountain ridge & The Greatest Snow on Earth', category: 'ski', icon: '🎿', lat: 40.6514, lon: -111.5080, country: 'USA' },
       { name: 'Jackson Hole', desc: 'Wyoming, USA • Steep & deep Teton mountain backcountry terrain & Corbet\'s Couloir', category: 'ski', icon: '🎿', lat: 43.5875, lon: -110.8279, country: 'USA' },
       { name: 'Hakuba Valley', desc: 'Nagano, Japan • Japanese Northern Alps premier ski destination and 1998 Winter Olympics host', category: 'ski', icon: '❄️', lat: 36.6982, lon: 137.8619, country: 'Japan' },
+      { name: 'Morzine-Avoriaz', desc: 'Portes du Soleil, France • Vast alpine ski area spanning France and Switzerland', category: 'ski', icon: '🎿', lat: 46.1792, lon: 6.7089, country: 'France' },
+      { name: 'St. Moritz', desc: 'Engadin, Switzerland • Glamorous birthplace of winter tourism & Corviglia slopes', category: 'ski', icon: '🏔️', lat: 46.4908, lon: 9.8355, country: 'Switzerland' },
+      { name: 'Cervinia', desc: 'Aosta Valley, Italy • High-altitude Italian alpine slopes beneath the south face of the Matterhorn', category: 'ski', icon: '🎿', lat: 45.9338, lon: 7.6310, country: 'Italy' },
+      { name: 'Lech Zürs', desc: 'Vorarlberg, Austria • Legendary deep powder snow bowls and exclusive royal ski trails', category: 'ski', icon: '🎿', lat: 47.2104, lon: 10.1417, country: 'Austria' },
+      { name: 'Big Sky', desc: 'Montana, USA • Lone Peak tram access to the Biggest Skiing in America', category: 'ski', icon: '🎿', lat: 45.2858, lon: -111.4011, country: 'USA' },
+      { name: 'Telluride', desc: 'Colorado, USA • Dramatic box canyon peaks and legendary Rocky Mountain glades', category: 'ski', icon: '🎿', lat: 37.9375, lon: -107.8123, country: 'USA' },
+      { name: 'Sun Peaks', desc: 'British Columbia, Canada • Second-largest ski area in Canada across three mountain faces', category: 'ski', icon: '🎿', lat: 50.8847, lon: -119.8828, country: 'Canada' },
+      { name: 'Hemsedal', desc: 'Viken, Norway • Scandinavian Alps premier ski resort with long groomed alpine trails', category: 'ski', icon: '❄️', lat: 60.8617, lon: 8.5528, country: 'Norway' },
 
       // ⚡ Live Extreme Weather Hotspots (Lightning, Winds, Deluges & Scorching Deserts)
       { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms (280/hr)', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
@@ -9311,6 +9331,12 @@ function joinSpacedLetters(text) {
       { name: 'Lloró, Chocó', desc: 'Colombia • Relentless Pacific Tropical Rainforest Deluges (12,717 mm/yr)', category: 'weather', icon: '🌧️', lat: 5.5000, lon: -76.5400, country: 'Colombia' },
       { name: 'Aswan', desc: 'Egypt • Driest City in Africa with Virtually Zero Measurable Rain', category: 'weather', icon: '🏜️', lat: 24.0889, lon: 32.8998, country: 'Egypt' },
       { name: 'Cape Denison', desc: 'Adélie Coast, Antarctica • Mawson\'s Legendary Home of the Blizzard', category: 'weather', icon: '❄️', lat: -67.0092, lon: 142.6644, country: 'Antarctica' },
+      { name: 'Kebili Oasis', desc: 'Tunisia • Historic highest recorded temperature in Africa (55.0°C)', category: 'weather', icon: '🔥', lat: 33.7050, lon: 8.9690, country: 'Tunisia' },
+      { name: 'Bergen', desc: 'Vestland, Norway • The Rainiest City in Europe (over 240 precipitation days/yr)', category: 'weather', icon: '🌧️', lat: 60.3913, lon: 5.3221, country: 'Norway' },
+      { name: 'Cargados Carajos', desc: 'Indian Ocean • World record 24-hour tropical cyclone rain deluge (1,825mm)', category: 'weather', icon: '🌀', lat: -16.5833, lon: 59.6167, country: 'Mauritius' },
+      { name: 'Barrow Island', desc: 'Western Australia • World record non-tornadic wind gust (408 km/h)', category: 'weather', icon: '💨', lat: -20.8000, lon: 115.4000, country: 'Australia' },
+      { name: 'Kufra Basin', desc: 'Libya • Hyper-arid Sahara desert basin receiving virtually zero measurable rain', category: 'weather', icon: '🏜️', lat: 24.1833, lon: 23.3000, country: 'Libya' },
+      { name: 'Mount Waialeale', desc: 'Kauai, Hawaii • High-elevation tropical shield volcano receiving 11,500mm rain/yr', category: 'weather', icon: '🌧️', lat: 22.0700, lon: -159.4983, country: 'USA' },
 
       // 🌋 Active Volcanology & Seismic Hotspots
       { name: 'Grindavík Volcano', desc: 'Reykjanes Peninsula, Iceland • Active Fissure Eruptions & Blue Lagoon', category: 'volcano', icon: '🌋', lat: 63.8425, lon: -22.4344, country: 'Iceland' },
@@ -9327,6 +9353,12 @@ function joinSpacedLetters(text) {
       { name: 'Pacaya', desc: 'Escuintla, Guatemala • Active Basaltic Lava River Volcano', category: 'volcano', icon: '🌋', lat: 14.3817, lon: -90.6014, country: 'Guatemala' },
       { name: 'Yasur Volcano', desc: 'Tanna Island, Vanuatu • World\'s Most Accessible Active Strombolian Volcano', category: 'volcano', icon: '🌋', lat: -19.5320, lon: 169.4470, country: 'Vanuatu' },
       { name: 'Piton de la Fournaise', desc: 'Réunion Island, Indian Ocean • One of Earth\'s Most Active Shield Volcanoes', category: 'volcano', icon: '🌋', lat: -21.2425, lon: 55.7088, country: 'France' },
+      { name: 'Taal Volcano', desc: 'Batangas, Philippines • Complex volcanic caldera island nestled in freshwater lake', category: 'volcano', icon: '🌋', lat: 14.0094, lon: 120.9961, country: 'Philippines' },
+      { name: 'Erta Ale', desc: 'Afar, Ethiopia • "Smoking Mountain" persistent boiling basaltic lava lake', category: 'volcano', icon: '🌋', lat: 13.6033, lon: 40.6631, country: 'Ethiopia' },
+      { name: 'Mount Semeru', desc: 'East Java, Indonesia • Tallest active peak on Java with recurring pyroclastic flows', category: 'volcano', icon: '🌋', lat: -8.1080, lon: 112.9220, country: 'Indonesia' },
+      { name: 'Cumbre Vieja', desc: 'La Palma, Canary Islands • Dynamic oceanic volcanic rift ridge and recent basalt cones', category: 'volcano', icon: '🌋', lat: 28.5700, lon: -17.8400, country: 'Spain' },
+      { name: 'Villarrica', desc: 'Araucanía, Chile • Snow-capped stratovolcano with an active bubbling magma crater', category: 'volcano', icon: '🌋', lat: -39.4203, lon: -71.9397, country: 'Chile' },
+      { name: 'Hekla', desc: 'South Iceland • Historic "Gateway to Hell" one of Iceland\'s most explosive volcanoes', category: 'volcano', icon: '🌋', lat: 63.9922, lon: -19.6658, country: 'Iceland' },
 
       // ❄️ Extreme Cold & Polar Frontier
       { name: 'Yakutsk', desc: 'Siberia, Russia • Coldest Major City Built on Continuous Permafrost', category: 'cold', icon: '❄️', lat: 62.0355, lon: 129.6755, country: 'Russia' },
@@ -9345,6 +9377,12 @@ function joinSpacedLetters(text) {
       { name: 'Snag, Yukon', desc: 'Canada • Coldest Recorded Temp in North America (-63.0°C)', category: 'cold', icon: '❄️', lat: 62.3956, lon: -140.4072, country: 'Canada' },
       { name: 'Mount Erebus', desc: 'Ross Island, Antarctica • Southernmost Active Volcano with Ice Fumaroles', category: 'cold', icon: '🌋', lat: -77.5297, lon: 167.1533, country: 'Antarctica' },
       { name: 'Eureka', desc: 'Ellesmere Island, Canada • Coldest Annual Mean Temp Weather Station in NA', category: 'cold', icon: '🧊', lat: 79.9889, lon: -85.9406, country: 'Canada' },
+      { name: 'Dudinka', desc: 'Krasnoyarsk Krai, Siberia • Arctic port city enduring -50°C blizzards on Yenisei River', category: 'cold', icon: '❄️', lat: 69.4058, lon: 86.1778, country: 'Russia' },
+      { name: 'Inuvik', desc: 'Northwest Territories, Canada • Subarctic Mackenzie Delta community and tundra gateway', category: 'cold', icon: '🇨🇦', lat: 68.3607, lon: -133.7230, country: 'Canada' },
+      { name: 'Kiruna', desc: 'Lapland, Sweden • Sweden\'s northernmost subarctic city & famous Icehotel realm', category: 'cold', icon: '❄️', lat: 67.8558, lon: 20.2253, country: 'Sweden' },
+      { name: 'Rovaniemi', desc: 'Lapland, Finland • Official Arctic Circle gateway & snowy frozen wilderness wonderland', category: 'cold', icon: '✨', lat: 66.5039, lon: 25.7294, country: 'Finland' },
+      { name: 'Scoresby Sound', desc: 'East Greenland • World\'s largest frozen glacial fjord system with pack ice', category: 'cold', icon: '🧊', lat: 70.4833, lon: -21.9667, country: 'Greenland' },
+      { name: 'Mount Logan', desc: 'Yukon, Canada • Canada\'s highest glacial summit with extreme sub-polar wind chills', category: 'cold', icon: '🏔️', lat: 60.5672, lon: -140.4056, country: 'Canada' },
 
       // 🏛️ Iconic Landmarks & Wonders
       { name: 'Pyramids of Giza', desc: 'Cairo, Egypt • Great Pyramid & Sphinx in the Desert', category: 'landmark', icon: '🏛️', lat: 29.9792, lon: 31.1342, country: 'Egypt' },
@@ -9364,7 +9402,13 @@ function joinSpacedLetters(text) {
       { name: 'Great Barrier Reef', desc: 'Cairns, Coral Sea, Australia • World\'s Largest Living Coral Reef', category: 'landmark', icon: '🪸', lat: -16.9186, lon: 145.7781, country: 'Australia' },
       { name: 'Mount Kilimanjaro', desc: 'Tanzania • Africa\'s Highest Freestanding Snowcapped Volcanic Peak', category: 'landmark', icon: '🗻', lat: -3.0674, lon: 37.3556, country: 'Tanzania' },
       { name: 'Giant\'s Causeway', desc: 'County Antrim, Northern Ireland • 40,000 Interlocking Basalt Columns', category: 'landmark', icon: '🇮🇪', lat: 55.2408, lon: -6.5116, country: 'UK' },
-      { name: 'Milford Sound', desc: 'Fiordland, New Zealand • Glacial Fjord with Cascading 1,000m Waterfalls', category: 'landmark', icon: '🇳🇿', lat: -44.6716, lon: 167.9256, country: 'New Zealand' }
+      { name: 'Milford Sound', desc: 'Fiordland, New Zealand • Glacial Fjord with Cascading 1,000m Waterfalls', category: 'landmark', icon: '🇳🇿', lat: -44.6716, lon: 167.9256, country: 'New Zealand' },
+      { name: 'Acropolis', desc: 'Athens, Greece • Ancient Parthenon citadel towering over classical birthplace of democracy', category: 'landmark', icon: '🏛️', lat: 37.9715, lon: 23.7257, country: 'Greece' },
+      { name: 'Alhambra', desc: 'Granada, Spain • Monumental Moorish hilltop fortress palace & Islamic reflecting pools', category: 'landmark', icon: '🏰', lat: 37.1761, lon: -3.5881, country: 'Spain' },
+      { name: 'Burj Khalifa', desc: 'Dubai, UAE • Earth\'s tallest architectural marvel standing at 828 meters', category: 'landmark', icon: '🏙️', lat: 25.1972, lon: 55.2744, country: 'UAE' },
+      { name: 'Mount Rushmore', desc: 'Black Hills, South Dakota • Monumental granite sculpture of four US Presidents', category: 'landmark', icon: '🗿', lat: 43.8791, lon: -103.4591, country: 'USA' },
+      { name: 'Neuschwanstein', desc: 'Bavaria, Germany • 19th-century Romanesque Revival cliff palace & fairytale inspiration', category: 'landmark', icon: '🏰', lat: 47.5576, lon: 10.7498, country: 'Germany' },
+      { name: 'St. Basil\'s Cathedral', desc: 'Red Square, Moscow • Famed kaleidoscopic onion dome cathedral landmark', category: 'landmark', icon: '🏛️', lat: 55.7525, lon: 37.6231, country: 'Russia' }
     ];
 
     let wondersAutoCloseTimer = null;
@@ -9886,7 +9930,7 @@ function joinSpacedLetters(text) {
         }
       } catch (_) {}
 
-      populateWondersChips();
+      populateWondersChips(true);
       loadLiveRocketLaunches();
       resetWondersAutoCloseTimer();
       updateWondersCountdownDisplay();
@@ -9941,12 +9985,29 @@ function joinSpacedLetters(text) {
         landmark: document.getElementById('wondersLandmarkChips')
       };
 
+      const targetPoolSizes = {
+        capitals: 14,
+        tourist: 12,
+        ski: 11,
+        landmark: 11,
+        weather: 10,
+        volcano: 10,
+        cold: 10,
+        news: 8
+      };
+
       Object.keys(containerMap).forEach(cat => {
         const parent = containerMap[cat];
         if (!parent) return;
         parent.innerHTML = '';
-        const items = getRotatedCategoryWonders(cat, (cat === 'capitals' || cat === 'tourist' || cat === 'landmark' || cat === 'ski') ? 8 : 6);
-        items.forEach(w => {
+        const isMeasured = parent.offsetWidth > 0;
+        const fallbackCount = (cat === 'capitals') ? 11 : (cat === 'tourist' ? 10 : (cat === 'news' ? 6 : 8));
+        const poolSize = isMeasured ? (targetPoolSizes[cat] || 12) : fallbackCount;
+        const items = getRotatedCategoryWonders(cat, poolSize);
+        let line1Top = -1;
+        let line2Top = -1;
+
+        for (const w of items) {
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.tabIndex = 0;
@@ -9965,7 +10026,21 @@ function joinSpacedLetters(text) {
             selectWonderLocation(w);
           };
           parent.appendChild(btn);
-        });
+
+          // Dynamic two-line fitter: fills two complete lines and stops before spilling onto a 3rd line
+          if (isMeasured) {
+            const top = btn.offsetTop;
+            if (line1Top === -1) {
+              line1Top = top;
+            } else if (line2Top === -1 && top > line1Top + 6) {
+              line2Top = top;
+            } else if (line2Top !== -1 && top > line2Top + 6) {
+              // Reached 3rd line; remove this chip and stop appending for this shelf
+              parent.removeChild(btn);
+              break;
+            }
+          }
+        }
       });
     }
 
@@ -9976,6 +10051,13 @@ function joinSpacedLetters(text) {
         onWondersModalActivity();
       }
     }
+
+    window.addEventListener('resize', () => {
+      const modal = document.getElementById('wondersModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        populateWondersChips(true);
+      }
+    });
 
     function selectWonderLocation(wonder) {
       closeWondersModal(false);
@@ -15402,7 +15484,7 @@ function joinSpacedLetters(text) {
     initLocation();
     setInterval(() => {
       fetchWeatherData();
-      populateWondersChips();
+      populateWondersChips(true);
     }, 15 * 60 * 1000);
 
     // ============================================================
@@ -15456,7 +15538,7 @@ function joinSpacedLetters(text) {
 
         // 2. Fetch fresh weather, traffic & flood telemetry
         await fetchWeatherData();
-        populateWondersChips();
+        populateWondersChips(true);
       } catch (err) {
         console.warn('Wake-up refresh warning:', err);
       } finally {
