@@ -1160,7 +1160,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.121) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.122) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1605,7 +1605,7 @@
     <!-- Portrait Phone Landscape Suggestion Floating Pill -->
     <div id="portraitRotatePrompt" onclick="dismissPortraitRotatePrompt()" class="hidden pointer-events-auto fixed bottom-24 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 rounded-2xl bg-slate-900/95 border border-sky-400/50 text-white text-xs font-semibold shadow-[0_10px_25px_rgba(0,0,0,0.8),0_0_15px_rgba(56,189,248,0.3)] backdrop-blur-md transition-all duration-300 opacity-0 translate-y-2 flex items-center gap-2 cursor-pointer select-none whitespace-nowrap">
       <span class="text-base text-sky-300">🔄</span>
-      <span class="text-[11px] text-slate-200">Rotate phone to landscape for widescreen view</span>
+      <span class="text-[11px] text-slate-200">Rotate device to landscape for widescreen view</span>
       <span class="text-sm">📱</span>
     </div>
 
@@ -2691,10 +2691,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=285"></script>
+  <script src="traffic-flood.js?v=286"></script>
     <script>
-    const APP_BUILD = 285;
-    const APP_VERSION = '1.10.121';
+    const APP_BUILD = 286;
+    const APP_VERSION = '1.10.122';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -11637,25 +11637,19 @@ function joinSpacedLetters(text) {
     }
 
     let portraitRotateTimer = null;
+    let lastPortraitRotatePromptTime = 0;
 
-    function isPhoneInPortrait() {
+    function isPortraitDevice() {
       const isPortrait = window.innerHeight > window.innerWidth || (window.matchMedia && window.matchMedia('(orientation: portrait)').matches);
-      const isNarrow = Math.min(window.innerWidth, window.innerHeight) <= 580;
-      const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-      return isPortrait && isNarrow && isTouch;
+      const isTouchOrMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.innerWidth <= 1024);
+      return isPortrait && isTouchOrMobile;
     }
 
-    let portraitRotatePromptShown = false;
-    try {
-      if (sessionStorage.getItem('ambient_rotate_prompt_shown') === 'true') {
-        portraitRotatePromptShown = true;
-      }
-    } catch (_) {}
-
     function showPortraitRotatePrompt() {
-      if (portraitRotatePromptShown) return;
-      portraitRotatePromptShown = true;
-      try { sessionStorage.setItem('ambient_rotate_prompt_shown', 'true'); } catch (_) {}
+      const now = Date.now();
+      // 10-second cooldown between viewing sessions so rapid toggling doesn't flicker
+      if (now - lastPortraitRotatePromptTime < 10000) return;
+      lastPortraitRotatePromptTime = now;
 
       const promptEl = document.getElementById('portraitRotatePrompt');
       if (!promptEl) return;
@@ -11672,8 +11666,6 @@ function joinSpacedLetters(text) {
     }
 
     function dismissPortraitRotatePrompt() {
-      portraitRotatePromptShown = true;
-      try { sessionStorage.setItem('ambient_rotate_prompt_shown', 'true'); } catch (_) {}
       if (portraitRotateTimer) {
         clearTimeout(portraitRotateTimer);
         portraitRotateTimer = null;
@@ -11742,7 +11734,8 @@ function joinSpacedLetters(text) {
         updateTenDayForecastIndicator();
         renderHourly(cachedHourlyData, slideDir);
 
-        if (isPhoneInPortrait()) {
+        // Show rotation suggestion once at the start of a panoramic viewing session
+        if (!prevCompressed && isPortraitDevice()) {
           showPortraitRotatePrompt();
         }
 
