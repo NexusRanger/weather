@@ -2832,10 +2832,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=293"></script>
+  <script src="traffic-flood.js?v=294"></script>
     <script>
-    const APP_BUILD = 293;
-    const APP_VERSION = '1.10.129';
+    const APP_BUILD = 294;
+    const APP_VERSION = '1.10.130';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4276,13 +4276,17 @@
       resetHistoryMapAutoCloseTimer();
       updateHistoryMapCountdownDisplay();
 
-      // Ensure the browser renders the modal container geometry BEFORE initializing Leaflet & calculating bounds
+      initOrRefreshHistoryMap(true);
+      try { switchHistoryMapStyle(getHistoryMapStyle(), false); } catch (_) {}
+      updateMapDistances(getMapDistUnit());
+
+      // Ensure the browser renders the modal container geometry and focuses the first chip cleanly
       requestAnimationFrame(() => {
         setTimeout(() => {
-          initOrRefreshHistoryMap(true);
-          switchHistoryMapStyle(getHistoryMapStyle(), false);
-          updateMapDistances(getMapDistUnit());
-
+          if (historyLeafletMap) {
+            try { historyLeafletMap.invalidateSize(); } catch (_) {}
+            try { applyHistoryMapAutoZoom(true); } catch (_) {}
+          }
           // TV D-Pad UX: Initially focus on the first location (Current Location on the left of the bottom bar)
           const chipsEl = document.getElementById('mapRecentChips');
           const firstBtn = chipsEl ? chipsEl.querySelector('button') : null;
@@ -4895,9 +4899,9 @@
         }).addTo(historyLeafletMap);
       }
 
-      // Ensure all marker pins always stay on top
-      if (historyMarkersLayer) {
-        historyMarkersLayer.bringToFront();
+      // Ensure all marker pins always stay on top (guarded: L.layerGroup does not define bringToFront)
+      if (historyMarkersLayer && typeof historyMarkersLayer.bringToFront === 'function') {
+        try { historyMarkersLayer.bringToFront(); } catch (_) {}
       }
       stripMapCanvasFocusables();
     }
