@@ -1219,7 +1219,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.124) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.131) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1971,6 +1971,14 @@
             <span>🏖️</span> Popular Tourist Hotspots (Shuffled Vacation Destinations)
           </div>
           <div id="wondersTouristChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <!-- 🎿 World-Class Ski Resorts & Alpine Slopes -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-cyan-300 mb-1 flex items-center gap-1">
+            <span>🎿</span> World-Class Ski Resorts &amp; Alpine Slopes
+          </div>
+          <div id="wondersSkiChips" class="flex flex-wrap gap-1.5"></div>
         </div>
 
         <!-- ⚡ Live Extreme Weather Hotspots -->
@@ -2832,10 +2840,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=294"></script>
+  <script src="traffic-flood.js?v=295"></script>
     <script>
-    const APP_BUILD = 294;
-    const APP_VERSION = '1.10.130';
+    const APP_BUILD = 295;
+    const APP_VERSION = '1.10.131';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -9260,6 +9268,24 @@ function joinSpacedLetters(text) {
       { name: 'Cusco', desc: 'Peru • Imperial Incan mountain capital and gateway trail to Machu Picchu', category: 'tourist', icon: '⛰️', lat: -13.5319, lon: -71.9675, country: 'Peru' },
       { name: 'Miami South Beach', desc: 'Florida, USA • Sun-soaked Art Deco architectural boulevard & white sand shorelines', category: 'tourist', icon: '🌴', lat: 25.7907, lon: -80.1300, country: 'USA' },
 
+      // 🎿 World-Class Ski Resorts & Alpine Slopes
+      { name: 'Whistler Blackcomb', desc: 'British Columbia, Canada • Largest ski resort in North America with Peak 2 Peak Gondola', category: 'ski', icon: '🎿', lat: 50.1163, lon: -122.9574, country: 'Canada' },
+      { name: 'Chamonix Mont-Blanc', desc: 'Haute-Savoie, France • Iconic alpine mountaineering capital & Vallée Blanche glacier runs', category: 'ski', icon: '🎿', lat: 45.9237, lon: 6.8694, country: 'France' },
+      { name: 'Zermatt (Matterhorn)', desc: 'Valais, Switzerland • Legendary Matterhorn alpine paradise & year-round glacier skiing', category: 'ski', icon: '🏔️', lat: 45.9763, lon: 7.7491, country: 'Switzerland' },
+      { name: 'St. Anton am Arlberg', desc: 'Tyrol, Austria • Cradle of alpine skiing with deep Arlberg powder snow bowls', category: 'ski', icon: '🎿', lat: 47.1296, lon: 10.2682, country: 'Austria' },
+      { name: 'Courchevel', desc: 'Les 3 Vallées, France • World\'s largest linked ski domain with 600km of groomed pistes', category: 'ski', icon: '🎿', lat: 45.4150, lon: 6.6340, country: 'France' },
+      { name: 'Val d\'Isère', desc: 'Savoie, France • High-altitude legendary Espace Killy snow reliability & Olympic downhills', category: 'ski', icon: '🎿', lat: 45.4480, lon: 6.9802, country: 'France' },
+      { name: 'Aspen Snowmass', desc: 'Colorado, USA • Premier Rocky Mountain quad-mountain champagne powder haven', category: 'ski', icon: '🎿', lat: 39.1911, lon: -106.8175, country: 'USA' },
+      { name: 'Vail Ski Resort', desc: 'Colorado, USA • Seven legendary expansive Back Bowls & legendary alpine glades', category: 'ski', icon: '🎿', lat: 39.6403, lon: -106.3742, country: 'USA' },
+      { name: 'Niseko United', desc: 'Hokkaido, Japan • World-renowned endless Ja-pow dry powder snow & night skiing', category: 'ski', icon: '❄️', lat: 42.8622, lon: 140.7042, country: 'Japan' },
+      { name: 'Cortina d\'Ampezzo', desc: 'Dolomites, Italy • Queen of the Dolomites, Olympic alpine pistes & dramatic pink peaks', category: 'ski', icon: '🎿', lat: 46.5405, lon: 12.1357, country: 'Italy' },
+      { name: 'Banff & Lake Louise', desc: 'Alberta, Canada • Breathtaking Canadian Rockies glacial scenery & dry champagne powder', category: 'ski', icon: '🏔️', lat: 51.1784, lon: -115.5708, country: 'Canada' },
+      { name: 'Kitzbühel', desc: 'Tyrol, Austria • Home of the legendary Streif Hahnenkamm World Cup downhill race', category: 'ski', icon: '🎿', lat: 47.4464, lon: 12.3922, country: 'Austria' },
+      { name: 'Verbier', desc: '4 Vallées, Switzerland • Legendary high-alpine freeride mecca overlooking the Mont Fort glacier', category: 'ski', icon: '🎿', lat: 46.0968, lon: 7.2286, country: 'Switzerland' },
+      { name: 'Park City Mountain', desc: 'Utah, USA • Massive interconnected Wasatch mountain ridge & The Greatest Snow on Earth', category: 'ski', icon: '🎿', lat: 40.6514, lon: -111.5080, country: 'USA' },
+      { name: 'Jackson Hole', desc: 'Wyoming, USA • Steep & deep Teton mountain backcountry terrain & Corbet\'s Couloir', category: 'ski', icon: '🎿', lat: 43.5875, lon: -110.8279, country: 'USA' },
+      { name: 'Hakuba Valley', desc: 'Nagano, Japan • Japanese Northern Alps premier ski destination and 1998 Winter Olympics host', category: 'ski', icon: '❄️', lat: 36.6982, lon: 137.8619, country: 'Japan' },
+
       // ⚡ Live Extreme Weather Hotspots (Lightning, Winds, Deluges & Scorching Deserts)
       { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms (280/hr)', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
       { name: 'Mount Washington', desc: 'New Hampshire, USA • Extreme Hurricane-Force Winds (372 km/h record)', category: 'weather', icon: '💨', lat: 44.2705, lon: -71.3033, country: 'USA' },
@@ -9569,6 +9595,7 @@ function joinSpacedLetters(text) {
         '#wondersNewsChips',
         '#wondersCapitalChips',
         '#wondersTouristChips',
+        '#wondersSkiChips',
         '#wondersWeatherChips',
         '#wondersVolcanoChips',
         '#wondersColdChips',
@@ -9899,6 +9926,7 @@ function joinSpacedLetters(text) {
         news: document.getElementById('wondersNewsChips'),
         capitals: document.getElementById('wondersCapitalChips'),
         tourist: document.getElementById('wondersTouristChips'),
+        ski: document.getElementById('wondersSkiChips'),
         weather: document.getElementById('wondersWeatherChips'),
         volcano: document.getElementById('wondersVolcanoChips'),
         cold: document.getElementById('wondersColdChips'),
@@ -9909,7 +9937,7 @@ function joinSpacedLetters(text) {
         const parent = containerMap[cat];
         if (!parent) return;
         parent.innerHTML = '';
-        const items = getRotatedCategoryWonders(cat, (cat === 'capitals' || cat === 'tourist' || cat === 'landmark') ? 8 : 6);
+        const items = getRotatedCategoryWonders(cat, (cat === 'capitals' || cat === 'tourist' || cat === 'landmark' || cat === 'ski') ? 8 : 6);
         items.forEach(w => {
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -9920,6 +9948,8 @@ function joinSpacedLetters(text) {
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 hover:border-sky-400/60 text-xs text-sky-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
             : (w.category === 'tourist')
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 hover:border-rose-400/60 text-xs text-rose-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
+            : (w.category === 'ski')
+            ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/30 hover:border-cyan-400/60 text-xs text-cyan-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
             : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
           btn.title = `${w.name}: ${w.desc}`;
           btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
