@@ -2814,10 +2814,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=290"></script>
+  <script src="traffic-flood.js?v=291"></script>
     <script>
-    const APP_BUILD = 290;
-    const APP_VERSION = '1.10.126';
+    const APP_BUILD = 291;
+    const APP_VERSION = '1.10.127';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13934,9 +13934,11 @@ function joinSpacedLetters(text) {
           return;
         }
       } catch (_) {}
+      try {
+        window.open('', '_self');
+        window.close();
+      } catch (_) {}
       try { window.close(); } catch (_) {}
-      try { window.history.back(); } catch (_) {}
-      try { window.location.replace('about:blank'); } catch (_) {}
     }
 
     function configureTvReceiverUI() {
