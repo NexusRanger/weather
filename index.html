@@ -1160,7 +1160,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.120) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.121) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1770,7 +1770,7 @@
           <div class="flex items-center gap-1.5">
             <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
             <div class="relative flex-1 flex items-center">
-              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full h-[34px] bg-black/60 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-500 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
+              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full h-[34px] bg-black/60 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-400 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
               <button id="customRenameClearBtn" type="button" tabindex="0" onclick="clearRenameInput()" onkeydown="handleRenameClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear title text">✕</button>
             </div>
             <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onblur="cancelRenameAutoContinue()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber h-[34px] px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0">
@@ -2691,10 +2691,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=284"></script>
+  <script src="traffic-flood.js?v=285"></script>
     <script>
-    const APP_BUILD = 284;
-    const APP_VERSION = '1.10.120';
+    const APP_BUILD = 285;
+    const APP_VERSION = '1.10.121';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6816,13 +6816,9 @@ function joinSpacedLetters(text) {
       const renameInput = document.getElementById('customRenameInput');
       if (renameInput) {
         const curName = (CURRENT_LOCATION && CURRENT_LOCATION.name && CURRENT_LOCATION.name !== 'Current Location') ? CURRENT_LOCATION.name : '';
-        renameInput.value = curName;
-        renameInput.dataset.prefilled = curName ? 'true' : 'false';
-        if (curName) {
-          renameInput.placeholder = `Current: "${curName}"`;
-        } else {
-          renameInput.placeholder = 'New title (e.g. Grand Hotel)';
-        }
+        renameInput.value = '';
+        renameInput.placeholder = curName || 'New title (e.g. Grand Hotel)';
+        renameInput.dataset.prefilled = 'false';
         updateRenameClearBtnVisibility();
       }
       const delBar = document.getElementById('recentDeleteBar');
