@@ -1124,7 +1124,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.110) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.111) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2623,10 +2623,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=274"></script>
+  <script src="traffic-flood.js?v=275"></script>
     <script>
-    const APP_BUILD = 274;
-    const APP_VERSION = '1.10.110';
+    const APP_BUILD = 275;
+    const APP_VERSION = '1.10.111';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6197,6 +6197,7 @@
     let locLastInputAt = 0;
     let locPrefixToStrip = '';
     let locSettleTimer = null;
+    let locSpelledSettleTimer = null;
     let locActivatedAt = 0;
     let locInitialQSwallowed = false;
     let locLastPhrase = '';
@@ -6280,6 +6281,10 @@
         clearTimeout(locSettleTimer);
         locSettleTimer = null;
       }
+      if (locSpelledSettleTimer) {
+        clearTimeout(locSpelledSettleTimer);
+        locSpelledSettleTimer = null;
+      }
     }
 
     // Speech-to-text often hears "H" ("aitch") as "8" ("eight") after a digit (e.g. "GL5 5HH" -> "GL5 588" or "588").
@@ -6320,7 +6325,7 @@
       });
     }
 
-function normalizeSpokenSpelledText(text) {
+function joinSpacedLetters(text) {
       if (!text) return text;
       let raw = text;
 
@@ -6329,49 +6334,48 @@ function normalizeSpokenSpelledText(text) {
         return raw;
       }
 
-      // Check if input ends with a sequence of single letters (e.g. 'p a n a m i n t' or 'p. a. n. a. m. i. n. t.')
-      const endsWithSpelledSequence = /(?:^|\s)[A-Za-z][\.\-\/]?\s+[A-Za-z][\.\-\/]?\s*$/.test(raw.trimEnd());
-
-      // 1. Normalize hyphenated, dotted, or slash-separated single letters:
-      // e.g. 'P-A-N-A-M-I-N-T' -> 'P A N A M I N T', 'P. A. N. A. M. I. N. T.' -> 'P A N A M I N T'
+      // 1. Normalize dotted, hyphenated, or slash-separated single letters: e.g. 'P. A. N. A. M. I. N. T.' -> 'P A N A M I N T'
       let cleaned = raw.replace(/([A-Za-z])[\.\-\/](?:\s*)/g, '$1 ');
 
-      // If text is not a UK postcode (or pure digits/coordinates)
+      // If text is a UK postcode with digits, don't collapse (let UK postcode logic handle it)
       const isUkPostcode = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2}$/i.test(cleaned.replace(/[\s-]+/g, ''));
-      if (!isUkPostcode) {
-        // 2. Identify sequences of 2 or more standalone single letters (separated by whitespace)
-        // e.g. 'p a n a m i n t' or 'P A N A M I N T' -> 'Panamint'
-        cleaned = cleaned.replace(/\b([a-zA-Z])(?:\s+([a-zA-Z]))+\b/g, (match) => {
-          const letters = match.split(/\s+/).filter(Boolean);
-          if (letters.length >= 2) {
-            const joined = letters.join('');
-            return joined.charAt(0).toUpperCase() + joined.slice(1).toLowerCase();
-          }
-          return match;
-        });
+      if (isUkPostcode) return raw;
 
-        // 3. Fix words accidentally joined without a space after spelling out or dictation:
-        // e.g. 'PanamintSprings' -> 'Panamint Springs'
-        cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
+      // Check if input ends with a sequence of 2+ single letters (e.g. 'p a n a m i n t' or '... p a n a m i n t')
+      const endsWithSpelledSequence = /(?:^|\s)[A-Za-z]\s+[A-Za-z]\s*$/.test(cleaned.trimEnd());
+      const hadTrailingSpace = raw.endsWith(' ') || endsWithSpelledSequence;
 
-        // 4. Ensure proper single spacing between words
-        cleaned = cleaned.replace(/\s{2,}/g, ' ');
-
-        // 5. Title-case words for place names if following a spelled word or if all lowercase
-        cleaned = cleaned.replace(/\b([a-z]+)\b/g, (w) => {
-          if (['upon', 'on', 'under', 'in', 'by', 'le', 'la', 'de', 'of', 'and'].includes(w.toLowerCase())) {
-            return w.toLowerCase();
-          }
-          return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-        });
-
-        cleaned = cleaned.trim();
-
-        // 6. If the user was dictating letter-by-letter and reached the end of the spelled word,
-        // add a trailing space so the next dictated word (e.g. 'Springs') attaches cleanly with a space!
-        if (endsWithSpelledSequence) {
-          cleaned = cleaned + ' ';
+      // 2. Identify sequences of 2 or more standalone single letters (separated by whitespace)
+      // and join them together into a word: e.g. 'p a n a m i n t' -> 'Panamint'
+      cleaned = cleaned.replace(/\b([a-zA-Z])(?:\s+([a-zA-Z]))+\b/g, (match) => {
+        const letters = match.split(/\s+/).filter(Boolean);
+        if (letters.length >= 2) {
+          const joined = letters.join('');
+          return joined.charAt(0).toUpperCase() + joined.slice(1).toLowerCase();
         }
+        return match;
+      });
+
+      // 3. Fix words accidentally joined without space: 'PanamintSprings' -> 'Panamint Springs'
+      cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
+
+      // 4. Clean up multiple spaces
+      cleaned = cleaned.replace(/\s{2,}/g, ' ');
+
+      // 5. Title-case words nicely for place names: e.g. 'panamint springs' -> 'Panamint Springs'
+      cleaned = cleaned.replace(/\b([a-z]+)\b/g, (w) => {
+        if (['upon', 'on', 'under', 'in', 'by', 'le', 'la', 'de', 'of', 'and'].includes(w.toLowerCase())) {
+          return w.toLowerCase();
+        }
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      });
+
+      cleaned = cleaned.trim();
+
+      // 6. Once stopped speaking, if a spelled sequence was joined or input ended with a space,
+      // keep the trailing space so the user can speak the next word: e.g. 'Panamint ' + 'Springs' -> 'Panamint Springs'
+      if (hadTrailingSpace) {
+        cleaned = cleaned + ' ';
       }
 
       return cleaned;
@@ -6437,10 +6441,19 @@ function normalizeSpokenSpelledText(text) {
         if (normalized !== input.value) {
           input.value = normalized;
         }
-        const spelledNormalized = normalizeSpokenSpelledText(input.value);
-        if (spelledNormalized !== input.value) {
-          input.value = spelledNormalized;
+        if (locSpelledSettleTimer) {
+          clearTimeout(locSpelledSettleTimer);
+          locSpelledSettleTimer = null;
         }
+        locSpelledSettleTimer = setTimeout(() => {
+          const locInput = document.getElementById('locationInput');
+          if (!locInput || !locInput.value) return;
+          const joined = joinSpacedLetters(locInput.value);
+          if (joined !== locInput.value) {
+            locInput.value = joined;
+            updateLocationClearBtnVisibility();
+          }
+        }, 1000);
         updateLocationClearBtnVisibility();
       });
 
@@ -6488,11 +6501,22 @@ function normalizeSpokenSpelledText(text) {
           if (normalized !== input.value) {
             input.value = normalized;
           }
-          // Normalize letter-by-letter voice entry: e.g. 'p a n a m i n t' -> 'Panamint ', 'P A N A M I N T Springs' -> 'Panamint Springs'
-          const spelledNormalized = normalizeSpokenSpelledText(input.value);
-          if (spelledNormalized !== input.value) {
-            input.value = spelledNormalized;
+          // Do NOT scramble letters synchronously while user is speaking letter-by-letter!
+          // Once the user stops speaking, detect if a sequence of spaced letters was entered,
+          // join them into a word, and append a space so the next word can be spoken cleanly!
+          if (locSpelledSettleTimer) {
+            clearTimeout(locSpelledSettleTimer);
+            locSpelledSettleTimer = null;
           }
+          locSpelledSettleTimer = setTimeout(() => {
+            const locInput = document.getElementById('locationInput');
+            if (!locInput || !locInput.value) return;
+            const joined = joinSpacedLetters(locInput.value);
+            if (joined !== locInput.value) {
+              locInput.value = joined;
+              updateLocationClearBtnVisibility();
+            }
+          }, 1000);
         }
 
         // Track outward postcode prefix (e.g. "GL5") and last non-empty phrase for pause-stitching
@@ -7106,8 +7130,12 @@ function normalizeSpokenSpelledText(text) {
       if (locLastOutwardCode && /^[0-9][A-Z0-9]{2}$/i.test(q.replace(/[s-]+/g, ''))) {
         q = `${locLastOutwardCode} ${q}`;
       }
+      if (locSpelledSettleTimer) {
+        clearTimeout(locSpelledSettleTimer);
+        locSpelledSettleTimer = null;
+      }
       q = normalizeSpokenUkPostcode(q);
-      q = normalizeSpokenSpelledText(q).trim();
+      q = joinSpacedLetters(q).trim();
       input.value = q;
 
       // Check for secret map unlock password
