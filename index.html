@@ -1124,7 +1124,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.111) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.112) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2307,12 +2307,14 @@
         </div>
 
         <div class="flex flex-col gap-2.5 pt-1">
-          <button id="tvConfirmExitBtn" tabindex="1" onclick="executeTvExitCast()" onkeydown="handleTvExitConfirmKeydown(event)" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/90 text-slate-200 font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-md focus:outline-none cursor-pointer">
-            <span>🏠 Return to TV Home</span>
-            <span id="tvExitCountdown" class="text-amber-300 font-mono text-[10px] ml-1">(20s)</span>
+          <!-- Top Option: Green Stay Here button (default focus on open, press Up to reach) -->
+          <button id="tvCancelExitBtn" tabindex="1" onclick="closeTvExitCastModal(true)" onkeydown="handleTvExitCancelKeydown(event)" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500/90 border border-emerald-400/50 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg focus:outline-none cursor-pointer">
+            <span>✓ Stay Here (Keep Watching)</span>
+            <span id="tvExitCountdown" class="text-emerald-200 font-mono text-[10px] ml-1">(20s)</span>
           </button>
-          <button id="tvCancelExitBtn" tabindex="2" onclick="closeTvExitCastModal(true)" onkeydown="handleTvExitCancelKeydown(event)" class="tv-focus-amber w-full px-4 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/60 text-slate-300 hover:text-white font-medium text-xs transition-all flex items-center justify-center focus:outline-none cursor-pointer">
-            <span>✕ Cancel (Keep Watching)</span>
+          <!-- Bottom Option: Close Window to return to base screen (press Down to reach) -->
+          <button id="tvConfirmExitBtn" tabindex="2" onclick="executeTvExitCast()" onkeydown="handleTvExitConfirmKeydown(event)" class="tv-focus-amber w-full px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700/90 text-slate-200 hover:text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 shadow-md focus:outline-none cursor-pointer">
+            <span>🏠 Close Window (Return to TV Home)</span>
           </button>
         </div>
       </div>
@@ -2623,10 +2625,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=275"></script>
+  <script src="traffic-flood.js?v=276"></script>
     <script>
-    const APP_BUILD = 275;
-    const APP_VERSION = '1.10.111';
+    const APP_BUILD = 276;
+    const APP_VERSION = '1.10.112';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -12544,25 +12546,31 @@ function joinSpacedLetters(text) {
     let tvExitCountdownTimer = null;
     let tvExitSeconds = 20;
 
-    function handleTvExitConfirmKeydown(e) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const cancelBtn = document.getElementById('tvCancelExitBtn');
-        if (cancelBtn) cancelBtn.focus();
-      } else if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.key === ' ') {
-        e.preventDefault();
-        executeTvExitCast();
-      }
-    }
-
     function handleTvExitCancelKeydown(e) {
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
         const confirmBtn = document.getElementById('tvConfirmExitBtn');
         if (confirmBtn) confirmBtn.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        // Stay firmly on the top option
       } else if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.key === ' ') {
         e.preventDefault();
         closeTvExitCastModal(true);
+      }
+    }
+
+    function handleTvExitConfirmKeydown(e) {
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const cancelBtn = document.getElementById('tvCancelExitBtn');
+        if (cancelBtn) cancelBtn.focus();
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        // Stay firmly on the bottom option
+      } else if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.key === ' ') {
+        e.preventDefault();
+        executeTvExitCast();
       }
     }
 
@@ -12670,8 +12678,8 @@ function joinSpacedLetters(text) {
       }, 1000);
 
       setTimeout(() => {
-        const confirmBtn = document.getElementById('tvConfirmExitBtn');
-        if (confirmBtn) confirmBtn.focus();
+        const cancelBtn = document.getElementById('tvCancelExitBtn');
+        if (cancelBtn) cancelBtn.focus();
       }, 50);
     }
 
@@ -12708,11 +12716,8 @@ function joinSpacedLetters(text) {
           return;
         }
       } catch (_) {}
-      try {
-        window.location.href = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end';
-      } catch (_) {}
-      try { window.history.back(); } catch (_) {}
       try { window.close(); } catch (_) {}
+      try { window.history.back(); } catch (_) {}
     }
 
     function enterTvSleepMode() {
@@ -12752,12 +12757,8 @@ function joinSpacedLetters(text) {
           return;
         }
       } catch (_) {}
-      // Strictly trigger Android Home Intent to return directly to Shield home screen
-      try {
-        window.location.href = 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end';
-      } catch (_) {}
-      try { window.history.back(); } catch (_) {}
       try { window.close(); } catch (_) {}
+      try { window.history.back(); } catch (_) {}
     }
 
     function configureTvReceiverUI() {
