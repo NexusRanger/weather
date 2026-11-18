@@ -1219,7 +1219,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.134) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.135) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2840,10 +2840,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=298"></script>
+  <script src="traffic-flood.js?v=299"></script>
     <script>
-    const APP_BUILD = 298;
-    const APP_VERSION = '1.10.134';
+    const APP_BUILD = 299;
+    const APP_VERSION = '1.10.135';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3933,23 +3933,20 @@
     function isPersonalLocationName(name) {
       if (!name) return true;
       const s = String(name).trim().toLowerCase();
-      if (/dunkirk|amberley|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false; // Explicitly allowed landmarks & heritage sites
+      // Explicitly allow landmarks & heritage sites
+      if (/dunkirk|amberley|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false;
       if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
         if (POPULAR_LANDMARKS_DATABASE.some(lm => (lm.name && s.includes(lm.name.toLowerCase())) || (Array.isArray(lm.aliases) && lm.aliases.some(a => s.includes(a.toLowerCase()))))) return false;
       }
-      if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location') return true;
+      if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location' || s === 'gps' || s === 'geo') return true;
       if (/['’]s\b/i.test(s)) return true; // e.g. Phil's, Mum's, John's
-      if (/^(my|our|the)\s+/i.test(s)) return true; // e.g. My House, The Grand Hotel
-      const customWords = [
-        'hotel', 'motel', 'inn', 'lodge', 'resort', 'villa', 'stay', 'cottage', 'cabin',
-        'house', 'home', 'flat', 'apartment', 'suite', 'room', 'office', 'work', 'desk',
-        'hq', 'shed', 'garage', 'farm', 'barn', 'yard', 'garden', 'club', 'gym', 'school',
-        'church', 'hall', 'shop', 'store', 'cafe', 'pub', 'bar', 'restaurant', 'place',
+      if (/^(my|our)\s+/i.test(s)) return true; // e.g. My House, Our Cottage
+      const personalWords = [
+        'home', 'flat', 'apartment', 'desk', 'shed', 'garage', 'yard',
         'retreat', 'hideaway', 'base', 'mum', 'mums', 'mom', 'moms', 'dad', 'dads', 'nan',
-        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'current location',
-        'dentiste', 'pool', 'storr', 'ne40', 'ne66', 'venus'
+        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'dentiste'
       ];
-      return customWords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(s));
+      return personalWords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(s));
     }
     const isCustomOrPersonalLocationName = isPersonalLocationName;
 
@@ -4011,23 +4008,27 @@
         return 'Eiffel Tower';
       }
 
-      // 1. Precise coordinate match to known generic town takes top priority (guarantees generic naming)
-      const knownTown = getKnownGenericTown(lat, lon);
-      if (knownTown) return knownTown;
+      // 1. Demarcation Principle: If the title is NOT a custom/personal title edited by the user, keep the official searched name!
+      const isCustom = Boolean(loc.isCustomTitle) || isPersonalLocationName(raw);
+      if (!isCustom) {
+        const cleanName = shortenPlaceName(raw);
+        if (cleanName && cleanName.toLowerCase() !== 'united kingdom' && cleanName.toLowerCase() !== 'uk') {
+          return cleanName;
+        }
+      }
 
-      // 2. If geoName is clean and not custom/personal, use it
+      // 2. If it IS a custom title (e.g. user renamed or gave personal label):
+      // (a) Anonymize to official geocoded place name if available & clean
       const geo = (loc.geoName || '').trim();
-      if (geo && !isPersonalLocationName(geo)) {
+      if (geo && !isPersonalLocationName(geo) && geo.toLowerCase() !== 'united kingdom' && geo.toLowerCase() !== 'uk') {
         return shortenPlaceName(geo);
       }
 
-      // 3. If rawName is clean and not custom/personal, use it
-      const rawName = (loc.name || '').trim();
-      if (rawName && !isPersonalLocationName(rawName)) {
-        return shortenPlaceName(rawName);
-      }
+      // (b) Coordinate match to known generic town takes priority for custom titles
+      const knownTown = getKnownGenericTown(lat, lon);
+      if (knownTown) return knownTown;
 
-      // 4. Safe generic fallback to outward postcode district
+      // (c) Safe generic fallback to outward postcode district
       const outward = getOutwardPostcode(loc.postcode);
       if (outward) return `${outward} Area`;
 
@@ -4105,6 +4106,7 @@
           postcode: loc.postcode || '',
           lat: loc.lat,
           lon: loc.lon,
+          isCustomTitle: Boolean(loc.isCustomTitle),
           locked: preserveLocked,
           timestamp: Date.now()
         });
@@ -4166,15 +4168,17 @@
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
         if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return;
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
-        if (isPersonalLocationName(q.name)) return;
+
+        const publicName = getDepersonalizedLocationName(q);
+        if (!publicName || isPersonalLocationName(publicName)) return;
 
         const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
         if (ts < cutoff) return;
 
-        if (!deduped.some(d => Math.abs(d.lat - q.lat) < 0.05 && Math.abs(d.lon - q.lon) < 0.05)) {
+        if (!deduped.some(d => Math.abs(d.lat - q.lat) < 0.015 && Math.abs(d.lon - q.lon) < 0.015)) {
           deduped.push({
             ...q,
-            name: getDepersonalizedLocationName(q)
+            name: publicName
           });
         }
       });
@@ -5793,6 +5797,7 @@
     function applySelectedLocation(name, lat, lon, postcode, recordInRecent = true) {
       const nLat = parseFloat(lat);
       const nLon = parseFloat(lon);
+      const isCustom = Boolean(pendingCustomLocationName);
       const chosenName = pendingCustomLocationName ? pendingCustomLocationName.trim() : (name || '');
       pendingCustomLocationName = '';
       const newName = shortenPlaceName(chosenName);
@@ -5810,7 +5815,8 @@
         postcode: (postcode && postcode !== 'undefined') ? postcode : '',
         lat: nLat,
         lon: nLon,
-        desc: formatCoordDesc(nLat, nLon)
+        desc: formatCoordDesc(nLat, nLon),
+        isCustomTitle: isCustom
       };
 
       // When location changes, unlock radar zoom and reset zoom level to default
@@ -7785,6 +7791,7 @@ function joinSpacedLetters(text) {
       if (!cleanNewName) return;
 
       CURRENT_LOCATION.name = cleanNewName;
+      CURRENT_LOCATION.isCustomTitle = true;
       if (!CURRENT_LOCATION.geoName) {
         CURRENT_LOCATION.geoName = cleanNewName;
       }
