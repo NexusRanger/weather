@@ -1282,7 +1282,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.139) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.140) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2903,10 +2903,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=303"></script>
+  <script src="traffic-flood.js?v=304"></script>
     <script>
-    const APP_BUILD = 303;
-    const APP_VERSION = '1.10.139';
+    const APP_BUILD = 304;
+    const APP_VERSION = '1.10.140';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3969,14 +3969,7 @@
                 }
                 return true;
               });
-              if (k === PUBLIC_MAP_CACHE_KEY) {
-                arr = arr.map(q => {
-                  if (q && q.name && /dunkirk/i.test(q.name)) {
-                    return { ...q, name: 'Nailsworth' };
-                  }
-                  return q;
-                });
-              }
+
               localStorage.setItem(k, JSON.stringify(arr));
             }
           }
@@ -4059,8 +4052,8 @@
     function getDepersonalizedLocationName(loc) {
       if (!loc) return '';
       const raw = typeof loc === 'string' ? loc : (loc.name || loc.geoName || '');
-      if (/dunkirk/i.test(raw)) return 'Nailsworth';
-      if (loc.geoName && /dunkirk/i.test(loc.geoName)) return 'Nailsworth';
+      if (/dunkirk/i.test(raw)) return 'Dunkirk Mills';
+      if (loc.geoName && /dunkirk/i.test(loc.geoName)) return 'Dunkirk Mills';
       if (loc.name && /amberley/i.test(loc.name)) return 'Amberley Church';
       if (loc.geoName && /amberley/i.test(loc.geoName)) return 'Amberley Church';
       if (loc.name && /stroud hotel|the stroud/i.test(loc.name)) return 'The Stroud Hotel';
@@ -4072,7 +4065,7 @@
       // 0. Landmark Preservation: Public world wonders & heritage sites preserve their iconic identity
       if (typeof matchActiveLandmark === 'function') {
         const lm = matchActiveLandmark({ name: raw, lat, lon, postcode: loc.postcode });
-        if (lm && lm.id !== 'dunkirk_mills') {
+        if (lm) {
           return lm.name;
         }
       }
@@ -4188,8 +4181,10 @@
     }
 
     const DEFAULT_PUBLIC_MAP_LOCATIONS = [
-      { name: 'Nailsworth', postcode: 'GL5', lat: 51.6950, lon: -2.2220 },
+      { name: 'Dunkirk Mills', postcode: 'GL5', lat: 51.7032, lon: -2.2266 },
       { name: 'Amberley Church', postcode: 'GL5', lat: 51.7093, lon: -2.2241 },
+      { name: 'Nailsworth', postcode: 'GL5', lat: 51.6950, lon: -2.2220 },
+      { name: 'The Stroud Hotel', postcode: 'GL5', lat: 51.7448, lon: -2.2188 },
       { name: 'Stroud', postcode: 'GL5', lat: 51.7458, lon: -2.2178 },
       { name: 'Cirencester', postcode: 'GL7', lat: 51.7180, lon: -1.9680 },
       { name: 'Gloucester', postcode: 'GL1', lat: 51.8642, lon: -2.2431 },
@@ -4760,15 +4755,15 @@
         const isDunkirk = CURRENT_LOCATION.name && /dunkirk/i.test(CURRENT_LOCATION.name);
         const isAmberley = CURRENT_LOCATION.name && /amberley/i.test(CURRENT_LOCATION.name);
         return {
-          name: isDunkirk ? 'Nailsworth' : (isAmberley ? 'Amberley Church' : getDepersonalizedLocationName(CURRENT_LOCATION)),
-          postcode: isDunkirk ? (getOutwardPostcode(CURRENT_LOCATION.postcode) || 'GL5') : (isAmberley ? (CURRENT_LOCATION.postcode || 'GL5 5QG') : (getOutwardPostcode(CURRENT_LOCATION.postcode) || CURRENT_LOCATION.postcode || '')),
+          name: isDunkirk ? 'Dunkirk Mills' : (isAmberley ? 'Amberley Church' : getDepersonalizedLocationName(CURRENT_LOCATION)),
+          postcode: isDunkirk ? (getOutwardPostcode(CURRENT_LOCATION.postcode) || 'GL5 5HH') : (isAmberley ? (CURRENT_LOCATION.postcode || 'GL5 5QG') : (getOutwardPostcode(CURRENT_LOCATION.postcode) || CURRENT_LOCATION.postcode || '')),
           lat: CURRENT_LOCATION.lat,
           lon: CURRENT_LOCATION.lon
         };
       }
       return {
-        name: 'Nailsworth',
-        postcode: 'GL5',
+        name: 'Dunkirk Mills',
+        postcode: 'GL5 5HH',
         lat: 51.7032,
         lon: -2.2266
       };
@@ -5088,23 +5083,31 @@
       const combined = queries.filter(q => {
         if (!q || !q.name) return false;
         const n = q.name.toLowerCase().trim();
+        if (n.includes('probe') || n.includes('test location')) return false;
         return n !== 'united kingdom' && n !== 'uk';
       });
-      const hasCurrentInList = combined.some(q => Math.abs(q.lat - currentRef.lat) < 0.03 && Math.abs(q.lon - currentRef.lon) < 0.03);
-      if (!hasCurrentInList) {
-        combined.unshift({
-          name: currentRef.name,
-          postcode: currentRef.postcode,
-          lat: currentRef.lat,
-          lon: currentRef.lon,
-          timestamp: Date.now(),
-          isCurrentPin: true
-        });
-      }
 
-      const sortedQueries = combined.map(q => {
+      // Filter out any historical entry that is identical to currentRef (same name or virtually same coords < 200m)
+      const filtered = combined.filter(q => {
+        const sameName = (q.name || '').toLowerCase().trim() === currentRef.name.toLowerCase().trim();
+        const sameCoords = Math.abs(q.lat - currentRef.lat) < 0.003 && Math.abs(q.lon - currentRef.lon) < 0.003;
+        return !sameName && !sameCoords;
+      });
+
+      // Guarantee Current Location is always present as the first entry
+      filtered.unshift({
+        name: currentRef.name,
+        postcode: currentRef.postcode,
+        lat: currentRef.lat,
+        lon: currentRef.lon,
+        timestamp: Date.now(),
+        isCurrentPin: true
+      });
+
+      const sortedQueries = filtered.map(q => {
         const distKm = calculateHaversineKm(currentRef.lat, currentRef.lon, q.lat, q.lon);
-        const isCurrent = distKm < 2.0 || !!q.isCurrentPin;
+        // Only the explicitly designated currentRef pin is the current location
+        const isCurrent = !!q.isCurrentPin;
         return {
           ...q,
           name: getDepersonalizedLocationName(q),
@@ -5703,7 +5706,7 @@
                 const nLower = name.toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000);
+                const isPurged = nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000);
                 if (name && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(name)) {
                   sheetQueries.push({
                     name: name,
