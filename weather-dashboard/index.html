@@ -1225,7 +1225,7 @@
             <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
           </button>
           <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline flex-shrink-0 whitespace-nowrap">51.70°N, 2.23°W</span>
-          <button id="headerGlobeBtn" tabindex="-1" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none cursor-default" aria-label="Location History Map">
+          <button id="headerGlobeBtn" tabindex="0" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="tv-focus-amber p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none cursor-pointer" aria-label="Location History Map">
             <svg class="w-4 h-4 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
               <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
@@ -2903,10 +2903,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=302"></script>
+  <script src="traffic-flood.js?v=303"></script>
     <script>
-    const APP_BUILD = 302;
-    const APP_VERSION = '1.10.138';
+    const APP_BUILD = 303;
+    const APP_VERSION = '1.10.139';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3910,7 +3910,7 @@
     // 30-Day Location History & Google Sheets Integration
     // -------------------------------------------------------------
     // Master switch: change to true when you want the map active for everyone
-    const PUBLIC_MAP_ENABLED = false;
+    const PUBLIC_MAP_ENABLED = true;
 
     function isMapUnlocked() {
       if (PUBLIC_MAP_ENABLED) return true;
