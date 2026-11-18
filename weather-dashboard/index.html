@@ -1282,7 +1282,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.142) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.143) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2138,17 +2138,23 @@
         <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 w-full min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
           <!-- Chips injected dynamically -->
         </div>
-        <!-- Bottom Controls: Return to Current, Distance Unit (Miles / km), and Close button -->
+        <!-- Bottom Controls: Close button on bottom left, Return to Current, Distance Unit (Miles / km), and Map Style on right -->
         <div class="flex items-center justify-between gap-2 px-1 pb-0 -mt-0.5 flex-wrap">
-          <!-- Bottom Left: Touch gesture indicator -->
-          <div class="flex items-center gap-1.5 text-[10px] text-slate-400 select-none py-0.5 font-medium tracking-wide pointer-events-none">
-            <span class="text-sky-400 font-mono text-[9px]">◀</span>
-            <span class="text-slate-300">Swipe to browse</span>
-            <span class="text-sky-400 font-mono text-[9px]">▶</span>
+          <!-- Bottom Left: Close button and touch gesture indicator -->
+          <div class="flex items-center gap-2">
+            <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const cur=document.getElementById('mapReturnCurrentBtn');if(cur)cur.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber h-[26px] px-2.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center justify-center gap-1 cursor-pointer shadow-sm box-border whitespace-nowrap leading-none" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
+              <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
+            </button>
+
+            <div class="hidden sm:flex items-center gap-1.5 text-[10px] text-slate-400 select-none py-0.5 font-medium tracking-wide pointer-events-none">
+              <span class="text-sky-400 font-mono text-[9px]">◀</span>
+              <span class="text-slate-300">Swipe to browse</span>
+              <span class="text-sky-400 font-mono text-[9px]">▶</span>
+            </div>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-[26px] px-2.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center justify-center gap-1 cursor-pointer shadow-sm box-border whitespace-nowrap leading-none" tabindex="0" title="Return to Current Location (first item on list)">
+            <button id="mapReturnCurrentBtn" type="button" onclick="returnMapToCurrentLocation()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const km=document.getElementById('mapUnitKmBtn');if(km)km.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-[26px] px-2.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 hover:text-white font-semibold text-[10px] transition focus:outline-none flex items-center justify-center gap-1 cursor-pointer shadow-sm box-border whitespace-nowrap leading-none" tabindex="0" title="Return to Current Location (first item on list)">
               <span>📍 Current</span>
             </button>
 
@@ -2168,14 +2174,10 @@
               <button id="mapStyleSatelliteBtn" type="button" onclick="switchHistoryMapStyle('satellite')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const db=document.getElementById('mapStyleDarkBtn');if(db)db.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const pb=document.getElementById('mapStylePhysicalBtn');if(pb)pb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Satellite: True-color Earth surface from space">
                 🛰️ Satellite
               </button>
-              <button id="mapStyleDarkBtn" type="button" onclick="switchHistoryMapStyle('dark')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const sb=document.getElementById('mapStyleSatelliteBtn');if(sb)sb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Dark: Stealth Dark Canvas">
+              <button id="mapStyleDarkBtn" type="button" onclick="switchHistoryMapStyle('dark')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const sb=document.getElementById('mapStyleSatelliteBtn');if(sb)sb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Dark: Stealth Dark Canvas">
                 🌑 Dark
               </button>
             </div>
-
-            <button id="closeMapBtnBottom" type="button" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const db=document.getElementById('mapStyleDarkBtn');if(db)db.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();handleBottomCloseDownClick(this);}" onclick="closeHistoryMapModal()" class="tv-focus-amber h-[26px] px-2.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/15 text-slate-400 hover:text-white font-medium text-[10px] transition focus:outline-none flex items-center justify-center gap-1 cursor-pointer shadow-sm box-border whitespace-nowrap leading-none" tabindex="0" title="Close Map (Back / Esc • Double-Down to Lock Timer)">
-              <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
-            </button>
           </div>
         </div>
       </div>
@@ -2903,10 +2905,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=306"></script>
+  <script src="traffic-flood.js?v=307"></script>
     <script>
-    const APP_BUILD = 306;
-    const APP_VERSION = '1.10.142';
+    const APP_BUILD = 307;
+    const APP_VERSION = '1.10.143';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
