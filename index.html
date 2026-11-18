@@ -1219,7 +1219,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.135) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.136) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2840,10 +2840,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=299"></script>
+  <script src="traffic-flood.js?v=300"></script>
     <script>
-    const APP_BUILD = 299;
-    const APP_VERSION = '1.10.135';
+    const APP_BUILD = 300;
+    const APP_VERSION = '1.10.136';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3873,7 +3873,15 @@
     const USER_RECENTS_STORAGE_KEY = 'ambient_user_recent_locations';
     const PUBLIC_MAP_CACHE_KEY = 'ambient_public_map_cache';
 
-    // Startup storage sanitization & migration: purge unwanted test queries (Sturgeon County, Iran, IN)
+    // Startup storage sanitization & migration: purge unwanted test queries (Sturgeon County, Iran, IN, and previous Eiffel Tower test entries)
+    const EIFFEL_PURGE_CUTOFF = 1794998300000;
+    try {
+      const rawLoc = localStorage.getItem('ambient_weather_loc');
+      if (rawLoc && /eiffel/i.test(rawLoc)) {
+        localStorage.removeItem('ambient_weather_loc');
+        sessionStorage.removeItem('ambient_weather_loc');
+      }
+    } catch (_) {}
     try {
       if (!localStorage.getItem(USER_RECENTS_STORAGE_KEY)) {
         const legacy = localStorage.getItem('ambient_location_queries');
@@ -3890,6 +3898,8 @@
               arr = arr.filter(q => {
                 if (!q || !q.name) return false;
                 const n = q.name.trim().toLowerCase();
+                const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
+                if (n.includes('eiffel') && ts <= EIFFEL_PURGE_CUTOFF) return false;
                 if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
                 if (typeof q.lat === 'number' && typeof q.lon === 'number') {
                   if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
@@ -3900,9 +3910,6 @@
                 arr = arr.map(q => {
                   if (q && q.name && /dunkirk/i.test(q.name)) {
                     return { ...q, name: 'Nailsworth' };
-                  }
-                  if (q && ((q.name && /eiffel/i.test(q.name)) || (typeof q.lat === 'number' && typeof q.lon === 'number' && Math.abs(q.lat - 48.8584) < 0.015 && Math.abs(q.lon - 2.2945) < 0.015))) {
-                    return { ...q, name: 'Eiffel Tower' };
                   }
                   return q;
                 });
@@ -4004,9 +4011,6 @@
           return lm.name;
         }
       }
-      if (/eiffel/i.test(raw) || (!isNaN(lat) && !isNaN(lon) && Math.abs(lat - 48.8584) < 0.015 && Math.abs(lon - 2.2945) < 0.015)) {
-        return 'Eiffel Tower';
-      }
 
       // 1. Demarcation Principle: If the title is NOT a custom/personal title edited by the user, keep the official searched name!
       const isCustom = Boolean(loc.isCustomTitle) || isPersonalLocationName(raw);
@@ -4043,6 +4047,8 @@
         return arr.filter(q => {
           if (!q || !q.name) return false;
           const n = q.name.trim().toLowerCase();
+          const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
+          if (n.includes('eiffel') && ts <= 1794998300000) return false;
           if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
           if (typeof q.lat === 'number' && typeof q.lon === 'number') {
             if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
@@ -4165,6 +4171,8 @@
       combined.forEach(q => {
         if (!q || typeof q.lat !== 'number' || typeof q.lon !== 'number' || !q.name) return;
         const n = (q.name || '').toLowerCase().trim();
+        const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
+        if (n.includes('eiffel') && ts <= 1794998300000) return;
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
         if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return;
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
@@ -4172,7 +4180,6 @@
         const publicName = getDepersonalizedLocationName(q);
         if (!publicName || isPersonalLocationName(publicName)) return;
 
-        const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
         if (ts < cutoff) return;
 
         if (!deduped.some(d => Math.abs(d.lat - q.lat) < 0.015 && Math.abs(d.lon - q.lon) < 0.015)) {
@@ -5621,7 +5628,7 @@
                 const nLower = name.toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64);
+                const isPurged = nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794998300000);
                 if (name && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(name)) {
                   sheetQueries.push({
                     name: name,
@@ -5893,7 +5900,18 @@
       // Priority 1: Always keep the user's saved location across reloads unless an explicit shared URL param was just opened
       const saved = loadSavedLocation();
       if (saved && saved.lat && saved.lon && !pc && !loc && !(lat && lon)) {
-        CURRENT_LOCATION = saved;
+        if (saved.name && /eiffel/i.test(saved.name)) {
+          CURRENT_LOCATION = {
+            name: 'Nailsworth',
+            postcode: 'GL5 5HH',
+            lat: 51.7032,
+            lon: -2.2266,
+            desc: '51.70°N, 2.23°W • Elev. 120m'
+          };
+          saveSavedLocation();
+        } else {
+          CURRENT_LOCATION = saved;
+        }
         if (saved.name === 'Current Location') {
           await lookupCoords(saved.lat, saved.lon, false);
           return;
