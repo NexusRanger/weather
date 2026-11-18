@@ -182,7 +182,8 @@
       will-change: transform;
       animation: marqueePingPong var(--scroll-duration, 8s) ease-in-out infinite;
     }
-    #headerLocationTitle.has-fade {
+    #headerLocationTitle.has-fade,
+    #weatherDescContainer.has-fade {
       mask-image: linear-gradient(to right, black 85%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
@@ -1282,7 +1283,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.144) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.145) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1325,10 +1326,12 @@
                   <div id="todayRange" class="text-[10px] font-mono text-slate-400 whitespace-nowrap leading-tight">▲ --°  ▼ --°</div>
                 </div>
               </div>
-              <div class="text-right flex items-center gap-1 flex-shrink-0 min-w-0 max-w-[45%]">
+              <div class="text-right flex items-center gap-1 flex-shrink-0 min-w-0 max-w-[48%]">
                 <div id="weatherIconLg" class="text-xl sm:text-2xl leading-none flex-shrink-0">☁️</div>
-                <div class="text-left min-w-0">
-                  <div id="weatherDesc" class="text-xs sm:text-sm font-bold text-white capitalize leading-tight truncate">Overcast</div>
+                <div class="text-left min-w-0 flex-1 overflow-hidden">
+                  <div id="weatherDescContainer" class="overflow-hidden whitespace-nowrap max-w-full">
+                    <span id="weatherDesc" class="inline-block text-xs sm:text-sm font-bold text-white capitalize leading-tight whitespace-nowrap">Overcast</span>
+                  </div>
                   <div id="weatherSubDesc" class="text-[9px] text-slate-400 leading-tight truncate">Calm valley air</div>
                 </div>
               </div>
@@ -2904,10 +2907,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=308"></script>
+  <script src="traffic-flood.js?v=309"></script>
     <script>
-    const APP_BUILD = 308;
-    const APP_VERSION = '1.10.144';
+    const APP_BUILD = 309;
+    const APP_VERSION = '1.10.145';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10337,6 +10340,9 @@ function joinSpacedLetters(text) {
     function checkStargazingAdviceScroll() {
       applyMarqueeScroll('stargazingAdviceContainer', 'stargazingAdvice', 'stargazing-scroll', '--advice-scroll-distance', '--advice-scroll-duration', 12, 16, 6, 12);
     }
+    function checkWeatherDescScroll() {
+      applyMarqueeScroll('weatherDescContainer', 'weatherDesc', 'marquee-scroll', '--scroll-distance', '--scroll-duration', 6, 14, 3, 6);
+    }
 
     let marqueeResizeTimer = null;
     window.addEventListener('resize', () => {
@@ -10345,6 +10351,7 @@ function joinSpacedLetters(text) {
         checkLocationTitleScroll();
         checkFrostDetailScroll();
         checkStargazingAdviceScroll();
+        checkWeatherDescScroll();
         if (typeof checkRainNowcastScroll === 'function') checkRainNowcastScroll();
       }, 100);
     });
@@ -11642,6 +11649,7 @@ function joinSpacedLetters(text) {
       
       document.getElementById('weatherIconLg').textContent = weatherInfo.icon;
       document.getElementById('weatherDesc').textContent = weatherInfo.desc;
+      checkWeatherDescScroll();
 
       // Check for late-day or evening wind spikes (e.g. calm daytime, strong wind arriving late tonight)
       let lateWindNotice = '';
