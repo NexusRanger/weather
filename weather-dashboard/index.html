@@ -1282,7 +1282,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.140) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.141) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2162,10 +2162,10 @@
             </div>
 
             <div class="flex items-center rounded-md bg-white/10 border border-white/15 p-0.5 h-[26px] box-border" role="group" aria-label="Map style">
-              <button id="mapStylePhysicalBtn" type="button" onclick="switchHistoryMapStyle('physical')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const sb=document.getElementById('mapStyleSatelliteBtn');if(sb)sb.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Physical: Clean blue sea, green vegetation & icy wastes">
+              <button id="mapStylePhysicalBtn" type="button" onclick="switchHistoryMapStyle('physical')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const sb=document.getElementById('mapStyleSatelliteBtn');if(sb)sb.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const mi=document.getElementById('mapUnitMiBtn');if(mi)mi.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Physical: Clean blue sea, green vegetation & icy wastes">
                 🌍 Physical
               </button>
-              <button id="mapStyleSatelliteBtn" type="button" onclick="switchHistoryMapStyle('satellite')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const db=document.getElementById('mapStyleDarkBtn');if(db)db.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const pb=document.getElementById('mapStylePhysicalBtn');if(pb)pb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Satellite: True-color Earth surface from space">
+              <button id="mapStyleSatelliteBtn" type="button" onclick="switchHistoryMapStyle('satellite')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const db=document.getElementById('mapStyleDarkBtn');if(db)db.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const pb=document.getElementById('mapStylePhysicalBtn');if(pb)pb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Satellite: True-color Earth surface from space">
                 🛰️ Satellite
               </button>
               <button id="mapStyleDarkBtn" type="button" onclick="switchHistoryMapStyle('dark')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const c=document.getElementById('closeMapBtnBottom');if(c)c.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const sb=document.getElementById('mapStyleSatelliteBtn');if(sb)sb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const target=chips[mapLastFocusedChipIndex]||chips[0];if(target){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();}" class="tv-focus-amber h-full px-2 rounded text-[10px] font-medium text-slate-400 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center leading-none" tabindex="0" title="Dark: Stealth Dark Canvas">
@@ -2903,10 +2903,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=304"></script>
+  <script src="traffic-flood.js?v=305"></script>
     <script>
-    const APP_BUILD = 304;
-    const APP_VERSION = '1.10.140';
+    const APP_BUILD = 305;
+    const APP_VERSION = '1.10.141';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4242,7 +4242,12 @@
 
         if (ts < cutoff) return;
 
-        if (!deduped.some(d => Math.abs(d.lat - q.lat) < 0.015 && Math.abs(d.lon - q.lon) < 0.015)) {
+        const nameLower = publicName.toLowerCase().trim();
+        if (!deduped.some(d => {
+          const sameName = (d.name || '').toLowerCase().trim() === nameLower;
+          const sameCoords = Math.abs(d.lat - q.lat) < 0.003 && Math.abs(d.lon - q.lon) < 0.003;
+          return sameName || sameCoords;
+        })) {
           deduped.push({
             ...q,
             name: publicName
@@ -5720,10 +5725,15 @@
             });
 
             // Authoritative synchronization with Supabase:
-            // Deduplicate the queries by proximity (keeping newest entries, as results are ordered by timestamp desc)
+            // Deduplicate queries by distinct place (same name or virtually same coords < 300m)
             const deduped = [];
             sheetQueries.forEach(sq => {
-              if (!deduped.some(d => Math.abs(d.lat - sq.lat) < 0.05 && Math.abs(d.lon - sq.lon) < 0.05)) {
+              const nameLower = (sq.name || '').toLowerCase().trim();
+              if (!deduped.some(d => {
+                const sameName = (d.name || '').toLowerCase().trim() === nameLower;
+                const sameCoords = Math.abs(d.lat - sq.lat) < 0.003 && Math.abs(d.lon - sq.lon) < 0.003;
+                return sameName || sameCoords;
+              })) {
                 deduped.push(sq);
               }
             });
