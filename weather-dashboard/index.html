@@ -1282,7 +1282,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.138) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.139) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -4284,22 +4284,24 @@
         if (mapQueries.length > 50) mapQueries = mapQueries.slice(0, 50);
         localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(mapQueries));
 
-        const PRIVATE_SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
-        if (PRIVATE_SHEETS_ENDPOINT) {
-          fetch(PRIVATE_SHEETS_ENDPOINT, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'log',
-              name: publicName,
-              postcode: outwardPostcode,
-              lat: loc.lat,
-              lon: loc.lon,
-              timestamp: new Date().toISOString()
-            })
-          }).catch(() => {});
-        }
+        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+        fetch(`${SUPABASE_URL}/rest/v1/locations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            name: publicName,
+            postcode: outwardPostcode || '',
+            lat: loc.lat,
+            lon: loc.lon,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(() => {});
       } catch (err) {
         console.warn('Could not record location query:', err);
       }
@@ -5678,15 +5680,23 @@
     }
 
     async function syncPublicHistoryQueriesFromSheet(isMapOpen = false) {
-      const endpoint = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
+      const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+      const cutoffISO = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const endpoint = `${SUPABASE_URL}/rest/v1/locations?select=name,postcode,lat,lon,timestamp&timestamp=gte.${cutoffISO}&order=timestamp.desc&limit=150`;
       try {
-        const res = await fetch(endpoint);
+        const res = await fetch(endpoint, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY
+          }
+        });
         if (res.ok) {
-          const json = await res.json();
-          if (json && json.data && Array.isArray(json.data)) {
+          const rows = await res.json();
+          if (Array.isArray(rows) && rows.length > 0) {
             const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
             const sheetQueries = [];
-            json.data.forEach(sq => {
+            rows.forEach(sq => {
               const ts = sq.timestamp ? new Date(sq.timestamp).getTime() : Date.now();
               if (sq.lat && sq.lon && ts >= cutoff) {
                 const name = (sq.name || '').trim();
@@ -5706,10 +5716,10 @@
               }
             });
 
-            // Authoritative synchronization with Google Sheet:
-            // Deduplicate the sheet queries by proximity (keeping newest entries)
+            // Authoritative synchronization with Supabase:
+            // Deduplicate the queries by proximity (keeping newest entries, as results are ordered by timestamp desc)
             const deduped = [];
-            sheetQueries.slice().reverse().forEach(sq => {
+            sheetQueries.forEach(sq => {
               if (!deduped.some(d => Math.abs(d.lat - sq.lat) < 0.05 && Math.abs(d.lon - sq.lon) < 0.05)) {
                 deduped.push(sq);
               }
