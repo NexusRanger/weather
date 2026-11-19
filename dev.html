@@ -1360,7 +1360,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.158-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.159-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2171,47 +2171,74 @@
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
       
       <!-- Modal Header -->
-      <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-white/10 flex-shrink-0 flex-wrap">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-6 h-6 rounded-full overflow-hidden shadow-[0_0_10px_rgba(56,189,248,0.35)] flex-shrink-0">
-            <svg class="w-full h-full" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
-              <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
-              <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
-              <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-            </svg>
+      <div class="pb-2 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded-full overflow-hidden shadow-[0_0_10px_rgba(56,189,248,0.35)] flex-shrink-0">
+              <svg class="w-full h-full" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
+                <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
+                <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
+                <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+              </svg>
+            </div>
+            <h3 id="mapModalTitleText" class="text-sm md:text-base font-bold text-white leading-none whitespace-nowrap">30-Day Location Map</h3>
+            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-mono font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
+              <span>🗺️</span><span id="mapQueryCountText">0 locations</span>
+            </button>
           </div>
-          <div class="min-w-0">
-            <h3 class="text-sm md:text-base font-bold text-white flex items-center gap-2 flex-wrap">
-              <span id="mapModalTitleText">30-Day Location Map</span>
-              <span id="mapQueryCount" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">0 locations</span>
-            </h3>
-            <p class="text-[10px] text-slate-400">Sorted by distance from current location • TV: Use bottom bar • Touch: Pan map to auto-inspect</p>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <!-- 3-Way Map View Filter: All (Public) | Recent (Saved up to 30) | Locked (Favourites) -->
+            <div class="flex items-center rounded-xl bg-white/10 border border-white/15 p-0.5 h-[30px] box-border" role="group" aria-label="Map location view filter">
+              <button id="mapFilterAllBtn" type="button" onclick="setMapViewFilter('all')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapQueryCount');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show everyone's shared 30-day locations">
+                <span>🌐</span><span>All</span>
+              </button>
+              <button id="mapFilterLocalBtn" type="button" onclick="setMapViewFilter('local')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show your locally saved recent locations (private custom names included)">
+                <span>📍</span><span>Recent</span><span id="mapFilterLocalBadge" class="text-[9px] font-mono opacity-80"></span>
+              </button>
+              <button id="mapFilterLockedBtn" type="button" onclick="setMapViewFilter('locked')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapViewInfoBtn')||document.getElementById('closeMapBtnTop');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show only your locked locations (hold any saved location in Search to lock)">
+                <span>🔒</span><span>Locked</span><span id="mapFilterLockedBadge" class="text-[9px] font-mono opacity-80"></span>
+              </button>
+            </div>
+            <!-- Round 'i' Info Button explaining All (Central Anonymous DB) vs Recent/Locked (Browser Cache) -->
+            <button id="mapViewInfoBtn" type="button" tabindex="0" onclick="toggleMapViewInfo()" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('closeMapBtnTop');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber w-[30px] h-[30px] rounded-full bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/45 text-sky-300 hover:text-white text-xs font-serif font-bold italic inline-flex items-center justify-center leading-none transition focus:outline-none cursor-pointer flex-shrink-0 shadow-sm box-border" title="How Map Views &amp; Privacy Work" aria-label="How Map Views and Privacy Work" aria-expanded="false">
+              i
+            </button>
+            <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
+            <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapViewInfoBtn')||document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const target=typeof getActiveOrLastFocusedChip==='function'?getActiveOrLastFocusedChip():document.querySelector('#mapRecentChips button');if(target){try{const cEl=document.getElementById('mapRecentChips');if(cEl){cEl.scrollTo({left:Math.max(0,target.offsetLeft-6),behavior:'smooth'});}}catch(_){}try{target.focus({preventScroll:true});}catch(_){target.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber h-[30px] px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition inline-flex items-center justify-center gap-1.5 leading-none focus:outline-none cursor-pointer flex-shrink-0 box-border whitespace-nowrap" tabindex="1" title="Close Map (Back / Esc)">
+              <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-0.5">(45s)</span></span>
+            </button>
           </div>
         </div>
-        <div class="flex items-center gap-2 flex-wrap">
-          <!-- 3-Way Map View Filter: All (Public) | Local (Saved up to 30) | Locked (Favourites) -->
-          <div class="flex items-center rounded-xl bg-white/10 border border-white/15 p-0.5 h-[30px] box-border" role="group" aria-label="Map location view filter">
-            <button id="mapFilterAllBtn" type="button" onclick="setMapViewFilter('all')" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show everyone's shared 30-day locations">
-              <span>🌐</span><span>All</span>
-            </button>
-            <button id="mapFilterLocalBtn" type="button" onclick="setMapViewFilter('local')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show your locally saved locations (private custom names included)">
-              <span>📍</span><span>Local</span><span id="mapFilterLocalBadge" class="text-[9px] font-mono opacity-80"></span>
-            </button>
-            <button id="mapFilterLockedBtn" type="button" onclick="setMapViewFilter('locked')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('closeMapBtnTop');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer focus:outline-none flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show only your locked locations (hold any saved location in Search to lock)">
-              <span>🔒</span><span>Locked</span><span id="mapFilterLockedBadge" class="text-[9px] font-mono opacity-80"></span>
-            </button>
-          </div>
-          <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
-          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const target=typeof getActiveOrLastFocusedChip==='function'?getActiveOrLastFocusedChip():document.querySelector('#mapRecentChips button');if(target){try{const cEl=document.getElementById('mapRecentChips');if(cEl){cEl.scrollTo({left:Math.max(0,target.offsetLeft-6),behavior:'smooth'});}}catch(_){}try{target.focus({preventScroll:true});}catch(_){target.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
-            <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
-          </button>
-        </div>
+        <p class="text-[10px] text-slate-400 mt-1.5 leading-tight">Sorted by distance from current location • Tap location count to fit all pins • TV: Use bottom bar</p>
       </div>
 
       <!-- Leaflet Map Container -->
       <div class="flex-1 min-h-0 mt-2 mb-1 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
         <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
+        <!-- Floating Map Views & Privacy Info Box (toggled by the round 'i' button) -->
+        <div id="mapViewInfoBox" onclick="event.stopPropagation()" class="hidden absolute top-3 right-3 z-[560] w-[min(360px,calc(100%-24px))] p-3 rounded-xl bg-slate-900/95 border border-sky-400/45 text-[11px] text-slate-200 leading-relaxed shadow-2xl backdrop-blur-md">
+          <div class="flex items-start justify-between gap-2 mb-1.5">
+            <div class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-sky-500/30 border border-sky-400/50 text-sky-300 text-[10px] font-serif italic">i</span>
+              <span>How Map Views &amp; Privacy Work</span>
+            </div>
+            <button type="button" onclick="toggleMapViewInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
+          </div>
+          <div class="space-y-1.5 text-[11px]">
+            <p>
+              <span class="font-semibold text-sky-300">🌐 All (Shared 30-Day Map):</span>
+              Recent location searches are stored <strong class="text-white">anonymously</strong> on the central database. Personal or custom names are always stripped to the generic local town name so nobody's private titles are shared.
+            </p>
+            <p>
+              <span class="font-semibold text-emerald-300">📍 Recent</span> &amp; <span class="font-semibold text-amber-300">🔒 Locked:</span>
+              Stored <strong class="text-white">only in your browser cache</strong> (<code class="text-sky-300 font-mono text-[10px]">localStorage</code>) on this device—never uploaded to the central database. Your custom location names appear here privately for your eyes only.
+            </p>
+            <p class="text-[10px] text-slate-400 pt-0.5 border-t border-white/10">
+              💡 Tip: Hold any saved location in Search (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> favourites into your Locked map view.
+            </p>
+          </div>
+        </div>
         <!-- Empty-State Banner for Locked/Local filter when no pins exist -->
         <div id="mapEmptyFilterNotice" class="hidden pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[500] px-4 py-2.5 rounded-xl bg-slate-900/92 border border-amber-400/45 text-amber-100 text-xs font-medium shadow-2xl backdrop-blur-md text-center max-w-[90%]">
           <div id="mapEmptyFilterTitle" class="font-bold text-amber-300 mb-0.5">🔒 No locked locations yet</div>
@@ -3017,8 +3044,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 322;
-    const APP_VERSION = '1.10.158-dev';
+    const APP_BUILD = 323;
+    const APP_VERSION = '1.10.159-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4690,6 +4717,7 @@
       if (mapToastTimer) { clearTimeout(mapToastTimer); mapToastTimer = null; }
       const toast = document.getElementById('mapToast');
       if (toast) { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }
+      if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
       stopHistoryMapAutoCloseTimer();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -5279,7 +5307,7 @@
         const btn = document.getElementById(id);
         if (!btn) return;
         const isActive = filterMode === key;
-        btn.className = `tv-focus-amber h-full px-2.5 rounded-lg text-[11px] transition cursor-pointer focus:outline-none flex items-center justify-center gap-1 leading-none whitespace-nowrap ${
+        btn.className = `tv-focus-amber h-full px-2.5 rounded-lg text-[11px] transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap ${
           isActive ? activeCls : 'font-medium text-slate-300 hover:text-white'
         }`;
         btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
@@ -5296,8 +5324,59 @@
       if (titleEl) {
         titleEl.textContent = filterMode === 'locked'
           ? 'Locked Locations Map'
-          : (filterMode === 'local' ? 'Local Saved Map' : '30-Day Location Map');
+          : (filterMode === 'local' ? 'Recent Saved Map' : '30-Day Location Map');
       }
+    }
+
+    function fitAllMapLocationsView() {
+      resetHistoryMapAutoCloseTimer();
+      if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
+      if (!historyLeafletMap) return;
+      const queries = (currentMapQueries && currentMapQueries.length > 0)
+        ? currentMapQueries
+        : Object.values(mapMarkerMap).map(e => e.query || e.q).filter(Boolean);
+      const validPts = queries
+        .filter(q => q && typeof q.lat === 'number' && typeof q.lon === 'number' && isFinite(q.lat) && isFinite(q.lon))
+        .map(q => [q.lat, q.lon]);
+      if (validPts.length === 0) {
+        showMapToast('No locations in this view to frame');
+        return;
+      }
+      mapProgrammaticFlyUntil = Date.now() + 1000;
+      try { historyLeafletMap.closePopup(); } catch (_) {}
+      try { historyLeafletMap.invalidateSize(false); } catch (_) {}
+
+      if (validPts.length === 1) {
+        const maxZ = (typeof historyLeafletMap.getMaxZoom === 'function') ? Math.min(9, historyLeafletMap.getMaxZoom()) : 9;
+        historyLeafletMap.flyTo(validPts[0], maxZ, { duration: 0.6 });
+      } else {
+        const bounds = L.latLngBounds(validPts);
+        const maxZ = (typeof historyLeafletMap.getMaxZoom === 'function') ? Math.min(11, historyLeafletMap.getMaxZoom()) : 11;
+        historyLeafletMap.fitBounds(bounds, {
+          padding: [38, 38],
+          maxZoom: maxZ,
+          animate: true,
+          duration: 0.65
+        });
+      }
+      const mode = getMapViewFilter();
+      const label = mode === 'locked' ? 'locked ' : (mode === 'local' ? 'recent ' : '');
+      showMapToast(`Framed all ${validPts.length} ${label}location${validPts.length === 1 ? '' : 's'}`);
+    }
+
+    function toggleMapViewInfo(forceState) {
+      const box = document.getElementById('mapViewInfoBox');
+      const btn = document.getElementById('mapViewInfoBtn');
+      if (!box) return;
+      const shouldShow = (typeof forceState === 'boolean') ? forceState : box.classList.contains('hidden');
+      if (shouldShow) {
+        box.classList.remove('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      } else {
+        box.classList.add('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+      resetHistoryMapAutoCloseTimer();
     }
 
     function setMapViewFilter(mode, reframe = true) {
@@ -5503,8 +5582,8 @@
 
       currentMapQueries = sortedQueries;
 
-      const countEl = document.getElementById('mapQueryCount');
-      if (countEl) countEl.textContent = `${sortedQueries.length} location${sortedQueries.length === 1 ? '' : 's'}`;
+      const countTextEl = document.getElementById('mapQueryCountText') || document.getElementById('mapQueryCount');
+      if (countTextEl) countTextEl.textContent = `${sortedQueries.length} location${sortedQueries.length === 1 ? '' : 's'}`;
 
       const chipsEl = document.getElementById('mapRecentChips');
       if (chipsEl) {
@@ -5681,9 +5760,11 @@
           if (modal && !modal.classList.contains('hidden')) {
             const isBottomCtrlActive = document.activeElement && (
               document.activeElement.id === 'closeMapBtnTop' ||
+              document.activeElement.id === 'mapQueryCount' ||
               document.activeElement.id === 'mapFilterAllBtn' ||
               document.activeElement.id === 'mapFilterLocalBtn' ||
               document.activeElement.id === 'mapFilterLockedBtn' ||
+              document.activeElement.id === 'mapViewInfoBtn' ||
               document.activeElement.id === 'closeMapBtnBottom' ||
               document.activeElement.id === 'mapUnitKmBtn' ||
               document.activeElement.id === 'mapUnitMiBtn' ||
@@ -6034,9 +6115,12 @@
           mapCanvasEl.addEventListener('keyup', handleGlobalBack, true);
         }
 
-        // Reset idle auto-close timer on direct map interactions
+        // Reset idle auto-close timer on direct map interactions (and dismiss info popover on tap/drag)
         historyLeafletMap.on('dragstart zoomstart movestart', () => {
           resetHistoryMapAutoCloseTimer();
+        });
+        historyLeafletMap.on('click dragstart', () => {
+          if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
         });
 
         // Tablet / Touch Gesture UX: As you pan or zoom the map, automatically pop up the info card
