@@ -1331,7 +1331,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.149) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.150) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2957,10 +2957,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=313"></script>
+  <script src="traffic-flood.js?v=314"></script>
     <script>
-    const APP_BUILD = 313;
-    const APP_VERSION = '1.10.149';
+    const APP_BUILD = 314;
+    const APP_VERSION = '1.10.150';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4112,6 +4112,8 @@
       if (loc.geoName && /amberley/i.test(loc.geoName)) return 'Amberley Church';
       if (loc.name && /stroud hotel|the stroud/i.test(loc.name)) return 'The Stroud Hotel';
       if (loc.geoName && /stroud hotel|the stroud/i.test(loc.geoName)) return 'The Stroud Hotel';
+      if (loc.name && /egypt mill/i.test(loc.name)) return 'Egypt Mill';
+      if (loc.geoName && /egypt mill/i.test(loc.geoName)) return 'Egypt Mill';
 
       const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
@@ -4236,7 +4238,9 @@
 
     const DEFAULT_PUBLIC_MAP_LOCATIONS = [
       { name: 'Dunkirk Mills', postcode: 'GL5', lat: 51.7032, lon: -2.2266 },
-      { name: 'Nailsworth', postcode: 'GL5', lat: 51.6950, lon: -2.2220 },
+      { name: 'Amberley Church', postcode: 'GL5', lat: 51.7093, lon: -2.2241 },
+      { name: 'Egypt Mill', postcode: 'GL6', lat: 51.6975, lon: -2.2192 },
+      { name: 'Nailsworth', postcode: 'GL6', lat: 51.6950, lon: -2.2220 },
       { name: 'The Stroud Hotel', postcode: 'GL5', lat: 51.7448, lon: -2.2188 },
       { name: 'Stroud', postcode: 'GL5', lat: 51.7458, lon: -2.2178 },
       { name: 'Cirencester', postcode: 'GL7', lat: 51.7180, lon: -1.9680 },
@@ -4253,6 +4257,26 @@
       { name: 'Starbase (SpaceX)', postcode: '', lat: 25.9972, lon: -97.1561 },
       { name: 'Sydney', postcode: '', lat: -33.8688, lon: 151.2093 }
     ];
+
+    function normalizeKnownLandmarkCoords(name, lat, lon, postcode) {
+      let outLat = typeof lat === 'number' ? lat : parseFloat(lat);
+      let outLon = typeof lon === 'number' ? lon : parseFloat(lon);
+      let outPc = postcode || '';
+      if (typeof matchActiveLandmark === 'function') {
+        const lm = matchActiveLandmark({ name, lat: outLat, lon: outLon, postcode: outPc });
+        if (lm && typeof lm.lat === 'number' && typeof lm.lon === 'number') {
+          const isLocalCustom = lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'stroud_hotel';
+          if (isLocalCustom) {
+            outLat = lm.lat;
+            outLon = lm.lon;
+            if (!outPc && Array.isArray(lm.postcodes) && lm.postcodes.length > 0) {
+              outPc = getOutwardPostcode(lm.postcodes[0]) || '';
+            }
+          }
+        }
+      }
+      return { lat: outLat, lon: outLon, postcode: outPc };
+    }
 
     function getHistoryQueries() {
       const now = Date.now();
@@ -4295,15 +4319,22 @@
 
         if (ts < cutoff) return;
 
+        const norm = normalizeKnownLandmarkCoords(publicName, q.lat, q.lon, q.postcode);
         const nameLower = publicName.toLowerCase().trim();
         if (!deduped.some(d => {
           const sameName = (d.name || '').toLowerCase().trim() === nameLower;
-          const sameCoords = Math.abs(d.lat - q.lat) < 0.003 && Math.abs(d.lon - q.lon) < 0.003;
+          const distKm = (typeof calculateHaversineKm === 'function')
+            ? calculateHaversineKm(d.lat, d.lon, norm.lat, norm.lon)
+            : Math.hypot(d.lat - norm.lat, d.lon - norm.lon) * 111;
+          const sameCoords = distKm < 0.14;
           return sameName || sameCoords;
         })) {
           deduped.push({
             ...q,
-            name: publicName
+            name: publicName,
+            lat: norm.lat,
+            lon: norm.lon,
+            postcode: norm.postcode
           });
         }
       });
@@ -4320,18 +4351,22 @@
       try {
         const publicName = getDepersonalizedLocationName(loc);
         if (!publicName || isPersonalLocationName(publicName)) return;
-        const outwardPostcode = getOutwardPostcode(loc.postcode);
+        const norm = normalizeKnownLandmarkCoords(publicName, loc.lat, loc.lon, loc.postcode);
+        const outwardPostcode = getOutwardPostcode(norm.postcode || loc.postcode);
         let mapQueries = getHistoryQueries();
         mapQueries = mapQueries.filter(q => {
           const sameName = (q.name || '').toLowerCase() === publicName.toLowerCase();
-          const sameCoords = Math.abs(q.lat - loc.lat) < 0.001 && Math.abs(q.lon - loc.lon) < 0.001;
+          const distKm = (typeof calculateHaversineKm === 'function')
+            ? calculateHaversineKm(q.lat, q.lon, norm.lat, norm.lon)
+            : Math.hypot(q.lat - norm.lat, q.lon - norm.lon) * 111;
+          const sameCoords = distKm < 0.14;
           return !sameName && !sameCoords;
         });
         mapQueries.unshift({
           name: publicName,
           postcode: outwardPostcode || '',
-          lat: loc.lat,
-          lon: loc.lon,
+          lat: norm.lat,
+          lon: norm.lon,
           timestamp: Date.now()
         });
         if (mapQueries.length > 50) mapQueries = mapQueries.slice(0, 50);
@@ -4350,8 +4385,8 @@
           body: JSON.stringify({
             name: publicName,
             postcode: outwardPostcode || '',
-            lat: loc.lat,
-            lon: loc.lon,
+            lat: norm.lat,
+            lon: norm.lon,
             timestamp: new Date().toISOString()
           })
         }).catch(() => {});
@@ -4844,13 +4879,13 @@
 
     function getMapCurrentReference() {
       if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') {
-        const isDunkirk = CURRENT_LOCATION.name && /dunkirk/i.test(CURRENT_LOCATION.name);
-        const isAmberley = CURRENT_LOCATION.name && /amberley/i.test(CURRENT_LOCATION.name);
+        const depName = getDepersonalizedLocationName(CURRENT_LOCATION) || CURRENT_LOCATION.name || 'Dunkirk Mills';
+        const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode);
         return {
-          name: isDunkirk ? 'Dunkirk Mills' : (isAmberley ? 'Amberley Church' : getDepersonalizedLocationName(CURRENT_LOCATION)),
-          postcode: isDunkirk ? (getOutwardPostcode(CURRENT_LOCATION.postcode) || 'GL5 5HH') : (isAmberley ? (CURRENT_LOCATION.postcode || 'GL5 5QG') : (getOutwardPostcode(CURRENT_LOCATION.postcode) || CURRENT_LOCATION.postcode || '')),
-          lat: CURRENT_LOCATION.lat,
-          lon: CURRENT_LOCATION.lon
+          name: depName,
+          postcode: getOutwardPostcode(norm.postcode || CURRENT_LOCATION.postcode) || norm.postcode || CURRENT_LOCATION.postcode || '',
+          lat: norm.lat,
+          lon: norm.lon
         };
       }
       return {
@@ -5187,10 +5222,15 @@
         return n !== 'united kingdom' && n !== 'uk';
       });
 
-      // Filter out any historical entry that is identical to currentRef (same name or virtually same coords < 200m)
-      const filtered = combined.filter(q => {
+      // Filter out any historical entry that is identical to currentRef (same name or virtually same coords < 140m)
+      const filtered = combined.map(q => {
+        const depName = getDepersonalizedLocationName(q);
+        const norm = normalizeKnownLandmarkCoords(depName, q.lat, q.lon, q.postcode);
+        return { ...q, name: depName, lat: norm.lat, lon: norm.lon, postcode: norm.postcode || q.postcode };
+      }).filter(q => {
         const sameName = (q.name || '').toLowerCase().trim() === currentRef.name.toLowerCase().trim();
-        const sameCoords = Math.abs(q.lat - currentRef.lat) < 0.003 && Math.abs(q.lon - currentRef.lon) < 0.003;
+        const distToCur = calculateHaversineKm(q.lat, q.lon, currentRef.lat, currentRef.lon);
+        const sameCoords = distToCur < 0.14;
         return !sameName && !sameCoords;
       });
 
@@ -5210,7 +5250,7 @@
         const isCurrent = !!q.isCurrentPin;
         return {
           ...q,
-          name: getDepersonalizedLocationName(q),
+          name: q.name || getDepersonalizedLocationName(q),
           postcode: getOutwardPostcode(q.postcode),
           distKm: isCurrent ? 0 : distKm,
           isCurrent
@@ -5810,11 +5850,12 @@
                 const lonNum = parseFloat(sq.lon);
                 const isPurged = nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000);
                 if (depName && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
+                  const norm = normalizeKnownLandmarkCoords(depName, latNum, lonNum, sq.postcode);
                   sheetQueries.push({
                     name: depName,
-                    postcode: sq.postcode || '',
-                    lat: latNum,
-                    lon: lonNum,
+                    postcode: norm.postcode || sq.postcode || '',
+                    lat: norm.lat,
+                    lon: norm.lon,
                     timestamp: ts
                   });
                 }
@@ -5822,13 +5863,16 @@
             });
 
             // Authoritative synchronization with Supabase:
-            // Deduplicate queries by distinct place (same name or virtually same coords < 300m)
+            // Deduplicate queries by distinct place (same name or virtually same coords < 140m)
             const deduped = [];
             sheetQueries.forEach(sq => {
               const nameLower = (sq.name || '').toLowerCase().trim();
               if (!deduped.some(d => {
                 const sameName = (d.name || '').toLowerCase().trim() === nameLower;
-                const sameCoords = Math.abs(d.lat - sq.lat) < 0.003 && Math.abs(d.lon - sq.lon) < 0.003;
+                const distKm = (typeof calculateHaversineKm === 'function')
+                  ? calculateHaversineKm(d.lat, d.lon, sq.lat, sq.lon)
+                  : Math.hypot(d.lat - sq.lat, d.lon - sq.lon) * 111;
+                const sameCoords = distKm < 0.14;
                 return sameName || sameCoords;
               })) {
                 deduped.push(sq);
@@ -6080,7 +6124,7 @@
       if (saved && saved.lat && saved.lon && !pc && !loc && !(lat && lon)) {
         if (saved.name && /eiffel/i.test(saved.name)) {
           CURRENT_LOCATION = {
-            name: 'Nailsworth',
+            name: 'Dunkirk Mills',
             postcode: 'GL5 5HH',
             lat: 51.7032,
             lon: -2.2266,
@@ -6089,6 +6133,26 @@
           saveSavedLocation();
         } else {
           CURRENT_LOCATION = saved;
+          // Auto-heal stale/drifted coordinates or mis-labeled generic town names for known local custom landmarks
+          if (typeof matchActiveLandmark === 'function') {
+            const lm = matchActiveLandmark(CURRENT_LOCATION);
+            if (lm && (lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'stroud_hotel')) {
+              const driftKm = (typeof calculateHaversineKm === 'function')
+                ? calculateHaversineKm(CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, lm.lat, lm.lon)
+                : Math.hypot(CURRENT_LOCATION.lat - lm.lat, CURRENT_LOCATION.lon - lm.lon) * 111;
+              const nameNeedsFix = !CURRENT_LOCATION.isCustomTitle && String(CURRENT_LOCATION.name || '').trim().toLowerCase() !== lm.name.toLowerCase();
+              if (driftKm > 0.05 || nameNeedsFix) {
+                CURRENT_LOCATION.name = lm.name;
+                CURRENT_LOCATION.lat = lm.lat;
+                CURRENT_LOCATION.lon = lm.lon;
+                if ((!CURRENT_LOCATION.postcode || CURRENT_LOCATION.postcode === 'GPS' || CURRENT_LOCATION.postcode === 'GEO') && Array.isArray(lm.postcodes) && lm.postcodes[0]) {
+                  CURRENT_LOCATION.postcode = lm.postcodes[0];
+                }
+                CURRENT_LOCATION.desc = formatCoordDesc(lm.lat, lm.lon);
+                saveSavedLocation();
+              }
+            }
+          }
         }
         if (saved.name === 'Current Location') {
           await lookupCoords(saved.lat, saved.lon, false);
@@ -6499,10 +6563,11 @@
         name: 'Amberley Church',
         city: 'Amberley, Stroud',
         country: 'United Kingdom',
-        postcodes: ['GL5 5QG', 'GL5 5JG', 'GL5 5AZ', 'GL5 5BA', 'GL5'],
+        postcodes: ['GL5 5QG', 'GL5 5JG', 'GL5 5AZ', 'GL5 5BA'],
         lat: 51.7093,
         lon: -2.2241,
-        radiusKm: 8,
+        radiusKm: 4,
+        snapRadiusKm: 0.25,
         aliases: ['amberley church', 'amberley', 'amberley shop and cafe', 'amberley shop & cafe', 'ambleside', 'holy trinity church amberley', 'holy trinity amberley', 'holy trinity church'],
         badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
         svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -6544,10 +6609,11 @@
         name: 'The Stroud Hotel',
         city: 'Stroud',
         country: 'United Kingdom',
-        postcodes: ['GL5 3AP', 'GL53AP', 'GL5'],
+        postcodes: ['GL5 3AP', 'GL53AP'],
         lat: 51.7448,
         lon: -2.2188,
-        radiusKm: 6,
+        radiusKm: 4,
+        snapRadiusKm: 0.08,
         aliases: [
           'the stroud hotel', 'stroud hotel', 'the stroud',
           'imperial hotel stroud', 'imperial hotel', 'gl53ap', 'gl5 3ap'
@@ -6611,7 +6677,8 @@
         postcodes: ['GL5 5HH', 'GL5 5HR'],
         lat: 51.7032,
         lon: -2.2266,
-        radiusKm: 5,
+        radiusKm: 4,
+        snapRadiusKm: 0.25,
         aliases: ['dunkirk mills', 'dunkirk mill', 'dunkirk', 'gl55hh', 'gl5 5hh'],
         badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
         svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -6658,7 +6725,8 @@
         lat: 51.6975,
         lon: -2.2192,
         radiusKm: 3,
-        aliases: ['egypt mill', 'egypt mills', 'egypt mill nailsworth', 'gl60ae', 'gl6 0ae'],
+        snapRadiusKm: 0.14,
+        aliases: ['egypt mill', 'egypt mills', 'egypt mill nailsworth', 'egypt mill hotel', 'gl60ae', 'gl6 0ae'],
         badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
         svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 24 C8 20, 18 22, 28 21 C36 20, 42 22, 48 24 L48 36 L0 36 Z" fill="#14532d" opacity="0.6"/>
@@ -6703,25 +6771,23 @@
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
       const hasCoords = !isNaN(lat) && !isNaN(lon);
 
-      // Pass 1: Name / Alias Match (+ geo-validation / postcode validation)
+      // Pass 1: Exact Name / Alias Match (+ geo-validation / exact full postcode validation)
       for (const lm of POPULAR_LANDMARKS_DATABASE) {
         const city = (lm.city || '').toLowerCase();
         const country = (lm.country || '').toLowerCase();
         if (cleanName === city || cleanName === country) continue;
 
-        const isAliasMatch = lm.aliases.some(alias => {
+        const isAliasMatch = cleanName && lm.aliases.some(alias => {
           const aClean = alias.replace(/[\s,.-]+/g, ' ').trim().toLowerCase();
-          if (cleanName === aClean || cleanName.includes(aClean)) return true;
-          const tokens = aClean.split(' ');
-          return tokens.some(t => t.length >= 4 && t === cleanName && t !== city && t !== country);
+          return aClean && (cleanName === aClean || cleanName.includes(aClean));
         });
 
         if (isAliasMatch) {
-          // Check postcode if present
-          if (rawPc && Array.isArray(lm.postcodes) && lm.postcodes.length > 0) {
+          // Check exact full unit postcode if present (never match 3-4 char outward codes like 'GL5')
+          if (rawPc.length >= 5 && Array.isArray(lm.postcodes) && lm.postcodes.length > 0) {
             const pcMatch = lm.postcodes.some(p => {
               const pNorm = p.toUpperCase().replace(/\s+/g, '');
-              return rawPc === pNorm || rawPc.startsWith(pNorm) || pNorm.startsWith(rawPc);
+              return pNorm.length >= 5 && rawPc === pNorm;
             });
             if (pcMatch) return lm;
           }
@@ -6740,13 +6806,14 @@
         }
       }
 
-      // Pass 2: Postcode-specific match for custom sites (e.g. Amberley Church GL5 5QG)
-      if (rawPc) {
+      // Pass 2: Exact full unit postcode match for custom sites (e.g. GL55QG, GL55HH, GL60AE, GL53AP)
+      // Never match generic outward district codes like 'GL5' or 'GL6'
+      if (rawPc.length >= 5) {
         for (const lm of POPULAR_LANDMARKS_DATABASE) {
           if (Array.isArray(lm.postcodes) && lm.postcodes.length > 0) {
             const exactPcMatch = lm.postcodes.some(p => {
               const pNorm = p.toUpperCase().replace(/\s+/g, '');
-              return rawPc === pNorm;
+              return pNorm.length >= 5 && rawPc === pNorm;
             });
             if (exactPcMatch) {
               if (!hasCoords) return lm;
@@ -6759,16 +6826,23 @@
         }
       }
 
-      // Pass 3: Immediate high-accuracy GPS proximity (< 350m)
-      if (hasCoords) {
+      // Pass 3: Immediate high-accuracy GPS proximity (closest landmark within its tight snapRadiusKm)
+      // Only snap when name is empty, generic GPS, or a surrounding town/parish — never overwrite distinct named venues!
+      const isGenericOrTown = !cleanName || /^(current location|gps|geo|location|local|local area|nailsworth|stroud|amberley|woodchester|minchinhampton|rodborough|cotswold|cotswolds|gl5 area|gl6 area)$/.test(cleanName);
+      if (hasCoords && isGenericOrTown) {
+        let closestLm = null;
+        let closestDist = Infinity;
         for (const lm of POPULAR_LANDMARKS_DATABASE) {
+          const maxSnapKm = typeof lm.snapRadiusKm === 'number' ? lm.snapRadiusKm : 0.20;
           const distKm = (typeof calculateHaversineKm === 'function')
             ? calculateHaversineKm(lat, lon, lm.lat, lm.lon)
             : Math.hypot(lat - lm.lat, lon - lm.lon) * 111;
-          if (distKm <= 0.35) {
-            return lm;
+          if (distKm <= maxSnapKm && distKm < closestDist) {
+            closestDist = distKm;
+            closestLm = lm;
           }
         }
+        if (closestLm) return closestLm;
       }
 
       return null;
@@ -7072,62 +7146,46 @@
       let resolvedName = '';
       let resolvedPostcode = '';
 
-      // High-accuracy location snapping for Dunkirk Mills:
-      // Dunkirk Mills GL5 5HH coordinates are 51.7032, -2.2266.
-      // Only snap if coordinates are within the immediate grounds of Dunkirk Mills (~250m / 0.25 km),
-      // allowing distinct neighboring villages like Amberley (~720m away) to resolve accurately.
-      const DUNKIRK_LAT = 51.7032;
-      const DUNKIRK_LON = -2.2266;
-      const distToDunkirk = (typeof calculateHaversineKm === 'function')
-        ? calculateHaversineKm(lat, lon, DUNKIRK_LAT, DUNKIRK_LON)
-        : Math.hypot(lat - DUNKIRK_LAT, lon - DUNKIRK_LON) * 111;
-
-      if (distToDunkirk <= 0.25) {
-        resolvedName = 'Dunkirk Mills';
-        resolvedPostcode = 'GL5 5HH';
-        // Snap to true high-precision coordinates for exact forecast & radar accuracy
-        lat = DUNKIRK_LAT;
-        lon = DUNKIRK_LON;
+      // 0. Unified high-accuracy landmark snapping (Dunkirk Mills, Amberley Church, Egypt Mill, The Stroud Hotel, etc.)
+      // Uses each landmark's tight snapRadiusKm (e.g. 250m Dunkirk/Amberley, 140m Egypt Mill, 150m Stroud Hotel)
+      // and picks the closest match so Main Screen and Map always agree 100%.
+      if (typeof matchActiveLandmark === 'function') {
+        const matchedLm = matchActiveLandmark({ name: '', lat, lon, postcode: '' });
+        if (matchedLm) {
+          resolvedName = matchedLm.name;
+          resolvedPostcode = (Array.isArray(matchedLm.postcodes) && matchedLm.postcodes[0]) || matchedLm.postcode || '';
+          lat = matchedLm.lat;
+          lon = matchedLm.lon;
+        }
       }
 
-      // High-accuracy location snapping for Amberley Church:
-      // Amberley Church (Holy Trinity & Amberley Shop/Cafe) PQ5J+GVR coordinates: 51.7093, -2.2241
-      const AMBERLEY_LAT = 51.7093;
-      const AMBERLEY_LON = -2.2241;
-      const distToAmberley = (typeof calculateHaversineKm === 'function')
-        ? calculateHaversineKm(lat, lon, AMBERLEY_LAT, AMBERLEY_LON)
-        : Math.hypot(lat - AMBERLEY_LAT, lon - AMBERLEY_LON) * 111;
-
-      if (!resolvedName && distToAmberley <= 0.35) {
-        resolvedName = 'Amberley Church';
-        resolvedPostcode = 'GL5 5QG';
-        lat = AMBERLEY_LAT;
-        lon = AMBERLEY_LON;
-      }
-
-      // Proximity Memory Check: Look through user's saved locations (up to 50 places)
-      // If coordinates are within ~700m (0.7 km) of any place the user previously saved or renamed,
-      // automatically recall and apply their preferred name and postcode!
+      // 1. Tight Proximity Memory Check: Only recall places the user explicitly renamed (isCustomTitle)
+      // within 150m so generic towns like "Nailsworth" in history never hijack nearby custom landmarks.
       if (!resolvedName && typeof calculateHaversineKm === 'function') {
         try {
           const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
           const recents = raw ? JSON.parse(raw) : [];
           if (Array.isArray(recents)) {
+            let bestItem = null;
+            let bestDist = Infinity;
             for (const item of recents) {
-              if (typeof item.lat === 'number' && typeof item.lon === 'number' && item.name && item.name !== 'Current Location') {
+              if (item && item.isCustomTitle && typeof item.lat === 'number' && typeof item.lon === 'number' && item.name && item.name !== 'Current Location') {
                 const distKm = calculateHaversineKm(lat, lon, item.lat, item.lon);
-                if (distKm <= 0.7) {
-                  resolvedName = item.name;
-                  resolvedPostcode = item.postcode || '';
-                  break;
+                if (distKm <= 0.15 && distKm < bestDist) {
+                  bestDist = distKm;
+                  bestItem = item;
                 }
               }
+            }
+            if (bestItem) {
+              resolvedName = bestItem.name;
+              resolvedPostcode = bestItem.postcode || '';
             }
           }
         } catch (_) {}
       }
 
-      // 1. UK high-accuracy lookup with wideSearch and 1000m radius
+      // 2. UK high-accuracy lookup with wideSearch and 1000m radius
       if (!resolvedName) {
         try {
           const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`);
@@ -7135,10 +7193,14 @@
             const pcData = await pcRes.json();
             if (pcData.result && pcData.result.length > 0) {
               const r = pcData.result[0];
-              const pcClean = String(r.postcode || '').replace(/\s+/g, '').toUpperCase();
-              if (pcClean === 'GL55HH' || pcClean === 'GL55HR') {
-                resolvedName = 'Dunkirk Mills';
-                resolvedPostcode = 'GL5 5HH';
+              const pcLm = (typeof matchActiveLandmark === 'function')
+                ? matchActiveLandmark({ name: '', lat, lon, postcode: r.postcode || '' })
+                : null;
+              if (pcLm) {
+                resolvedName = pcLm.name;
+                resolvedPostcode = (Array.isArray(pcLm.postcodes) && pcLm.postcodes[0]) || r.postcode || '';
+                lat = pcLm.lat;
+                lon = pcLm.lon;
               } else {
                 // Use built-up area (e.g. "Amberley (Stroud)"), then parish, ward, or district
                 const town = r.bua || r.parish || r.admin_ward || r.ced || r.admin_district || 'Local';
@@ -10604,13 +10666,9 @@ function joinSpacedLetters(text) {
       if (egyptIcon) {
         const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
         const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').trim().toUpperCase().replace(/\s+/g, '');
-        const latNum = Number(CURRENT_LOCATION && CURRENT_LOCATION.lat) || 0;
-        const lonNum = Number(CURRENT_LOCATION && CURRENT_LOCATION.lon) || 0;
-        const distKm = (latNum && lonNum) ? ((typeof calculateHaversineKm === 'function') ? calculateHaversineKm(latNum, lonNum, 51.6975, -2.2192) : Math.hypot(latNum - 51.6975, lonNum - (-2.2192)) * 111) : 999;
         const isEgyptMill = (activeLandmark && activeLandmark.id === 'egypt_mill') ||
           locName.includes('egypt mill') ||
-          locPc === 'GL60AE' || locPc === 'GL60AG' ||
-          (distKm <= 0.35);
+          locPc === 'GL60AE' || locPc === 'GL60AG';
         if (isEgyptMill) {
           egyptIcon.classList.remove('hidden');
           egyptIcon.classList.add('inline-flex');
