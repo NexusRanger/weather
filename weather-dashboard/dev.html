@@ -1360,7 +1360,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.160-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.161-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2242,15 +2242,15 @@
               <span class="font-semibold text-emerald-300">📍 Recent</span> &amp; <span class="font-semibold text-amber-300">🔒 Locked:</span>
               Stored <strong class="text-white">only in your browser cache</strong> (<code class="text-sky-300 font-mono text-[10px]">localStorage</code>) on this device—never uploaded to the central database. Your custom location names appear here privately for your eyes only.
             </p>
-            <p class="text-[10px] text-slate-400 pt-0.5 border-t border-white/10">
-              💡 Tip: Hold any saved location in Search (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> favourites into your Locked map view.
+            <p class="text-[10px] text-slate-300/90 pt-1.5 border-t border-white/10 leading-relaxed">
+              💡 <strong class="text-amber-300">How to 🔒 Lock a favourite:</strong> Open the Location menu, press and hold any Recent Location (or right-click it), then choose <strong class="text-white">Lock</strong>. Locked places stay saved on this device and appear in the <strong class="text-amber-300">Locked</strong> map view.
             </p>
           </div>
         </div>
         <!-- Empty-State Banner for Locked/Local filter when no pins exist -->
         <div id="mapEmptyFilterNotice" class="hidden pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[500] px-4 py-2.5 rounded-xl bg-slate-900/92 border border-amber-400/45 text-amber-100 text-xs font-medium shadow-2xl backdrop-blur-md text-center max-w-[90%]">
           <div id="mapEmptyFilterTitle" class="font-bold text-amber-300 mb-0.5">🔒 No locked locations yet</div>
-          <div id="mapEmptyFilterSub" class="text-[11px] text-slate-300">Hold any saved location in the Search dialog (or press Delete) to lock it here.</div>
+          <div id="mapEmptyFilterSub" class="text-[11px] text-slate-300">Open the Location menu, press and hold any Recent Location, then choose Lock to pin it here.</div>
         </div>
         <!-- Luminous Center Target Reticle for Tablet/Touch Auto-Popup -->
         <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
@@ -3052,8 +3052,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 324;
-    const APP_VERSION = '1.10.160-dev';
+    const APP_BUILD = 325;
+    const APP_VERSION = '1.10.161-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5563,8 +5563,8 @@
           const sEl = document.getElementById('mapEmptyFilterSub');
           if (tEl) tEl.textContent = filterMode === 'locked' ? '🔒 No locked locations yet' : '📍 No saved locations yet';
           if (sEl) sEl.textContent = filterMode === 'locked'
-            ? 'Hold any saved location in Search (or press Delete) to lock it here.'
-            : 'Search for places in the Location dialog to build your personal map.';
+            ? 'Open the Location menu, press and hold any Recent Location, then choose Lock to pin it here.'
+            : 'Search for places in the Location menu to build your personal map.';
           emptyNotice.classList.remove('hidden');
         } else {
           emptyNotice.classList.add('hidden');
