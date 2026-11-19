@@ -1331,7 +1331,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.148) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.149) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2957,10 +2957,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=312"></script>
+  <script src="traffic-flood.js?v=313"></script>
     <script>
-    const APP_BUILD = 312;
-    const APP_VERSION = '1.10.148';
+    const APP_BUILD = 313;
+    const APP_VERSION = '1.10.149';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4523,8 +4523,42 @@
     }
 
     const mapWeatherCache = {};
+    function formatMapPopupWeatherHtml(temp, desc, isWindy, isDay, timezone, timeStr, utcOffset) {
+      let localTime = '';
+      if (timezone) {
+        try {
+          localTime = new Intl.DateTimeFormat('en-GB', {
+            timeZone: timezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }).format(new Date());
+        } catch (_) {}
+      }
+      if (!localTime && typeof utcOffset === 'number') {
+        try {
+          const d = new Date(Date.now() + (utcOffset * 1000));
+          localTime = `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+        } catch (_) {}
+      }
+      if (!localTime && timeStr && timeStr.length >= 16) {
+        localTime = timeStr.slice(11, 16);
+      }
+      if (!localTime) {
+        localTime = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+      }
+
+      // Purple if nighttime (after sunset), Orange if daytime (after sunrise)
+      const timeColor = isDay ? '#fb923c' : '#c084fc';
+      const timeBg = isDay ? 'rgba(251, 146, 60, 0.18)' : 'rgba(192, 132, 252, 0.20)';
+      const timeBorder = isDay ? 'rgba(251, 146, 60, 0.40)' : 'rgba(192, 132, 252, 0.40)';
+      const timeIcon = isDay ? '☀️' : '🌙';
+
+      return `<span style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 700; font-family: monospace; color: ${timeColor}; background: ${timeBg}; border: 1px solid ${timeBorder}; flex-shrink: 0;" title="${isDay ? 'Local time (Daytime / After sunrise)' : 'Local time (Nighttime / After sunset)'}">${timeIcon} ${localTime}</span> <span style="color: #fde047; font-weight: 600;">${temp}° • ${desc}${isWindy ? ' • Windy' : ''}</span>`;
+    }
+
     function fetchMapLocationWeather(lat, lon, callback) {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,wind_gusts_10m`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m,wind_gusts_10m&timezone=auto`;
       fetch(url)
         .then(res => res.json())
         .then(data => {
@@ -4534,14 +4568,14 @@
             const isDay = cur.is_day === 1;
             const info = getWeatherInfo(cur.weather_code, isDay);
             const isWindy = (cur.wind_speed_10m || 0) >= 28 || (cur.wind_gusts_10m || 0) >= 38;
-            const summary = `${temp}° • ${info.desc}${isWindy ? ' • Windy' : ''}`;
-            callback(summary);
+            const html = formatMapPopupWeatherHtml(temp, info.desc, isWindy, isDay, data.timezone, cur.time, data.utc_offset_seconds);
+            callback(html);
           } else {
-            callback('Weather unavailable');
+            callback('<span style="color: #94a3b8;">Weather unavailable</span>');
           }
         })
         .catch(() => {
-          callback('Weather unavailable');
+          callback('<span style="color: #94a3b8;">Weather unavailable</span>');
         });
     }
 
@@ -5546,21 +5580,23 @@
 
         // Current temperature and weather condition line (e.g. "12° • Sunny" or "12° • Clear Sky • Windy")
         const weatherEl = document.createElement('div');
-        weatherEl.style.cssText = 'font-size: 10.5px; color: #fde047; font-weight: 600; margin-bottom: 3px; display: flex; align-items: center; gap: 4px;';
+        weatherEl.style.cssText = 'font-size: 10.5px; color: #fde047; font-weight: 600; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;';
         if (isCurrent && window._LATEST_WEATHER_DATA && window._LATEST_WEATHER_DATA.current) {
           const cur = window._LATEST_WEATHER_DATA.current;
           const temp = Math.round(cur.temperature_2m);
           const isDay = cur.is_day === 1;
           const info = getWeatherInfo(cur.weather_code, isDay);
           const isWindy = (cur.wind_speed_10m || 0) >= 28 || (cur.wind_gusts_10m || 0) >= 38;
-          weatherEl.textContent = `${temp}° • ${info.desc}${isWindy ? ' • Windy' : ''}`;
+          const tz = (window._LATEST_WEATHER_DATA && window._LATEST_WEATHER_DATA.timezone) || Intl.DateTimeFormat().resolvedOptions().timeZone;
+          const offset = window._LATEST_WEATHER_DATA && window._LATEST_WEATHER_DATA.utc_offset_seconds;
+          weatherEl.innerHTML = formatMapPopupWeatherHtml(temp, info.desc, isWindy, isDay, tz, cur.time, offset);
         } else if (mapWeatherCache[key]) {
-          weatherEl.textContent = mapWeatherCache[key];
+          weatherEl.innerHTML = mapWeatherCache[key];
         } else {
-          weatherEl.textContent = 'Checking weather...';
-          fetchMapLocationWeather(q.lat, q.lon, (summary) => {
-            mapWeatherCache[key] = summary;
-            weatherEl.textContent = summary;
+          weatherEl.innerHTML = '<span style="color: #94a3b8;">Checking weather...</span>';
+          fetchMapLocationWeather(q.lat, q.lon, (html) => {
+            mapWeatherCache[key] = html;
+            weatherEl.innerHTML = html;
           });
         }
         popupWrapper.appendChild(weatherEl);
