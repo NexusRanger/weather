@@ -1,21 +1,103 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
+    <!-- Background Gradient -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#030712"/>
+      <stop offset="50%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#020617"/>
     </linearGradient>
-    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#fde047"/>
-      <stop offset="100%" stop-color="#f97316"/>
+
+    <!-- Sun Radial Warmth Corona -->
+    <radialGradient id="sunCorona" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.45"/>
+      <stop offset="60%" stop-color="#f97316" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Sun Core Gradient -->
+    <linearGradient id="sunCore" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="35%" stop-color="#facc15"/>
+      <stop offset="75%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ea580c"/>
     </linearGradient>
-    <linearGradient id="cloudGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+
+    <!-- Cloud Drop Shadow -->
+    <filter id="cloudShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+
+    <!-- Cloud Front Gradient -->
+    <linearGradient id="cloudGrad" x1="20%" y1="0%" x2="40%" y2="100%">
       <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#f8fafc"/>
+      <stop offset="80%" stop-color="#e2e8f0"/>
       <stop offset="100%" stop-color="#cbd5e1"/>
     </linearGradient>
+
+    <!-- Cloud Highlight Rim -->
+    <linearGradient id="cloudRim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Rain / Frost Drop Gradient -->
+    <linearGradient id="dropGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <!-- Ambient Subtle Blue/Cyan Glow under cloud -->
+    <radialGradient id="ambientCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
-  <!-- Sun -->
-  <circle cx="310" cy="210" r="90" fill="url(#sunGrad)"/>
-  <!-- Cloud -->
-  <path d="M190 380 h190 a60 60 0 0 0 0-120 a75 75 0 0 0-142-26 a55 55 0 0 0-48 66 a45 45 0 0 0 0 80 z" fill="url(#cloudGrad)"/>
+
+  <!-- Tile Rounded Base (Squircle / Rounded Rect) -->
+  <rect width="512" height="512" rx="116" fill="url(#bgGrad)"/>
+  <rect x="1" y="1" width="510" height="510" rx="115" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+
+  <!-- Soft Ambient Glows -->
+  <circle cx="300" cy="195" r="160" fill="url(#sunCorona)"/>
+  <circle cx="256" cy="310" r="130" fill="url(#ambientCyan)"/>
+
+  <!-- THE SUN (Nestled behind upper-right shoulder of cloud) -->
+  <circle cx="304" cy="198" r="74" fill="url(#sunCorona)"/>
+  <circle cx="304" cy="198" r="62" fill="url(#sunCore)"/>
+  <circle cx="301" cy="195" r="60" fill="none" stroke="#ffffff" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- THE CLOUD (Perfect Center Alignment: Left 138, Right 374, Midpoint = 256.0) -->
+  <g filter="url(#cloudShadow)">
+    <path d="M 182 328
+             C 152 328 136 306 138 282
+             C 140 258 158 244 178 244
+             C 182 244 186 245 190 246
+             C 198 214 226 194 258 194
+             C 292 194 318 214 326 244
+             C 332 242 338 240 346 240
+             C 366 240 376 256 374 276
+             C 372 298 360 328 328 328
+             Z"
+          fill="url(#cloudGrad)"/>
+    
+    <!-- Cloud Top Gloss Highlight -->
+    <path d="M 182 246
+             C 190 245 194 245 198 246
+             C 206 216 230 198 258 198
+             C 288 198 312 216 320 244
+             C 328 242 336 242 344 242
+             C 358 242 368 252 370 266
+             C 364 250 350 244 336 244
+             C 326 244 320 246 316 248
+             C 308 222 284 204 256 204
+             C 230 204 208 220 200 248
+             C 194 246 186 246 182 246 Z"
+          fill="url(#cloudRim)"/>
+  </g>
+
+  <!-- RAIN / FROST PRECIPITATION DROPS (Centered: x=216, 258, 300, Midpoint = 258) -->
+  <line x1="216" y1="352" x2="208" y2="376" stroke="url(#dropGrad)" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="258" y1="355" x2="250" y2="381" stroke="url(#dropGrad)" stroke-width="4.5" stroke-linecap="round"/>
+  <line x1="300" y1="352" x2="292" y2="376" stroke="url(#dropGrad)" stroke-width="4.5" stroke-linecap="round"/>
 </svg>
