@@ -1259,6 +1259,35 @@
               </svg>
             </span>
           </div>
+          <div id="oliveTreeIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="The Olive Tree, Nailsworth">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-lime-500/15 border border-lime-400/40 shadow-[0_0_10px_rgba(132,204,22,0.25)] p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()">
+              <svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Warm Cotswold Bistro Wall & George St Ground -->
+                <rect x="0" y="29.5" width="48" height="6.5" fill="#475569"/>
+                <line x1="0" y1="29.5" x2="48" y2="29.5" stroke="#94a3b8" stroke-width="0.6"/>
+                <rect x="4" y="13" width="22" height="16.5" rx="0.8" fill="#fef3c7" stroke="#d97706" stroke-width="0.65"/>
+                <polygon points="2.5,13 15,7.5 27.5,13" fill="#475569" stroke="#334155" stroke-width="0.5"/>
+                <!-- Warm glowing bistro windows & arched doorway -->
+                <rect x="7" y="15.5" width="4.2" height="4.5" rx="0.4" fill="#fbbf24" stroke="#78350f" stroke-width="0.4"/>
+                <rect x="18.8" y="15.5" width="4.2" height="4.5" rx="0.4" fill="#fbbf24" stroke="#78350f" stroke-width="0.4"/>
+                <path d="M12.5 29.5 L12.5 22.5 A2.5 2.5 0 0 1 17.5 22.5 L17.5 29.5 Z" fill="#451a03"/>
+                <circle cx="15" cy="24.5" r="1.2" fill="#fde047" opacity="0.85"/>
+                <!-- Mediterranean Olive Tree -->
+                <path d="M34.5 29.5 C34.5 25, 33 23, 33.8 18.5 C34.2 16.5, 36.2 16.5, 36.6 18.5 C37.2 22.5, 36.4 25.5, 37.2 29.5 Z" fill="#78350f" stroke="#451a03" stroke-width="0.45"/>
+                <path d="M35 21 L30.5 17.5 M35.5 20.5 L40 17" stroke="#78350f" stroke-width="1.3" stroke-linecap="round"/>
+                <!-- Silvery-Olive Foliage Canopy -->
+                <circle cx="35.5" cy="11.5" r="6.8" fill="#65a30d"/>
+                <circle cx="29.5" cy="14.5" r="5.2" fill="#84cc16"/>
+                <circle cx="41" cy="14.5" r="5.2" fill="#4d7c0f"/>
+                <circle cx="35.5" cy="15.5" r="5.5" fill="#a3e635" opacity="0.85"/>
+                <!-- Tiny dark olives -->
+                <ellipse cx="32" cy="13.5" rx="0.9" ry="1.2" fill="#1e293b"/>
+                <ellipse cx="38.5" cy="12.5" rx="0.9" ry="1.2" fill="#1e293b"/>
+                <ellipse cx="35.5" cy="16.5" rx="0.9" ry="1.2" fill="#1e293b"/>
+                <ellipse cx="28.5" cy="15.5" rx="0.8" ry="1.1" fill="#1e293b"/>
+              </svg>
+            </span>
+          </div>
           <div id="headerLandmarkIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="World Landmark">
             <span id="headerLandmarkBadge" class="inline-flex items-center justify-center w-7 h-7 rounded-lg p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()"></span>
           </div>
@@ -1331,7 +1360,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.151) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.152) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2957,10 +2986,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=315"></script>
+  <script src="traffic-flood.js?v=316"></script>
     <script>
-    const APP_BUILD = 315;
-    const APP_VERSION = '1.10.151';
+    const APP_BUILD = 316;
+    const APP_VERSION = '1.10.152';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4051,7 +4080,7 @@
       if (!name) return true;
       const s = String(name).trim().toLowerCase();
       // Explicitly allow landmarks & heritage sites
-      if (/dunkirk|amberley|stroud hotel|the stroud|egypt mill|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false;
+      if (/dunkirk|amberley|stroud hotel|the stroud|egypt mill|olive tree|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false;
       if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
         if (POPULAR_LANDMARKS_DATABASE.some(lm => (lm.name && s.includes(lm.name.toLowerCase())) || (Array.isArray(lm.aliases) && lm.aliases.some(a => s.includes(a.toLowerCase()))))) return false;
       }
@@ -4061,7 +4090,7 @@
       const personalWords = [
         'home', 'flat', 'apartment', 'desk', 'shed', 'garage', 'yard',
         'retreat', 'hideaway', 'base', 'mum', 'mums', 'mom', 'moms', 'dad', 'dads', 'nan',
-        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'dentiste'
+        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'dentiste', 'jeth'
       ];
       return personalWords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(s));
     }
@@ -4106,21 +4135,26 @@
     function getDepersonalizedLocationName(loc) {
       if (!loc) return '';
       const raw = typeof loc === 'string' ? loc : (loc.name || loc.geoName || '');
-      if (/dunkirk/i.test(raw)) return 'Dunkirk Mills';
-      if (loc.geoName && /dunkirk/i.test(loc.geoName)) return 'Dunkirk Mills';
-      if (loc.name && /amberley/i.test(loc.name)) return 'Amberley Church';
-      if (loc.geoName && /amberley/i.test(loc.geoName)) return 'Amberley Church';
-      if (loc.name && /stroud hotel|the stroud/i.test(loc.name)) return 'The Stroud Hotel';
-      if (loc.geoName && /stroud hotel|the stroud/i.test(loc.geoName)) return 'The Stroud Hotel';
-      if (loc.name && /egypt mill/i.test(loc.name)) return 'Egypt Mill';
-      if (loc.geoName && /egypt mill/i.test(loc.geoName)) return 'Egypt Mill';
+      if (!loc.isCustomTitle) {
+        if (/dunkirk/i.test(raw)) return 'Dunkirk Mills';
+        if (loc.geoName && /dunkirk/i.test(loc.geoName)) return 'Dunkirk Mills';
+        if (loc.name && /amberley/i.test(loc.name)) return 'Amberley Church';
+        if (loc.geoName && /amberley/i.test(loc.geoName)) return 'Amberley Church';
+        if (loc.name && /stroud hotel|the stroud/i.test(loc.name)) return 'The Stroud Hotel';
+        if (loc.geoName && /stroud hotel|the stroud/i.test(loc.geoName)) return 'The Stroud Hotel';
+        if (loc.name && /egypt mill/i.test(loc.name)) return 'Egypt Mill';
+        if (loc.geoName && /egypt mill/i.test(loc.geoName)) return 'Egypt Mill';
+        if (loc.name && /olive tree/i.test(loc.name)) return 'The Olive Tree';
+        if (loc.geoName && /olive tree/i.test(loc.geoName)) return 'The Olive Tree';
+      }
 
       const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
 
       // 0. Landmark Preservation: Public world wonders & heritage sites preserve their iconic identity
-      if (typeof matchActiveLandmark === 'function') {
-        const lm = matchActiveLandmark({ name: raw, lat, lon, postcode: loc.postcode });
+      // (Skipped if this is a low-confidence Wi-Fi/cell fix so we never falsely label a coarse town fix as a venue)
+      if (!loc.lowConfidenceGps && !loc.isCustomTitle && typeof matchActiveLandmark === 'function') {
+        const lm = matchActiveLandmark({ name: raw, lat, lon, postcode: loc.postcode, lowConfidenceGps: Boolean(loc.lowConfidenceGps) });
         if (lm) {
           return lm.name;
         }
@@ -4135,10 +4169,11 @@
         }
       }
 
-      // 2. If it IS a custom title (e.g. user renamed or gave personal label):
-      // (a) Anonymize to official geocoded place name if available & clean
+      // 2. If it IS a custom/personal title (e.g. user renamed in the title box like "Jeth"):
+      // ALWAYS default to the real generic local town name, NEVER let the custom title leak onto the public world map!
       const geo = (loc.geoName || '').trim();
-      if (geo && !isPersonalLocationName(geo) && geo.toLowerCase() !== 'united kingdom' && geo.toLowerCase() !== 'uk') {
+      const rawLower = String(raw || '').trim().toLowerCase();
+      if (geo && geo.toLowerCase() !== rawLower && !isPersonalLocationName(geo) && geo.toLowerCase() !== 'united kingdom' && geo.toLowerCase() !== 'uk') {
         return shortenPlaceName(geo);
       }
 
@@ -4258,14 +4293,14 @@
       { name: 'Sydney', postcode: '', lat: -33.8688, lon: 151.2093 }
     ];
 
-    function normalizeKnownLandmarkCoords(name, lat, lon, postcode) {
+    function normalizeKnownLandmarkCoords(name, lat, lon, postcode, lowConfidenceGps = false) {
       let outLat = typeof lat === 'number' ? lat : parseFloat(lat);
       let outLon = typeof lon === 'number' ? lon : parseFloat(lon);
       let outPc = postcode || '';
-      if (typeof matchActiveLandmark === 'function') {
-        const lm = matchActiveLandmark({ name, lat: outLat, lon: outLon, postcode: outPc });
+      if (!lowConfidenceGps && typeof matchActiveLandmark === 'function') {
+        const lm = matchActiveLandmark({ name, lat: outLat, lon: outLon, postcode: outPc, lowConfidenceGps: false });
         if (lm && typeof lm.lat === 'number' && typeof lm.lon === 'number') {
-          const isLocalCustom = lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'stroud_hotel';
+          const isLocalCustom = lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'the_olive_tree' || lm.id === 'stroud_hotel';
           if (isLocalCustom) {
             outLat = lm.lat;
             outLon = lm.lon;
@@ -4351,7 +4386,7 @@
       try {
         const publicName = getDepersonalizedLocationName(loc);
         if (!publicName || isPersonalLocationName(publicName)) return;
-        const norm = normalizeKnownLandmarkCoords(publicName, loc.lat, loc.lon, loc.postcode);
+        const norm = normalizeKnownLandmarkCoords(publicName, loc.lat, loc.lon, loc.postcode, Boolean(loc.lowConfidenceGps));
         const outwardPostcode = getOutwardPostcode(norm.postcode || loc.postcode);
         let mapQueries = getHistoryQueries();
         mapQueries = mapQueries.filter(q => {
@@ -4880,7 +4915,7 @@
     function getMapCurrentReference() {
       if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') {
         const depName = getDepersonalizedLocationName(CURRENT_LOCATION) || CURRENT_LOCATION.name || 'Dunkirk Mills';
-        const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode);
+        const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
         return {
           name: depName,
           postcode: getOutwardPostcode(norm.postcode || CURRENT_LOCATION.postcode) || norm.postcode || CURRENT_LOCATION.postcode || '',
@@ -6023,14 +6058,17 @@
 
     let pendingCustomLocationName = '';
 
-    function applySelectedLocation(name, lat, lon, postcode, recordInRecent = true) {
+    function applySelectedLocation(name, lat, lon, postcode, recordInRecent = true, options = {}) {
       const nLat = parseFloat(lat);
       const nLon = parseFloat(lon);
-      const isCustom = Boolean(pendingCustomLocationName);
+      const isCustom = Boolean(pendingCustomLocationName) || Boolean(options && options.isCustomTitle);
       const chosenName = pendingCustomLocationName ? pendingCustomLocationName.trim() : (name || '');
       pendingCustomLocationName = '';
       const newName = shortenPlaceName(chosenName);
-      const geoPlace = shortenPlaceName(name) || newName;
+      let geoPlace = (options && options.geoName) ? shortenPlaceName(options.geoName) : shortenPlaceName(name);
+      if (isCustom && (!geoPlace || geoPlace.toLowerCase() === newName.toLowerCase())) {
+        geoPlace = (typeof getKnownGenericTown === 'function' ? getKnownGenericTown(nLat, nLon) : '') || '';
+      }
       const locationChanged = (
         !CURRENT_LOCATION ||
         Math.abs((CURRENT_LOCATION.lat || 0) - nLat) > 0.0005 ||
@@ -6045,7 +6083,8 @@
         lat: nLat,
         lon: nLon,
         desc: formatCoordDesc(nLat, nLon),
-        isCustomTitle: isCustom
+        isCustomTitle: isCustom,
+        lowConfidenceGps: Boolean(options && options.lowConfidenceGps)
       };
 
       // When location changes, unlock radar zoom and reset zoom level to default
@@ -6134,9 +6173,9 @@
         } else {
           CURRENT_LOCATION = saved;
           // Auto-heal stale/drifted coordinates or mis-labeled generic town names for known local custom landmarks
-          if (typeof matchActiveLandmark === 'function') {
+          if (!CURRENT_LOCATION.lowConfidenceGps && !CURRENT_LOCATION.isCustomTitle && typeof matchActiveLandmark === 'function') {
             const lm = matchActiveLandmark(CURRENT_LOCATION);
-            if (lm && (lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'stroud_hotel')) {
+            if (lm && (lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'the_olive_tree' || lm.id === 'stroud_hotel')) {
               const driftKm = (typeof calculateHaversineKm === 'function')
                 ? calculateHaversineKm(CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, lm.lat, lm.lon)
                 : Math.hypot(CURRENT_LOCATION.lat - lm.lat, CURRENT_LOCATION.lon - lm.lon) * 111;
@@ -6567,7 +6606,7 @@
         lat: 51.7093,
         lon: -2.2241,
         radiusKm: 4,
-        snapRadiusKm: 0.25,
+        snapRadiusKm: 0.15,
         aliases: ['amberley church', 'amberley', 'amberley shop and cafe', 'amberley shop & cafe', 'ambleside', 'holy trinity church amberley', 'holy trinity amberley', 'holy trinity church'],
         badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
         svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -6613,7 +6652,7 @@
         lat: 51.7448,
         lon: -2.2188,
         radiusKm: 4,
-        snapRadiusKm: 0.08,
+        snapRadiusKm: 0.06,
         aliases: [
           'the stroud hotel', 'stroud hotel', 'the stroud',
           'imperial hotel stroud', 'imperial hotel', 'gl53ap', 'gl5 3ap'
@@ -6678,7 +6717,7 @@
         lat: 51.7032,
         lon: -2.2266,
         radiusKm: 4,
-        snapRadiusKm: 0.25,
+        snapRadiusKm: 0.15,
         aliases: ['dunkirk mills', 'dunkirk mill', 'dunkirk', 'gl55hh', 'gl5 5hh'],
         badgeStyle: 'bg-amber-500/15 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
         svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -6721,11 +6760,11 @@
         name: 'Egypt Mill',
         city: 'Nailsworth, Stroud',
         country: 'United Kingdom',
-        postcodes: ['GL6 0AE', 'GL6 0AG'],
+        postcodes: ['GL6 0AE'],
         lat: 51.6975,
         lon: -2.2192,
         radiusKm: 3,
-        snapRadiusKm: 0.14,
+        snapRadiusKm: 0.10,
         aliases: ['egypt mill', 'egypt mills', 'egypt mill nailsworth', 'egypt mill hotel', 'gl60ae', 'gl6 0ae'],
         badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
         svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -6759,6 +6798,39 @@
           <path d="M0 31.5 C12 30.5, 24 32.5, 48 31.5" stroke="#38bdf8" stroke-width="0.8" opacity="0.9"/>
           <path d="M2 34 C16 33, 30 35, 46 34" stroke="#e0f2fe" stroke-width="0.6" opacity="0.75"/>
         </svg>`
+      },
+      {
+        id: 'the_olive_tree',
+        name: 'The Olive Tree',
+        city: 'Nailsworth, Stroud',
+        country: 'United Kingdom',
+        postcodes: ['GL6 0AG'],
+        lat: 51.6967,
+        lon: -2.2173,
+        radiusKm: 3,
+        snapRadiusKm: 0.05,
+        aliases: ['the olive tree', 'olive tree', 'the olive tree nailsworth', 'olive tree nailsworth', 'gl60ag', 'gl6 0ag'],
+        badgeStyle: 'bg-lime-500/15 border-lime-400/40 shadow-[0_0_10px_rgba(132,204,22,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="29.5" width="48" height="6.5" fill="#475569"/>
+          <line x1="0" y1="29.5" x2="48" y2="29.5" stroke="#94a3b8" stroke-width="0.6"/>
+          <rect x="4" y="13" width="22" height="16.5" rx="0.8" fill="#fef3c7" stroke="#d97706" stroke-width="0.65"/>
+          <polygon points="2.5,13 15,7.5 27.5,13" fill="#475569" stroke="#334155" stroke-width="0.5"/>
+          <rect x="7" y="15.5" width="4.2" height="4.5" rx="0.4" fill="#fbbf24" stroke="#78350f" stroke-width="0.4"/>
+          <rect x="18.8" y="15.5" width="4.2" height="4.5" rx="0.4" fill="#fbbf24" stroke="#78350f" stroke-width="0.4"/>
+          <path d="M12.5 29.5 L12.5 22.5 A2.5 2.5 0 0 1 17.5 22.5 L17.5 29.5 Z" fill="#451a03"/>
+          <circle cx="15" cy="24.5" r="1.2" fill="#fde047" opacity="0.85"/>
+          <path d="M34.5 29.5 C34.5 25, 33 23, 33.8 18.5 C34.2 16.5, 36.2 16.5, 36.6 18.5 C37.2 22.5, 36.4 25.5, 37.2 29.5 Z" fill="#78350f" stroke="#451a03" stroke-width="0.45"/>
+          <path d="M35 21 L30.5 17.5 M35.5 20.5 L40 17" stroke="#78350f" stroke-width="1.3" stroke-linecap="round"/>
+          <circle cx="35.5" cy="11.5" r="6.8" fill="#65a30d"/>
+          <circle cx="29.5" cy="14.5" r="5.2" fill="#84cc16"/>
+          <circle cx="41" cy="14.5" r="5.2" fill="#4d7c0f"/>
+          <circle cx="35.5" cy="15.5" r="5.5" fill="#a3e635" opacity="0.85"/>
+          <ellipse cx="32" cy="13.5" rx="0.9" ry="1.2" fill="#1e293b"/>
+          <ellipse cx="38.5" cy="12.5" rx="0.9" ry="1.2" fill="#1e293b"/>
+          <ellipse cx="35.5" cy="16.5" rx="0.9" ry="1.2" fill="#1e293b"/>
+          <ellipse cx="28.5" cy="15.5" rx="0.8" ry="1.1" fill="#1e293b"/>
+        </svg>`
       }
     ];
 
@@ -6770,6 +6842,7 @@
       const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
       const hasCoords = !isNaN(lat) && !isNaN(lon);
+      const isLowConfidence = Boolean(loc.lowConfidenceGps);
 
       // Pass 1: Exact Name / Alias Match (+ geo-validation / exact full postcode validation)
       for (const lm of POPULAR_LANDMARKS_DATABASE) {
@@ -6806,7 +6879,10 @@
         }
       }
 
-      // Pass 2: Exact full unit postcode match for custom sites (e.g. GL55QG, GL55HH, GL60AE, GL53AP)
+      // If this fix came from low-confidence Wi-Fi/cell/IP positioning, NEVER promote it to a custom venue!
+      if (isLowConfidence) return null;
+
+      // Pass 2: Exact full unit postcode match for custom sites (e.g. GL55QG, GL55HH, GL60AE, GL60AG, GL53AP)
       // Never match generic outward district codes like 'GL5' or 'GL6'
       if (rawPc.length >= 5) {
         for (const lm of POPULAR_LANDMARKS_DATABASE) {
@@ -6873,13 +6949,23 @@
       },
       {
         aliases: [
-          'gl60ae', 'gl6 0ae', 'gl60ag', 'gl6 0ag', 'gl60at', 'gl6 0at',
+          'gl60ae', 'gl6 0ae', 'gl60at', 'gl6 0at',
           'egypt mill', 'egypt mills', 'egypt mill nailsworth', 'egypt mill hotel'
         ],
         name: 'Egypt Mill',
         postcode: 'GL6 0AE',
         lat: 51.6975,
         lon: -2.2192
+      },
+      {
+        aliases: [
+          'gl60ag', 'gl6 0ag',
+          'the olive tree', 'olive tree', 'the olive tree nailsworth', 'olive tree nailsworth'
+        ],
+        name: 'The Olive Tree',
+        postcode: 'GL6 0AG',
+        lat: 51.6967,
+        lon: -2.2173
       },
       {
         aliases: [
@@ -7142,15 +7228,25 @@
       return false;
     }
 
-    async function lookupCoords(lat, lon, saveAsGps = true, accuracyMeters = null) {
+    async function lookupCoords(lat, lon, saveAsGps = true, accuracyMeters = null, altitudeMeters = null, isLowAccuracyFallback = false) {
       let resolvedName = '';
       let resolvedPostcode = '';
-      const isReliableGps = (accuracyMeters == null || !isFinite(accuracyMeters) || accuracyMeters <= 300);
+      let resolvedIsCustomTitle = false;
+      let resolvedGeoName = '';
 
-      // 0. Unified high-accuracy landmark snapping (Dunkirk Mills, Amberley Church, Egypt Mill, The Stroud Hotel, etc.)
-      // Only snaps on reliable GPS fixes (<= 300m accuracy) so coarse cell-tower/IP estimates never falsely trigger a landmark.
-      if (isReliableGps && typeof matchActiveLandmark === 'function') {
-        const matchedLm = matchActiveLandmark({ name: '', lat, lon, postcode: '' });
+      // Two-tier GPS confidence gate:
+      // High-confidence hardware GPS: accuracy <= 50m, OR <= 75m with a 3D GPS altitude lock (not fallback).
+      // Low-confidence Wi-Fi / cell / IP fixes skip custom venues and use the honest default town name.
+      const hasAltitude = (altitudeMeters !== null && altitudeMeters !== undefined && isFinite(altitudeMeters));
+      const isHighConfidenceGps = !isLowAccuracyFallback && (
+        accuracyMeters === null
+          ? true
+          : (isFinite(accuracyMeters) && (accuracyMeters <= 50 || (accuracyMeters <= 75 && hasAltitude)))
+      );
+
+      // 0. Unified high-accuracy landmark snapping (Dunkirk Mills, Amberley Church, Egypt Mill, The Olive Tree, The Stroud Hotel)
+      if (isHighConfidenceGps && typeof matchActiveLandmark === 'function') {
+        const matchedLm = matchActiveLandmark({ name: '', lat, lon, postcode: '', lowConfidenceGps: false });
         if (matchedLm) {
           resolvedName = matchedLm.name;
           resolvedPostcode = (Array.isArray(matchedLm.postcodes) && matchedLm.postcodes[0]) || matchedLm.postcode || '';
@@ -7160,8 +7256,8 @@
       }
 
       // 1. Tight Proximity Memory Check: Only recall places the user explicitly renamed (isCustomTitle)
-      // within 150m so generic towns like "Nailsworth" in history never hijack nearby custom landmarks.
-      if (!resolvedName && typeof calculateHaversineKm === 'function') {
+      // on high-confidence GPS within 150m, preserving isCustomTitle & geoName so private titles never leak to the map.
+      if (!resolvedName && isHighConfidenceGps && typeof calculateHaversineKm === 'function') {
         try {
           const raw = localStorage.getItem(USER_RECENTS_STORAGE_KEY) || localStorage.getItem('ambient_location_queries');
           const recents = raw ? JSON.parse(raw) : [];
@@ -7180,6 +7276,8 @@
             if (bestItem) {
               resolvedName = bestItem.name;
               resolvedPostcode = bestItem.postcode || '';
+              resolvedIsCustomTitle = true;
+              resolvedGeoName = bestItem.geoName || (typeof getKnownGenericTown === 'function' ? getKnownGenericTown(lat, lon) : '') || '';
             }
           }
         } catch (_) {}
@@ -7193,8 +7291,9 @@
             const pcData = await pcRes.json();
             if (pcData.result && pcData.result.length > 0) {
               const r = pcData.result[0];
-              const pcLm = (typeof matchActiveLandmark === 'function')
-                ? matchActiveLandmark({ name: '', lat, lon, postcode: r.postcode || '' })
+              // Only promote unit postcode to a custom venue on high-confidence GPS!
+              const pcLm = (isHighConfidenceGps && typeof matchActiveLandmark === 'function')
+                ? matchActiveLandmark({ name: '', lat, lon, postcode: r.postcode || '', lowConfidenceGps: false })
                 : null;
               if (pcLm) {
                 resolvedName = pcLm.name;
@@ -7202,7 +7301,7 @@
                 lat = pcLm.lat;
                 lon = pcLm.lon;
               } else {
-                // Use built-up area (e.g. "Amberley (Stroud)"), then parish, ward, or district
+                // Default town / built-up area (e.g. "Nailsworth", "Stroud")
                 const town = r.bua || r.parish || r.admin_ward || r.ced || r.admin_district || 'Local';
                 resolvedName = shortenPlaceName(town);
                 resolvedPostcode = r.postcode || '';
@@ -7212,7 +7311,7 @@
         } catch (_) {}
       }
 
-      // 2. Global fallback reverse geocoding via BigDataCloud (fast, client-side, zero key)
+      // 3. Global fallback reverse geocoding via BigDataCloud (fast, client-side, zero key)
       if (!resolvedName) {
         try {
           const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
@@ -7227,13 +7326,17 @@
         } catch (_) {}
       }
 
-      // 3. Fallback if still unknown
+      // 4. Fallback if still unknown
       if (!resolvedName) {
         resolvedName = `GPS (${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
         resolvedPostcode = 'GPS';
       }
 
-      applySelectedLocation(resolvedName, lat, lon, resolvedPostcode || 'GPS');
+      applySelectedLocation(resolvedName, lat, lon, resolvedPostcode || 'GPS', true, {
+        isCustomTitle: resolvedIsCustomTitle,
+        geoName: resolvedGeoName,
+        lowConfidenceGps: !isHighConfidenceGps
+      });
       if (saveAsGps) {
         try {
           localStorage.setItem('ambient_last_gps_loc', JSON.stringify(CURRENT_LOCATION));
@@ -7365,19 +7468,27 @@
         }
       };
 
-      const commitPosition = async (position) => {
+      const commitPosition = async (position, isFallback = false) => {
         if (resolved) return;
-        const lat = position && position.coords ? position.coords.latitude : null;
-        const lon = position && position.coords ? position.coords.longitude : null;
-        const acc = (position && position.coords && typeof position.coords.accuracy === 'number')
-          ? Math.round(position.coords.accuracy)
+        const coords = position && position.coords;
+        const lat = coords ? coords.latitude : null;
+        const lon = coords ? coords.longitude : null;
+        const acc = (coords && typeof coords.accuracy === 'number' && isFinite(coords.accuracy))
+          ? Math.round(coords.accuracy)
+          : null;
+        const alt = (coords && typeof coords.altitude === 'number' && isFinite(coords.altitude))
+          ? coords.altitude
           : null;
         if (lat == null || lon == null) {
           finishLocationAttempt(false, 'Invalid coordinates received.');
           return;
         }
-        finishLocationAttempt(true, acc != null ? `GPS locked (±${acc}m)` : 'GPS locked');
-        await lookupCoords(lat, lon, true, acc);
+        const highConf = !isFallback && acc != null && (acc <= 50 || (acc <= 75 && alt !== null));
+        const label = highConf
+          ? `GPS locked (±${acc}m)`
+          : (acc != null ? `Approximate area (±${acc}m)` : 'Approximate area');
+        finishLocationAttempt(true, label);
+        await lookupCoords(lat, lon, true, acc, alt, isFallback);
       };
 
       const onHighAccuracyReading = (position) => {
@@ -7393,7 +7504,7 @@
 
         // Crisp hardware GPS fix (<= 50m): lock immediately!
         if (acc <= GPS_TARGET_ACCURACY_M) {
-          commitPosition(bestPosition);
+          commitPosition(bestPosition, false);
           return;
         }
 
@@ -7406,7 +7517,7 @@
         if (!gpsRefineTimer) {
           gpsRefineTimer = setTimeout(() => {
             if (!resolved && bestPosition) {
-              commitPosition(bestPosition);
+              commitPosition(bestPosition, false);
             }
           }, 4500);
         }
@@ -7416,7 +7527,7 @@
       // committing the sharpest fix obtained or failing cleanly so TV / Shield never hangs.
       gpsWatchdogTimer = setTimeout(() => {
         if (!resolved && bestPosition) {
-          commitPosition(bestPosition);
+          commitPosition(bestPosition, false);
         } else {
           finishLocationAttempt(false, 'GPS location request timed out.');
         }
@@ -7425,12 +7536,12 @@
       const tryLowAccuracyFallback = () => {
         if (resolved) return;
         if (bestPosition) {
-          commitPosition(bestPosition);
+          commitPosition(bestPosition, false);
           return;
         }
         try {
           navigator.geolocation.getCurrentPosition(
-            commitPosition,
+            (pos) => commitPosition(pos, true),
             (error) => {
               let msg = 'Location unavailable on this network/device.';
               if (error && error.code === 1) msg = 'Location permission denied.';
@@ -8266,11 +8377,15 @@ function joinSpacedLetters(text) {
       const cleanNewName = titleCaseCustomName(shortenPlaceName(renameInput.value.trim()));
       if (!cleanNewName) return;
 
+      // Preserve the genuine underlying geographic name BEFORE replacing with the user's custom title
+      if (!CURRENT_LOCATION.geoName || CURRENT_LOCATION.geoName.toLowerCase() === cleanNewName.toLowerCase()) {
+        const prevOfficial = (!CURRENT_LOCATION.isCustomTitle && CURRENT_LOCATION.name && !isPersonalLocationName(CURRENT_LOCATION.name))
+          ? CURRENT_LOCATION.name
+          : '';
+        CURRENT_LOCATION.geoName = prevOfficial || (typeof getKnownGenericTown === 'function' ? getKnownGenericTown(CURRENT_LOCATION.lat, CURRENT_LOCATION.lon) : '') || '';
+      }
       CURRENT_LOCATION.name = cleanNewName;
       CURRENT_LOCATION.isCustomTitle = true;
-      if (!CURRENT_LOCATION.geoName) {
-        CURRENT_LOCATION.geoName = cleanNewName;
-      }
       // If renamed to a known landmark/custom site that has a definitive postcode, pair it if generic
       if (typeof matchActiveLandmark === 'function') {
         const lm = matchActiveLandmark(CURRENT_LOCATION);
@@ -9015,8 +9130,8 @@ function joinSpacedLetters(text) {
       return 2 * R * Math.asin(Math.sqrt(a));
     }
 
-    function loadLocationDirectly(name, lat, lon, postcode, recordInRecent = true) {
-      applySelectedLocation(name, lat, lon, postcode, recordInRecent);
+    function loadLocationDirectly(name, lat, lon, postcode, recordInRecent = true, options = {}) {
+      applySelectedLocation(name, lat, lon, postcode, recordInRecent, options);
       closeLocationModal();
     }
 
@@ -9304,6 +9419,7 @@ function joinSpacedLetters(text) {
                 displayName: shortName,
                 fullName: q.name,
                 geoName: q.geoName || '',
+                isCustomTitle: Boolean(q.isCustomTitle),
                 query: isUkPc ? cleanPc : fallbackQuery,
                 lat: q.lat,
                 lon: q.lon,
@@ -9370,7 +9486,10 @@ function joinSpacedLetters(text) {
 
               const openItem = () => {
                 if (item.lat && item.lon) {
-                  loadLocationDirectly(item.fullName, item.lat, item.lon, item.postcode);
+                  loadLocationDirectly(item.fullName, item.lat, item.lon, item.postcode, true, {
+                    isCustomTitle: Boolean(item.isCustomTitle),
+                    geoName: item.geoName || ''
+                  });
                 } else {
                   selectQuickLocation(item.query);
                 }
@@ -9582,7 +9701,11 @@ function joinSpacedLetters(text) {
           gpsBtn.title = `Last location found by Locate Me (${lastGps.name})`;
           gpsBtn.innerHTML = `<span>📍</span><span>${gpsShort}</span>`;
           gpsBtn.onclick = () => {
-            loadLocationDirectly(lastGps.name, lastGps.lat, lastGps.lon, lastGps.postcode || 'GPS');
+            loadLocationDirectly(lastGps.name, lastGps.lat, lastGps.lon, lastGps.postcode || 'GPS', true, {
+              isCustomTitle: Boolean(lastGps.isCustomTitle),
+              geoName: lastGps.geoName || '',
+              lowConfidenceGps: Boolean(lastGps.lowConfidenceGps)
+            });
           };
           wireLocationChipDpad(
             gpsBtn,
@@ -10753,7 +10876,7 @@ function joinSpacedLetters(text) {
         const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').trim().toUpperCase().replace(/\s+/g, '');
         const isEgyptMill = (activeLandmark && activeLandmark.id === 'egypt_mill') ||
           locName.includes('egypt mill') ||
-          locPc === 'GL60AE' || locPc === 'GL60AG';
+          (!CURRENT_LOCATION.lowConfidenceGps && locPc === 'GL60AE');
         if (isEgyptMill) {
           egyptIcon.classList.remove('hidden');
           egyptIcon.classList.add('inline-flex');
@@ -10763,9 +10886,26 @@ function joinSpacedLetters(text) {
         }
       }
 
+      // Handle The Olive Tree
+      const oliveTreeIcon = document.getElementById('oliveTreeIcon');
+      if (oliveTreeIcon) {
+        const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
+        const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').trim().toUpperCase().replace(/\s+/g, '');
+        const isOliveTree = (activeLandmark && activeLandmark.id === 'the_olive_tree') ||
+          locName.includes('olive tree') ||
+          (!CURRENT_LOCATION.lowConfidenceGps && locPc === 'GL60AG');
+        if (isOliveTree) {
+          oliveTreeIcon.classList.remove('hidden');
+          oliveTreeIcon.classList.add('inline-flex');
+        } else {
+          oliveTreeIcon.classList.add('hidden');
+          oliveTreeIcon.classList.remove('inline-flex');
+        }
+      }
+
       // Handle Global Landmarks in dynamic badge container
       if (landmarkIconCont && landmarkBadge) {
-        if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel' && activeLandmark.id !== 'egypt_mill') {
+        if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel' && activeLandmark.id !== 'egypt_mill' && activeLandmark.id !== 'the_olive_tree') {
           landmarkBadge.className = `inline-flex items-center justify-center w-7 h-7 rounded-lg ${activeLandmark.badgeStyle || 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]'} p-0.5 transform hover:scale-110 transition cursor-pointer`;
           landmarkBadge.innerHTML = activeLandmark.svg;
           landmarkIconCont.title = `${activeLandmark.name} • ${activeLandmark.city ? activeLandmark.city + ', ' : ''}${activeLandmark.country}`;
