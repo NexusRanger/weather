@@ -1360,11 +1360,11 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.156) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.162) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
-            <button id="castBtn" tabindex="0" onclick="triggerCast()" title="Cast to TV (Chromecast / Google TV / Shield)" class="tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm">
+            <button id="castBtn" tabindex="0" onclick="triggerCast()" title="Cast to TV (Chromecast / Google TV)" class="tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm">
               <svg id="castIcon" class="w-3.5 h-3.5 pointer-events-none" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
               </svg>
@@ -1372,7 +1372,7 @@
               <span id="castActiveSolidDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-white shadow-[0_0_6px_#38bdf8] pointer-events-none"></span>
             </button>
             <div id="castFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-sky-400/50 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-sky-200 backdrop-blur-md">
-              <span>📺 Cast to TV &bull; Stream to Chromecast / Shield</span>
+              <span>📺 Cast to TV &bull; Stream to Chromecast / Smart TV</span>
             </div>
           </div>
         </div>
@@ -1940,49 +1940,61 @@
   </div>
 
   <!-- LOCATION SEARCH MODAL -->
-  <div id="locationModal" onclick="closeLocationModal()" onmousemove="onLocationModalActivity()" onkeydown="onLocationModalActivity()" oninput="onLocationModalActivity()" ontouchstart="onLocationModalActivity()" onpointerdown="onLocationModalActivity()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 cursor-pointer">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 max-w-lg w-full max-h-[94vh] overflow-y-auto border border-white/15 shadow-2xl relative text-left cursor-default">
-      <div class="flex items-center justify-between pb-2 border-b border-white/10">
-        <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-          <span>📍</span> Set Location (Postcode, Town or GPS)
+  <div id="locationModal" onclick="closeLocationModal()" onmousemove="onLocationModalActivity()" onkeydown="onLocationModalActivity()" oninput="onLocationModalActivity()" ontouchstart="onLocationModalActivity()" onpointerdown="onLocationModalActivity()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 cursor-pointer overflow-hidden">
+    <div id="locationModalCard" onclick="event.stopPropagation()" style="max-height: 88vh; max-height: 88dvh;" class="glass-card rounded-2xl p-3 sm:p-4 max-w-lg w-full overflow-hidden border border-white/15 shadow-2xl relative text-left cursor-default flex flex-col">
+      <div id="locationModalHeader" title="Drag header to move window" class="flex items-center justify-between gap-2 pb-2 border-b border-white/10 flex-shrink-0 select-none cursor-grab active:cursor-grabbing touch-none">
+        <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 min-w-0">
+          <span class="text-slate-400/80 text-xs leading-none tracking-tighter" aria-hidden="true">⋮⋮</span>
+          <span>📍</span>
+          <span class="truncate">Set Location (Postcode, Town or GPS)</span>
         </h3>
-        <button id="closeLocationBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
+        <button id="closeLocationBtnTop" tabindex="0" onpointerdown="event.stopPropagation()" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer flex-shrink-0">
           <span>✕ Close <span id="locationBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
         </button>
       </div>
 
-      <div class="mt-2 space-y-2">
-        <div>
-          <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town, GPS Coordinates or Map Link</label>
+      <!-- Scrollable Body (keeps Header & Close button permanently pinned in view) -->
+      <div id="locationModalBody" style="-webkit-overflow-scrolling: touch;" class="mt-2 flex-1 min-h-0 overflow-y-auto overscroll-contain pr-0.5">
+      <div class="space-y-2.5">
+        <!-- Primary Search Card (Visually Prominent) -->
+        <div class="p-2.5 rounded-xl bg-gradient-to-br from-sky-950/60 via-indigo-950/50 to-slate-900/60 border border-sky-400/50 shadow-[0_0_16px_rgba(56,189,248,0.16)]">
+          <label for="locationInput" class="flex items-center gap-1.5 text-xs font-bold text-sky-200 mb-1.5">
+            <span>🔍</span>
+            <span>Search Location</span>
+            <span class="text-[10px] font-normal text-sky-300/75">(Postcode, Town, GPS or Map Link)</span>
+          </label>
           <div class="flex gap-1.5">
             <div class="relative flex-1 flex items-center">
-              <input id="locationInput" tabindex="0" type="text" placeholder="Search (e.g. GL5 5HH, Paris, 51.7032, -2.2266 or Google Maps link)" class="w-full h-[34px] bg-black/50 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-400 focus:outline-none" onkeydown="handleLocationInputKeydown(event)">
+              <span class="pointer-events-none absolute left-2.5 text-sky-300/90 text-xs select-none" aria-hidden="true">🔍</span>
+              <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)">
               <button id="locationClearBtn" type="button" tabindex="0" onclick="clearLocationInput()" onkeydown="handleLocationClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear search text">✕</button>
             </div>
-            <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber h-[34px] px-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" onkeydown="handleSearchBtnKeydown(event)">
-              Search
+            <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber h-[38px] px-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 focus:outline-none cursor-pointer flex-shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)] border border-sky-300/40" onkeydown="handleSearchBtnKeydown(event)">
+              <span>Search</span>
             </button>
           </div>
-          <div id="locationSearchStatus" class="text-[10px] text-slate-400 empty:hidden mt-0.5 min-h-[14px]"></div>
+          <div id="locationSearchStatus" class="text-[10px] text-slate-300 empty:hidden mt-1 min-h-[14px]"></div>
           <div class="text-[9px] text-slate-400 mt-1 leading-tight flex items-center gap-1">
             <span>💡</span> <span><strong class="text-slate-300">GPS, Plus Codes &amp; Maps:</strong> Enter Plus Codes (<span class="text-sky-300 font-mono">9C3VPQ3F+79</span>), coordinates (<span class="text-sky-300 font-mono">51.7032, -2.2266</span>), or Google Maps URLs.</span>
           </div>
         </div>
 
-        <!-- Custom Title Guidance & Direct Rename Box (Compact TV Fit) -->
-        <div class="p-2 rounded-xl bg-sky-950/30 border border-sky-400/20 text-left">
+        <!-- Secondary Rename Box (Visually Subdued so it won't be confused with Primary Search) -->
+        <div class="p-2 rounded-xl bg-white/[0.03] border border-white/10 text-left">
           <div class="flex items-center gap-1.5">
-            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0">Rename Current:</div>
+            <div class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex-shrink-0 flex items-center gap-1">
+              <span>✏️</span><span>Rename:</span>
+            </div>
             <div class="relative flex-1 flex items-center">
-              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full h-[34px] bg-black/60 border border-white/20 rounded-xl pl-2.5 pr-7 text-xs text-white placeholder-slate-400 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
+              <input id="customRenameInput" tabindex="0" type="text" placeholder="New title (e.g. Grand Hotel)" class="w-full h-[30px] bg-black/45 border border-white/15 rounded-lg pl-2.5 pr-7 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none" onfocus="handleRenameInputFocus(this)" onclick="handleRenameInputClick(this)" oninput="handleRenameInputChange(this)" onblur="handleRenameInputBlur(this)" onkeydown="handleRenameInputKeydown(event)">
               <button id="customRenameClearBtn" type="button" tabindex="0" onclick="clearRenameInput()" onkeydown="handleRenameClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear title text">✕</button>
             </div>
-            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onblur="cancelRenameAutoContinue()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber h-[34px] px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0">
+            <button id="customRenameBtn" tabindex="0" type="button" onclick="applyCurrentLocationRename()" onblur="cancelRenameAutoContinue()" onkeydown="handleRenameBtnKeydown(event)" class="tv-focus-amber h-[30px] px-3 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-slate-200 hover:text-white font-medium text-[11px] transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0">
               Save Title
             </button>
           </div>
-          <div class="text-[9px] text-slate-400 mt-1 leading-tight">
-            💡 <span class="text-slate-300 font-semibold">Tip:</span> You can also search <span class="text-sky-300 font-mono">"Grand Hotel BN1 2FW"</span> to set name &amp; postcode together.
+          <div class="text-[9px] text-slate-500 mt-1 leading-tight">
+            💡 <span class="text-slate-400 font-medium">Tip:</span> You can also search <span class="text-slate-300 font-mono">"Grand Hotel BN1 2FW"</span> above to set name &amp; postcode together.
           </div>
         </div>
       </div>
@@ -2042,6 +2054,7 @@
           </div>
           <div id="nearbyLocationChips" class="flex flex-wrap gap-1"></div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -2166,35 +2179,79 @@
     <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
       
       <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-2.5 border-b border-white/10 flex-shrink-0">
-        <div class="flex items-center gap-2.5">
-          <div class="w-6 h-6 rounded-full overflow-hidden shadow-[0_0_10px_rgba(56,189,248,0.35)] flex-shrink-0">
-            <svg class="w-full h-full" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
-              <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
-              <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
-              <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-            </svg>
+      <div class="pb-2 border-b border-white/10 flex-shrink-0">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded-full overflow-hidden shadow-[0_0_10px_rgba(56,189,248,0.35)] flex-shrink-0">
+              <svg class="w-full h-full" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
+                <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
+                <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
+                <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+              </svg>
+            </div>
+            <h3 id="mapModalTitleText" class="text-sm md:text-base font-bold text-white leading-none whitespace-nowrap">30-Day Location Map</h3>
+            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-mono font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
+              <span>🗺️</span><span id="mapQueryCountText">0 locations</span>
+            </button>
           </div>
-          <div>
-            <h3 class="text-sm md:text-base font-bold text-white flex items-center gap-2">
-              30-Day Location Map
-              <span id="mapQueryCount" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30">0 locations</span>
-            </h3>
-            <p class="text-[10px] text-slate-400">Sorted by distance from current location • TV: Use bottom bar • Touch: Pan map to auto-inspect</p>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <!-- 3-Way Map View Filter: All (Public) | Recent (Saved up to 30) | Locked (Favourites) -->
+            <div class="flex items-center rounded-xl bg-white/10 border border-white/15 p-0.5 h-[30px] box-border" role="group" aria-label="Map location view filter">
+              <button id="mapFilterAllBtn" type="button" onclick="setMapViewFilter('all')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapQueryCount');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show everyone's shared 30-day locations">
+                <span>🌐</span><span>All</span>
+              </button>
+              <button id="mapFilterLocalBtn" type="button" onclick="setMapViewFilter('local')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show your locally saved recent locations (private custom names included)">
+                <span>📍</span><span>Recent</span><span id="mapFilterLocalBadge" class="text-[9px] font-mono opacity-80"></span>
+              </button>
+              <button id="mapFilterLockedBtn" type="button" onclick="setMapViewFilter('locked')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapViewInfoBtn')||document.getElementById('closeMapBtnTop');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show only your locked locations (hold any saved location in Search to lock)">
+                <span>🔒</span><span>Locked</span><span id="mapFilterLockedBadge" class="text-[9px] font-mono opacity-80"></span>
+              </button>
+            </div>
+            <!-- Round 'i' Info Button explaining All (Central Anonymous DB) vs Recent/Locked (Browser Cache) -->
+            <button id="mapViewInfoBtn" type="button" tabindex="0" onclick="toggleMapViewInfo()" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('closeMapBtnTop');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber w-[30px] h-[30px] rounded-full bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/45 text-sky-300 hover:text-white text-xs font-serif font-bold italic inline-flex items-center justify-center leading-none transition focus:outline-none cursor-pointer flex-shrink-0 shadow-sm box-border" title="How Map Views &amp; Privacy Work" aria-label="How Map Views and Privacy Work" aria-expanded="false">
+              i
+            </button>
+            <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
+            <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapViewInfoBtn')||document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const target=typeof getActiveOrLastFocusedChip==='function'?getActiveOrLastFocusedChip():document.querySelector('#mapRecentChips button');if(target){try{const cEl=document.getElementById('mapRecentChips');if(cEl){cEl.scrollTo({left:Math.max(0,target.offsetLeft-6),behavior:'smooth'});}}catch(_){}try{target.focus({preventScroll:true});}catch(_){target.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber h-[30px] px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition inline-flex items-center justify-center gap-1.5 leading-none focus:outline-none cursor-pointer flex-shrink-0 box-border whitespace-nowrap" tabindex="1" title="Close Map (Back / Esc)">
+              <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-0.5">(45s)</span></span>
+            </button>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <!-- Prominent TV-focusable Close Button with 45s Auto-Close Countdown -->
-          <button id="closeMapBtnTop" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const target=typeof getActiveOrLastFocusedChip==='function'?getActiveOrLastFocusedChip():document.querySelector('#mapRecentChips button');if(target){try{const cEl=document.getElementById('mapRecentChips');if(cEl){cEl.scrollTo({left:Math.max(0,target.offsetLeft-6),behavior:'smooth'});}}catch(_){}try{target.focus({preventScroll:true});}catch(_){target.focus();}}}}" onclick="closeHistoryMapModal()" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" tabindex="1" title="Close Map (Back / Esc)">
-            <span>✕ Close <span id="mapBtnCountdownTop" class="text-amber-300 font-mono text-[11px] ml-1">(45s)</span></span>
-          </button>
-        </div>
+        <p class="text-[10px] text-slate-400 mt-1.5 leading-tight">Sorted by distance from current location • Tap location count to fit all pins • TV: Use bottom bar</p>
       </div>
 
       <!-- Leaflet Map Container -->
       <div class="flex-1 min-h-0 mt-2 mb-1 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
         <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
+        <!-- Floating Map Views & Privacy Info Box (toggled by the round 'i' button) -->
+        <div id="mapViewInfoBox" onclick="event.stopPropagation()" class="hidden absolute top-3 right-3 z-[560] w-[min(360px,calc(100%-24px))] p-3 rounded-xl bg-slate-900/95 border border-sky-400/45 text-[11px] text-slate-200 leading-relaxed shadow-2xl backdrop-blur-md">
+          <div class="flex items-start justify-between gap-2 mb-1.5">
+            <div class="font-bold text-white flex items-center gap-1.5 text-xs">
+              <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-sky-500/30 border border-sky-400/50 text-sky-300 text-[10px] font-serif italic">i</span>
+              <span>How Map Views &amp; Privacy Work</span>
+            </div>
+            <button type="button" onclick="toggleMapViewInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
+          </div>
+          <div class="space-y-1.5 text-[11px]">
+            <p>
+              <span class="font-semibold text-sky-300">🌐 All (Shared 30-Day Map):</span>
+              Recent location searches are stored <strong class="text-white">anonymously</strong> on the central database. Personal or custom names are always stripped to the generic local town name so nobody's private titles are shared.
+            </p>
+            <p>
+              <span class="font-semibold text-emerald-300">📍 Recent</span> &amp; <span class="font-semibold text-amber-300">🔒 Locked:</span>
+              Stored <strong class="text-white">only in your browser cache</strong> (<code class="text-sky-300 font-mono text-[10px]">localStorage</code>) on this device—never uploaded to the central database. Your custom location names appear here privately for your eyes only.
+            </p>
+            <p class="text-[10px] text-slate-300/90 pt-1.5 border-t border-white/10 leading-relaxed">
+              💡 <strong class="text-amber-300">How to 🔒 Lock a favourite:</strong> Open the Location menu, press and hold any Recent Location (or right-click it), then choose <strong class="text-white">Lock</strong>. Locked places stay saved on this device and appear in the <strong class="text-amber-300">Locked</strong> map view.
+            </p>
+          </div>
+        </div>
+        <!-- Empty-State Banner for Locked/Local filter when no pins exist -->
+        <div id="mapEmptyFilterNotice" class="hidden pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 z-[500] px-4 py-2.5 rounded-xl bg-slate-900/92 border border-amber-400/45 text-amber-100 text-xs font-medium shadow-2xl backdrop-blur-md text-center max-w-[90%]">
+          <div id="mapEmptyFilterTitle" class="font-bold text-amber-300 mb-0.5">🔒 No locked locations yet</div>
+          <div id="mapEmptyFilterSub" class="text-[11px] text-slate-300">Open the Location menu, press and hold any Recent Location, then choose Lock to pin it here.</div>
+        </div>
         <!-- Luminous Center Target Reticle for Tablet/Touch Auto-Popup -->
         <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
           <div class="relative flex items-center justify-center">
@@ -2364,11 +2421,11 @@
             <!-- Smart TV -->
             <div class="p-2 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
               <div class="flex items-center gap-1 font-bold text-white mb-0.5 text-[11px]">
-                <span>📺</span> Smart TV &amp; Shield
+                <span>📺</span> Smart TV &amp; Android TV
               </div>
               <p class="text-[10px] text-slate-300 leading-snug">
                 <span class="block mb-0.5"><strong class="text-emerald-300">Looks best on TV!</strong></span>
-                Use the <strong class="text-sky-300">Cast</strong> button to stream directly, or open in <strong class="text-amber-300">TV Bro browser</strong> on Shield / Android TV. Press <strong class="text-sky-300">F</strong> for fullscreen. Full D-pad remote control &amp; auto-refresh.
+                Use the <strong class="text-sky-300">Cast</strong> button to stream directly, or open in <strong class="text-amber-300">TV Bro browser</strong> on Android TV / Google TV. Press <strong class="text-sky-300">F</strong> for fullscreen. Full D-pad remote control &amp; auto-refresh.
                 <span class="block mt-1 pt-1 border-t border-white/10 text-[9.5px] text-sky-300">Cast App ID: <code class="font-mono bg-black/40 px-1 py-0.5 rounded text-sky-200">EC255DC2</code></span>
               </p>
             </div>
@@ -2476,7 +2533,7 @@
             <h3 class="text-base font-bold text-white flex items-center gap-2">
               Cast Session Active
             </h3>
-            <p id="castDeviceNameLabel" class="text-[11px] text-sky-300 font-mono">Connected to TV / Shield</p>
+            <p id="castDeviceNameLabel" class="text-[11px] text-sky-300 font-mono">Connected to TV</p>
           </div>
         </div>
         <button id="closeCastOptionsBtnTop" tabindex="1" onclick="closeCastOptionsModal(true)" onkeydown="if(event.key==='ArrowDown'){event.preventDefault();const b=document.getElementById('castStopCloseBtn');if(b)b.focus();}" class="tv-focus-amber px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1.5 focus:outline-none cursor-pointer" title="Cancel (Esc / Back)">
@@ -2505,7 +2562,7 @@
               <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/40">Turn Off Screen</span>
             </div>
             <p class="text-[11px] text-slate-300 group-hover:text-white mt-1 leading-snug">
-              Closes the dashboard on your TV / Shield and cleanly frees the Cast button so you can cast elsewhere.
+              Closes the dashboard on your TV and cleanly frees the Cast button so you can cast elsewhere.
             </p>
           </div>
         </button>
@@ -2521,7 +2578,7 @@
               <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">TV Runs Standalone</span>
             </div>
             <p class="text-[11px] text-slate-400 group-hover:text-slate-300 mt-1 leading-snug">
-              Stops device sync so the dashboard keeps running independently on your TV / Shield while you browse locations freely on your tablet or phone.
+              Stops device sync so the dashboard keeps running independently on your TV while you browse locations freely on your tablet or phone.
             </p>
           </div>
         </button>
@@ -2542,11 +2599,11 @@
           </div>
         </button>
 
-        <!-- Android Chrome Multi-Screen Note -->
-        <div class="rounded-xl bg-slate-900/70 border border-amber-400/25 px-3 py-2.5 text-[11px] text-slate-300 leading-snug flex items-start gap-2">
-          <span class="text-amber-300 text-xs flex-shrink-0 mt-0.5">ℹ️</span>
+        <!-- Multi-Device Casting Tip -->
+        <div class="rounded-xl bg-sky-950/40 border border-sky-400/25 px-3 py-2.5 text-[11px] text-slate-300 leading-snug flex items-start gap-2">
+          <span class="text-sky-300 text-xs flex-shrink-0 mt-0.5">💡</span>
           <p>
-            <strong class="text-amber-200">Casting to a 2nd screen later?</strong> Leaving a TV independent works cleanly on its own, though Android Chrome still remembers the old Cast target until Wi-Fi drops. Toggle <span class="text-orange-400 font-semibold">Flight Mode</span> / <span class="text-orange-400 font-semibold">Wi-Fi</span> briefly (or use another browser) before casting elsewhere.
+            <strong class="text-sky-200">Casting to several devices?</strong> Leaving your TV running independently works seamlessly on its own. If you later want to cast to several devices in the same location, Android Chrome may remember the previous TV—simply toggle <span class="text-sky-300 font-semibold">Wi-Fi</span> briefly, or use another browser before casting to another device.
           </p>
         </div>
       </div>
@@ -2618,7 +2675,7 @@
 
       <div class="w-full p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-[11px] text-slate-300 flex items-center gap-2.5 text-left">
         <span class="text-lg">🏠</span>
-        <span>Press the <strong>Home</strong> button on your Nvidia Shield remote to return to Android TV Home.</span>
+        <span>Press the <strong>Home</strong> button on your TV remote to return to your TV Home screen.</span>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-2.5 w-full pt-1">
@@ -2995,8 +3052,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 320;
-    const APP_VERSION = '1.10.156';
+    const APP_BUILD = 326;
+    const APP_VERSION = '1.10.162';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3673,7 +3730,7 @@
           if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
             setUpdateAvailable(data.version, data.build);
           } else {
-            setUpToDate(data && data.version ? data.version : APP_VERSION);
+            setUpToDate(APP_VERSION);
           }
         } else {
           setUpToDate();
@@ -4668,6 +4725,7 @@
       if (mapToastTimer) { clearTimeout(mapToastTimer); mapToastTimer = null; }
       const toast = document.getElementById('mapToast');
       if (toast) { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }
+      if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
       stopHistoryMapAutoCloseTimer();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -5193,9 +5251,166 @@
       }, 2400);
     }
 
-    function loadLocationFromMap(name, lat, lon, postcode) {
+    const MAP_VIEW_FILTER_KEY = 'ambient_map_view_filter';
+    function getMapViewFilter() {
+      try {
+        const saved = localStorage.getItem(MAP_VIEW_FILTER_KEY);
+        if (saved === 'all' || saved === 'local' || saved === 'locked') return saved;
+      } catch (_) {}
+      return 'all';
+    }
+
+    function getLocalMapQueries(lockedOnly = false) {
+      const rawQueries = loadUserRecentQueries();
+      const byKey = new Map();
+      for (const q of rawQueries) {
+        if (!q || !q.name || typeof q.lat !== 'number' || typeof q.lon !== 'number') continue;
+        if (lockedOnly && !q.locked) continue;
+        const nLower = q.name.trim().toLowerCase();
+        if (nLower.includes('probe') || nLower.includes('test location') || nLower === 'united kingdom' || nLower === 'uk') continue;
+        const shortKey = shortenPlaceName(q.name).toLowerCase();
+        const existing = byKey.get(shortKey);
+        if (!existing) {
+          byKey.set(shortKey, {
+            name: q.name,
+            geoName: q.geoName || '',
+            isCustomTitle: Boolean(q.isCustomTitle),
+            postcode: q.postcode || '',
+            lat: q.lat,
+            lon: q.lon,
+            locked: Boolean(q.locked),
+            timestamp: q.timestamp ? new Date(q.timestamp).getTime() : Date.now()
+          });
+        } else {
+          if (q.locked && !existing.locked) existing.locked = true;
+        }
+      }
+      const allUnique = Array.from(byKey.values());
+      if (lockedOnly) return allUnique;
+      const cap = typeof MAX_SAVED_RECENT_LOCATIONS === 'number' ? MAX_SAVED_RECENT_LOCATIONS : 30;
+      let limited = allUnique.slice(0, cap);
+      const includedKeys = new Set(limited.map(x => shortenPlaceName(x.name).toLowerCase()));
+      const missingLocked = allUnique.filter(x => x.locked && !includedKeys.has(shortenPlaceName(x.name).toLowerCase()));
+      if (missingLocked.length > 0) {
+        const kept = limited.filter(x => x.locked);
+        const unlockedKept = limited.filter(x => !x.locked).slice(0, Math.max(0, cap - kept.length - missingLocked.length));
+        limited = allUnique.filter(x => kept.includes(x) || unlockedKept.includes(x) || missingLocked.includes(x));
+      }
+      return limited;
+    }
+
+    function getQueriesForMapFilter(filterMode = getMapViewFilter()) {
+      if (filterMode === 'local') return getLocalMapQueries(false);
+      if (filterMode === 'locked') return getLocalMapQueries(true);
+      return getHistoryQueries();
+    }
+
+    function updateMapFilterButtonUI(filterMode = getMapViewFilter()) {
+      const modes = [
+        { id: 'mapFilterAllBtn', key: 'all', activeCls: 'bg-sky-500/40 text-white font-bold shadow-sm' },
+        { id: 'mapFilterLocalBtn', key: 'local', activeCls: 'bg-emerald-500/35 text-emerald-100 font-bold shadow-sm' },
+        { id: 'mapFilterLockedBtn', key: 'locked', activeCls: 'bg-amber-500/35 text-amber-100 font-bold shadow-sm' }
+      ];
+      modes.forEach(({ id, key, activeCls }) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const isActive = filterMode === key;
+        btn.className = `tv-focus-amber h-full px-2.5 rounded-lg text-[11px] transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap ${
+          isActive ? activeCls : 'font-medium text-slate-300 hover:text-white'
+        }`;
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+
+      const localCount = getLocalMapQueries(false).length;
+      const lockedCount = getLocalMapQueries(true).length;
+      const localBadge = document.getElementById('mapFilterLocalBadge');
+      const lockedBadge = document.getElementById('mapFilterLockedBadge');
+      if (localBadge) localBadge.textContent = localCount > 0 ? `(${localCount})` : '';
+      if (lockedBadge) lockedBadge.textContent = lockedCount > 0 ? `(${lockedCount})` : '';
+
+      const titleEl = document.getElementById('mapModalTitleText');
+      if (titleEl) {
+        titleEl.textContent = filterMode === 'locked'
+          ? 'Locked Locations Map'
+          : (filterMode === 'local' ? 'Recent Saved Map' : '30-Day Location Map');
+      }
+    }
+
+    function fitAllMapLocationsView() {
+      resetHistoryMapAutoCloseTimer();
+      if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
+      if (!historyLeafletMap) return;
+      const queries = (currentMapQueries && currentMapQueries.length > 0)
+        ? currentMapQueries
+        : Object.values(mapMarkerMap).map(e => e.query || e.q).filter(Boolean);
+      const validPts = queries
+        .filter(q => q && typeof q.lat === 'number' && typeof q.lon === 'number' && isFinite(q.lat) && isFinite(q.lon))
+        .map(q => [q.lat, q.lon]);
+      if (validPts.length === 0) {
+        showMapToast('No locations in this view to frame');
+        return;
+      }
+      mapProgrammaticFlyUntil = Date.now() + 1000;
+      try { historyLeafletMap.closePopup(); } catch (_) {}
+      try { historyLeafletMap.invalidateSize(false); } catch (_) {}
+
+      if (validPts.length === 1) {
+        const maxZ = (typeof historyLeafletMap.getMaxZoom === 'function') ? Math.min(9, historyLeafletMap.getMaxZoom()) : 9;
+        historyLeafletMap.flyTo(validPts[0], maxZ, { duration: 0.6 });
+      } else {
+        const bounds = L.latLngBounds(validPts);
+        const maxZ = (typeof historyLeafletMap.getMaxZoom === 'function') ? Math.min(11, historyLeafletMap.getMaxZoom()) : 11;
+        historyLeafletMap.fitBounds(bounds, {
+          padding: [38, 38],
+          maxZoom: maxZ,
+          animate: true,
+          duration: 0.65
+        });
+      }
+      const mode = getMapViewFilter();
+      const label = mode === 'locked' ? 'locked ' : (mode === 'local' ? 'recent ' : '');
+      showMapToast(`Framed all ${validPts.length} ${label}location${validPts.length === 1 ? '' : 's'}`);
+    }
+
+    function toggleMapViewInfo(forceState) {
+      const box = document.getElementById('mapViewInfoBox');
+      const btn = document.getElementById('mapViewInfoBtn');
+      if (!box) return;
+      const shouldShow = (typeof forceState === 'boolean') ? forceState : box.classList.contains('hidden');
+      if (shouldShow) {
+        box.classList.remove('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+      } else {
+        box.classList.add('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+      resetHistoryMapAutoCloseTimer();
+    }
+
+    function setMapViewFilter(mode, reframe = true) {
+      const valid = (mode === 'local' || mode === 'locked') ? mode : 'all';
+      try { localStorage.setItem(MAP_VIEW_FILTER_KEY, valid); } catch (_) {}
+      resetHistoryMapAutoCloseTimer();
+      updateMapFilterButtonUI(valid);
+      mapLastFocusedChipIndex = 0;
+      mapActivePopupKey = null;
+      const queries = getQueriesForMapFilter(valid);
+      renderHistoryMarkersAndChips(queries, true, valid);
+      if (reframe && historyLeafletMap) {
+        try { historyLeafletMap.closePopup(); } catch (_) {}
+        setTimeout(() => {
+          try {
+            if (currentMapQueries && currentMapQueries.length > 0) {
+              applyHistoryMapAutoZoom(true);
+            }
+          } catch (_) {}
+        }, 60);
+      }
+    }
+
+    function loadLocationFromMap(name, lat, lon, postcode, options = {}) {
       closeHistoryMapModal();
-      applySelectedLocation(name, lat, lon, (postcode && postcode !== 'undefined') ? postcode : 'GEO');
+      applySelectedLocation(name, lat, lon, (postcode && postcode !== 'undefined') ? postcode : 'GEO', true, options || {});
     }
 
     // Dynamic TV/Tablet Highlight Sync:
@@ -5239,61 +5454,131 @@
       }
     }
 
-    function renderHistoryMarkersAndChips(queries, isInitialOpen = false) {
+    function renderHistoryMarkersAndChips(queries, isInitialOpen = false, filterMode = getMapViewFilter()) {
       const prevActiveKey = mapActivePopupKey;
+      const isPrivateView = (filterMode === 'local' || filterMode === 'locked');
       if (historyMarkersLayer) {
         historyMarkersLayer.clearLayers();
       }
       mapMarkerMap = {};
       mapActivePopupKey = null;
 
-      // 1. Ensure Current Location is always present and filter out test or country-only entries (e.g. United Kingdom)
+      updateMapFilterButtonUI(filterMode);
+
+      // 1. Determine Current Location reference (private title allowed in Local/Locked, depersonalized in All)
       const currentRef = getMapCurrentReference();
+      const privateCurrentRef = (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number')
+        ? {
+            name: CURRENT_LOCATION.name || currentRef.name,
+            geoName: CURRENT_LOCATION.geoName || '',
+            isCustomTitle: Boolean(CURRENT_LOCATION.isCustomTitle),
+            postcode: CURRENT_LOCATION.postcode || currentRef.postcode || '',
+            lat: CURRENT_LOCATION.lat,
+            lon: CURRENT_LOCATION.lon
+          }
+        : currentRef;
+      const activeCurRef = isPrivateView ? privateCurrentRef : currentRef;
+
       const curNameEl = document.getElementById('mapReturnCurrentName');
       if (curNameEl) {
-        curNameEl.textContent = shortenPlaceName(currentRef.name || 'Current');
+        curNameEl.textContent = shortenPlaceName(activeCurRef.name || 'Current');
       }
       const curBtnEl = document.getElementById('mapReturnCurrentBtn');
       if (curBtnEl) {
-        curBtnEl.title = `Return to Current Location: ${currentRef.name || 'Current'} (first item on list)`;
+        curBtnEl.title = `Return to Current Location: ${activeCurRef.name || 'Current'} (first item on list)`;
       }
-      const combined = queries.filter(q => {
+      const combined = (Array.isArray(queries) ? queries : []).filter(q => {
         if (!q || !q.name) return false;
         const n = q.name.toLowerCase().trim();
         if (n.includes('probe') || n.includes('test location')) return false;
         return n !== 'united kingdom' && n !== 'uk';
       });
 
-      // Filter out any historical entry that is identical to currentRef (same name or virtually same coords < 140m)
-      const filtered = combined.map(q => {
-        const depName = getDepersonalizedLocationName(q);
-        const norm = normalizeKnownLandmarkCoords(depName, q.lat, q.lon, q.postcode);
-        return { ...q, name: depName, lat: norm.lat, lon: norm.lon, postcode: norm.postcode || q.postcode };
-      }).filter(q => {
-        const sameName = (q.name || '').toLowerCase().trim() === currentRef.name.toLowerCase().trim();
-        const distToCur = calculateHaversineKm(q.lat, q.lon, currentRef.lat, currentRef.lon);
-        const sameCoords = distToCur < 0.14;
-        return !sameName && !sameCoords;
-      });
+      let filtered = [];
+      if (filterMode === 'locked') {
+        // Strictly show only locked locations — never inject an unlocked Current Location pin
+        filtered = combined.map(q => {
+          const sameName = (q.name || '').toLowerCase().trim() === (activeCurRef.name || '').toLowerCase().trim();
+          const distToCur = calculateHaversineKm(q.lat, q.lon, activeCurRef.lat, activeCurRef.lon);
+          const isCur = sameName || distToCur < 0.14;
+          return {
+            ...q,
+            name: q.name,
+            locked: true,
+            isCurrentPin: isCur
+          };
+        });
+      } else if (filterMode === 'local') {
+        // Local personal saved locations (up to 30): keep user's custom titles intact
+        let currentWasLocked = false;
+        filtered = combined.filter(q => {
+          const sameName = (q.name || '').toLowerCase().trim() === (activeCurRef.name || '').toLowerCase().trim();
+          const distToCur = calculateHaversineKm(q.lat, q.lon, activeCurRef.lat, activeCurRef.lon);
+          const sameCoords = distToCur < 0.14;
+          if ((sameName || sameCoords) && q.locked) {
+            currentWasLocked = true;
+          }
+          return !sameName && !sameCoords;
+        }).map(q => ({
+          ...q,
+          name: q.name
+        }));
+        filtered.unshift({
+          name: activeCurRef.name,
+          geoName: activeCurRef.geoName || '',
+          isCustomTitle: Boolean(activeCurRef.isCustomTitle),
+          postcode: activeCurRef.postcode,
+          lat: activeCurRef.lat,
+          lon: activeCurRef.lon,
+          locked: currentWasLocked,
+          timestamp: Date.now(),
+          isCurrentPin: true
+        });
+      } else {
+        // Public 'all' view: strictly depersonalize every entry and guarantee Current Location first
+        filtered = combined.map(q => {
+          const depName = getDepersonalizedLocationName(q);
+          const norm = normalizeKnownLandmarkCoords(depName, q.lat, q.lon, q.postcode);
+          return { ...q, name: depName, lat: norm.lat, lon: norm.lon, postcode: norm.postcode || q.postcode };
+        }).filter(q => {
+          const sameName = (q.name || '').toLowerCase().trim() === currentRef.name.toLowerCase().trim();
+          const distToCur = calculateHaversineKm(q.lat, q.lon, currentRef.lat, currentRef.lon);
+          const sameCoords = distToCur < 0.14;
+          return !sameName && !sameCoords;
+        });
+        filtered.unshift({
+          name: currentRef.name,
+          postcode: currentRef.postcode,
+          lat: currentRef.lat,
+          lon: currentRef.lon,
+          timestamp: Date.now(),
+          isCurrentPin: true
+        });
+      }
 
-      // Guarantee Current Location is always present as the first entry
-      filtered.unshift({
-        name: currentRef.name,
-        postcode: currentRef.postcode,
-        lat: currentRef.lat,
-        lon: currentRef.lon,
-        timestamp: Date.now(),
-        isCurrentPin: true
-      });
+      const emptyNotice = document.getElementById('mapEmptyFilterNotice');
+      if (emptyNotice) {
+        if (filtered.length === 0) {
+          const tEl = document.getElementById('mapEmptyFilterTitle');
+          const sEl = document.getElementById('mapEmptyFilterSub');
+          if (tEl) tEl.textContent = filterMode === 'locked' ? '🔒 No locked locations yet' : '📍 No saved locations yet';
+          if (sEl) sEl.textContent = filterMode === 'locked'
+            ? 'Open the Location menu, press and hold any Recent Location, then choose Lock to pin it here.'
+            : 'Search for places in the Location menu to build your personal map.';
+          emptyNotice.classList.remove('hidden');
+        } else {
+          emptyNotice.classList.add('hidden');
+        }
+      }
 
       const sortedQueries = filtered.map(q => {
-        const distKm = calculateHaversineKm(currentRef.lat, currentRef.lon, q.lat, q.lon);
+        const distKm = calculateHaversineKm(activeCurRef.lat, activeCurRef.lon, q.lat, q.lon);
         // Only the explicitly designated currentRef pin is the current location
         const isCurrent = !!q.isCurrentPin;
         return {
           ...q,
-          name: q.name || getDepersonalizedLocationName(q),
-          postcode: getOutwardPostcode(q.postcode),
+          name: isPrivateView ? (q.name || getDepersonalizedLocationName(q)) : (q.name || getDepersonalizedLocationName(q)),
+          postcode: isPrivateView ? (q.postcode || '') : getOutwardPostcode(q.postcode),
           distKm: isCurrent ? 0 : distKm,
           isCurrent
         };
@@ -5305,8 +5590,8 @@
 
       currentMapQueries = sortedQueries;
 
-      const countEl = document.getElementById('mapQueryCount');
-      if (countEl) countEl.textContent = `${sortedQueries.length} location${sortedQueries.length === 1 ? '' : 's'}`;
+      const countTextEl = document.getElementById('mapQueryCountText') || document.getElementById('mapQueryCount');
+      if (countTextEl) countTextEl.textContent = `${sortedQueries.length} location${sortedQueries.length === 1 ? '' : 's'}`;
 
       const chipsEl = document.getElementById('mapRecentChips');
       if (chipsEl) {
@@ -5321,12 +5606,15 @@
           const btn = document.createElement('button');
           btn.className = q.isCurrent
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-xs text-emerald-200 hover:text-white font-semibold transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0'
-            : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 hover:border-white/30 text-xs text-slate-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0';
+            : (q.locked && isPrivateView
+              ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 hover:border-amber-300/60 text-xs text-amber-100 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0'
+              : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 hover:border-white/30 text-xs text-slate-200 hover:text-white font-medium transition whitespace-nowrap flex items-center gap-1.5 focus:outline-none cursor-pointer flex-shrink-0');
           btn.tabIndex = 0;
           btn.title = q.isCurrent
             ? `${q.name} (Current Location)`
             : `${q.name} (${chipDistLabel} from current location) — Press OK to view on map`;
-          btn.innerHTML = `<span style="font-size:11px;">📍</span><span>${escapeHtml(shortName)}</span><span class="chip-dist text-[10px] opacity-75 font-mono">• ${chipDistLabel}</span>`;
+          const pinIcon = (q.locked && isPrivateView) ? '🔒' : '📍';
+          btn.innerHTML = `<span style="font-size:11px;">${pinIcon}</span><span>${escapeHtml(shortName)}</span><span class="chip-dist text-[10px] opacity-75 font-mono">• ${chipDistLabel}</span>`;
           btn._distSpan = btn.querySelector('.chip-dist');
           btn._distKm = q.distKm;
           btn._isCurrent = q.isCurrent;
@@ -5445,7 +5733,10 @@
               return;
             }
             if (mapActivePopupKey === key) {
-              loadLocationFromMap(q.name, q.lat, q.lon, q.postcode);
+              loadLocationFromMap(q.name, q.lat, q.lon, q.postcode, {
+                isCustomTitle: Boolean(q.isCustomTitle),
+                geoName: q.geoName || ''
+              });
             } else {
               panAndOpenOnMap();
             }
@@ -5477,6 +5768,11 @@
           if (modal && !modal.classList.contains('hidden')) {
             const isBottomCtrlActive = document.activeElement && (
               document.activeElement.id === 'closeMapBtnTop' ||
+              document.activeElement.id === 'mapQueryCount' ||
+              document.activeElement.id === 'mapFilterAllBtn' ||
+              document.activeElement.id === 'mapFilterLocalBtn' ||
+              document.activeElement.id === 'mapFilterLockedBtn' ||
+              document.activeElement.id === 'mapViewInfoBtn' ||
               document.activeElement.id === 'closeMapBtnBottom' ||
               document.activeElement.id === 'mapUnitKmBtn' ||
               document.activeElement.id === 'mapUnitMiBtn' ||
@@ -5606,10 +5902,11 @@
           ? '📍 Current Location'
           : `${formatMapDistance(q.distKm)} from current location`;
 
-        // Large, easy-to-hit 36x36 target with pulsating halo (emerald for Current, cyan for others)
-        const haloColor = isCurrent ? 'rgba(52, 211, 153, 0.5)' : 'rgba(56, 189, 248, 0.45)';
-        const dotBg = isCurrent ? '#10b981' : '#0284c7';
-        const dotShadow = isCurrent ? '#34d399' : '#38bdf8';
+        // Large, easy-to-hit 36x36 target with pulsating halo (emerald for Current, amber for Locked in private views, cyan for others)
+        const isLockedPin = Boolean(q.locked && isPrivateView);
+        const haloColor = isCurrent ? 'rgba(52, 211, 153, 0.5)' : (isLockedPin ? 'rgba(245, 158, 11, 0.45)' : 'rgba(56, 189, 248, 0.45)');
+        const dotBg = isCurrent ? '#10b981' : (isLockedPin ? '#f59e0b' : '#0284c7');
+        const dotShadow = isCurrent ? '#34d399' : (isLockedPin ? '#fbbf24' : '#38bdf8');
         const iconHtml = `
           <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
             <div style="position: absolute; width: 26px; height: 26px; border-radius: 50%; background: ${haloColor}; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; pointer-events: none;"></div>
@@ -5652,7 +5949,7 @@
 
         const titleEl = document.createElement('div');
         titleEl.style.cssText = 'font-weight: 800; color: #ffffff; font-size: 13px; margin-bottom: 2px; padding-right: 12px;';
-        titleEl.textContent = q.name;
+        titleEl.textContent = (q.locked && isPrivateView) ? `🔒 ${q.name}` : q.name;
         popupWrapper.appendChild(titleEl);
 
         const distEl = document.createElement('div');
@@ -5708,7 +6005,10 @@
               e.stopPropagation();
               if (e.preventDefault) e.preventDefault();
             }
-            loadLocationFromMap(q.name, q.lat, q.lon, q.postcode);
+            loadLocationFromMap(q.name, q.lat, q.lon, q.postcode, {
+              isCustomTitle: Boolean(q.isCustomTitle),
+              geoName: q.geoName || ''
+            });
           };
           popupWrapper.appendChild(forecastBtn);
         } else {
@@ -5823,9 +6123,12 @@
           mapCanvasEl.addEventListener('keyup', handleGlobalBack, true);
         }
 
-        // Reset idle auto-close timer on direct map interactions
+        // Reset idle auto-close timer on direct map interactions (and dismiss info popover on tap/drag)
         historyLeafletMap.on('dragstart zoomstart movestart', () => {
           resetHistoryMapAutoCloseTimer();
+        });
+        historyLeafletMap.on('click dragstart', () => {
+          if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
         });
 
         // Tablet / Touch Gesture UX: As you pan or zoom the map, automatically pop up the info card
@@ -5845,9 +6148,11 @@
         historyLeafletMap.setView([currentRef.lat, currentRef.lon], defaultZoom);
       }
 
-      // 1. Immediately render queries with seed fallback
-      let queries = getHistoryQueries();
-      renderHistoryMarkersAndChips(queries, isInitialOpen);
+      // 1. Immediately render queries for the active map filter (All / Local / Locked)
+      const activeFilter = getMapViewFilter();
+      updateMapFilterButtonUI(activeFilter);
+      let queries = getQueriesForMapFilter(activeFilter);
+      renderHistoryMarkersAndChips(queries, isInitialOpen, activeFilter);
 
       // 2. Invalidate map size and re-verify markers once container geometry is computed by the browser
       [80, 150, 350].forEach(delay => {
@@ -5855,8 +6160,9 @@
           if (historyLeafletMap) {
             historyLeafletMap.invalidateSize();
             if (delay === 150) {
-              const currentQueries = getHistoryQueries();
-              renderHistoryMarkersAndChips(currentQueries, isInitialOpen);
+              const curFilter = getMapViewFilter();
+              const currentQueries = getQueriesForMapFilter(curFilter);
+              renderHistoryMarkersAndChips(currentQueries, isInitialOpen, curFilter);
             }
           }
         }, delay);
@@ -5927,7 +6233,11 @@
 
             const mapModal = document.getElementById('historyMapModal');
             if (mapModal && !mapModal.classList.contains('hidden') && historyLeafletMap) {
-              renderHistoryMarkersAndChips(queries, false);
+              if (getMapViewFilter() === 'all') {
+                renderHistoryMarkersAndChips(queries, false, 'all');
+              } else {
+                updateMapFilterButtonUI(getMapViewFilter());
+              }
             }
           }
         }
@@ -8362,6 +8672,116 @@ function joinSpacedLetters(text) {
       proceedOpenLocationModal();
     }
 
+    let locModalDragX = 0;
+    let locModalDragY = 0;
+    let locModalDragInitialized = false;
+
+    function applyLocationModalTransform() {
+      const card = document.getElementById('locationModalCard');
+      if (!card) return;
+      if (locModalDragX === 0 && locModalDragY === 0) {
+        card.style.transform = '';
+      } else {
+        card.style.transform = `translate3d(${Math.round(locModalDragX)}px, ${Math.round(locModalDragY)}px, 0)`;
+      }
+    }
+
+    function clampLocationModalPosition() {
+      const card = document.getElementById('locationModalCard');
+      const modal = document.getElementById('locationModal');
+      if (!card || !modal || modal.classList.contains('hidden')) return;
+      const vpW = (window.visualViewport && window.visualViewport.width) || window.innerWidth || 1024;
+      const vpH = (window.visualViewport && window.visualViewport.height) || window.innerHeight || 768;
+      const rect = card.getBoundingClientRect();
+      // Compute card's natural (untranslated) bounding box
+      const baseLeft = rect.left - locModalDragX;
+      const baseRight = rect.right - locModalDragX;
+      const baseTop = rect.top - locModalDragY;
+      const baseBottom = rect.bottom - locModalDragY;
+      const margin = 8;
+
+      const minX = margin - baseLeft;
+      const maxX = (vpW - margin) - baseRight;
+      const minY = margin - baseTop;
+      const maxY = (vpH - margin) - baseBottom;
+
+      if (minX <= maxX) {
+        locModalDragX = Math.max(minX, Math.min(maxX, locModalDragX));
+      } else {
+        locModalDragX = 0;
+      }
+      if (minY <= maxY) {
+        locModalDragY = Math.max(minY, Math.min(maxY, locModalDragY));
+      } else {
+        locModalDragY = 0;
+      }
+      applyLocationModalTransform();
+    }
+
+    function resetLocationModalPosition() {
+      locModalDragX = 0;
+      locModalDragY = 0;
+      applyLocationModalTransform();
+      const bodyEl = document.getElementById('locationModalBody');
+      if (bodyEl) bodyEl.scrollTop = 0;
+    }
+
+    function initLocationModalDrag() {
+      if (locModalDragInitialized) return;
+      const header = document.getElementById('locationModalHeader');
+      const card = document.getElementById('locationModalCard');
+      if (!header || !card) return;
+      locModalDragInitialized = true;
+
+      let dragging = false;
+      let activePointerId = null;
+      let startClientX = 0;
+      let startClientY = 0;
+      let originX = 0;
+      let originY = 0;
+
+      header.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+        if (e.target && e.target.closest('button, input, a, select, textarea')) return;
+        dragging = true;
+        activePointerId = e.pointerId;
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+        originX = locModalDragX;
+        originY = locModalDragY;
+        try { header.setPointerCapture(e.pointerId); } catch (_) {}
+        onLocationModalActivity();
+      });
+
+      header.addEventListener('pointermove', (e) => {
+        if (!dragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
+        e.preventDefault();
+        locModalDragX = originX + (e.clientX - startClientX);
+        locModalDragY = originY + (e.clientY - startClientY);
+        clampLocationModalPosition();
+        onLocationModalActivity();
+      });
+
+      const endDrag = (e) => {
+        if (!dragging) return;
+        if (activePointerId !== null && e && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
+        dragging = false;
+        try { if (activePointerId !== null) header.releasePointerCapture(activePointerId); } catch (_) {}
+        activePointerId = null;
+      };
+
+      header.addEventListener('pointerup', endDrag);
+      header.addEventListener('pointercancel', endDrag);
+
+      const handleViewportResize = () => {
+        clampLocationModalPosition();
+      };
+      window.addEventListener('resize', handleViewportResize);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+      }
+    }
+
     function proceedOpenLocationModal() {
       const modal = document.getElementById('locationModal');
       const input = document.getElementById('locationInput');
@@ -8371,6 +8791,9 @@ function joinSpacedLetters(text) {
         status.style.color = '';
       }
       modalTimerLocks['locationModal'] = false;
+      recentLocationsExpanded = false;
+      initLocationModalDrag();
+      resetLocationModalPosition();
       lastUpClickTarget = null;
       lastUpClickTime = 0;
       locationAutoCloseSecs = 30;
@@ -8404,6 +8827,12 @@ function joinSpacedLetters(text) {
         try { history.pushState({ modal: 'locationModal' }, ''); } catch (_) {}
       }
       renderLocationModalPicks();
+      // Reset scroll & position AFTER the modal is visible (browsers ignore scrollTop=0 while display:none)
+      resetLocationModalPosition();
+      requestAnimationFrame(() => {
+        resetLocationModalPosition();
+        setTimeout(resetLocationModalPosition, 50);
+      });
       resetLocationAutoCloseTimer();
       resetLocationIdleExitFocusTimer();
 
@@ -8426,6 +8855,7 @@ function joinSpacedLetters(text) {
     function closeLocationModal(pop = true) {
       window._locModalReopenGuardUntil = Date.now() + 850;
       modalTimerLocks['locationModal'] = false;
+      recentLocationsExpanded = false;
       lastUpClickTarget = null;
       lastUpClickTime = 0;
       if (typeof cancelAllLocationAutoContinue === 'function') cancelAllLocationAutoContinue();
@@ -8436,6 +8866,8 @@ function joinSpacedLetters(text) {
       }
       const modal = document.getElementById('locationModal');
       if (modal) {
+        // Reset scroll position while modal is still rendered so browsers don't preserve old scroll offset
+        resetLocationModalPosition();
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         if (pop && history.state && history.state.modal === 'locationModal') {
@@ -9472,6 +9904,10 @@ function joinSpacedLetters(text) {
       });
     }
 
+    let recentLocationsExpanded = false;
+    const MAX_SAVED_RECENT_LOCATIONS = 30;
+    const INITIAL_VISIBLE_RECENT_LOCATIONS = 16;
+
     function renderLocationModalPicks() {
       hideRecentDeleteBar();
 
@@ -9507,21 +9943,26 @@ function joinSpacedLetters(text) {
             }
           }
           const allUnique = Array.from(byName.values());
-          const maxDisplay = 15;
-          // When list grows, make sure locked items are preserved while keeping natural recency order
+          const maxDisplay = MAX_SAVED_RECENT_LOCATIONS;
+          // Preserve all locked items while capping total saved list to 30 (or more if >30 locked)
           let filtered = allUnique.slice(0, maxDisplay);
           const includedKeys = new Set(filtered.map(x => x.displayName.toLowerCase()));
           const missingLocked = allUnique.filter(x => x.locked && !includedKeys.has(x.displayName.toLowerCase()));
           if (missingLocked.length > 0) {
-            // Drop unlocked items from the tail to make room for locked items that fell past position 15
+            // Drop unlocked items from the tail to make room for locked items that fell past position 30
             const kept = filtered.filter(x => x.locked);
             const unlockedKept = filtered.filter(x => !x.locked).slice(0, Math.max(0, maxDisplay - kept.length - missingLocked.length));
             filtered = allUnique.filter(x => kept.includes(x) || unlockedKept.includes(x) || missingLocked.includes(x));
           }
 
           if (filtered.length > 0) {
+            const hasOverflow = filtered.length > INITIAL_VISIBLE_RECENT_LOCATIONS;
+            const visibleItems = (hasOverflow && !recentLocationsExpanded)
+              ? filtered.slice(0, INITIAL_VISIBLE_RECENT_LOCATIONS)
+              : filtered;
+            const hiddenCount = filtered.length - visibleItems.length;
             const curShort = shortenPlaceName(CURRENT_LOCATION.name).toLowerCase();
-            filtered.forEach(item => {
+            visibleItems.forEach(item => {
               const isCurrent = (item.displayName.toLowerCase() === curShort);
               const btn = document.createElement('button');
               if (isCurrent) {
@@ -9749,6 +10190,42 @@ function joinSpacedLetters(text) {
 
               recentChips.appendChild(btn);
             });
+
+            if (hasOverflow) {
+              const expandBtn = document.createElement('button');
+              expandBtn.id = 'recentLocationsExpandBtn';
+              expandBtn.type = 'button';
+              expandBtn.tabIndex = 0;
+              expandBtn.className = recentLocationsExpanded
+                ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-indigo-500/25 hover:bg-indigo-500/35 border border-indigo-400/50 text-xs text-indigo-200 hover:text-white font-semibold transition cursor-pointer select-none focus:outline-none flex items-center gap-1'
+                : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/25 text-xs text-slate-200 hover:text-white font-semibold transition cursor-pointer select-none focus:outline-none flex items-center gap-1';
+              expandBtn.textContent = recentLocationsExpanded
+                ? '▴ Show less'
+                : `▾ +${hiddenCount} more`;
+              expandBtn.title = recentLocationsExpanded
+                ? `Collapse back to first ${INITIAL_VISIBLE_RECENT_LOCATIONS} saved locations`
+                : `Expand to show all ${filtered.length} saved locations`;
+              expandBtn.addEventListener('click', (e) => {
+                if (e) { e.preventDefault(); e.stopPropagation(); }
+                recentLocationsExpanded = !recentLocationsExpanded;
+                renderLocationModalPicks();
+                requestAnimationFrame(() => {
+                  clampLocationModalPosition();
+                  const updatedBtn = document.getElementById('recentLocationsExpandBtn');
+                  if (updatedBtn) {
+                    try { updatedBtn.focus({ preventScroll: true }); } catch (_) { updatedBtn.focus(); }
+                  }
+                });
+              });
+              wireLocationChipDpad(
+                expandBtn,
+                recentChips,
+                () => document.getElementById('clearRecentLocationsBtn') || document.getElementById('gpsModalBtn'),
+                () => document.querySelector('#nearbyLocationChips button')
+              );
+              recentChips.appendChild(expandBtn);
+            }
+
             recentCont.classList.remove('hidden');
           } else {
             recentCont.classList.add('hidden');
@@ -14201,7 +14678,7 @@ function joinSpacedLetters(text) {
 
       if (modalCastBtn) {
         modalCastBtn.className = 'relative px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-500 font-semibold text-xs transition flex items-center justify-center gap-1.5 opacity-40 cursor-default select-none';
-        modalCastBtn.title = 'Cast not available on TV / Shield display';
+        modalCastBtn.title = 'Cast not available on TV display';
         modalCastBtn.tabIndex = -1;
         modalCastBtn.onclick = (e) => {
           if (e) {
@@ -14393,7 +14870,7 @@ function joinSpacedLetters(text) {
           btn.title = 'Connected via Google Cast • Click for options';
         } else {
           btn.className = 'tv-focus-amber relative p-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-300 hover:text-white transition focus:outline-none cursor-pointer flex items-center justify-center w-7 h-7 flex-shrink-0 shadow-sm';
-          btn.title = 'Cast to TV (Chromecast / Google TV / Shield)';
+          btn.title = 'Cast to TV (Chromecast / Google TV)';
         }
       }
 
@@ -16292,7 +16769,7 @@ function joinSpacedLetters(text) {
                 setUpdateAvailable(data.version, data.build);
               }
             } else {
-              setUpToDate(data && data.version ? data.version : APP_VERSION);
+              setUpToDate(APP_VERSION);
             }
           }
         } catch (_) {}
