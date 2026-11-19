@@ -1360,7 +1360,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.157-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.158-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1940,18 +1940,22 @@
   </div>
 
   <!-- LOCATION SEARCH MODAL -->
-  <div id="locationModal" onclick="closeLocationModal()" onmousemove="onLocationModalActivity()" onkeydown="onLocationModalActivity()" oninput="onLocationModalActivity()" ontouchstart="onLocationModalActivity()" onpointerdown="onLocationModalActivity()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 cursor-pointer">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 max-w-lg w-full max-h-[94vh] overflow-y-auto border border-white/15 shadow-2xl relative text-left cursor-default">
-      <div class="flex items-center justify-between pb-2 border-b border-white/10">
-        <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-          <span>📍</span> Set Location (Postcode, Town or GPS)
+  <div id="locationModal" onclick="closeLocationModal()" onmousemove="onLocationModalActivity()" onkeydown="onLocationModalActivity()" oninput="onLocationModalActivity()" ontouchstart="onLocationModalActivity()" onpointerdown="onLocationModalActivity()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 cursor-pointer overflow-hidden">
+    <div id="locationModalCard" onclick="event.stopPropagation()" style="max-height: 88vh; max-height: 88dvh;" class="glass-card rounded-2xl p-3 sm:p-4 max-w-lg w-full overflow-hidden border border-white/15 shadow-2xl relative text-left cursor-default flex flex-col">
+      <div id="locationModalHeader" title="Drag header to move window" class="flex items-center justify-between gap-2 pb-2 border-b border-white/10 flex-shrink-0 select-none cursor-grab active:cursor-grabbing touch-none">
+        <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 min-w-0">
+          <span class="text-slate-400/80 text-xs leading-none tracking-tighter" aria-hidden="true">⋮⋮</span>
+          <span>📍</span>
+          <span class="truncate">Set Location (Postcode, Town or GPS)</span>
         </h3>
-        <button id="closeLocationBtnTop" tabindex="0" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer">
+        <button id="closeLocationBtnTop" tabindex="0" onpointerdown="event.stopPropagation()" onkeydown="if(event.key==='ArrowDown'){const b=document.getElementById('searchLocBtn');if(b){event.preventDefault();b.focus();}}" onclick="if(window._locModalCloseGuardUntil && Date.now() < window._locModalCloseGuardUntil) return; closeLocationModal()" title="Close Location (Esc / Back)" class="tv-focus-amber px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs transition flex items-center gap-1 focus:outline-none cursor-pointer flex-shrink-0">
           <span>✕ Close <span id="locationBtnCountdown" class="text-amber-300 font-mono text-[11px] ml-1">(30s)</span></span>
         </button>
       </div>
 
-      <div class="mt-2 space-y-2">
+      <!-- Scrollable Body (keeps Header & Close button permanently pinned in view) -->
+      <div id="locationModalBody" style="-webkit-overflow-scrolling: touch;" class="mt-2 flex-1 min-h-0 overflow-y-auto overscroll-contain pr-0.5">
+      <div class="space-y-2">
         <div>
           <label class="block text-[11px] font-semibold text-slate-300 mb-1">Enter Postcode, Town, GPS Coordinates or Map Link</label>
           <div class="flex gap-1.5">
@@ -2042,6 +2046,7 @@
           </div>
           <div id="nearbyLocationChips" class="flex flex-wrap gap-1"></div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -3012,8 +3017,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 321;
-    const APP_VERSION = '1.10.157-dev';
+    const APP_BUILD = 322;
+    const APP_VERSION = '1.10.158-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -8575,6 +8580,116 @@ function joinSpacedLetters(text) {
       proceedOpenLocationModal();
     }
 
+    let locModalDragX = 0;
+    let locModalDragY = 0;
+    let locModalDragInitialized = false;
+
+    function applyLocationModalTransform() {
+      const card = document.getElementById('locationModalCard');
+      if (!card) return;
+      if (locModalDragX === 0 && locModalDragY === 0) {
+        card.style.transform = '';
+      } else {
+        card.style.transform = `translate3d(${Math.round(locModalDragX)}px, ${Math.round(locModalDragY)}px, 0)`;
+      }
+    }
+
+    function clampLocationModalPosition() {
+      const card = document.getElementById('locationModalCard');
+      const modal = document.getElementById('locationModal');
+      if (!card || !modal || modal.classList.contains('hidden')) return;
+      const vpW = (window.visualViewport && window.visualViewport.width) || window.innerWidth || 1024;
+      const vpH = (window.visualViewport && window.visualViewport.height) || window.innerHeight || 768;
+      const rect = card.getBoundingClientRect();
+      // Compute card's natural (untranslated) bounding box
+      const baseLeft = rect.left - locModalDragX;
+      const baseRight = rect.right - locModalDragX;
+      const baseTop = rect.top - locModalDragY;
+      const baseBottom = rect.bottom - locModalDragY;
+      const margin = 8;
+
+      const minX = margin - baseLeft;
+      const maxX = (vpW - margin) - baseRight;
+      const minY = margin - baseTop;
+      const maxY = (vpH - margin) - baseBottom;
+
+      if (minX <= maxX) {
+        locModalDragX = Math.max(minX, Math.min(maxX, locModalDragX));
+      } else {
+        locModalDragX = 0;
+      }
+      if (minY <= maxY) {
+        locModalDragY = Math.max(minY, Math.min(maxY, locModalDragY));
+      } else {
+        locModalDragY = 0;
+      }
+      applyLocationModalTransform();
+    }
+
+    function resetLocationModalPosition() {
+      locModalDragX = 0;
+      locModalDragY = 0;
+      applyLocationModalTransform();
+      const bodyEl = document.getElementById('locationModalBody');
+      if (bodyEl) bodyEl.scrollTop = 0;
+    }
+
+    function initLocationModalDrag() {
+      if (locModalDragInitialized) return;
+      const header = document.getElementById('locationModalHeader');
+      const card = document.getElementById('locationModalCard');
+      if (!header || !card) return;
+      locModalDragInitialized = true;
+
+      let dragging = false;
+      let activePointerId = null;
+      let startClientX = 0;
+      let startClientY = 0;
+      let originX = 0;
+      let originY = 0;
+
+      header.addEventListener('pointerdown', (e) => {
+        if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+        if (e.target && e.target.closest('button, input, a, select, textarea')) return;
+        dragging = true;
+        activePointerId = e.pointerId;
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+        originX = locModalDragX;
+        originY = locModalDragY;
+        try { header.setPointerCapture(e.pointerId); } catch (_) {}
+        onLocationModalActivity();
+      });
+
+      header.addEventListener('pointermove', (e) => {
+        if (!dragging || (activePointerId !== null && e.pointerId !== activePointerId)) return;
+        e.preventDefault();
+        locModalDragX = originX + (e.clientX - startClientX);
+        locModalDragY = originY + (e.clientY - startClientY);
+        clampLocationModalPosition();
+        onLocationModalActivity();
+      });
+
+      const endDrag = (e) => {
+        if (!dragging) return;
+        if (activePointerId !== null && e && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
+        dragging = false;
+        try { if (activePointerId !== null) header.releasePointerCapture(activePointerId); } catch (_) {}
+        activePointerId = null;
+      };
+
+      header.addEventListener('pointerup', endDrag);
+      header.addEventListener('pointercancel', endDrag);
+
+      const handleViewportResize = () => {
+        clampLocationModalPosition();
+      };
+      window.addEventListener('resize', handleViewportResize);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+      }
+    }
+
     function proceedOpenLocationModal() {
       const modal = document.getElementById('locationModal');
       const input = document.getElementById('locationInput');
@@ -8585,6 +8700,8 @@ function joinSpacedLetters(text) {
       }
       modalTimerLocks['locationModal'] = false;
       recentLocationsExpanded = false;
+      initLocationModalDrag();
+      resetLocationModalPosition();
       lastUpClickTarget = null;
       lastUpClickTime = 0;
       locationAutoCloseSecs = 30;
@@ -9992,10 +10109,13 @@ function joinSpacedLetters(text) {
                 if (e) { e.preventDefault(); e.stopPropagation(); }
                 recentLocationsExpanded = !recentLocationsExpanded;
                 renderLocationModalPicks();
-                const updatedBtn = document.getElementById('recentLocationsExpandBtn');
-                if (updatedBtn) {
-                  try { updatedBtn.focus({ preventScroll: true }); } catch (_) { updatedBtn.focus(); }
-                }
+                requestAnimationFrame(() => {
+                  clampLocationModalPosition();
+                  const updatedBtn = document.getElementById('recentLocationsExpandBtn');
+                  if (updatedBtn) {
+                    try { updatedBtn.focus({ preventScroll: true }); } catch (_) { updatedBtn.focus(); }
+                  }
+                });
               });
               wireLocationChipDpad(
                 expandBtn,
