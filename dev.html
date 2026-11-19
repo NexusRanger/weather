@@ -1211,6 +1211,53 @@
               </svg>
             </span>
           </div>
+          <div id="egyptMillIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="Egypt Mill, Nailsworth">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)] p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()">
+              <svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Riverbank Trees & Cotswold Greenery -->
+                <path d="M0 24 C8 20, 18 22, 28 21 C36 20, 42 22, 48 24 L48 36 L0 36 Z" fill="#14532d" opacity="0.6"/>
+                <circle cx="5" cy="18" r="5" fill="#15803d" opacity="0.75"/>
+                <circle cx="43" cy="19" r="4.5" fill="#166534" opacity="0.7"/>
+
+                <!-- Cotswold Stone Mill Building Facade -->
+                <rect x="14" y="12" width="28" height="17" rx="0.5" fill="#fde68a" stroke="#d97706" stroke-width="0.75"/>
+                <!-- Multi-Pitched Cotswold Gabled Roof -->
+                <polygon points="12,12 21,5 30,12" fill="#475569" stroke="#334155" stroke-width="0.5"/>
+                <polygon points="28,12 36,6 44,12" fill="#334155" stroke="#334155" stroke-width="0.5"/>
+                <!-- Dormer windows -->
+                <polygon points="21,6 19.5,8.5 22.5,8.5" fill="#f8fafc"/>
+                <polygon points="36,7 34.5,9.5 37.5,9.5" fill="#f8fafc"/>
+                <!-- Chimney -->
+                <rect x="25" y="3" width="2.4" height="6" rx="0.3" fill="#b45309" stroke="#78350f" stroke-width="0.3"/>
+                <!-- Mill Windows -->
+                <rect x="17" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <rect x="22" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <rect x="32" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <rect x="37" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <rect x="17" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <rect x="22" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <rect x="32" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <rect x="37" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+                <!-- Arched Mill Doorway -->
+                <path d="M26 29 L26 23 A2 2 0 0 1 30 23 L30 29 Z" fill="#0f172a"/>
+
+                <!-- Iconic Egypt Mill Historic Wooden Waterwheel on left -->
+                <circle cx="10" cy="23" r="7.5" stroke="#78350f" stroke-width="1.2" fill="none"/>
+                <circle cx="10" cy="23" r="5" stroke="#92400e" stroke-width="0.8" fill="none"/>
+                <circle cx="10" cy="23" r="1.8" fill="#451a03"/>
+                <line x1="10" y1="15.5" x2="10" y2="30.5" stroke="#78350f" stroke-width="0.8"/>
+                <line x1="2.5" y1="23" x2="17.5" y2="23" stroke="#78350f" stroke-width="0.8"/>
+                <line x1="4.7" y1="17.7" x2="15.3" y2="28.3" stroke="#78350f" stroke-width="0.8"/>
+                <line x1="4.7" y1="28.3" x2="15.3" y2="17.7" stroke="#78350f" stroke-width="0.8"/>
+                <path d="M4 29 Q7 27 10 29 Q13 27 16 29" stroke="#e0f2fe" stroke-width="0.9" fill="none"/>
+
+                <!-- Nailsworth Stream / River Mill Race Water -->
+                <rect x="0" y="29.5" width="48" height="6.5" fill="#0284c7" opacity="0.85"/>
+                <path d="M0 31.5 C12 30.5, 24 32.5, 48 31.5" stroke="#38bdf8" stroke-width="0.8" opacity="0.9"/>
+                <path d="M2 34 C16 33, 30 35, 46 34" stroke="#e0f2fe" stroke-width="0.6" opacity="0.75"/>
+              </svg>
+            </span>
+          </div>
           <div id="headerLandmarkIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="World Landmark">
             <span id="headerLandmarkBadge" class="inline-flex items-center justify-center w-7 h-7 rounded-lg p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()"></span>
           </div>
@@ -1283,7 +1330,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.145) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.146) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2907,10 +2954,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=309"></script>
+  <script src="traffic-flood.js?v=310"></script>
     <script>
-    const APP_BUILD = 309;
-    const APP_VERSION = '1.10.145';
+    const APP_BUILD = 310;
+    const APP_VERSION = '1.10.146';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4001,7 +4048,7 @@
       if (!name) return true;
       const s = String(name).trim().toLowerCase();
       // Explicitly allow landmarks & heritage sites
-      if (/dunkirk|amberley|stroud hotel|the stroud|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false;
+      if (/dunkirk|amberley|stroud hotel|the stroud|egypt mill|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false;
       if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
         if (POPULAR_LANDMARKS_DATABASE.some(lm => (lm.name && s.includes(lm.name.toLowerCase())) || (Array.isArray(lm.aliases) && lm.aliases.some(a => s.includes(a.toLowerCase()))))) return false;
       }
@@ -6562,6 +6609,49 @@
           <path d="M0 31.5 C12 30.5, 24 32.5, 48 31.5" stroke="#38bdf8" stroke-width="0.8" opacity="0.9"/>
           <path d="M2 34 C16 33, 30 35, 46 34" stroke="#e0f2fe" stroke-width="0.6" opacity="0.75"/>
         </svg>`
+      },
+      {
+        id: 'egypt_mill',
+        name: 'Egypt Mill',
+        city: 'Nailsworth, Stroud',
+        country: 'United Kingdom',
+        postcodes: ['GL6 0AE', 'GL6 0AG'],
+        lat: 51.6975,
+        lon: -2.2192,
+        radiusKm: 3,
+        aliases: ['egypt mill', 'egypt mills', 'egypt mill nailsworth', 'gl60ae', 'gl6 0ae'],
+        badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 24 C8 20, 18 22, 28 21 C36 20, 42 22, 48 24 L48 36 L0 36 Z" fill="#14532d" opacity="0.6"/>
+          <circle cx="5" cy="18" r="5" fill="#15803d" opacity="0.75"/>
+          <circle cx="43" cy="19" r="4.5" fill="#166534" opacity="0.7"/>
+          <rect x="14" y="12" width="28" height="17" rx="0.5" fill="#fde68a" stroke="#d97706" stroke-width="0.75"/>
+          <polygon points="12,12 21,5 30,12" fill="#475569" stroke="#334155" stroke-width="0.5"/>
+          <polygon points="28,12 36,6 44,12" fill="#334155" stroke="#334155" stroke-width="0.5"/>
+          <polygon points="21,6 19.5,8.5 22.5,8.5" fill="#f8fafc"/>
+          <polygon points="36,7 34.5,9.5 37.5,9.5" fill="#f8fafc"/>
+          <rect x="25" y="3" width="2.4" height="6" rx="0.3" fill="#b45309" stroke="#78350f" stroke-width="0.3"/>
+          <rect x="17" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <rect x="22" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <rect x="32" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <rect x="37" y="14" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <rect x="17" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <rect x="22" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <rect x="32" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <rect x="37" y="19" width="2.2" height="2.8" rx="0.3" fill="#0284c7"/>
+          <path d="M26 29 L26 23 A2 2 0 0 1 30 23 L30 29 Z" fill="#0f172a"/>
+          <circle cx="10" cy="23" r="7.5" stroke="#78350f" stroke-width="1.2" fill="none"/>
+          <circle cx="10" cy="23" r="5" stroke="#92400e" stroke-width="0.8" fill="none"/>
+          <circle cx="10" cy="23" r="1.8" fill="#451a03"/>
+          <line x1="10" y1="15.5" x2="10" y2="30.5" stroke="#78350f" stroke-width="0.8"/>
+          <line x1="2.5" y1="23" x2="17.5" y2="23" stroke="#78350f" stroke-width="0.8"/>
+          <line x1="4.7" y1="17.7" x2="15.3" y2="28.3" stroke="#78350f" stroke-width="0.8"/>
+          <line x1="4.7" y1="28.3" x2="15.3" y2="17.7" stroke="#78350f" stroke-width="0.8"/>
+          <path d="M4 29 Q7 27 10 29 Q13 27 16 29" stroke="#e0f2fe" stroke-width="0.9" fill="none"/>
+          <rect x="0" y="29.5" width="48" height="6.5" fill="#0284c7" opacity="0.85"/>
+          <path d="M0 31.5 C12 30.5, 24 32.5, 48 31.5" stroke="#38bdf8" stroke-width="0.8" opacity="0.9"/>
+          <path d="M2 34 C16 33, 30 35, 46 34" stroke="#e0f2fe" stroke-width="0.6" opacity="0.75"/>
+        </svg>`
       }
     ];
 
@@ -6667,6 +6757,16 @@
         postcode: 'GL5 5QG',
         lat: 51.7093,
         lon: -2.2241
+      },
+      {
+        aliases: [
+          'gl60ae', 'gl6 0ae', 'gl60ag', 'gl6 0ag', 'gl60at', 'gl6 0at',
+          'egypt mill', 'egypt mills', 'egypt mill nailsworth', 'egypt mill hotel'
+        ],
+        name: 'Egypt Mill',
+        postcode: 'GL6 0AE',
+        lat: 51.6975,
+        lon: -2.2192
       },
       {
         aliases: [
@@ -10456,9 +10556,30 @@ function joinSpacedLetters(text) {
         }
       }
 
+      // Handle Egypt Mill
+      const egyptIcon = document.getElementById('egyptMillIcon');
+      if (egyptIcon) {
+        const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
+        const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').trim().toUpperCase().replace(/\s+/g, '');
+        const latNum = Number(CURRENT_LOCATION && CURRENT_LOCATION.lat) || 0;
+        const lonNum = Number(CURRENT_LOCATION && CURRENT_LOCATION.lon) || 0;
+        const distKm = (latNum && lonNum) ? ((typeof calculateHaversineKm === 'function') ? calculateHaversineKm(latNum, lonNum, 51.6975, -2.2192) : Math.hypot(latNum - 51.6975, lonNum - (-2.2192)) * 111) : 999;
+        const isEgyptMill = (activeLandmark && activeLandmark.id === 'egypt_mill') ||
+          locName.includes('egypt mill') ||
+          locPc === 'GL60AE' || locPc === 'GL60AG' ||
+          (distKm <= 0.35);
+        if (isEgyptMill) {
+          egyptIcon.classList.remove('hidden');
+          egyptIcon.classList.add('inline-flex');
+        } else {
+          egyptIcon.classList.add('hidden');
+          egyptIcon.classList.remove('inline-flex');
+        }
+      }
+
       // Handle Global Landmarks in dynamic badge container
       if (landmarkIconCont && landmarkBadge) {
-        if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel') {
+        if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel' && activeLandmark.id !== 'egypt_mill') {
           landmarkBadge.className = `inline-flex items-center justify-center w-7 h-7 rounded-lg ${activeLandmark.badgeStyle || 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]'} p-0.5 transform hover:scale-110 transition cursor-pointer`;
           landmarkBadge.innerHTML = activeLandmark.svg;
           landmarkIconCont.title = `${activeLandmark.name} • ${activeLandmark.city ? activeLandmark.city + ', ' : ''}${activeLandmark.country}`;
