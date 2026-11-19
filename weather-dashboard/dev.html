@@ -1360,7 +1360,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.153) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.154) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2330,7 +2330,14 @@
                 <span id="modalCastLabel">Cast</span>
               </button>
               <button id="nativeShareBtn" onclick="triggerNativeShare()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs transition flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-white active:scale-95 cursor-pointer" tabindex="0" title="Share via phone share menu">
-                <span>↗ Share</span>
+                <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                <span>Share</span>
               </button>
             </div>
             <div class="text-[10px] text-emerald-400 font-mono mt-1 flex items-center gap-1">
@@ -2986,10 +2993,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=317"></script>
+  <script src="traffic-flood.js?v=318"></script>
     <script>
-    const APP_BUILD = 317;
-    const APP_VERSION = '1.10.153';
+    const APP_BUILD = 318;
+    const APP_VERSION = '1.10.154';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
