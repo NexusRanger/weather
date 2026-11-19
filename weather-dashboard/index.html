@@ -183,7 +183,8 @@
       animation: marqueePingPong var(--scroll-duration, 8s) ease-in-out infinite;
     }
     #headerLocationTitle.has-fade,
-    #weatherDescContainer.has-fade {
+    #weatherDescContainer.has-fade,
+    #moonPhaseContainer.has-fade {
       mask-image: linear-gradient(to right, black 85%, transparent 100%);
       -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
     }
@@ -1330,7 +1331,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.146) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.147) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1608,8 +1609,10 @@
                 🌕
               </div>
               <div class="flex-grow min-w-0">
-                <div class="flex items-center justify-between gap-1">
-                  <span id="moonPhaseName" class="text-xs font-bold text-white truncate">Full Moon</span>
+                <div class="flex items-center justify-between gap-1 min-w-0">
+                  <div id="moonPhaseContainer" class="overflow-hidden whitespace-nowrap min-w-0 flex-1 mr-1">
+                    <span id="moonPhaseName" class="inline-block text-xs font-bold text-white whitespace-nowrap">Full Moon</span>
+                  </div>
                   <div class="flex items-center gap-1.5 flex-shrink-0">
                     <span id="moonriseTime" class="text-[10px] font-mono text-indigo-300 whitespace-nowrap">Moonrise --:--</span>
                     <span class="text-[9px] text-slate-600">•</span>
@@ -2954,10 +2957,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=310"></script>
+  <script src="traffic-flood.js?v=311"></script>
     <script>
-    const APP_BUILD = 310;
-    const APP_VERSION = '1.10.146';
+    const APP_BUILD = 311;
+    const APP_VERSION = '1.10.147';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10443,6 +10446,9 @@ function joinSpacedLetters(text) {
     function checkWeatherDescScroll() {
       applyMarqueeScroll('weatherDescContainer', 'weatherDesc', 'marquee-scroll', '--scroll-distance', '--scroll-duration', 6, 14, 3, 6);
     }
+    function checkMoonPhaseScroll() {
+      applyMarqueeScroll('moonPhaseContainer', 'moonPhaseName', 'marquee-scroll', '--scroll-distance', '--scroll-duration', 6, 14, 3, 6);
+    }
 
     let marqueeResizeTimer = null;
     window.addEventListener('resize', () => {
@@ -10452,6 +10458,7 @@ function joinSpacedLetters(text) {
         checkFrostDetailScroll();
         checkStargazingAdviceScroll();
         checkWeatherDescScroll();
+        checkMoonPhaseScroll();
         if (typeof checkRainNowcastScroll === 'function') checkRainNowcastScroll();
       }, 100);
     });
@@ -12041,6 +12048,7 @@ function joinSpacedLetters(text) {
       const moon = calculateMoonPhase(new Date());
       document.getElementById('moonIcon').textContent = moon.icon;
       document.getElementById('moonPhaseName').textContent = moon.name;
+      checkMoonPhaseScroll();
       document.getElementById('moonIllumination').textContent = `${moon.illumination}% lit`;
       const moonriseEl = document.getElementById('moonriseTime');
       if (moonriseEl) {
