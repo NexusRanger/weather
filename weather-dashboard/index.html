@@ -1331,7 +1331,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.150) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.151) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2957,10 +2957,10 @@
   </div>
 
   <!-- SCRIPT LOGIC -->
-  <script src="traffic-flood.js?v=314"></script>
+  <script src="traffic-flood.js?v=315"></script>
     <script>
-    const APP_BUILD = 314;
-    const APP_VERSION = '1.10.150';
+    const APP_BUILD = 315;
+    const APP_VERSION = '1.10.151';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -7142,14 +7142,14 @@
       return false;
     }
 
-    async function lookupCoords(lat, lon, saveAsGps = true) {
+    async function lookupCoords(lat, lon, saveAsGps = true, accuracyMeters = null) {
       let resolvedName = '';
       let resolvedPostcode = '';
+      const isReliableGps = (accuracyMeters == null || !isFinite(accuracyMeters) || accuracyMeters <= 300);
 
       // 0. Unified high-accuracy landmark snapping (Dunkirk Mills, Amberley Church, Egypt Mill, The Stroud Hotel, etc.)
-      // Uses each landmark's tight snapRadiusKm (e.g. 250m Dunkirk/Amberley, 140m Egypt Mill, 150m Stroud Hotel)
-      // and picks the closest match so Main Screen and Map always agree 100%.
-      if (typeof matchActiveLandmark === 'function') {
+      // Only snaps on reliable GPS fixes (<= 300m accuracy) so coarse cell-tower/IP estimates never falsely trigger a landmark.
+      if (isReliableGps && typeof matchActiveLandmark === 'function') {
         const matchedLm = matchActiveLandmark({ name: '', lat, lon, postcode: '' });
         if (matchedLm) {
           resolvedName = matchedLm.name;
@@ -7258,6 +7258,23 @@
 
     let isDetectingLocation = false;
     let gpsWatchdogTimer = null;
+    let gpsRefineTimer = null;
+    let gpsWatchId = null;
+
+    function cleanupGpsHandles() {
+      if (gpsWatchdogTimer) {
+        clearTimeout(gpsWatchdogTimer);
+        gpsWatchdogTimer = null;
+      }
+      if (gpsRefineTimer) {
+        clearTimeout(gpsRefineTimer);
+        gpsRefineTimer = null;
+      }
+      if (gpsWatchId !== null && navigator.geolocation && typeof navigator.geolocation.clearWatch === 'function') {
+        try { navigator.geolocation.clearWatch(gpsWatchId); } catch (_) {}
+        gpsWatchId = null;
+      }
+    }
 
     async function detectCurrentLocation() {
       const gpsBtn = document.getElementById('gpsButtonText');
@@ -7266,10 +7283,7 @@
 
       // If already attempting, a second click cancels the attempt cleanly
       if (isDetectingLocation) {
-        if (gpsWatchdogTimer) {
-          clearTimeout(gpsWatchdogTimer);
-          gpsWatchdogTimer = null;
-        }
+        cleanupGpsHandles();
         isDetectingLocation = false;
         if (gpsIcon) gpsIcon.textContent = '📍';
         if (gpsBtn) gpsBtn.textContent = 'Locate Me';
@@ -7313,26 +7327,30 @@
 
       isDetectingLocation = true;
       if (gpsIcon) gpsIcon.textContent = '⏳';
-      if (gpsBtn) gpsBtn.textContent = 'Locating...';
+      if (gpsBtn) gpsBtn.textContent = 'GPS Lock...';
       if (statusEl) {
         statusEl.style.color = '#38bdf8';
-        statusEl.textContent = 'Detecting current location...';
+        statusEl.textContent = 'Acquiring high-accuracy GPS fix...';
       }
 
       let resolved = false;
+      let bestPosition = null;
+      const GPS_TARGET_ACCURACY_M = 50; // Accept immediately when GPS locks within ±50m
 
       const finishLocationAttempt = (success, message = '') => {
         if (resolved) return;
         resolved = true;
         isDetectingLocation = false;
-        if (gpsWatchdogTimer) {
-          clearTimeout(gpsWatchdogTimer);
-          gpsWatchdogTimer = null;
-        }
+        cleanupGpsHandles();
 
         if (success) {
           if (gpsIcon) gpsIcon.textContent = '📍';
           if (gpsBtn) gpsBtn.textContent = 'Located!';
+          if (statusEl && message) {
+            statusEl.style.color = '#34d399';
+            statusEl.textContent = message;
+            setTimeout(() => { if (statusEl.textContent === message) statusEl.textContent = ''; }, 3000);
+          }
           setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
         } else {
           // Clean, silent failure with NO browser alerts or popups
@@ -7347,56 +7365,123 @@
         }
       };
 
-      // Master watchdog: hard cancel after 5.5s so TV / Shield never hangs or triggers browser pop-up warnings
-      gpsWatchdogTimer = setTimeout(() => {
-        finishLocationAttempt(false, 'Location request timed out.');
-      }, 5500);
-
-      const onLocationSuccess = async (position) => {
+      const commitPosition = async (position) => {
         if (resolved) return;
         const lat = position && position.coords ? position.coords.latitude : null;
         const lon = position && position.coords ? position.coords.longitude : null;
+        const acc = (position && position.coords && typeof position.coords.accuracy === 'number')
+          ? Math.round(position.coords.accuracy)
+          : null;
         if (lat == null || lon == null) {
           finishLocationAttempt(false, 'Invalid coordinates received.');
           return;
         }
-        finishLocationAttempt(true);
-        await lookupCoords(lat, lon);
+        finishLocationAttempt(true, acc != null ? `GPS locked (±${acc}m)` : 'GPS locked');
+        await lookupCoords(lat, lon, true, acc);
       };
+
+      const onHighAccuracyReading = (position) => {
+        if (resolved) return;
+        const coords = position && position.coords;
+        if (!coords || coords.latitude == null || coords.longitude == null) return;
+        const acc = typeof coords.accuracy === 'number' ? coords.accuracy : 9999;
+
+        // Keep the sharpest (most accurate) GPS reading received so far
+        if (!bestPosition || acc < (typeof bestPosition.coords.accuracy === 'number' ? bestPosition.coords.accuracy : 9999)) {
+          bestPosition = position;
+        }
+
+        // Crisp hardware GPS fix (<= 50m): lock immediately!
+        if (acc <= GPS_TARGET_ACCURACY_M) {
+          commitPosition(bestPosition);
+          return;
+        }
+
+        // First reading was coarse (e.g. initial Wi-Fi/cell estimate before GPS satellites lock):
+        // Hold briefly (up to 4.5s) to let real GPS refine it, then use the sharpest fix obtained.
+        if (statusEl) {
+          statusEl.style.color = '#38bdf8';
+          statusEl.textContent = `Refining GPS fix (±${Math.round(acc)}m)...`;
+        }
+        if (!gpsRefineTimer) {
+          gpsRefineTimer = setTimeout(() => {
+            if (!resolved && bestPosition) {
+              commitPosition(bestPosition);
+            }
+          }, 4500);
+        }
+      };
+
+      // Master watchdog: gives real GPS hardware up to 9.5s to acquire a fresh satellite lock,
+      // committing the sharpest fix obtained or failing cleanly so TV / Shield never hangs.
+      gpsWatchdogTimer = setTimeout(() => {
+        if (!resolved && bestPosition) {
+          commitPosition(bestPosition);
+        } else {
+          finishLocationAttempt(false, 'GPS location request timed out.');
+        }
+      }, 9500);
 
       const tryLowAccuracyFallback = () => {
         if (resolved) return;
+        if (bestPosition) {
+          commitPosition(bestPosition);
+          return;
+        }
         try {
           navigator.geolocation.getCurrentPosition(
-            onLocationSuccess,
+            commitPosition,
             (error) => {
               let msg = 'Location unavailable on this network/device.';
               if (error && error.code === 1) msg = 'Location permission denied.';
               else if (error && error.code === 3) msg = 'Location request timed out.';
               finishLocationAttempt(false, msg);
             },
-            { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
+            { enableHighAccuracy: false, timeout: 3000, maximumAge: 15000 }
           );
         } catch (_) {
           finishLocationAttempt(false, 'Location query failed.');
         }
       };
 
+      // Priority 1: Fresh hardware GPS via watchPosition (maximumAge: 0 rejects stale cached/cell fixes)
       try {
-        navigator.geolocation.getCurrentPosition(
-          onLocationSuccess,
-          (error) => {
-            if (!resolved) {
-              if (error && error.code === 1) {
-                // Permission denied: don't retry, fail cleanly
-                finishLocationAttempt(false, 'Location permission denied.');
-              } else {
-                tryLowAccuracyFallback();
+        if (typeof navigator.geolocation.watchPosition === 'function') {
+          gpsWatchId = navigator.geolocation.watchPosition(
+            onHighAccuracyReading,
+            (error) => {
+              if (!resolved) {
+                if (error && error.code === 1) {
+                  finishLocationAttempt(false, 'Location permission denied.');
+                } else if (bestPosition) {
+                  commitPosition(bestPosition);
+                } else {
+                  cleanupGpsHandles();
+                  // Restore watchdog for fallback attempt
+                  gpsWatchdogTimer = setTimeout(() => {
+                    finishLocationAttempt(false, 'Location request timed out.');
+                  }, 3500);
+                  tryLowAccuracyFallback();
+                }
               }
-            }
-          },
-          { enableHighAccuracy: true, timeout: 2500, maximumAge: 60000 }
-        );
+            },
+            { enableHighAccuracy: true, timeout: 8500, maximumAge: 0 }
+          );
+        } else {
+          navigator.geolocation.getCurrentPosition(
+            commitPosition,
+            (error) => {
+              if (!resolved) {
+                if (error && error.code === 1) {
+                  finishLocationAttempt(false, 'Location permission denied.');
+                } else {
+                  tryLowAccuracyFallback();
+                }
+              }
+            },
+            { enableHighAccuracy: true, timeout: 8500, maximumAge: 0 }
+          );
+        }
       } catch (_) {
         tryLowAccuracyFallback();
       }
