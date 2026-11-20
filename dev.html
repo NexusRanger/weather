@@ -1360,7 +1360,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.162) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.163-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2191,8 +2191,8 @@
               </svg>
             </div>
             <h3 id="mapModalTitleText" class="text-sm md:text-base font-bold text-white leading-none whitespace-nowrap">30-Day Location Map</h3>
-            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-mono font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
-              <span>🗺️</span><span id="mapQueryCountText">0 locations</span>
+            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
+              <span>🗺️</span><span id="mapQueryCountText">View <span class="text-amber-300 font-mono font-bold">0</span> Locations</span>
             </button>
           </div>
           <div class="flex items-center gap-1.5 flex-wrap">
@@ -3052,8 +3052,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 326;
-    const APP_VERSION = '1.10.162';
+    const APP_BUILD = 327;
+    const APP_VERSION = '1.10.163-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5591,7 +5591,9 @@
       currentMapQueries = sortedQueries;
 
       const countTextEl = document.getElementById('mapQueryCountText') || document.getElementById('mapQueryCount');
-      if (countTextEl) countTextEl.textContent = `${sortedQueries.length} location${sortedQueries.length === 1 ? '' : 's'}`;
+      if (countTextEl) {
+        countTextEl.innerHTML = `View <span class="text-amber-300 font-mono font-bold">${sortedQueries.length}</span> Location${sortedQueries.length === 1 ? '' : 's'}`;
+      }
 
       const chipsEl = document.getElementById('mapRecentChips');
       if (chipsEl) {
