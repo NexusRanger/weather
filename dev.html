@@ -1423,7 +1423,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.165-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.166-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3115,8 +3115,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 329;
-    const APP_VERSION = '1.10.165-dev';
+    const APP_BUILD = 330;
+    const APP_VERSION = '1.10.166-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3188,7 +3188,7 @@
     function syncCloseBtnLockWarning(modalId, secsLeft, isLocked, btnIds) {
       const modal = document.getElementById(modalId);
       const isVisible = !!(modal && !modal.classList.contains('hidden'));
-      const shouldWarn = isVisible && !isLocked && typeof secsLeft === 'number' && secsLeft > 0 && secsLeft <= 5;
+      const shouldWarn = isVisible && !isLocked && typeof secsLeft === 'number' && secsLeft > 0 && secsLeft <= 8;
       const ids = Array.isArray(btnIds) ? btnIds : [btnIds];
       let primaryBtn = null;
 
@@ -4678,7 +4678,7 @@
       historyMapAutoCloseTimer = setInterval(() => {
         historyMapAutoCloseSecs--;
         updateHistoryMapCountdownDisplay();
-        if (historyMapAutoCloseSecs === 5) {
+        if (historyMapAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeMapBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -8785,7 +8785,7 @@ function joinSpacedLetters(text) {
       locationAutoCloseTimer = setInterval(() => {
         locationAutoCloseSecs--;
         updateLocationCountdownDisplay();
-        if (locationAutoCloseSecs === 5) {
+        if (locationAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeLocationBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -10784,7 +10784,7 @@ function joinSpacedLetters(text) {
       wondersAutoCloseTimer = setInterval(() => {
         wondersAutoCloseSecs--;
         updateWondersCountdownDisplay();
-        if (wondersAutoCloseSecs === 5) {
+        if (wondersAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeWondersBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -14511,7 +14511,7 @@ function joinSpacedLetters(text) {
       shareAutoCloseTimer = setInterval(() => {
         shareAutoCloseSecs--;
         updateShareCountdownDisplay();
-        if (shareAutoCloseSecs === 5) {
+        if (shareAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeShareBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -16095,7 +16095,7 @@ function joinSpacedLetters(text) {
       radarAutoCloseTimer = setInterval(() => {
         radarAutoCloseSecs--;
         updateRadarCountdownDisplay();
-        if (radarAutoCloseSecs === 5) {
+        if (radarAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeRadarBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -16299,7 +16299,7 @@ function joinSpacedLetters(text) {
       trafficAutoCloseTimer = setInterval(() => {
         trafficAutoCloseSecs--;
         updateTrafficCountdownDisplay();
-        if (trafficAutoCloseSecs === 5) {
+        if (trafficAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeTrafficBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -16628,7 +16628,7 @@ function joinSpacedLetters(text) {
       riverAutoCloseTimer = setInterval(() => {
         riverAutoCloseSecs--;
         updateRiverCountdownDisplay();
-        if (riverAutoCloseSecs === 5) {
+        if (riverAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeRiverBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
