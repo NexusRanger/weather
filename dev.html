@@ -26,7 +26,7 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=312">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link rel="manifest" href="manifest.json?v=312">
+  <link id="appManifestLink" rel="manifest" href="manifest-dev.json?v=328">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=312">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=312">
@@ -34,7 +34,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Ambient Weather &amp; Frost Watch</title>
+  <title>Ambient Weather (Dev)</title>
   <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet World Map (30-day History) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -747,6 +747,69 @@
       scroll-snap-align: start;
     }
 
+    /* Experimental: Final 5-Second Auto-Close Flash & Floating Long-Press Lock Hint */
+    @keyframes closeBtnWarnFlash {
+      0%, 100% {
+        background-color: rgba(245, 158, 11, 0.28);
+        border-color: rgba(251, 191, 36, 0.92);
+        box-shadow: 0 0 14px rgba(251, 191, 36, 0.55);
+      }
+      50% {
+        background-color: rgba(244, 63, 94, 0.38);
+        border-color: rgba(251, 113, 133, 0.95);
+        box-shadow: 0 0 18px rgba(244, 63, 94, 0.65);
+      }
+    }
+    .close-btn-countdown-flash {
+      animation: closeBtnWarnFlash 0.85s ease-in-out infinite !important;
+    }
+    @keyframes closeHintPulse {
+      0%, 100% { opacity: 1; transform: translateY(0); }
+      50% { opacity: 0.72; transform: translateY(1.5px); }
+    }
+    #closeTimerLockHint {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 9px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(251, 191, 36, 0.7);
+      color: #fde68a;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65), 0 0 14px rgba(251, 191, 36, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    #closeTimerLockHint.hint-flashing {
+      display: inline-flex;
+      animation: closeHintPulse 0.85s ease-in-out infinite;
+    }
+    #closeTimerLockHint.hint-locked {
+      display: inline-flex;
+      border-color: rgba(52, 211, 153, 0.75);
+      color: #6ee7b7;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65), 0 0 14px rgba(52, 211, 153, 0.3);
+    }
+    #closeTimerLockHint::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      right: 18px;
+      width: 8px;
+      height: 8px;
+      background: rgba(15, 23, 42, 0.96);
+      border-left: 1px solid inherit;
+      border-top: 1px solid inherit;
+      border-color: inherit;
+      transform: rotate(45deg);
+    }
+
     /* Location Map: Callout popup positioned to the left of the pin with seamlessly integrated arrow */
     .history-map-tall-popup {
       margin: 0 !important;
@@ -1360,7 +1423,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.163-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.164-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -2218,7 +2281,7 @@
             </button>
           </div>
         </div>
-        <p class="text-[10px] text-slate-400 mt-1.5 leading-tight">Sorted by distance from current location • Tap location count to fit all pins • TV: Use bottom bar</p>
+        <p class="text-[10px] text-slate-400 mt-1.5 leading-tight">Sorted by distance • Tap 'View Locations' to fit all pins • TV remote: use D-pad to scroll the bottom carousel</p>
       </div>
 
       <!-- Leaflet Map Container -->
@@ -3052,8 +3115,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 327;
-    const APP_VERSION = '1.10.163-dev';
+    const APP_BUILD = 328;
+    const APP_VERSION = '1.10.164-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3063,6 +3126,94 @@
     let lastDownClickTarget = null;
     let lastDownClickTime = 0;
     const modalTimerLocks = {};
+    let closeTimerLockHintModalId = null;
+    let closeTimerLockStatusTimer = null;
+
+    function getOrCreateCloseTimerLockHint() {
+      let el = document.getElementById('closeTimerLockHint');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'closeTimerLockHint';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        document.body.appendChild(el);
+      }
+      return el;
+    }
+
+    function positionCloseTimerLockHint(anchorBtn) {
+      const hint = getOrCreateCloseTimerLockHint();
+      if (!anchorBtn) return hint;
+      const rect = anchorBtn.getBoundingClientRect();
+      if (!rect || (rect.width === 0 && rect.height === 0)) return hint;
+      const vpW = window.innerWidth || 1024;
+      const rightOffset = Math.max(8, Math.round(vpW - rect.right));
+      hint.style.top = `${Math.round(rect.bottom + 7)}px`;
+      hint.style.right = `${rightOffset}px`;
+      hint.style.left = 'auto';
+      return hint;
+    }
+
+    function hideCloseTimerLockHint(onlyForModalId = null) {
+      if (onlyForModalId && closeTimerLockHintModalId && closeTimerLockHintModalId !== onlyForModalId) return;
+      if (closeTimerLockStatusTimer) return; // Let brief lock-confirmation toast finish
+      const el = document.getElementById('closeTimerLockHint');
+      if (el) {
+        el.classList.remove('hint-flashing', 'hint-locked');
+        el.style.display = 'none';
+      }
+      closeTimerLockHintModalId = null;
+    }
+
+    function flashCloseLockStatusPill(modalId, anchorBtn, locked) {
+      if (!anchorBtn) return;
+      if (closeTimerLockStatusTimer) {
+        clearTimeout(closeTimerLockStatusTimer);
+        closeTimerLockStatusTimer = null;
+      }
+      const hint = positionCloseTimerLockHint(anchorBtn);
+      hint.textContent = locked
+        ? '🔒 Locked open — long-press Close to unlock'
+        : '🔓 Auto-close resumed';
+      hint.classList.remove('hint-flashing', 'hint-locked');
+      hint.classList.add('hint-locked');
+      hint.style.display = 'inline-flex';
+      closeTimerLockHintModalId = modalId;
+      closeTimerLockStatusTimer = setTimeout(() => {
+        closeTimerLockStatusTimer = null;
+        hideCloseTimerLockHint(modalId);
+      }, 1900);
+    }
+
+    function syncCloseBtnLockWarning(modalId, secsLeft, isLocked, btnIds) {
+      const modal = document.getElementById(modalId);
+      const isVisible = !!(modal && !modal.classList.contains('hidden'));
+      const shouldWarn = isVisible && !isLocked && typeof secsLeft === 'number' && secsLeft > 0 && secsLeft <= 5;
+      const ids = Array.isArray(btnIds) ? btnIds : [btnIds];
+      let primaryBtn = null;
+
+      ids.forEach((id, idx) => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        if (idx === 0) primaryBtn = b;
+        b.classList.toggle('close-btn-countdown-flash', shouldWarn);
+      });
+
+      if (shouldWarn && primaryBtn) {
+        if (closeTimerLockStatusTimer) {
+          clearTimeout(closeTimerLockStatusTimer);
+          closeTimerLockStatusTimer = null;
+        }
+        const hint = positionCloseTimerLockHint(primaryBtn);
+        hint.textContent = '🔒 Long-press Close to lock open';
+        hint.classList.remove('hint-locked');
+        hint.classList.add('hint-flashing');
+        hint.style.display = 'inline-flex';
+        closeTimerLockHintModalId = modalId;
+      } else {
+        hideCloseTimerLockHint(modalId);
+      }
+    }
 
     function isModalTimerLocked(modalId) {
       return !!modalTimerLocks[modalId];
@@ -3168,11 +3319,23 @@
         updateTvExitCountdown();
       }
 
-      // Visual feedback: amber pulse on active close button
-      const activeClose = document.activeElement;
-      if (activeClose) {
-        activeClose.classList.add('ring-2', 'ring-amber-400', 'scale-105');
-        setTimeout(() => activeClose.classList.remove('ring-2', 'ring-amber-400', 'scale-105'), 350);
+      // Visual feedback: amber pulse on active close button + brief lock status pill underneath
+      const modalCloseMap = {
+        historyMapModal: 'closeMapBtnTop',
+        locationModal: 'closeLocationBtnTop',
+        wondersModal: 'closeWondersBtnTop',
+        shareModal: 'closeShareBtnTop',
+        radarModal: 'closeRadarBtnTop',
+        trafficModal: 'closeTrafficBtnTop',
+        riverModal: 'closeRiverBtnTop'
+      };
+      const anchorCloseBtn = document.getElementById(modalCloseMap[id]) || document.activeElement;
+      if (anchorCloseBtn) {
+        anchorCloseBtn.classList.add('ring-2', 'ring-amber-400', 'scale-105');
+        setTimeout(() => anchorCloseBtn.classList.remove('ring-2', 'ring-amber-400', 'scale-105'), 350);
+        if (modalCloseMap[id]) {
+          flashCloseLockStatusPill(id, anchorCloseBtn, newLocked);
+        }
       }
     }
 
@@ -4504,6 +4667,7 @@
       const bottomBtnTimer = document.getElementById('mapBtnCountdownBottom');
       if (topBtnTimer) topBtnTimer.textContent = `(${historyMapAutoCloseSecs}s${suffix})`;
       if (bottomBtnTimer) bottomBtnTimer.textContent = `(${historyMapAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('historyMapModal', historyMapAutoCloseSecs, isLocked, ['closeMapBtnTop', 'closeMapBtnBottom']);
     }
 
     function resetHistoryMapAutoCloseTimer() {
@@ -8582,6 +8746,7 @@ function joinSpacedLetters(text) {
       const suffix = isLocked ? ' 🔒' : '';
       const btnTimerEl = document.getElementById('locationBtnCountdown');
       if (btnTimerEl) btnTimerEl.textContent = `(${locationAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('locationModal', locationAutoCloseSecs, isLocked, ['closeLocationBtnTop']);
     }
 
     function resetLocationIdleExitFocusTimer() {
@@ -10641,6 +10806,7 @@ function joinSpacedLetters(text) {
       const suffix = isLocked ? ' 🔒' : '';
       const el = document.getElementById('wondersBtnCountdown');
       if (el) el.textContent = `(${Math.max(0, wondersAutoCloseSecs)}s${suffix})`;
+      syncCloseBtnLockWarning('wondersModal', wondersAutoCloseSecs, isLocked, ['closeWondersBtnTop']);
     }
 
     function onWondersModalActivity() {
@@ -14363,6 +14529,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${shareAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('shareBtnCountdown');
       if (btnEl) btnEl.textContent = `(${shareAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('shareModal', shareAutoCloseSecs, isLocked, ['closeShareBtnTop']);
     }
 
     function stopShareAutoCloseTimer() {
@@ -15948,6 +16115,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${radarAutoCloseSecs}s${suffix}`;
       const btnTimerEl = document.getElementById('radarBtnCountdown');
       if (btnTimerEl) btnTimerEl.textContent = `(${radarAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('radarModal', radarAutoCloseSecs, isLocked, ['closeRadarBtnTop']);
     }
 
     function stopRadarAutoCloseTimer() {
@@ -16150,6 +16318,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${trafficAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('trafficBtnCountdown');
       if (btnEl) btnEl.textContent = `(${trafficAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('trafficModal', trafficAutoCloseSecs, isLocked, ['closeTrafficBtnTop']);
     }
 
     function stopTrafficAutoCloseTimer() {
@@ -16477,6 +16646,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${riverAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('riverBtnCountdown');
       if (btnEl) btnEl.textContent = `(${riverAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('riverModal', riverAutoCloseSecs, isLocked, ['closeRiverBtnTop']);
     }
 
     function stopRiverAutoCloseTimer() {
