@@ -1427,7 +1427,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.168-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.169-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3119,8 +3119,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 332;
-    const APP_VERSION = '1.10.168-dev';
+    const APP_BUILD = 333;
+    const APP_VERSION = '1.10.169-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3160,33 +3160,12 @@
 
     function hideCloseTimerLockHint(onlyForModalId = null) {
       if (onlyForModalId && closeTimerLockHintModalId && closeTimerLockHintModalId !== onlyForModalId) return;
-      if (closeTimerLockStatusTimer) return; // Let brief lock-confirmation toast finish
       const el = document.getElementById('closeTimerLockHint');
       if (el) {
         el.classList.remove('hint-flashing', 'hint-locked');
         el.style.display = 'none';
       }
       closeTimerLockHintModalId = null;
-    }
-
-    function flashCloseLockStatusPill(modalId, anchorBtn, locked) {
-      if (!anchorBtn) return;
-      if (closeTimerLockStatusTimer) {
-        clearTimeout(closeTimerLockStatusTimer);
-        closeTimerLockStatusTimer = null;
-      }
-      const hint = positionCloseTimerLockHint(anchorBtn);
-      hint.textContent = locked
-        ? '🔒 Locked open — long-press Close to unlock'
-        : '🔓 Auto-close resumed';
-      hint.classList.remove('hint-flashing', 'hint-locked');
-      hint.classList.add('hint-locked');
-      hint.style.display = 'inline-flex';
-      closeTimerLockHintModalId = modalId;
-      closeTimerLockStatusTimer = setTimeout(() => {
-        closeTimerLockStatusTimer = null;
-        hideCloseTimerLockHint(modalId);
-      }, 4000);
     }
 
     function syncCloseBtnLockWarning(modalId, secsLeft, isLocked, btnIds) {
@@ -3204,10 +3183,6 @@
       });
 
       if (shouldWarn && primaryBtn) {
-        if (closeTimerLockStatusTimer) {
-          clearTimeout(closeTimerLockStatusTimer);
-          closeTimerLockStatusTimer = null;
-        }
         const hint = positionCloseTimerLockHint(primaryBtn);
         hint.textContent = '🔒 Long-press Close to lock open';
         hint.classList.remove('hint-locked');
@@ -3323,7 +3298,7 @@
         updateTvExitCountdown();
       }
 
-      // Visual feedback: amber pulse on active close button + brief lock status pill underneath
+      // Visual feedback: amber pulse on active close button
       const modalCloseMap = {
         historyMapModal: 'closeMapBtnTop',
         locationModal: 'closeLocationBtnTop',
@@ -3337,9 +3312,6 @@
       if (anchorCloseBtn) {
         anchorCloseBtn.classList.add('ring-2', 'ring-amber-400', 'scale-105');
         setTimeout(() => anchorCloseBtn.classList.remove('ring-2', 'ring-amber-400', 'scale-105'), 350);
-        if (modalCloseMap[id]) {
-          flashCloseLockStatusPill(id, anchorCloseBtn, newLocked);
-        }
       }
     }
 
