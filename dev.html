@@ -2036,6 +2036,9 @@
               <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)">
               <button id="locationClearBtn" type="button" tabindex="0" onclick="clearLocationInput()" onkeydown="handleLocationClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear search text">✕</button>
             </div>
+            <button id="voiceSearchBtn" type="button" tabindex="0" onclick="toggleVoiceSearch()" onkeydown="handleVoiceSearchKeydown(event)" class="tv-focus-amber h-[38px] w-[38px] px-0 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/60 text-slate-200 hover:text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" title="Voice Search (speak town or postcode)">
+              <span id="voiceSearchIcon">🎤</span>
+            </button>
             <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber h-[38px] px-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 focus:outline-none cursor-pointer flex-shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)] border border-sky-300/40" onkeydown="handleSearchBtnKeydown(event)">
               <span>Search</span>
             </button>
@@ -3119,8 +3122,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 333;
-    const APP_VERSION = '1.10.169-dev';
+    const APP_BUILD = 334;
+    const APP_VERSION = '1.10.170-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3863,7 +3866,7 @@
 
     async function checkForUpdates() {
       try {
-        const res = await fetch(`version.json?_=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`version-dev.json?_=${Date.now()}`, { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
           if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
@@ -6434,7 +6437,7 @@
       try {
         // Quick background check to see if a newer software build was deployed:
         try {
-          const updateRes = await fetch(`version.json?_=${Date.now()}`, { cache: 'no-store' });
+          const updateRes = await fetch(`version-dev.json?_=${Date.now()}`, { cache: 'no-store' });
           if (updateRes.ok) {
             const data = await updateRes.json();
             if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
@@ -8167,8 +8170,13 @@
         }
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        const searchBtn = document.getElementById('searchLocBtn');
-        if (searchBtn) searchBtn.focus();
+        const voiceBtn = document.getElementById('voiceSearchBtn');
+        if (voiceBtn) {
+          voiceBtn.focus();
+        } else {
+          const searchBtn = document.getElementById('searchLocBtn');
+          if (searchBtn) searchBtn.focus();
+        }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         const renameBtn = document.getElementById('customRenameBtn');
@@ -8194,8 +8202,14 @@
           e.preventDefault();
           clearBtn.focus();
         } else {
-          const searchBtn = document.getElementById('searchLocBtn');
-          if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
+          const voiceBtn = document.getElementById('voiceSearchBtn');
+          if (voiceBtn) {
+            e.preventDefault();
+            voiceBtn.focus();
+          } else {
+            const searchBtn = document.getElementById('searchLocBtn');
+            if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
+          }
         }
       } else if (e.key === 'ArrowDown') {
         // Step down to Save Title button (bypassing text inputs on vertical scroll)
@@ -8204,6 +8218,172 @@
       } else if (e.key === 'ArrowUp') {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) { e.preventDefault(); closeBtn.focus(); }
+      }
+    }
+
+    function handleVoiceSearchKeydown(e) {
+      if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.key === ' ') {
+        e.preventDefault();
+        toggleVoiceSearch();
+        return;
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const searchBtn = document.getElementById('searchLocBtn');
+        if (searchBtn) searchBtn.focus();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const clearBtn = document.getElementById('locationClearBtn');
+        if (clearBtn && !clearBtn.classList.contains('hidden')) {
+          clearBtn.focus();
+        } else {
+          const input = document.getElementById('locationInput');
+          if (input) {
+            input.focus();
+            try { input.click(); } catch (_) {}
+            const len = input.value.length;
+            try { input.setSelectionRange(len, len); } catch (_) {}
+          }
+        }
+      } else if (e.key === 'ArrowDown') {
+        const renameBtn = document.getElementById('customRenameBtn');
+        if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
+      } else if (e.key === 'ArrowUp') {
+        const closeBtn = document.getElementById('closeLocationBtnTop');
+        if (closeBtn) { e.preventDefault(); closeBtn.focus(); }
+      }
+    }
+
+    let voiceRecognition = null;
+    let isVoiceListening = false;
+
+    function resetVoiceSearchBtn() {
+      const btn = document.getElementById('voiceSearchBtn');
+      const icon = document.getElementById('voiceSearchIcon');
+      if (btn) {
+        btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/60 text-slate-200 hover:text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0';
+        btn.title = 'Voice Search (speak town or postcode)';
+      }
+      if (icon) {
+        icon.textContent = '🎤';
+      }
+    }
+
+    function stopVoiceSearch() {
+      if (voiceRecognition) {
+        try { voiceRecognition.stop(); } catch (_) {}
+        voiceRecognition = null;
+      }
+      isVoiceListening = false;
+      resetVoiceSearchBtn();
+    }
+
+    function toggleVoiceSearch() {
+      if (typeof onLocationModalActivity === 'function') onLocationModalActivity();
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const status = document.getElementById('locationSearchStatus');
+      const input = document.getElementById('locationInput');
+      const btn = document.getElementById('voiceSearchBtn');
+      const icon = document.getElementById('voiceSearchIcon');
+
+      if (!SpeechRec) {
+        if (status) {
+          status.style.color = '#f87171';
+          status.textContent = 'Voice search is not supported by this browser. Please type or use your on-screen keyboard.';
+        }
+        return;
+      }
+
+      if (isVoiceListening) {
+        stopVoiceSearch();
+        if (status) {
+          status.style.color = '#94a3b8';
+          status.textContent = 'Voice search stopped.';
+        }
+        return;
+      }
+
+      try {
+        voiceRecognition = new SpeechRec();
+        voiceRecognition.lang = 'en-GB';
+        voiceRecognition.interimResults = true;
+        voiceRecognition.continuous = false;
+        voiceRecognition.maxAlternatives = 1;
+
+        voiceRecognition.onstart = () => {
+          isVoiceListening = true;
+          if (btn) {
+            btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-rose-500/30 hover:bg-rose-500/40 border-2 border-rose-400 text-rose-200 rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0 animate-pulse ring-2 ring-rose-400/50 shadow-[0_0_14px_rgba(244,63,94,0.7)]';
+            btn.title = 'Listening... Tap to cancel';
+          }
+          if (icon) icon.textContent = '🔴';
+          if (status) {
+            status.style.color = '#38bdf8';
+            status.textContent = '🎙️ Listening... Speak a town, city, or UK postcode';
+          }
+        };
+
+        voiceRecognition.onresult = (e) => {
+          if (typeof onLocationModalActivity === 'function') onLocationModalActivity();
+          let transcript = '';
+          for (let i = e.resultIndex; i < e.results.length; ++i) {
+            transcript += e.results[i][0].transcript;
+          }
+          if (transcript && transcript.trim()) {
+            const raw = transcript.trim();
+            const normalized = normalizeSpokenUkPostcode(joinSpacedLetters(raw));
+            if (input) {
+              input.value = normalized;
+              updateLocationClearBtnVisibility();
+            }
+            if (status) {
+              status.style.color = '#38bdf8';
+              status.textContent = `🎙️ Heard: "${normalized}"`;
+            }
+          }
+        };
+
+        voiceRecognition.onerror = (e) => {
+          console.warn('Speech recognition error:', e.error);
+          isVoiceListening = false;
+          resetVoiceSearchBtn();
+          if (status) {
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+              status.style.color = '#f87171';
+              status.textContent = '⚠️ Microphone blocked. Please allow microphone permission in Chrome settings.';
+            } else if (e.error === 'no-speech') {
+              status.style.color = '#94a3b8';
+              status.textContent = 'No speech heard. Tap 🎤 to try again.';
+            } else {
+              status.style.color = '#f87171';
+              status.textContent = `Microphone notice: ${e.error}`;
+            }
+          }
+        };
+
+        voiceRecognition.onend = () => {
+          isVoiceListening = false;
+          resetVoiceSearchBtn();
+          if (input && input.value && input.value.trim().length > 0) {
+            if (status) {
+              status.style.color = '#34d399';
+              status.textContent = `Searching for "${input.value.trim()}"...`;
+            }
+            setTimeout(() => {
+              searchLocationFromModal();
+            }, 350);
+          }
+        };
+
+        voiceRecognition.start();
+      } catch (err) {
+        console.error('Failed to start voice recognition:', err);
+        isVoiceListening = false;
+        resetVoiceSearchBtn();
+        if (status) {
+          status.style.color = '#f87171';
+          status.textContent = 'Could not start voice search: ' + (err.message || err);
+        }
       }
     }
 
@@ -8219,6 +8399,12 @@
         return;
       }
       if (e.key === 'ArrowLeft') {
+        const voiceBtn = document.getElementById('voiceSearchBtn');
+        if (voiceBtn) {
+          e.preventDefault();
+          voiceBtn.focus();
+          return;
+        }
         const clearBtn = document.getElementById('locationClearBtn');
         if (clearBtn && !clearBtn.classList.contains('hidden')) {
           e.preventDefault();
@@ -8926,6 +9112,7 @@ function joinSpacedLetters(text) {
     }
 
     function proceedOpenLocationModal() {
+      if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       const modal = document.getElementById('locationModal');
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
@@ -8996,6 +9183,7 @@ function joinSpacedLetters(text) {
     }
 
     function closeLocationModal(pop = true) {
+      if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       window._locModalReopenGuardUntil = Date.now() + 850;
       modalTimerLocks['locationModal'] = false;
       recentLocationsExpanded = false;
@@ -9405,6 +9593,7 @@ function joinSpacedLetters(text) {
     }
 
     async function searchLocationFromModal() {
+      if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       if (typeof cancelSearchAutoContinue === 'function') cancelSearchAutoContinue();
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
@@ -16906,7 +17095,7 @@ function joinSpacedLetters(text) {
         );
 
         try {
-          const updateRes = await fetch(`version.json?_=${now}`, { cache: 'no-store' });
+          const updateRes = await fetch(`version-dev.json?_=${now}`, { cache: 'no-store' });
           if (updateRes.ok) {
             const data = await updateRes.json();
             if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
