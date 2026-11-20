@@ -2383,7 +2383,7 @@
           <div class="space-y-1.5 text-[11px]">
             <p>
               <span class="font-semibold text-sky-300">🌐 All (Shared 30-Day Map):</span>
-              Recent location searches are stored <strong class="text-white">anonymously</strong> on the central database. Personal or custom names are always stripped to the generic local town name so nobody's private titles are shared.
+              Recent location searches are stored <strong class="text-white">anonymously</strong> on the central database. Personal or custom names are stripped to the local town name.
             </p>
             <p>
               <span class="font-semibold text-emerald-300">📍 Recent</span> &amp; <span class="font-semibold text-amber-300">🔒 Locked:</span>
@@ -3199,8 +3199,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 345;
-    const APP_VERSION = '1.10.181-dev';
+    const APP_BUILD = 346;
+    const APP_VERSION = '1.10.182-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4424,56 +4424,56 @@
     function getDepersonalizedLocationName(loc) {
       if (!loc) return '';
       const raw = typeof loc === 'string' ? loc : (loc.name || loc.geoName || '');
-      if (!loc.isCustomTitle) {
-        if (/dunkirk/i.test(raw)) return 'Dunkirk Mills';
-        if (loc.geoName && /dunkirk/i.test(loc.geoName)) return 'Dunkirk Mills';
-        if (loc.name && /amberley/i.test(loc.name)) return 'Amberley Church';
-        if (loc.geoName && /amberley/i.test(loc.geoName)) return 'Amberley Church';
-        if (loc.name && /stroud hotel|the stroud/i.test(loc.name)) return 'The Stroud Hotel';
-        if (loc.geoName && /stroud hotel|the stroud/i.test(loc.geoName)) return 'The Stroud Hotel';
-        if (loc.name && /egypt mill/i.test(loc.name)) return 'Egypt Mill';
-        if (loc.geoName && /egypt mill/i.test(loc.geoName)) return 'Egypt Mill';
-        if (loc.name && /olive tree/i.test(loc.name)) return 'The Olive Tree';
-        if (loc.geoName && /olive tree/i.test(loc.geoName)) return 'The Olive Tree';
-      }
-
       const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
+      const geo = (typeof loc === 'object' && loc.geoName ? loc.geoName : '').trim();
+      const isCustom = Boolean(typeof loc === 'object' && loc.isCustomTitle) ||
+                       Boolean(geo && raw.trim().toLowerCase() !== geo.toLowerCase()) ||
+                       isPersonalLocationName(raw);
 
-      // 0. Landmark Preservation: Public world wonders & heritage sites preserve their iconic identity
-      // (Skipped if this is a low-confidence Wi-Fi/cell fix so we never falsely label a coarse town fix as a venue)
-      if (!loc.lowConfidenceGps && !loc.isCustomTitle && typeof matchActiveLandmark === 'function') {
-        const lm = matchActiveLandmark({ name: raw, lat, lon, postcode: loc.postcode, lowConfidenceGps: Boolean(loc.lowConfidenceGps) });
-        if (lm) {
+      // 1. Verified Public Landmark / Hotel / Heritage Site (Publicly Known Places)
+      if (typeof matchActiveLandmark === 'function') {
+        const lm = matchActiveLandmark({
+          name: isCustom && geo ? geo : raw,
+          lat,
+          lon,
+          postcode: typeof loc === 'object' ? loc.postcode : '',
+          lowConfidenceGps: Boolean(typeof loc === 'object' && loc.lowConfidenceGps)
+        });
+        if (lm && lm.name) {
           return lm.name;
         }
       }
 
-      // 1. Demarcation Principle: If the title is NOT a custom/personal title edited by the user, keep the official searched name!
-      const isCustom = Boolean(loc.isCustomTitle) || isPersonalLocationName(raw);
+      // Check explicit landmark shortcuts
+      if (/dunkirk/i.test(raw) || /dunkirk/i.test(geo)) return 'Dunkirk Mills';
+      if (/amberley/i.test(raw) || /amberley/i.test(geo)) return 'Amberley Church';
+      if (/stroud hotel|the stroud/i.test(raw) || /stroud hotel|the stroud/i.test(geo)) return 'The Stroud Hotel';
+      if (/egypt mill/i.test(raw) || /egypt mill/i.test(geo)) return 'Egypt Mill';
+      if (/olive tree/i.test(raw) || /olive tree/i.test(geo)) return 'The Olive Tree';
+
+      // 2. In the Middle of a Known Town (Coordinates Match a Known Settlement)
+      const knownTown = getKnownGenericTown(lat, lon);
+      if (knownTown) return knownTown;
+
+      // 3. Official Geocoded Town (geoName from Geocoder)
+      if (geo && !isPersonalLocationName(geo) && geo.toLowerCase() !== 'united kingdom' && geo.toLowerCase() !== 'uk') {
+        const cleanGeo = shortenPlaceName(geo);
+        if (cleanGeo && !isPersonalLocationName(cleanGeo)) {
+          return cleanGeo;
+        }
+      }
+
+      // 4. Non-custom searched location: If it wasn't a custom name and matches an official town name
       if (!isCustom) {
         const cleanName = shortenPlaceName(raw);
-        if (cleanName && cleanName.toLowerCase() !== 'united kingdom' && cleanName.toLowerCase() !== 'uk') {
+        if (cleanName && cleanName.toLowerCase() !== 'united kingdom' && cleanName.toLowerCase() !== 'uk' && !isPersonalLocationName(cleanName)) {
           return cleanName;
         }
       }
 
-      // 2. If it IS a custom/personal title (e.g. user renamed in the title box like "Jeth"):
-      // ALWAYS default to the real generic local town name, NEVER let the custom title leak onto the public world map!
-      const geo = (loc.geoName || '').trim();
-      const rawLower = String(raw || '').trim().toLowerCase();
-      if (geo && geo.toLowerCase() !== rawLower && !isPersonalLocationName(geo) && geo.toLowerCase() !== 'united kingdom' && geo.toLowerCase() !== 'uk') {
-        return shortenPlaceName(geo);
-      }
-
-      // (b) Coordinate match to known generic town takes priority for custom titles
-      const knownTown = getKnownGenericTown(lat, lon);
-      if (knownTown) return knownTown;
-
-      // (c) Safe generic fallback to outward postcode district
-      const outward = getOutwardPostcode(loc.postcode);
-      if (outward) return `${outward} Area`;
-
+      // 5. User Rule: If a custom/personal location cannot be attached to a generic local town or a verified public place,
+      // DO NOT SHOW IT AT ALL on the wide map!
       return '';
     }
 
