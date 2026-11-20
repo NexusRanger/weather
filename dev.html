@@ -1363,18 +1363,20 @@
             <span id="headerPostcodeBadge" class="font-mono text-white font-bold">GL5 5HH</span>
             <span class="text-[9px] text-sky-300/80">✏️</span>
           </button>
-          <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Use Current GPS Location" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
-            <span id="gpsButtonIcon">📍</span>
-            <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
+          <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Find my current GPS location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-500/25 via-sky-500/20 to-emerald-500/15 text-emerald-200 hover:text-white border border-emerald-400/40 hover:border-emerald-300/70 shadow-[0_0_12px_rgba(52,211,153,0.2)] hover:shadow-[0_0_16px_rgba(52,211,153,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+            <span id="gpsButtonIcon" class="text-xs">📍</span>
+            <span id="gpsButtonText">Find Me</span>
           </button>
-          <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline flex-shrink-0 whitespace-nowrap">51.70°N, 2.23°W</span>
-          <button id="headerGlobeBtn" tabindex="0" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="tv-focus-amber p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none cursor-pointer" aria-label="Location History Map">
-            <svg class="w-4 h-4 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
-              <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
-              <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
-              <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-            </svg>
+          <button id="headerGlobeBtn" tabindex="0" onclick="openHistoryMapModal()" title="View Location Map (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-blue-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer group" aria-label="Location Map">
+            <div class="w-3.5 h-3.5 rounded-full overflow-hidden flex-shrink-0">
+              <svg class="w-full h-full transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
+                <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
+                <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
+                <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+              </svg>
+            </div>
+            <span>Map</span>
           </button>
         </div>
       </div>
@@ -1425,7 +1427,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.167-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.168-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3117,8 +3119,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 331;
-    const APP_VERSION = '1.10.167-dev';
+    const APP_BUILD = 332;
+    const APP_VERSION = '1.10.168-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -7943,7 +7945,7 @@
         cleanupGpsHandles();
         isDetectingLocation = false;
         if (gpsIcon) gpsIcon.textContent = '📍';
-        if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+        if (gpsBtn) gpsBtn.textContent = 'Find Me';
         if (statusEl) {
           statusEl.style.color = '#94a3b8';
           statusEl.textContent = 'Location search cancelled.';
@@ -7960,7 +7962,7 @@
           statusEl.textContent = 'Geolocation is not supported on this device/browser.';
           setTimeout(() => { statusEl.textContent = ''; }, 3000);
         }
-        setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+        setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 2500);
         return;
       }
 
@@ -7976,7 +7978,7 @@
               statusEl.textContent = 'Location access is denied in browser settings.';
               setTimeout(() => { statusEl.textContent = ''; }, 3000);
             }
-            setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+            setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 2500);
             return;
           }
         } catch (_) {}
@@ -8008,7 +8010,7 @@
             statusEl.textContent = message;
             setTimeout(() => { if (statusEl.textContent === message) statusEl.textContent = ''; }, 3000);
           }
-          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
+          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 3000);
         } else {
           // Clean, silent failure with NO browser alerts or popups
           if (gpsIcon) gpsIcon.textContent = '📍';
@@ -8018,7 +8020,7 @@
             statusEl.textContent = message || 'Location unavailable.';
             setTimeout(() => { if (statusEl.textContent === (message || 'Location unavailable.')) statusEl.textContent = ''; }, 3000);
           }
-          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 2500);
         }
       };
 
@@ -11511,7 +11513,8 @@ function joinSpacedLetters(text) {
       const displayPc = (rawPc && rawPc !== 'undefined' && rawPc !== 'GEO' && rawPc !== 'GPS') ? rawPc : 'Search';
       const badgeEl = document.getElementById('headerPostcodeBadge');
       if (badgeEl) badgeEl.textContent = displayPc;
-      document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
+      const coordsEl = document.getElementById('headerCoords');
+      if (coordsEl) coordsEl.textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
 
       const minLocName = document.getElementById('minimalLocationName');
