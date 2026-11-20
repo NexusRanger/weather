@@ -2040,8 +2040,8 @@
               <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)">
               <button id="locationClearBtn" type="button" tabindex="0" onclick="clearLocationInput()" onkeydown="handleLocationClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear search text">✕</button>
             </div>
-            <button id="voiceSearchBtn" type="button" tabindex="0" onclick="toggleVoiceSearch()" onkeydown="handleVoiceSearchKeydown(event)" class="tv-focus-amber h-[38px] w-[38px] px-0 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/60 text-slate-200 hover:text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" title="Voice Search (speak town or postcode)">
-              <span id="voiceSearchIcon">🎤</span>
+            <button id="voiceSearchBtn" type="button" tabindex="0" onclick="toggleVoiceSearch()" onkeydown="handleVoiceSearchKeydown(event)" class="tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-300/50 shadow-[0_0_12px_rgba(168,85,247,0.4)] text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" title="Voice Search (speak town or postcode)">
+              <span id="voiceSearchIcon" class="text-base sm:text-lg select-none leading-none">🎤</span>
             </button>
             <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber h-[38px] px-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 focus:outline-none cursor-pointer flex-shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)] border border-sky-300/40" onkeydown="handleSearchBtnKeydown(event)">
               <span>Search</span>
@@ -3126,8 +3126,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 335;
-    const APP_VERSION = '1.10.171-dev';
+    const APP_BUILD = 336;
+    const APP_VERSION = '1.10.172-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -8265,7 +8265,7 @@
       const btn = document.getElementById('voiceSearchBtn');
       const icon = document.getElementById('voiceSearchIcon');
       if (btn) {
-        btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-slate-800/80 hover:bg-slate-700/80 border border-slate-600/60 text-slate-200 hover:text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0';
+        btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-300/50 shadow-[0_0_12px_rgba(168,85,247,0.4)] text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0';
         btn.title = 'Voice Search (speak town or postcode)';
       }
       if (icon) {
@@ -8317,7 +8317,7 @@
         voiceRecognition.onstart = () => {
           isVoiceListening = true;
           if (btn) {
-            btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-rose-500/30 hover:bg-rose-500/40 border-2 border-rose-400 text-rose-200 rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0 animate-pulse ring-2 ring-rose-400/50 shadow-[0_0_14px_rgba(244,63,94,0.7)]';
+            btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 border-2 border-rose-300 text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0 animate-pulse ring-2 ring-rose-400 shadow-[0_0_16px_rgba(244,63,94,0.8)]';
             btn.title = 'Listening... Tap to cancel';
           }
           if (icon) icon.textContent = '🔴';
