@@ -362,7 +362,11 @@
     body:not(.focus-dormant) #headerLocationBtn:focus #headerPostcodeBadge,
     body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerPostcodeBadge,
     #headerLocationBtn.loc-btn-flash #headerPostcodeBadge,
-    body.focus-dormant #headerLocationBtn.loc-btn-flash #headerPostcodeBadge {
+    body.focus-dormant #headerLocationBtn.loc-btn-flash #headerPostcodeBadge,
+    body:not(.focus-dormant) #headerLocationBtn:focus #headerSearchPrefix,
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerSearchPrefix,
+    #headerLocationBtn.loc-btn-flash #headerSearchPrefix,
+    body.focus-dormant #headerLocationBtn.loc-btn-flash #headerSearchPrefix {
       color: #fbbf24 !important;
     }
 
@@ -1359,7 +1363,7 @@
           </button>
           <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Search or change location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span class="text-xs">🔍</span>
-            <span class="hidden sm:inline text-sky-300 font-medium">Search:</span>
+            <span id="headerSearchPrefix" class="hidden sm:inline text-sky-300 font-medium">Search:</span>
             <span id="headerPostcodeBadge" class="font-mono text-white font-bold">GL5 5HH</span>
             <span class="text-[9px] text-sky-300/80">✏️</span>
           </button>
@@ -3122,8 +3126,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 334;
-    const APP_VERSION = '1.10.170-dev';
+    const APP_BUILD = 335;
+    const APP_VERSION = '1.10.171-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -11671,9 +11675,28 @@ function joinSpacedLetters(text) {
         if (t) t.textContent = CURRENT_LOCATION.name;
       }
       const rawPc = CURRENT_LOCATION.postcode ? CURRENT_LOCATION.postcode.trim() : '';
-      const displayPc = (rawPc && rawPc !== 'undefined' && rawPc !== 'GEO' && rawPc !== 'GPS') ? rawPc : 'Search';
+      const hasValidPostcode = (rawPc && rawPc !== 'undefined' && rawPc !== 'GEO' && rawPc !== 'GPS');
       const badgeEl = document.getElementById('headerPostcodeBadge');
-      if (badgeEl) badgeEl.textContent = displayPc;
+      const prefixEl = document.getElementById('headerSearchPrefix');
+      if (hasValidPostcode) {
+        if (prefixEl) {
+          prefixEl.textContent = 'Search:';
+          prefixEl.className = 'hidden sm:inline text-sky-300 font-medium';
+        }
+        if (badgeEl) {
+          badgeEl.textContent = rawPc;
+          badgeEl.classList.remove('hidden');
+        }
+      } else {
+        if (prefixEl) {
+          prefixEl.textContent = 'Search';
+          prefixEl.className = 'inline text-sky-300 font-medium';
+        }
+        if (badgeEl) {
+          badgeEl.textContent = '';
+          badgeEl.classList.add('hidden');
+        }
+      }
       const coordsEl = document.getElementById('headerCoords');
       if (coordsEl) coordsEl.textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
