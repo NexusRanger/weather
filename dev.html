@@ -1357,9 +1357,11 @@
           <button id="headerLocationTitle" type="button" tabindex="-1" onclick="openLocationModal()" title="Change location (Press OK)" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent" style="max-width: min(320px, 30vw); outline: none !important; outline-offset: 0 !important;">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Dunkirk Mills</span>
           </button>
-          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
-            <span id="headerPostcodeBadge">GL5 5HH</span>
-            <span class="text-[8px] text-indigo-400">✏️</span>
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Search or change location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+            <span class="text-xs">🔍</span>
+            <span class="hidden sm:inline text-sky-300 font-medium">Search:</span>
+            <span id="headerPostcodeBadge" class="font-mono text-white font-bold">GL5 5HH</span>
+            <span class="text-[9px] text-sky-300/80">✏️</span>
           </button>
           <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Use Current GPS Location" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span id="gpsButtonIcon">📍</span>
@@ -1423,7 +1425,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.166-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.167-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3115,8 +3117,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 330;
-    const APP_VERSION = '1.10.166-dev';
+    const APP_BUILD = 331;
+    const APP_VERSION = '1.10.167-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
