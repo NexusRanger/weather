@@ -3215,8 +3215,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 339;
-    const APP_VERSION = '1.10.175-dev';
+    const APP_BUILD = 340;
+    const APP_VERSION = '1.10.176-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4633,6 +4633,23 @@
         if (Array.isArray(userRecents)) combined.push(...userRecents);
       } catch (_) {}
 
+      // 3. Always include CURRENT_LOCATION so the active selected location is NEVER missing from the map!
+      try {
+        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number' && typeof CURRENT_LOCATION.lon === 'number') {
+          const depName = getDepersonalizedLocationName(CURRENT_LOCATION);
+          if (depName && !isPersonalLocationName(depName)) {
+            const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
+            combined.unshift({
+              name: depName,
+              postcode: getOutwardPostcode(norm.postcode || CURRENT_LOCATION.postcode) || norm.postcode || CURRENT_LOCATION.postcode || '',
+              lat: norm.lat,
+              lon: norm.lon,
+              timestamp: now
+            });
+          }
+        }
+      } catch (_) {}
+
       // 4. Always seed from built-in verified default locations so the map is NEVER empty on initial load/refresh!
       if (typeof DEFAULT_PUBLIC_MAP_LOCATIONS !== 'undefined' && Array.isArray(DEFAULT_PUBLIC_MAP_LOCATIONS)) {
         combined.push(...DEFAULT_PUBLIC_MAP_LOCATIONS);
@@ -4706,6 +4723,14 @@
         });
         if (mapQueries.length > 300) mapQueries = mapQueries.slice(0, 300);
         localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(mapQueries));
+
+        // If history map is currently open, immediately reflect the new location
+        const mapModal = document.getElementById('historyMapModal');
+        if (mapModal && !mapModal.classList.contains('hidden') && historyLeafletMap) {
+          const curFilter = getMapViewFilter();
+          const activeQueries = getQueriesForMapFilter(curFilter);
+          renderHistoryMarkersAndChips(activeQueries, false, curFilter);
+        }
 
         const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
@@ -4785,6 +4810,8 @@
       lastDownClickTarget = null;
       lastDownClickTime = 0;
       mapLastFocusedChipIndex = 0;
+      mapActivePopupKey = null;
+      lastScrolledChipKey = null;
       historyMapAutoCloseSecs = 45;
       savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
@@ -6507,17 +6534,65 @@
               }
             });
 
+            // CRITICAL FIX: Merge Supabase rows with locally saved cache and recent queries
+            // so recent searches (e.g. Minchinhampton) are never erased if Supabase hasn't committed them yet!
+            const localRecents = (typeof loadUserRecentQueries === 'function') ? loadUserRecentQueries() : [];
+            let existingCache = [];
+            try {
+              const existingCacheRaw = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+              if (existingCacheRaw) existingCache = JSON.parse(existingCacheRaw);
+            } catch (_) {}
+            if (!Array.isArray(existingCache)) existingCache = [];
+
+            const mergePool = [...existingCache, ...localRecents];
+            if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number' && typeof CURRENT_LOCATION.lon === 'number') {
+              const depName = getDepersonalizedLocationName(CURRENT_LOCATION);
+              if (depName && !isPersonalLocationName(depName)) {
+                const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
+                mergePool.unshift({
+                  name: depName,
+                  postcode: getOutwardPostcode(norm.postcode || CURRENT_LOCATION.postcode) || norm.postcode || CURRENT_LOCATION.postcode || '',
+                  lat: norm.lat,
+                  lon: norm.lon,
+                  timestamp: Date.now()
+                });
+              }
+            }
+
+            mergePool.forEach(mq => {
+              if (!mq || typeof mq.lat !== 'number' || typeof mq.lon !== 'number' || !mq.name) return;
+              const depName = getDepersonalizedLocationName(mq);
+              if (!depName || isPersonalLocationName(depName)) return;
+              const norm = normalizeKnownLandmarkCoords(depName, mq.lat, mq.lon, mq.postcode);
+              const nameLower = depName.toLowerCase().trim();
+              const existingIdx = deduped.findIndex(d => {
+                const sameName = (d.name || '').toLowerCase().trim() === nameLower;
+                const distKm = (typeof calculateHaversineKm === 'function')
+                  ? calculateHaversineKm(d.lat, d.lon, norm.lat, norm.lon)
+                  : Math.hypot(d.lat - norm.lat, d.lon - norm.lon) * 111;
+                return sameName || distKm < 0.14;
+              });
+              if (existingIdx === -1) {
+                deduped.unshift({
+                  ...mq,
+                  name: depName,
+                  postcode: norm.postcode || mq.postcode || '',
+                  lat: norm.lat,
+                  lon: norm.lon,
+                  timestamp: mq.timestamp || Date.now()
+                });
+              }
+            });
+
             const queries = deduped;
 
             try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(queries)); } catch (_) {}
 
             const mapModal = document.getElementById('historyMapModal');
             if (mapModal && !mapModal.classList.contains('hidden') && historyLeafletMap) {
-              if (getMapViewFilter() === 'all') {
-                renderHistoryMarkersAndChips(queries, false, 'all');
-              } else {
-                updateMapFilterButtonUI(getMapViewFilter());
-              }
+              const curFilter = getMapViewFilter();
+              const finalQueries = getQueriesForMapFilter(curFilter);
+              renderHistoryMarkersAndChips(finalQueries, false, curFilter);
             }
           }
         }
