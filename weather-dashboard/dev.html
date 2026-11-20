@@ -3215,8 +3215,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 340;
-    const APP_VERSION = '1.10.176-dev';
+    const APP_BUILD = 341;
+    const APP_VERSION = '1.10.177-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4662,6 +4662,7 @@
         const n = (q.name || '').toLowerCase().trim();
         const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
         if (n.includes('eiffel') && ts <= 1794999600000) return;
+        if (n.includes('minchinhampton') && ts <= 1795202600000) return;
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
         if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return;
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
@@ -6503,7 +6504,7 @@
                 const nLower = (depName || sq.name || '').trim().toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000);
+                const isPurged = nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
                 if (depName && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
                   const norm = normalizeKnownLandmarkCoords(depName, latNum, lonNum, sq.postcode);
                   sheetQueries.push({
