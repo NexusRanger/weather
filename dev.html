@@ -3199,8 +3199,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 344;
-    const APP_VERSION = '1.10.180-dev';
+    const APP_BUILD = 345;
+    const APP_VERSION = '1.10.181-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4369,11 +4369,17 @@
       }
       if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location' || s === 'gps' || s === 'geo') return true;
       if (/['’]s\b/i.test(s)) return true; // e.g. Phil's, Mum's, John's
-      if (/^(my|our)\s+/i.test(s)) return true; // e.g. My House, Our Cottage
+      if (/^(my|our|at|the)\s+/i.test(s)) {
+        if (/\b(home|house|flat|apartment|workshop|work|office|garage|shed|unit|studio|cabin|cottage|barn|yard|lockup|boat|retreat|hideaway|allotment|caravan|lodge)\b/i.test(s)) return true;
+      }
+      if (/\bworkshops?\b/i.test(s)) return true;
       const personalWords = [
         'home', 'flat', 'apartment', 'desk', 'shed', 'garage', 'yard',
         'retreat', 'hideaway', 'base', 'mum', 'mums', 'mom', 'moms', 'dad', 'dads', 'nan',
-        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'dentiste', 'jeth'
+        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'dentist', 'dentiste', 'jeth',
+        'workshop', 'workshops', 'office', 'offices', 'workplace', 'work', 'studio', 'studios',
+        'cabin', 'cabins', 'cottage', 'cottages', 'house', 'houses', 'barn', 'barns',
+        'unit', 'units', 'lockup', 'lock-up', 'boat', 'caravan', 'allotment', 'lodge'
       ];
       return personalWords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(s));
     }
@@ -4602,26 +4608,45 @@
       const cutoff = now - 30 * 24 * 60 * 60 * 1000;
       const combined = [];
 
-      // 1. Load public map cache
+      // 1. Load public map cache and purge any personal/workshop names
       try {
         const rawPublic = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
         if (rawPublic) {
-          const arr = JSON.parse(rawPublic);
-          if (Array.isArray(arr)) combined.push(...arr);
+          let arr = JSON.parse(rawPublic);
+          if (Array.isArray(arr)) {
+            const sanitized = arr.filter(q => q && q.name && !isPersonalLocationName(q.name) && !q.name.toLowerCase().includes('workshop'));
+            if (sanitized.length !== arr.length) {
+              try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(sanitized)); } catch (_) {}
+            }
+            combined.push(...sanitized);
+          }
         }
       } catch (_) {}
 
       // 2. Always merge local user recent locations so locations are NEVER missing right after a refresh!
+      // BUT ALWAYS DEPERSONALIZE THEM FIRST: private names like "Workshop" must NEVER reach the public "All" map!
       try {
         const userRecents = loadUserRecentQueries();
-        if (Array.isArray(userRecents)) combined.push(...userRecents);
+        if (Array.isArray(userRecents)) {
+          userRecents.forEach(r => {
+            if (!r || !r.name) return;
+            const depName = getDepersonalizedLocationName(r);
+            if (depName && !isPersonalLocationName(depName) && !depName.toLowerCase().includes('workshop')) {
+              combined.push({
+                ...r,
+                name: depName,
+                isCustomTitle: false
+              });
+            }
+          });
+        }
       } catch (_) {}
 
       // 3. Always include CURRENT_LOCATION so the active selected location is NEVER missing from the map!
       try {
         if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number' && typeof CURRENT_LOCATION.lon === 'number') {
           const depName = getDepersonalizedLocationName(CURRENT_LOCATION);
-          if (depName && !isPersonalLocationName(depName)) {
+          if (depName && !isPersonalLocationName(depName) && !depName.toLowerCase().includes('workshop')) {
             const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
             combined.unshift({
               name: depName,
@@ -4645,6 +4670,7 @@
         if (!q || typeof q.lat !== 'number' || typeof q.lon !== 'number' || !q.name) return;
         const n = (q.name || '').toLowerCase().trim();
         const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
+        if (n.includes('workshop')) return;
         if (n.includes('eiffel') && ts <= 1794999600000) return;
         if (n.includes('minchinhampton') && ts <= 1795202600000) return;
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
@@ -4652,7 +4678,7 @@
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
 
         const publicName = getDepersonalizedLocationName(q);
-        if (!publicName || isPersonalLocationName(publicName)) return;
+        if (!publicName || isPersonalLocationName(publicName) || publicName.toLowerCase().includes('workshop')) return;
 
         if (ts < cutoff) return;
 
@@ -4676,7 +4702,7 @@
         }
       });
 
-      return deduped.filter(q => q.name && !isPersonalLocationName(q.name) && q.name.toLowerCase() !== 'united kingdom' && q.name.toLowerCase() !== 'uk');
+      return deduped.filter(q => q.name && !isPersonalLocationName(q.name) && !q.name.toLowerCase().includes('workshop') && q.name.toLowerCase() !== 'united kingdom' && q.name.toLowerCase() !== 'uk');
     }
 
     function recordLocationQuery(loc) {
@@ -6762,7 +6788,7 @@
                 const nLower = (depName || sq.name || '').trim().toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
+                const isPurged = nLower.includes('workshop') || nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
                 if (depName && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
                   const norm = normalizeKnownLandmarkCoords(depName, latNum, lonNum, sq.postcode);
                   sheetQueries.push({
