@@ -4,7 +4,7 @@
   "short_name": "Weather Dev",
   "description": "Development sandbox for Ambient Weather & Frost Watch",
   "start_url": "./dev.html",
-  "scope": "./",
+  "scope": "./dev.html",
   "display": "standalone",
   "background_color": "#030712",
   "theme_color": "#030712",
