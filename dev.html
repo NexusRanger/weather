@@ -1423,7 +1423,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.164-dev) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.165-dev) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3115,8 +3115,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 328;
-    const APP_VERSION = '1.10.164-dev';
+    const APP_BUILD = 329;
+    const APP_VERSION = '1.10.165-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3182,7 +3182,7 @@
       closeTimerLockStatusTimer = setTimeout(() => {
         closeTimerLockStatusTimer = null;
         hideCloseTimerLockHint(modalId);
-      }, 1900);
+      }, 4000);
     }
 
     function syncCloseBtnLockWarning(modalId, secsLeft, isLocked, btnIds) {
