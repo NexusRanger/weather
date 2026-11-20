@@ -834,10 +834,9 @@
       border-radius: 14px !important;
       padding: 0 !important;
       position: relative !important;
-      transform: translate3d(var(--popup-x, 26px), var(--popup-y, -50%), 0) !important;
+      transform: translate3d(var(--popup-x, 52px), var(--popup-y, -50%), 0) !important;
       pointer-events: auto;
       overflow: visible !important;
-      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .history-map-tall-popup svg.popup-elastic-arrow {
       position: absolute;
@@ -3200,8 +3199,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 343;
-    const APP_VERSION = '1.10.179-dev';
+    const APP_BUILD = 344;
+    const APP_VERSION = '1.10.180-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5259,6 +5258,9 @@
     }
 
     let adaptivePlacementRafId = null;
+    let adaptiveLastSide = null;
+    let adaptiveLastSideTime = 0;
+    let adaptiveLastSource = null;
 
     function updateAdaptivePopupPlacement() {
       if (!historyLeafletMap) return;
@@ -5280,6 +5282,13 @@
       if (!mapW || !mapH) return;
 
       const pinPt = historyLeafletMap.latLngToContainerPoint(activeLatLng);
+
+      // Reset side memory if the popup belongs to a different marker
+      if (adaptiveLastSource !== popup._source) {
+        adaptiveLastSide = null;
+        adaptiveLastSideTime = 0;
+        adaptiveLastSource = popup._source;
+      }
 
       // Measure card dimensions (with fallback)
       const boxW = wrapperEl.offsetWidth || 210;
@@ -5305,7 +5314,8 @@
         }
       }
 
-      const gap = 26;
+      // Generous gap for prominent, elegant pointer arrow
+      const gap = 52;
       const candidates = [
         { id: 'right', x: pinPt.x + gap, y: pinPt.y - boxH / 2 },
         { id: 'left', x: pinPt.x - boxW - gap, y: pinPt.y - boxH / 2 },
@@ -5321,6 +5331,11 @@
       let best = candidates[0];
       let bestClampedX = Math.max(minX, Math.min(maxX, best.x));
       let bestClampedY = Math.max(minY, Math.min(maxY, best.y));
+
+      let currentSideCandidate = null;
+      let currentSideScore = Infinity;
+      let currentSideClampedX = 0;
+      let currentSideClampedY = 0;
 
       for (let i = 0; i < candidates.length; i++) {
         const c = candidates[i];
@@ -5355,12 +5370,39 @@
         // Slight ergonomic preference for horizontal right/left callouts
         if (c.id === 'right' || c.id === 'left') score -= 15;
 
+        // Hysteresis Damping: Give the currently active direction a strong sticky preference
+        // so hovering near center boundaries does NOT oscillate or jump back and forth!
+        if (adaptiveLastSide && c.id === adaptiveLastSide) {
+          score -= 350;
+          currentSideCandidate = c;
+          currentSideScore = score;
+          currentSideClampedX = clampedX;
+          currentSideClampedY = clampedY;
+        }
+
         if (score < bestScore) {
           bestScore = score;
           best = c;
           bestClampedX = clampedX;
           bestClampedY = clampedY;
         }
+      }
+
+      // Temporal Damping: Require minimum hold time before switching sides unless current side is obscured
+      const now = Date.now();
+      if (adaptiveLastSide && best.id !== adaptiveLastSide && currentSideCandidate) {
+        const timeSinceChange = now - adaptiveLastSideTime;
+        const currentIsSeverelyCompromised = currentSideScore > 2000;
+        if (!currentIsSeverelyCompromised && timeSinceChange < 450) {
+          best = currentSideCandidate;
+          bestClampedX = currentSideClampedX;
+          bestClampedY = currentSideClampedY;
+        }
+      }
+
+      if (adaptiveLastSide !== best.id) {
+        adaptiveLastSide = best.id;
+        adaptiveLastSideTime = now;
       }
 
       const offsetX = Math.round(bestClampedX - pinPt.x);
@@ -5389,8 +5431,8 @@
         else side = 'top';
       }
 
-      const halfBase = 10;
-      const cornerPad = 16;
+      const halfBase = 12;
+      const cornerPad = 18;
       let anchor = { x: 0, y: 0 };
       let b1 = { x: 0, y: 0 };
       let b2 = { x: 0, y: 0 };
@@ -6654,6 +6696,9 @@
         });
 
         historyLeafletMap.on('popupclose', () => {
+          adaptiveLastSide = null;
+          adaptiveLastSideTime = 0;
+          adaptiveLastSource = null;
           if (adaptivePlacementRafId) {
             cancelAnimationFrame(adaptivePlacementRafId);
             adaptivePlacementRafId = null;
