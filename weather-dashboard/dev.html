@@ -2113,6 +2113,21 @@
                 <p class="text-amber-200/90 flex items-center gap-1">
                   <span>📌</span> Hold any location (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> regular favourites so they never get pushed off the end and aren't wiped by <span class="font-semibold text-rose-300">"Clear"</span>.
                 </p>
+                <!-- Privacy Database Wipe (User's Own Data Only) -->
+                <div class="pt-2 mt-2 border-t border-sky-400/25">
+                  <div class="font-bold text-rose-300 flex items-center gap-1 mb-1">
+                    <span>🛡️</span> Privacy Database Wipe (Your Data Only)
+                  </div>
+                  <p class="text-slate-300 text-[9.5px]">
+                    To permanently erase all your saved places from this device AND remove them from the public shared map database, tap below. This only purges your own queries and will never affect other users' public data.
+                  </p>
+                  <div class="mt-2 flex items-center gap-2 flex-wrap">
+                    <button id="purgeMyDataBtn" type="button" tabindex="0" onclick="handlePurgeAllMyDataClick()" class="tv-focus-amber text-[9.5px] font-bold text-rose-200 hover:text-white bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/50 rounded-lg px-2.5 py-1 transition flex items-center gap-1.5 focus:outline-none cursor-pointer">
+                      <span>🗑️</span> Purge My Saved Places &amp; Public History
+                    </button>
+                    <span id="purgeDataStatus" class="text-[9.5px] text-emerald-300 hidden font-semibold"></span>
+                  </div>
+                </div>
               </div>
               <button type="button" onclick="toggleRecentLocationsInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
             </div>
@@ -3126,8 +3141,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 336;
-    const APP_VERSION = '1.10.172-dev';
+    const APP_BUILD = 337;
+    const APP_VERSION = '1.10.173-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6138,8 +6153,49 @@
         }
 
         const timeEl = document.createElement('div');
-        timeEl.style.cssText = 'font-size: 10px; color: #94a3b8; margin-top: 3px;';
-        timeEl.textContent = `Last queried: ${dateStr}`;
+        timeEl.style.cssText = 'font-size: 10px; color: #94a3b8; margin-top: 3px; display: flex; align-items: center; justify-content: space-between; gap: 6px;';
+        const timeText = document.createElement('span');
+        timeText.textContent = `Last queried: ${dateStr}`;
+        timeEl.appendChild(timeText);
+
+        const userRecents = (typeof loadUserRecentQueries === 'function') ? loadUserRecentQueries() : [];
+        const isOwnLocation = userRecents.some(r => doesRecentQueryMatch(r, q, 0.0035));
+        if (isOwnLocation) {
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.tabIndex = -1;
+          delBtn.title = 'Remove this location from your saved places and delete from public map database';
+          delBtn.style.cssText = 'background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fda4af; border-radius: 5px; padding: 1.5px 6px; font-size: 9px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; transition: all 0.2s; white-space: nowrap; line-height: 1.2;';
+          delBtn.innerHTML = '<span>🗑️</span><span>Delete</span>';
+          delBtn.onclick = async (e) => {
+            if (e) {
+              e.stopPropagation();
+              if (e.preventDefault) e.preventDefault();
+            }
+            if (!delBtn.dataset.confirming) {
+              delBtn.dataset.confirming = 'true';
+              delBtn.innerHTML = '<span>Confirm?</span>';
+              delBtn.style.background = 'rgba(244, 63, 94, 0.45)';
+              delBtn.style.color = '#ffffff';
+              delBtn.style.borderColor = '#f43f5e';
+              setTimeout(() => {
+                if (delBtn) {
+                  delBtn.dataset.confirming = '';
+                  delBtn.innerHTML = '<span>🗑️</span><span>Delete</span>';
+                  delBtn.style.background = 'rgba(244, 63, 94, 0.15)';
+                  delBtn.style.color = '#fda4af';
+                  delBtn.style.borderColor = 'rgba(244, 63, 94, 0.35)';
+                }
+              }, 4000);
+              return;
+            }
+            delBtn.innerHTML = '<span>Deleting...</span>';
+            delBtn.disabled = true;
+            await deleteLocationFromHistoryAndDatabase(q);
+          };
+          timeEl.appendChild(delBtn);
+        }
+
         popupWrapper.appendChild(timeEl);
 
         // For non-current locations, show the button to load forecast.
@@ -6407,6 +6463,190 @@
           window.history.replaceState(window.history.state || {}, '', url);
         }
       } catch (_) {}
+    }
+
+    async function deleteLocationFromHistoryAndDatabase(loc) {
+      if (!loc) return;
+      try {
+        const placeName = loc.displayName || loc.name || 'Location';
+
+        // 1. Remove from personal recent & locked locations in localStorage
+        if (typeof loadUserRecentQueries === 'function' && typeof saveUserRecentQueries === 'function') {
+          const remainingRecents = loadUserRecentQueries().filter(r => !doesRecentQueryMatch(r, loc, 0.0035));
+          saveUserRecentQueries(remainingRecents);
+        }
+
+        // 2. Remove from public map cache in localStorage
+        try {
+          const rawCache = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+          if (rawCache) {
+            const cachedArr = JSON.parse(rawCache);
+            if (Array.isArray(cachedArr)) {
+              const remainingMap = cachedArr.filter(m => !doesRecentQueryMatch(m, loc, 0.0035));
+              localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(remainingMap));
+            }
+          }
+        } catch (_) {}
+
+        // 3. Delete from Supabase public database table
+        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+        const tol = 0.0025;
+        const deletePromises = [];
+
+        if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+          const coordUrl = `${SUPABASE_URL}/rest/v1/locations?lat=gte.${loc.lat - tol}&lat=lte.${loc.lat + tol}&lon=gte.${loc.lon - tol}&lon=lte.${loc.lon + tol}`;
+          deletePromises.push(fetch(coordUrl, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY
+            }
+          }).catch(() => {}));
+        }
+
+        if (loc.name && typeof loc.name === 'string' && loc.name.trim().length > 1) {
+          const nameUrl = `${SUPABASE_URL}/rest/v1/locations?name=eq.${encodeURIComponent(loc.name.trim())}`;
+          deletePromises.push(fetch(nameUrl, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY
+            }
+          }).catch(() => {}));
+        }
+
+        await Promise.all(deletePromises);
+
+        // 4. Close the popup
+        if (historyLeafletMap) {
+          try { historyLeafletMap.closePopup(); } catch (_) {}
+        }
+
+        // 5. Refresh the map view and chips to immediately reflect the deletion
+        if (typeof renderLocationModalPicks === 'function') {
+          renderLocationModalPicks();
+        }
+        if (typeof setMapViewFilter === 'function') {
+          setMapViewFilter(getMapViewFilter(), false);
+        } else if (typeof renderHistoryMarkersAndChips === 'function') {
+          const updatedQueries = getLocalMapQueries(getMapViewFilter() === 'locked');
+          renderHistoryMarkersAndChips(updatedQueries, false, getMapViewFilter());
+        }
+
+        // 6. Show toast notification on the map
+        if (typeof showMapToast === 'function') {
+          showMapToast(`🔒 Deleted "${placeName}" from device & database`);
+        }
+      } catch (err) {
+        console.error('Error deleting location:', err);
+        if (typeof showMapToast === 'function') {
+          showMapToast('Deletion notice: ' + (err.message || err));
+        }
+      }
+    }
+
+    async function handlePurgeAllMyDataClick() {
+      const btn = document.getElementById('purgeMyDataBtn');
+      const status = document.getElementById('purgeDataStatus');
+      if (!btn) return;
+
+      const userRecents = (typeof loadUserRecentQueries === 'function') ? loadUserRecentQueries() : [];
+      if (userRecents.length === 0) {
+        if (status) {
+          status.textContent = 'No saved locations on this device to purge.';
+          status.style.color = '#94a3b8';
+          status.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!btn.dataset.confirming) {
+        btn.dataset.confirming = 'true';
+        btn.innerHTML = `<span>⚠️ Confirm Wipe ${userRecents.length} Place${userRecents.length === 1 ? '' : 's'} from Device &amp; Database?</span>`;
+        btn.classList.add('bg-rose-600', 'text-white', 'border-rose-300');
+        setTimeout(() => {
+          if (btn && btn.dataset.confirming) {
+            btn.dataset.confirming = '';
+            btn.innerHTML = '<span>🗑️</span> Purge My Saved Places &amp; Public History';
+            btn.classList.remove('bg-rose-600', 'text-white', 'border-rose-300');
+          }
+        }, 5000);
+        return;
+      }
+
+      // Confirmed wipe!
+      btn.dataset.confirming = '';
+      btn.innerHTML = '<span>⏳ Purging database &amp; device...</span>';
+      btn.disabled = true;
+
+      try {
+        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+        const tol = 0.0025;
+        const deletePromises = [];
+
+        for (const loc of userRecents) {
+          if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+            const coordUrl = `${SUPABASE_URL}/rest/v1/locations?lat=gte.${loc.lat - tol}&lat=lte.${loc.lat + tol}&lon=gte.${loc.lon - tol}&lon=lte.${loc.lon + tol}`;
+            deletePromises.push(fetch(coordUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+          if (loc.name && typeof loc.name === 'string' && loc.name.trim().length > 1) {
+            const nameUrl = `${SUPABASE_URL}/rest/v1/locations?name=eq.${encodeURIComponent(loc.name.trim())}`;
+            deletePromises.push(fetch(nameUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+        }
+
+        await Promise.all(deletePromises);
+
+        // Clear local storage
+        saveUserRecentQueries([]);
+        try {
+          const rawCache = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+          if (rawCache) {
+            const cachedArr = JSON.parse(rawCache);
+            if (Array.isArray(cachedArr)) {
+              const remainingMap = cachedArr.filter(m => !userRecents.some(ur => doesRecentQueryMatch(ur, m, 0.0035)));
+              localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(remainingMap));
+            }
+          }
+        } catch (_) {}
+
+        btn.innerHTML = '<span>✅ Purge Complete</span>';
+        btn.classList.remove('bg-rose-600', 'text-white', 'border-rose-300');
+        btn.classList.add('bg-emerald-600/30', 'text-emerald-200', 'border-emerald-400/50');
+        if (status) {
+          status.textContent = 'All your locations wiped from device and public database.';
+          status.style.color = '#34d399';
+          status.classList.remove('hidden');
+        }
+
+        renderLocationModalPicks();
+        if (typeof showRecentStatusMessage === 'function') {
+          showRecentStatusMessage('🔒 All your places wiped from device & public database.', '#34d399');
+        }
+      } catch (err) {
+        console.error('Error during full purge:', err);
+        btn.disabled = false;
+        btn.innerHTML = '<span>🗑️</span> Purge My Saved Places &amp; Public History';
+        if (status) {
+          status.textContent = 'Purge notice: ' + (err.message || err);
+          status.style.color = '#f87171';
+          status.classList.remove('hidden');
+        }
+      }
     }
 
     async function reloadDashboard(forceHardReload = false) {
