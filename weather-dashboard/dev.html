@@ -3230,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 349;
-    const APP_VERSION = '1.10.185-dev';
+    const APP_BUILD = 350;
+    const APP_VERSION = '1.10.186-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4333,13 +4333,24 @@
     const USER_RECENTS_STORAGE_KEY = 'ambient_user_recent_locations';
     const PUBLIC_MAP_CACHE_KEY = 'ambient_public_map_cache';
 
-    // Startup storage sanitization & migration: purge unwanted test queries (Sturgeon County, Iran, IN, and previous Eiffel Tower test entries)
+    // Startup storage sanitization & migration: purge unwanted test queries (Workshop, Sturgeon County, Iran, IN, and previous Eiffel Tower test entries)
     const EIFFEL_PURGE_CUTOFF = 1794999600000;
     try {
       const rawLoc = localStorage.getItem('ambient_weather_loc');
-      if (rawLoc && /eiffel/i.test(rawLoc)) {
-        localStorage.removeItem('ambient_weather_loc');
-        sessionStorage.removeItem('ambient_weather_loc');
+      if (rawLoc) {
+        if (/eiffel/i.test(rawLoc)) {
+          localStorage.removeItem('ambient_weather_loc');
+          sessionStorage.removeItem('ambient_weather_loc');
+        } else if (/workshop/i.test(rawLoc)) {
+          try {
+            const parsed = JSON.parse(rawLoc);
+            if (parsed && parsed.name && /workshop/i.test(parsed.name)) {
+              parsed.name = parsed.geoName || 'Location';
+              parsed.isCustomTitle = false;
+              localStorage.setItem('ambient_weather_loc', JSON.stringify(parsed));
+            }
+          } catch (_) {}
+        }
       }
     } catch (_) {}
     try {
@@ -4349,7 +4360,7 @@
           localStorage.setItem(USER_RECENTS_STORAGE_KEY, legacy);
         }
       }
-      [USER_RECENTS_STORAGE_KEY, PUBLIC_MAP_CACHE_KEY, 'ambient_location_queries'].forEach(k => {
+      [USER_RECENTS_STORAGE_KEY, PUBLIC_MAP_CACHE_KEY, 'ambient_location_queries', 'weather_public_map_cache', 'weather_dashboard_user_recents'].forEach(k => {
         try {
           const raw = localStorage.getItem(k);
           if (raw) {
@@ -4359,6 +4370,7 @@
                 if (!q || !q.name) return false;
                 const n = q.name.trim().toLowerCase();
                 const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
+                if (n.includes('workshop')) return false;
                 if (n.includes('eiffel') && ts <= EIFFEL_PURGE_CUTOFF) return false;
                 if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
                 if (typeof q.lat === 'number' && typeof q.lon === 'number') {
@@ -4400,7 +4412,10 @@
       }
       if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location' || s === 'gps' || s === 'geo') return true;
       // Personal possessive or personal prefix
-      return /['’]s\b|^(my|our)\s+/i.test(s);
+      if (/['’]s\b|^(my|our)\s+/i.test(s)) return true;
+      // Common personal/private property words that are never public towns or cities
+      if (/\b(workshop|workshops|shed|sheds|garage|garages|desk|office|offices|flat|flats|apartment|apartments|home|house|houses|cabin|cabins|cottage|cottages|barn|barns|unit|units|lockup|lock-up|boat|allotment|hideaway|retreat)\b/i.test(s)) return true;
+      return false;
     }
     const isCustomOrPersonalLocationName = isPersonalLocationName;
 
@@ -4505,6 +4520,7 @@
           if (!q || !q.name) return false;
           const n = q.name.trim().toLowerCase();
           const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
+          if (n.includes('workshop')) return false;
           if (n.includes('eiffel') && ts <= 1794999600000) return false;
           if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
           if (typeof q.lat === 'number' && typeof q.lon === 'number') {
@@ -4634,9 +4650,9 @@
           let arr = JSON.parse(rawPublic);
           if (Array.isArray(arr)) {
             const sanitized = arr.map(q => {
-              if (!q || q.locked) return null;
+              if (!q || q.locked || (q.name && q.name.toLowerCase().includes('workshop'))) return null;
               const pubName = getDepersonalizedLocationName(q);
-              return pubName ? { ...q, name: pubName } : null;
+              return (pubName && !pubName.toLowerCase().includes('workshop')) ? { ...q, name: pubName } : null;
             }).filter(Boolean);
             if (sanitized.length !== arr.length) {
               try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(sanitized)); } catch (_) {}
@@ -4652,11 +4668,11 @@
         const userRecents = loadUserRecentQueries();
         if (Array.isArray(userRecents)) {
           userRecents.forEach(r => {
-            if (!r || !r.name) return;
+            if (!r || !r.name || r.name.toLowerCase().includes('workshop')) return;
             // Strict rule: No locked location is displayed on the wider map!
             if (r.locked) return;
             const depName = getDepersonalizedLocationName(r);
-            if (depName) {
+            if (depName && !depName.toLowerCase().includes('workshop')) {
               combined.push({
                 ...r,
                 name: depName,
@@ -4670,9 +4686,9 @@
       // 3. Always include CURRENT_LOCATION (unless locked)
       try {
         if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number' && typeof CURRENT_LOCATION.lon === 'number') {
-          if (!CURRENT_LOCATION.locked) {
+          if (!CURRENT_LOCATION.locked && (!CURRENT_LOCATION.name || !CURRENT_LOCATION.name.toLowerCase().includes('workshop'))) {
             const depName = getDepersonalizedLocationName(CURRENT_LOCATION);
-            if (depName) {
+            if (depName && !depName.toLowerCase().includes('workshop')) {
               const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
               combined.unshift({
                 name: depName,
@@ -4699,6 +4715,7 @@
         if (q.locked) return;
         const n = (q.name || '').toLowerCase().trim();
         const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
+        if (n.includes('workshop')) return;
         if (n.includes('eiffel') && ts <= 1794999600000) return;
         if (n.includes('minchinhampton') && ts <= 1795202600000) return;
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
@@ -4706,7 +4723,7 @@
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
 
         const publicName = getDepersonalizedLocationName(q);
-        if (!publicName) return;
+        if (!publicName || publicName.toLowerCase().includes('workshop')) return;
 
         if (ts < cutoff) return;
 
@@ -4738,7 +4755,7 @@
         }
       });
 
-      return deduped.filter(q => q.name && !q.locked && q.name.toLowerCase() !== 'united kingdom' && q.name.toLowerCase() !== 'uk');
+      return deduped.filter(q => q.name && !q.locked && !q.name.toLowerCase().includes('workshop') && !isPersonalLocationName(q.name) && q.name.toLowerCase() !== 'united kingdom' && q.name.toLowerCase() !== 'uk');
     }
 
     function recordLocationQuery(loc) {
@@ -6827,8 +6844,8 @@
                 const nLower = (depName || sq.name || '').trim().toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
-                if (depName && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
+                const isPurged = nLower.includes('workshop') || nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
+                if (depName && !isPurged && !depName.toLowerCase().includes('workshop') && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
                   const norm = normalizeKnownLandmarkCoords(depName, latNum, lonNum, sq.postcode);
                   sheetQueries.push({
                     name: depName,
@@ -6873,7 +6890,7 @@
             const mergePool = [...existingCache, ...localRecents];
             if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && !CURRENT_LOCATION.locked && typeof CURRENT_LOCATION.lat === 'number' && typeof CURRENT_LOCATION.lon === 'number') {
               const depName = getDepersonalizedLocationName(CURRENT_LOCATION);
-              if (depName && !isPersonalLocationName(depName)) {
+              if (depName && !depName.toLowerCase().includes('workshop') && !isPersonalLocationName(depName)) {
                 const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
                 mergePool.unshift({
                   name: depName,
@@ -6888,7 +6905,7 @@
             mergePool.forEach(mq => {
               if (!mq || mq.locked || typeof mq.lat !== 'number' || typeof mq.lon !== 'number' || !mq.name) return;
               const depName = getDepersonalizedLocationName(mq);
-              if (!depName || isPersonalLocationName(depName)) return;
+              if (!depName || depName.toLowerCase().includes('workshop') || isPersonalLocationName(depName)) return;
               const norm = normalizeKnownLandmarkCoords(depName, mq.lat, mq.lon, mq.postcode);
               const nameLower = depName.toLowerCase().trim();
               const existing = deduped.find(d => {
