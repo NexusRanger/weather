@@ -2188,7 +2188,7 @@
                       <strong class="text-white">💾 Saved Locally:</strong> All your recent searches, locked favourites, and custom titles are saved directly in this browser (<code class="text-sky-300 font-mono text-[9.5px]">localStorage</code>). They persist across visits and restarts without requiring an account.
                     </li>
                     <li>
-                      <strong class="text-sky-300">🌐 Shared to Public Map:</strong> General searches are recorded anonymously on the 30-day shared database purely out of curiosity and general interest to see the site's worldwide reach. Custom titles are always stripped to the generic geographical town name, so private titles are never shared.
+                      <strong class="text-sky-300">🌐 Shared to Public Map:</strong> Searches are kept anonymously for 30 days to let visitors satisfy curiosity about current weather in interesting places worldwide and see the site's reach. There are zero cookies or trackers, and custom titles are stripped to standard town names.
                     </li>
                     <li>
                       <strong class="text-amber-300">🔒 What Locking Does:</strong> Locking marks a place as a permanent local favourite. Once locked, it stays saved on this device, is protected from <span class="text-rose-300">"Clear"</span>, and no subsequent visits or searches will be sent to the shared database.
@@ -2434,13 +2434,13 @@
             </div>
             <button type="button" onclick="toggleMapViewInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
           </div>
-          <div class="space-y-1.5 text-[11px]">
+          <div class="space-y-2 text-[11px]">
             <p>
               <span class="font-semibold text-sky-300">🌐 All (Shared 30-Day Map):</span>
-              Recent location searches are stored anonymously on the central database for up to 30 days. This is done purely out of curiosity and general interest to see where around the world the website might reach!
+              Searches are kept anonymously for up to 30 days so visitors can satisfy their curiosity about current weather in interesting places worldwide, and see how far around the globe the website reaches!
             </p>
-            <p class="text-[10.5px] text-slate-300">
-              🔒 <strong class="text-white">Privacy First:</strong> No personal details or browsing habits are ever tracked. Custom location names are always stripped to the generic geographical town name so private titles are never shared.
+            <p class="text-[10.5px] text-slate-300 leading-relaxed">
+              🔒 <strong class="text-white">Zero Cookies &amp; Full Privacy:</strong> This site uses <strong class="text-emerald-300">no cookies</strong>, no trackers, and collects no personal data. Any custom nicknames are stripped to standard town/area names so your private titles are never shared.
             </p>
             <p class="text-[10px] text-slate-300/90 pt-1.5 border-t border-white/10 leading-relaxed">
               💡 <strong class="text-amber-300">How to 🔒 Lock a favourite:</strong> Open the Location menu, press and hold any Recent Location (or right-click it), then choose <strong class="text-white">Lock</strong>. Locked places stay saved on this device and appear in the <strong class="text-amber-300">Locked</strong> map view.
@@ -3252,8 +3252,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 365;
-    const APP_VERSION = '1.10.198-dev';
+    const APP_BUILD = 366;
+    const APP_VERSION = '1.10.199-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
