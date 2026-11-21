@@ -3230,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 360;
-    const APP_VERSION = '1.10.194-dev';
+    const APP_BUILD = 362;
+    const APP_VERSION = '1.10.195-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -7259,10 +7259,11 @@
         recordLocationQuery(CURRENT_LOCATION);
       }
       updateLocationHeader();
-      fetchWeatherData();
+      const weatherPromise = fetchWeatherData();
       if (typeof broadcastLocationToCast === 'function') {
         broadcastLocationToCast(CURRENT_LOCATION);
       }
+      return weatherPromise;
     }
 
     // Key pool: add additional free TomTom keys here whenever you want to expand quota
@@ -8575,8 +8576,13 @@
       // 2. UK high-accuracy lookup with wideSearch and 1000m radius
       if (!resolvedName) {
         try {
-          const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`);
-          if (pcRes.ok) {
+          const pcCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+          const pcTimer = pcCtrl ? setTimeout(() => pcCtrl.abort(), 3500) : null;
+          const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`, {
+            signal: pcCtrl ? pcCtrl.signal : undefined
+          });
+          if (pcTimer) clearTimeout(pcTimer);
+          if (pcRes && pcRes.ok) {
             const pcData = await pcRes.json();
             if (pcData.result && pcData.result.length > 0) {
               const r = pcData.result[0];
@@ -8603,8 +8609,13 @@
       // 3. Global fallback reverse geocoding via BigDataCloud (fast, client-side, zero key)
       if (!resolvedName) {
         try {
-          const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
-          if (bdcRes.ok) {
+          const bdcCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+          const bdcTimer = bdcCtrl ? setTimeout(() => bdcCtrl.abort(), 3500) : null;
+          const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`, {
+            signal: bdcCtrl ? bdcCtrl.signal : undefined
+          });
+          if (bdcTimer) clearTimeout(bdcTimer);
+          if (bdcRes && bdcRes.ok) {
             const bdc = await bdcRes.json();
             const place = bdc.locality || bdc.city || bdc.principalSubdivision || '';
             if (place) {
@@ -8621,7 +8632,7 @@
         resolvedPostcode = 'GPS';
       }
 
-      applySelectedLocation(resolvedName, lat, lon, resolvedPostcode || 'GPS', true, {
+      await applySelectedLocation(resolvedName, lat, lon, resolvedPostcode || 'GPS', true, {
         isCustomTitle: resolvedIsCustomTitle,
         geoName: resolvedGeoName,
         lowConfidenceGps: !isHighConfidenceGps
@@ -8772,12 +8783,26 @@
           finishLocationAttempt(false, 'Invalid coordinates received.');
           return;
         }
+        cleanupGpsHandles();
         const highConf = !isFallback && acc != null && (acc <= 50 || (acc <= 75 && alt !== null));
         const label = highConf
           ? `GPS locked (±${acc}m)`
           : (acc != null ? `Approximate area (±${acc}m)` : 'Approximate area');
-        finishLocationAttempt(true, label);
-        await lookupCoords(lat, lon, true, acc, alt, isFallback);
+
+        if (gpsIcon) gpsIcon.textContent = '⏳';
+        if (gpsBtn) gpsBtn.textContent = 'Updating...';
+        if (statusEl) {
+          statusEl.style.color = '#38bdf8';
+          statusEl.textContent = `${label} • Loading weather...`;
+        }
+
+        try {
+          await lookupCoords(lat, lon, true, acc, alt, isFallback);
+          finishLocationAttempt(true, label);
+        } catch (err) {
+          console.error('Failed to lookup coordinates or update weather:', err);
+          finishLocationAttempt(false, 'Could not update location.');
+        }
       };
 
       const onHighAccuracyReading = (position) => {
@@ -8865,7 +8890,7 @@
                 }
               }
             },
-            { enableHighAccuracy: true, timeout: 8500, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 8500, maximumAge: 15000 }
           );
         } else {
           navigator.geolocation.getCurrentPosition(
@@ -8879,7 +8904,7 @@
                 }
               }
             },
-            { enableHighAccuracy: true, timeout: 8500, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 8500, maximumAge: 15000 }
           );
         }
       } catch (_) {
