@@ -3230,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 355;
-    const APP_VERSION = '1.10.191-dev';
+    const APP_BUILD = 356;
+    const APP_VERSION = '1.10.192-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13326,20 +13326,20 @@ function joinSpacedLetters(text) {
       // Freezing / Near-Freezing (Feels like <= 3°C)
       if (feelsLike <= 3) {
         if (isWet) return `🧥 Heavy waterproof coat & gloves (${flRound}°C)`;
-        if (isBlustery) return `🧥 Winter coat & scarf — bitter wind (${flRound}°C)`;
-        return `🧥 Winter coat (${flRound}°C)`;
+        if (isBlustery) return `🧥 Big winter coat & scarf — bitter wind (${flRound}°C)`;
+        return `🧥 Winter coat & gloves needed (${flRound}°C)`;
       }
 
       // Cold (Feels like 4°C to 8°C)
       if (feelsLike <= 8) {
         if (isWet) return `🧥 Warm waterproof coat advised (${flRound}°C)`;
-        if (isBlustery) return `🧥 Warm coat advised — chilly wind chill (${flRound}°C)`;
-        return `🧥 Warm coat (${flRound}°C)`;
+        if (isBlustery) return `🧥 Big coat advised — chilly wind chill (${flRound}°C)`;
+        return `🧥 Warm coat advised for going out (${flRound}°C)`;
       }
 
       // Chilly (Feels like 9°C to 12°C)
       if (feelsLike <= 12) {
-        if (isWet) return `☔ Waterproof coat or jacket (${flRound}°C)`;
+        if (isWet) return `☔ Waterproof coat or jacket needed (${flRound}°C)`;
         if (isBlustery) return `🧥 Windproof jacket or warm fleece (${flRound}°C)`;
         return `🧥 Jacket, fleece or warm sweater fine (${flRound}°C)`;
       }
