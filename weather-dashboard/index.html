@@ -1360,7 +1360,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.164) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.165) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3052,8 +3052,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 359;
-    const APP_VERSION = '1.10.164';
+    const APP_BUILD = 361;
+    const APP_VERSION = '1.10.165';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13228,7 +13228,7 @@ function joinSpacedLetters(text) {
     let isHourlyCompressed = false;
     let panoramicDayOffset = 0; // 0 = Today, 1..9 = Upcoming Days, -1 = Yesterday
     let isPanoramicLocked = false;
-    let lockedDayOffset = 0; // Remembers the original locked home day (0 = Today, -1 = Yesterday, 1 = Tomorrow)
+    let lockedDayOffset = 0; // Remembers the original locked home day (0 = Today, 1 = Tomorrow)
     let hasRestoredPanoramicLock = false;
     let hourlyResetTimer = null;
     let hourlyReturnToNowTimer = null;
@@ -13251,14 +13251,14 @@ function joinSpacedLetters(text) {
         return;
       }
 
-      const isLockableDay = (panoramicDayOffset === -1 || panoramicDayOffset === 0 || panoramicDayOffset === 1);
+      const isLockableDay = (panoramicDayOffset === 0 || panoramicDayOffset === 1);
 
       if (lockBtn) {
         if (isPanoramicLocked) {
           lockBtn.classList.remove('hidden');
           lockBtn.classList.add('inline-flex');
 
-          const lockedDayName = (lockedDayOffset === -1) ? 'Yesterday' : (lockedDayOffset === 1 ? 'Tomorrow' : 'Today');
+          const lockedDayName = (lockedDayOffset === 1 ? 'Tomorrow' : 'Today');
 
           if (panoramicDayOffset === lockedDayOffset) {
             if (lockIcon) lockIcon.textContent = '🔒';
@@ -13278,7 +13278,7 @@ function joinSpacedLetters(text) {
           lockBtn.classList.remove('hidden');
           lockBtn.classList.add('inline-flex');
           if (lockIcon) lockIcon.textContent = '🔓';
-          const dayName = (panoramicDayOffset === -1) ? 'Yesterday' : (panoramicDayOffset === 1 ? 'Tomorrow' : 'Today');
+          const dayName = (panoramicDayOffset === 1 ? 'Tomorrow' : 'Today');
           if (lockText) lockText.textContent = `Lock ${dayName}`;
           lockBtn.classList.remove('bg-cyan-500/25', 'border-cyan-400/60', 'text-cyan-200', 'bg-amber-500/25', 'border-amber-400/60', 'text-amber-200');
           lockBtn.classList.add('bg-white/10', 'border-white/15', 'text-slate-300');
@@ -13308,7 +13308,7 @@ function joinSpacedLetters(text) {
 
     function togglePanoramicLock() {
       if (!isHourlyCompressed) return;
-      const isLockableDay = (panoramicDayOffset === -1 || panoramicDayOffset === 0 || panoramicDayOffset === 1);
+      const isLockableDay = (panoramicDayOffset === 0 || panoramicDayOffset === 1);
 
       if (isPanoramicLocked) {
         if (panoramicDayOffset === lockedDayOffset) {
@@ -13322,7 +13322,7 @@ function joinSpacedLetters(text) {
           return;
         }
       } else if (isLockableDay) {
-        // Locking to Yesterday (-1), Today (0), or Tomorrow (1)
+        // Locking to Today (0) or Tomorrow (1)
         isPanoramicLocked = true;
         lockedDayOffset = panoramicDayOffset;
         try {
@@ -13420,7 +13420,7 @@ function joinSpacedLetters(text) {
         clearTimeout(hourlyResetTimer);
         hourlyResetTimer = null;
       }
-      // If Pano View is locked on home day (Yesterday, Today, or Tomorrow), it stays locked indefinitely
+      // If Pano View is locked on home day (Today or Tomorrow), it stays locked indefinitely
       if (isPanoramicLocked && panoramicDayOffset === lockedDayOffset) {
         return;
       }
@@ -13428,7 +13428,7 @@ function joinSpacedLetters(text) {
       // Allow remaining there longer (45 seconds) before auto-returning
       hourlyResetTimer = setTimeout(() => {
         if (isPanoramicLocked && typeof lockedDayOffset === 'number') {
-          // Return to original locked day (Yesterday, Today, or Tomorrow)
+          // Return to original locked day (Today or Tomorrow)
           stepPanoramicDayTo(lockedDayOffset);
         } else {
           setHourlyCompressedMode(false);
@@ -13575,7 +13575,7 @@ function joinSpacedLetters(text) {
             if (parsed && parsed.savedDate && parsed.savedDate !== todayStr) {
               // Rollover from a previous day: discard stale lock so old locks don't persist
               localStorage.removeItem('ambient_pano_locked');
-            } else if (parsed && (parsed.dayOffset === -1 || parsed.dayOffset === 0 || parsed.dayOffset === 1)) {
+            } else if (parsed && (parsed.dayOffset === 0 || parsed.dayOffset === 1)) {
               isPanoramicLocked = true;
               lockedDayOffset = parsed.dayOffset;
               panoramicDayOffset = parsed.dayOffset;
