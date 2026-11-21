@@ -2169,10 +2169,10 @@
                       <strong class="text-white">💾 Saved Locally:</strong> All your recent searches, locked favourites, and custom titles are saved directly in this browser (<code class="text-sky-300 font-mono text-[9.5px]">localStorage</code>). They persist across visits and restarts without requiring an account.
                     </li>
                     <li>
-                      <strong class="text-sky-300">🌐 Shared to Public Map:</strong> General searches are shared to the 30-day central database. Custom titles are always stripped to the generic geographical town name, so private titles are never shared.
+                      <strong class="text-sky-300">🌐 Shared to Public Map:</strong> General searches are recorded on the 30-day shared database. Custom titles are always stripped to the generic geographical town name, so private titles are never shared.
                     </li>
                     <li>
-                      <strong class="text-amber-300">🔒 Locked Places Never Shared:</strong> Any location you lock stays 100% private on this device and is never uploaded to the shared database.
+                      <strong class="text-amber-300">🔒 What Locking Does:</strong> Locking marks a place as a permanent local favourite. Once locked, it stays saved on this device, is protected from <span class="text-rose-300">"Clear"</span>, and no subsequent visits or searches will be sent to the shared database.
                     </li>
                   </ul>
                 </div>
@@ -2198,10 +2198,10 @@
                   </p>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1 text-[9.5px]">
                     <div class="bg-black/30 border border-amber-400/30 rounded-lg p-1.5">
-                      <span class="font-semibold text-amber-300">🔒 Lock:</span> Pins it permanently so it never rolls off the list, won't be cleared by <span class="text-rose-300">"Clear"</span>, and is kept strictly private.
+                      <span class="font-semibold text-amber-300">🔒 Lock / Unlock:</span> Pins it permanently to this device so it never rolls off the list and won't be cleared by <span class="text-rose-300">"Clear"</span>.
                     </div>
                     <div class="bg-black/30 border border-rose-400/30 rounded-lg p-1.5">
-                      <span class="font-semibold text-rose-300">🗑️ Remove:</span> Deletes that individual location from your device history.
+                      <span class="font-semibold text-rose-300">🗑️ Remove:</span> Deletes that individual location from your device history and database cache.
                     </div>
                   </div>
                 </div>
@@ -3230,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 350;
-    const APP_VERSION = '1.10.186-dev';
+    const APP_BUILD = 351;
+    const APP_VERSION = '1.10.187-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10879,6 +10879,10 @@ function joinSpacedLetters(text) {
       const queries = loadUserRecentQueries().filter(q => !doesRecentQueryMatch(q, item, 0.002));
       saveUserRecentQueries(queries);
       renderLocationModalPicks();
+
+      if (typeof deleteLocationFromHistoryAndDatabase === 'function') {
+        deleteLocationFromHistoryAndDatabase(item).catch(() => {});
+      }
 
       showRecentStatusMessage(`Removed "${item.displayName}" from recent locations.`);
 
