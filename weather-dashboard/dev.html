@@ -2156,24 +2156,59 @@
               </button>
             </div>
           </div>
-          <div id="recentLocationsInfoBox" class="hidden my-1.5 p-2 rounded-xl bg-sky-950/40 border border-sky-400/30 text-[10px] text-sky-200 leading-relaxed shadow-lg">
-            <div class="flex items-start justify-between gap-1.5">
-              <div class="space-y-1">
-                <div class="font-bold text-white flex items-center gap-1">
-                  <span>🔒</span> 100% Private &amp; Local to Your Device
+          <div id="recentLocationsInfoBox" class="hidden my-1.5 p-2.5 rounded-xl bg-sky-950/50 border border-sky-400/35 text-[10px] text-sky-200 leading-relaxed shadow-xl backdrop-blur-sm">
+            <div class="flex items-start justify-between gap-2">
+              <div class="space-y-2 text-slate-200 w-full">
+                <!-- Section 1: Local Storage vs Shared Map -->
+                <div>
+                  <div class="font-bold text-white flex items-center gap-1.5 text-xs mb-1">
+                    <span>📍</span> Local Storage vs. Shared Map
+                  </div>
+                  <ul class="space-y-1 text-slate-300 pl-0.5">
+                    <li>
+                      <strong class="text-white">💾 Saved Locally:</strong> All your recent searches, locked favourites, and custom titles are saved directly in this browser (<code class="text-sky-300 font-mono text-[9.5px]">localStorage</code>). They persist across visits and restarts without requiring an account.
+                    </li>
+                    <li>
+                      <strong class="text-sky-300">🌐 Shared to Public Map:</strong> General searches are shared to the 30-day central database. Custom titles are always stripped to the generic geographical town name, so private titles are never shared.
+                    </li>
+                    <li>
+                      <strong class="text-amber-300">🔒 Locked Places Never Shared:</strong> Any location you lock stays 100% private on this device and is never uploaded to the shared database.
+                    </li>
+                  </ul>
                 </div>
-                <p class="text-slate-300">
-                  Your locations are stored only inside your browser/TV's local memory (<code class="text-sky-300 font-mono">localStorage</code>). No personal accounts or tracking servers are used.
-                </p>
-                <p class="text-slate-300">
-                  Locations persist automatically across visits, restarts, and months away. If you return to a saved spot and click <span class="text-sky-300 font-semibold">"Locate Me"</span>, your custom title and settings are recalled automatically!
-                </p>
-                <p class="text-amber-200/90 flex items-center gap-1">
-                  <span>📌</span> Hold any location (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> regular favourites so they never get pushed off the end and aren't wiped by <span class="font-semibold text-rose-300">"Clear"</span>.
-                </p>
-                <!-- Privacy Database Wipe (User's Own Data Only) -->
-                <div class="pt-2 mt-2 border-t border-sky-400/25">
-                  <div class="font-bold text-rose-300 flex items-center gap-1 mb-1">
+
+                <!-- Section 2: How to Lock or Remove Favourites -->
+                <div class="pt-2 border-t border-sky-400/20">
+                  <div class="font-bold text-amber-300 flex items-center gap-1.5 text-xs mb-1">
+                    <span>💡</span> How to Lock or Remove Favourites
+                  </div>
+                  <p class="text-slate-300 mb-1">
+                    To manage any location in your recent list:
+                  </p>
+                  <ul class="space-y-1 text-slate-300 pl-0.5">
+                    <li>
+                      <strong class="text-white">Touch / Mouse:</strong> Press and hold (long-press) or right-click any location button.
+                    </li>
+                    <li>
+                      <strong class="text-white">TV Remote / Keyboard:</strong> Highlight the location button and press <code class="text-amber-300 font-mono bg-black/40 px-1 py-0.5 rounded">Delete</code>, <code class="text-amber-300 font-mono bg-black/40 px-1 py-0.5 rounded">Backspace</code>, or hold <code class="text-amber-300 font-mono bg-black/40 px-1 py-0.5 rounded">Enter</code>.
+                    </li>
+                  </ul>
+                  <p class="text-slate-300 mt-1.5">
+                    An action bar will open below the chips with these choices:
+                  </p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1 text-[9.5px]">
+                    <div class="bg-black/30 border border-amber-400/30 rounded-lg p-1.5">
+                      <span class="font-semibold text-amber-300">🔒 Lock:</span> Pins it permanently so it never rolls off the list, won't be cleared by <span class="text-rose-300">"Clear"</span>, and is kept strictly private.
+                    </div>
+                    <div class="bg-black/30 border border-rose-400/30 rounded-lg p-1.5">
+                      <span class="font-semibold text-rose-300">🗑️ Remove:</span> Deletes that individual location from your device history.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 3: Privacy Database Wipe (User's Own Data Only) -->
+                <div class="pt-2 border-t border-sky-400/20">
+                  <div class="font-bold text-rose-300 flex items-center gap-1 mb-1 text-[11px]">
                     <span>🛡️</span> Privacy Database Wipe (Your Data Only)
                   </div>
                   <p class="text-slate-300 text-[9.5px]">
@@ -2187,7 +2222,7 @@
                   </div>
                 </div>
               </div>
-              <button type="button" onclick="toggleRecentLocationsInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
+              <button id="closeRecentInfoBtn" type="button" tabindex="0" onclick="toggleRecentLocationsInfo(false)" class="tv-focus-amber text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
             </div>
           </div>
           <div id="recentLocationChips" class="flex flex-wrap gap-1"></div>
@@ -3195,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 348;
-    const APP_VERSION = '1.10.184-dev';
+    const APP_BUILD = 349;
+    const APP_VERSION = '1.10.185-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
