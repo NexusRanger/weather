@@ -3230,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 351;
-    const APP_VERSION = '1.10.187-dev';
+    const APP_BUILD = 352;
+    const APP_VERSION = '1.10.188-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -7150,7 +7150,13 @@
       hideReloadBadge();
 
       // If document is currently in fullscreen or user prefers fullscreen, remember preference
-      if (document.fullscreenElement) {
+      const wasFullscreen = !!(
+        document.fullscreenElement ||
+        localStorage.getItem('ambient_pref_fullscreen') === 'true' ||
+        (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) ||
+        (Math.abs(window.innerHeight - screen.height) <= 8 && Math.abs(window.innerWidth - screen.width) <= 8)
+      );
+      if (wasFullscreen) {
         try {
           sessionStorage.setItem('ambient_restore_fullscreen', 'true');
           localStorage.setItem('ambient_pref_fullscreen', 'true');
@@ -7181,7 +7187,7 @@
             const data = await updateRes.json();
             if (data && typeof data.build === 'number' && data.build > APP_BUILD) {
               // Newer build exists: navigate to apply new software
-              if (document.fullscreenElement) {
+              if (wasFullscreen) {
                 try {
                   sessionStorage.setItem('ambient_restore_fullscreen', 'true');
                   localStorage.setItem('ambient_pref_fullscreen', 'true');
@@ -15376,7 +15382,10 @@ function joinSpacedLetters(text) {
         try { localStorage.setItem('ambient_pref_fullscreen', 'true'); } catch (_) {}
         document.documentElement.requestFullscreen().catch(() => {});
       } else {
-        try { localStorage.removeItem('ambient_pref_fullscreen'); } catch (_) {}
+        try {
+          localStorage.removeItem('ambient_pref_fullscreen');
+          sessionStorage.removeItem('ambient_restore_fullscreen');
+        } catch (_) {}
         if (document.exitFullscreen) document.exitFullscreen();
       }
     }
@@ -15391,9 +15400,12 @@ function joinSpacedLetters(text) {
       );
 
       if (inFullscreen) {
-        try { localStorage.setItem('ambient_pref_fullscreen', 'true'); } catch (_) {}
-      } else {
-        try { localStorage.removeItem('ambient_pref_fullscreen'); } catch (_) {}
+        try {
+          localStorage.setItem('ambient_pref_fullscreen', 'true');
+          sessionStorage.removeItem('ambient_restore_fullscreen');
+        } catch (_) {}
+        const b = document.getElementById('resumeFullscreenBanner');
+        if (b) b.remove();
       }
 
       if (fsBtn) {
@@ -15419,10 +15431,16 @@ function joinSpacedLetters(text) {
       if (!shouldRestore) return;
       if (document.fullscreenElement) return;
 
+      const removeBanner = () => {
+        const b = document.getElementById('resumeFullscreenBanner');
+        if (b) b.remove();
+      };
+
       const doFullscreen = () => {
         if (!document.fullscreenElement && document.documentElement && document.documentElement.requestFullscreen) {
           document.documentElement.requestFullscreen().then(() => {
             sessionStorage.removeItem('ambient_restore_fullscreen');
+            removeBanner();
           }).catch(() => {});
         }
       };
@@ -15430,9 +15448,34 @@ function joinSpacedLetters(text) {
       // 1. Try immediately (works on TV / delegated webview / PWA)
       doFullscreen();
 
-      // 2. Fallback to first user tap or key interaction
+      // 2. If not in fullscreen, show subtle floating resume banner (clicking anywhere or on banner restores fullscreen)
+      let banner = document.getElementById('resumeFullscreenBanner');
+      if (!banner && !document.fullscreenElement) {
+        banner = document.createElement('div');
+        banner.id = 'resumeFullscreenBanner';
+        banner.className = 'fixed top-3 left-1/2 -translate-x-1/2 z-[9999] px-3.5 py-1.5 rounded-xl bg-slate-900/95 border border-sky-400/60 shadow-[0_0_18px_rgba(56,189,248,0.5)] text-sky-200 text-xs font-semibold backdrop-blur-md cursor-pointer flex items-center gap-2 hover:bg-sky-500/25 transition select-none animate-bounce';
+        banner.innerHTML = '<span>⛶</span><span>Click anywhere to resume Fullscreen</span><button type="button" class="ml-1 text-slate-400 hover:text-white text-xs" title="Dismiss">✕</button>';
+        banner.onclick = (e) => {
+          e.stopPropagation();
+          doFullscreen();
+        };
+        const closeBtn = banner.querySelector('button');
+        if (closeBtn) {
+          closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            sessionStorage.removeItem('ambient_restore_fullscreen');
+            try { localStorage.removeItem('ambient_pref_fullscreen'); } catch (_) {}
+            removeBanner();
+          };
+        }
+        document.body.appendChild(banner);
+        setTimeout(removeBanner, 9000);
+      }
+
+      // 3. Fallback to first user tap or key interaction
       const onFirstGesture = () => {
         doFullscreen();
+        removeBanner();
         window.removeEventListener('click', onFirstGesture, true);
         window.removeEventListener('keydown', onFirstGesture, true);
         window.removeEventListener('touchstart', onFirstGesture, true);
