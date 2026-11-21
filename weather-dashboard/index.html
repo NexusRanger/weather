@@ -26,7 +26,7 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=312">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link rel="manifest" href="manifest.json?v=312">
+  <link rel="manifest" href="manifest.json?v=357">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=312">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=312">
@@ -362,7 +362,11 @@
     body:not(.focus-dormant) #headerLocationBtn:focus #headerPostcodeBadge,
     body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerPostcodeBadge,
     #headerLocationBtn.loc-btn-flash #headerPostcodeBadge,
-    body.focus-dormant #headerLocationBtn.loc-btn-flash #headerPostcodeBadge {
+    body.focus-dormant #headerLocationBtn.loc-btn-flash #headerPostcodeBadge,
+    body:not(.focus-dormant) #headerLocationBtn:focus #headerSearchPrefix,
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible #headerSearchPrefix,
+    #headerLocationBtn.loc-btn-flash #headerSearchPrefix,
+    body.focus-dormant #headerLocationBtn.loc-btn-flash #headerSearchPrefix {
       color: #fbbf24 !important;
     }
 
@@ -747,10 +751,77 @@
       scroll-snap-align: start;
     }
 
-    /* Location Map: Callout popup positioned to the left of the pin with seamlessly integrated arrow */
+    /* Experimental: Final 5-Second Auto-Close Flash & Floating Long-Press Lock Hint */
+    @keyframes closeBtnWarnFlash {
+      0%, 100% {
+        background-color: rgba(245, 158, 11, 0.28);
+        border-color: rgba(251, 191, 36, 0.92);
+        box-shadow: 0 0 14px rgba(251, 191, 36, 0.55);
+      }
+      50% {
+        background-color: rgba(244, 63, 94, 0.38);
+        border-color: rgba(251, 113, 133, 0.95);
+        box-shadow: 0 0 18px rgba(244, 63, 94, 0.65);
+      }
+    }
+    .close-btn-countdown-flash {
+      animation: closeBtnWarnFlash 0.85s ease-in-out infinite !important;
+    }
+    @keyframes closeHintPulse {
+      0%, 100% { opacity: 1; transform: translateY(0); }
+      50% { opacity: 0.72; transform: translateY(1.5px); }
+    }
+    #closeTimerLockHint {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 9px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(251, 191, 36, 0.7);
+      color: #fde68a;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65), 0 0 14px rgba(251, 191, 36, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    #closeTimerLockHint.hint-flashing {
+      display: inline-flex;
+      animation: closeHintPulse 0.85s ease-in-out infinite;
+    }
+    #closeTimerLockHint.hint-locked {
+      display: inline-flex;
+      border-color: rgba(52, 211, 153, 0.75);
+      color: #6ee7b7;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.65), 0 0 14px rgba(52, 211, 153, 0.3);
+    }
+    #closeTimerLockHint::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      right: 18px;
+      width: 8px;
+      height: 8px;
+      background: rgba(15, 23, 42, 0.96);
+      border-left: 1px solid inherit;
+      border-top: 1px solid inherit;
+      border-color: inherit;
+      transform: rotate(45deg);
+    }
+
+    /* Location Map: Dynamic adaptive callout popup with elastic SVG pointer arrow */
     .history-map-tall-popup {
       margin: 0 !important;
       pointer-events: none;
+      left: 0 !important;
+      top: 0 !important;
+      bottom: auto !important;
+      right: auto !important;
     }
     .history-map-tall-popup .leaflet-popup-tip-container {
       display: none !important;
@@ -763,39 +834,19 @@
       border-radius: 14px !important;
       padding: 0 !important;
       position: relative !important;
-      transform: translate(calc(-50% - 46px), 50%) !important;
+      transform: translate3d(var(--popup-x, 52px), var(--popup-y, -50%), 0) !important;
       pointer-events: auto;
       overflow: visible !important;
     }
-    /* Outer Triangle: Continuous border extending from the panel */
-    .history-map-tall-popup .leaflet-popup-content-wrapper::before {
-      content: '';
+    .history-map-tall-popup svg.popup-elastic-arrow {
       position: absolute;
-      right: -44px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-top: 10px solid transparent;
-      border-bottom: 10px solid transparent;
-      border-left: 44px solid rgba(56, 189, 248, 0.6);
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      overflow: visible;
       pointer-events: none;
-      z-index: 10;
-    }
-    /* Inner Triangle: Exact same color as panel interior, extending into panel by 1px to seamlessly erase the card border */
-    .history-map-tall-popup .leaflet-popup-content-wrapper::after {
-      content: '';
-      position: absolute;
-      right: -41.5px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 0;
-      height: 0;
-      border-top: 8.5px solid transparent;
-      border-bottom: 8.5px solid transparent;
-      border-left: 42.5px solid #0f172a;
-      pointer-events: none;
-      z-index: 11;
+      z-index: 15;
     }
     .history-map-tall-popup .leaflet-popup-content {
       margin: 10px 14px 12px 14px !important;
@@ -1288,28 +1339,106 @@
               </svg>
             </span>
           </div>
+          <div id="duntisbourneIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="Duntisbourne Abbots (Cotswolds Land Rover)">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)] p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()">
+              <svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background Cotswold Rolling Hills & Trees -->
+                <path d="M0 20 C10 16, 24 18, 48 16 L48 36 L0 36 Z" fill="#14532d" opacity="0.5"/>
+                <circle cx="4" cy="15" r="4.5" fill="#15803d" opacity="0.65"/>
+                <circle cx="44" cy="14" r="4" fill="#166534" opacity="0.6"/>
+
+                <!-- Cotswold Country Lane / Ford Track -->
+                <rect x="0" y="29" width="48" height="7" fill="#1e293b"/>
+                <line x1="0" y1="29" x2="48" y2="29" stroke="#64748b" stroke-width="0.6" stroke-dasharray="2 2"/>
+
+                <!-- Land Rover Undercarriage Shadow -->
+                <ellipse cx="24" cy="33.5" rx="19" ry="2" fill="#020617" opacity="0.6"/>
+
+                <!-- Classic Rear Mounted Spare Wheel -->
+                <rect x="2.5" y="16.5" width="4" height="8.5" rx="1.8" fill="#0f172a" stroke="#1e293b" stroke-width="0.5"/>
+                <line x1="4.5" y1="18" x2="4.5" y2="23.5" stroke="#94a3b8" stroke-width="0.8"/>
+
+                <!-- Land Rover Main Body (Classic British Keswick Heritage Green) -->
+                <path d="M6 19 L26.5 19 L28 19 L42.5 20.5 L43 25 L41.5 27.5 L6 27.5 Z" fill="#166534" stroke="#14532d" stroke-width="0.5"/>
+
+                <!-- Front Wing & Flat Bonnet -->
+                <path d="M27.5 19 L42.5 20.5 L42.5 24.5 L27.5 24.5 Z" fill="#15803d"/>
+                <line x1="28" y1="22" x2="42" y2="22" stroke="#14532d" stroke-width="0.5"/>
+
+                <!-- Galvanized Waistline Capping & Door Seams -->
+                <line x1="6" y1="22" x2="42" y2="22" stroke="#94a3b8" stroke-width="0.6" opacity="0.85"/>
+                <line x1="18" y1="19" x2="18" y2="27.5" stroke="#0f172a" stroke-width="0.6" opacity="0.6"/>
+                <line x1="27.5" y1="19" x2="27.5" y2="27.5" stroke="#0f172a" stroke-width="0.6" opacity="0.6"/>
+
+                <!-- Cabin Upper Structure -->
+                <path d="M6.5 12 L25 12 L27.5 19 L6.5 19 Z" fill="#166534"/>
+
+                <!-- Iconic Alpine Roof Windows -->
+                <ellipse cx="14" cy="11.8" rx="2.2" ry="0.7" fill="#38bdf8" opacity="0.9"/>
+                <ellipse cx="20" cy="11.8" rx="2.2" ry="0.7" fill="#38bdf8" opacity="0.9"/>
+
+                <!-- Classic Limestone / Ivory White Hardtop Roof -->
+                <rect x="5.8" y="10.2" width="21.8" height="2" rx="0.6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.4"/>
+                <path d="M27 10.8 L28.2 13.5 L27.5 19" stroke="#cbd5e1" stroke-width="0.5" fill="none"/>
+
+                <!-- Tinted Cabin Windows -->
+                <rect x="8" y="13" width="8.5" height="5" rx="0.4" fill="#38bdf8" opacity="0.85"/>
+                <polygon points="18.5,13 24,13 26.5,18 18.5,18" fill="#38bdf8" opacity="0.85"/>
+                <line x1="12.2" y1="13" x2="12.2" y2="18" stroke="#14532d" stroke-width="0.5"/>
+
+                <!-- Classic Round Front Headlight & Sidelight -->
+                <circle cx="42.5" cy="22" r="1.4" fill="#fef08a" stroke="#ca8a04" stroke-width="0.4"/>
+                <circle cx="42.5" cy="22" r="0.6" fill="#ffffff"/>
+                <circle cx="42.3" cy="24" r="0.7" fill="#f97316"/>
+
+                <!-- Heavy Duty Front Bumper -->
+                <rect x="42" y="25.5" width="3.5" height="2.2" rx="0.4" fill="#64748b" stroke="#334155" stroke-width="0.4"/>
+
+                <!-- Black Wheel Arch Eyebrows -->
+                <path d="M7 27.5 C7 23.5, 16 23.5, 16 27.5" stroke="#0f172a" stroke-width="1.4" fill="none"/>
+                <path d="M30 27.5 C30 23.5, 39 23.5, 39 27.5" stroke="#0f172a" stroke-width="1.4" fill="none"/>
+
+                <!-- Chunky Off-Road Wheels & Heavy Duty Tyres -->
+                <!-- Rear Wheel -->
+                <circle cx="11.5" cy="28.5" r="5.2" fill="#090d16" stroke="#1e293b" stroke-width="0.6"/>
+                <circle cx="11.5" cy="28.5" r="3.3" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.5"/>
+                <circle cx="11.5" cy="28.5" r="1.4" fill="#090d16"/>
+                <!-- Front Wheel -->
+                <circle cx="34.5" cy="28.5" r="5.2" fill="#090d16" stroke="#1e293b" stroke-width="0.6"/>
+                <circle cx="34.5" cy="28.5" r="3.3" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.5"/>
+                <circle cx="34.5" cy="28.5" r="1.4" fill="#090d16"/>
+
+                <!-- Water Splash at Tyres (Crossing the Duntisbourne Ford) -->
+                <path d="M9 33.5 Q11.5 32 14 33.5" stroke="#7dd3fc" stroke-width="0.8" fill="none"/>
+                <path d="M32 33.5 Q34.5 32 37 33.5" stroke="#7dd3fc" stroke-width="0.8" fill="none"/>
+              </svg>
+            </span>
+          </div>
           <div id="headerLandmarkIcon" class="hidden items-center justify-center flex-shrink-0 select-none" title="World Landmark">
             <span id="headerLandmarkBadge" class="inline-flex items-center justify-center w-7 h-7 rounded-lg p-0.5 transform hover:scale-110 transition cursor-pointer" onclick="openLocationModal()"></span>
           </div>
           <button id="headerLocationTitle" type="button" tabindex="-1" onclick="openLocationModal()" title="Change location (Press OK)" class="text-sm sm:text-base lg:text-lg font-extrabold tracking-tight text-white flex items-center cursor-pointer hover:text-sky-300 transition whitespace-nowrap overflow-hidden flex-shrink px-1.5 py-0.5 rounded-lg border border-transparent bg-transparent" style="max-width: min(320px, 30vw); outline: none !important; outline-offset: 0 !important;">
             <span id="headerLocationText" class="inline-block whitespace-nowrap">Dunkirk Mills</span>
           </button>
-          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Change location (Press OK)" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
-            <span id="headerPostcodeBadge">GL5 5HH</span>
-            <span class="text-[8px] text-indigo-400">✏️</span>
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Search or change location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+            <span class="text-[16px] sm:text-[17px] leading-none inline-flex items-center flex-shrink-0 select-none">🔍</span>
+            <span id="headerSearchPrefix" class="hidden"></span>
+            <span id="headerPostcodeBadge" class="font-mono text-white font-bold tracking-wide">GL5 5HH</span>
           </button>
-          <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Use Current GPS Location" class="tv-focus-amber text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 transition flex items-center gap-1 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
-            <span id="gpsButtonIcon">📍</span>
-            <span id="gpsButtonText" class="hidden sm:inline">Locate Me</span>
+          <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Find my current GPS location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-500/25 via-sky-500/20 to-emerald-500/15 text-emerald-200 hover:text-white border border-emerald-400/40 hover:border-emerald-300/70 shadow-[0_0_12px_rgba(52,211,153,0.2)] hover:shadow-[0_0_16px_rgba(52,211,153,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+            <span id="gpsButtonIcon" class="text-xs">📍</span>
+            <span id="gpsButtonText">Find Me</span>
           </button>
-          <span id="headerCoords" class="text-[10px] text-slate-400 font-mono hidden md:inline flex-shrink-0 whitespace-nowrap">51.70°N, 2.23°W</span>
-          <button id="headerGlobeBtn" tabindex="0" onclick="openHistoryMapModal()" title="View Location Map (Last 30 Days)" class="tv-focus-amber p-1 rounded-full bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 hover:border-sky-400/60 shadow-[0_0_10px_rgba(56,189,248,0.25)] transition transform hover:scale-110 active:scale-95 flex items-center justify-center group flex-shrink-0 focus:outline-none cursor-pointer" aria-label="Location History Map">
-            <svg class="w-4 h-4 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
-              <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
-              <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
-              <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
-            </svg>
+          <button id="headerGlobeBtn" tabindex="0" onclick="openHistoryMapModal()" title="View Location Map (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-blue-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer group" aria-label="Location Map">
+            <div class="w-3.5 h-3.5 rounded-full overflow-hidden flex-shrink-0">
+              <svg class="w-full h-full transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#0284c7" stroke="#38bdf8" stroke-width="1.2"/>
+                <path d="M12 2a10 10 0 0 0-4 1.5c.3.8 1.1 1.5 2 1.5 1.5 0 2 1 2 2 0 .8-.5 1.5-1 2-1 1-2.5.5-3 2-.3.9.2 1.8.8 2.3A10 10 0 0 0 12 22a10 10 0 0 0 7.8-3.8c-.8-.5-1.8-.7-2.3-1.5-.5-.8-.2-1.7-.8-2.5-.5-.7-1.5-.9-2.2-1.5-.8-.7-.9-1.8-1.5-2.7-.5-.7-1.5-1-2-1.8-.4-.7-.2-1.6-.5-2.4C10.2 5 11 4 12 2z" fill="#22c55e" opacity="0.95"/>
+                <ellipse cx="12" cy="12" rx="9.8" ry="4" stroke="rgba(255,255,255,0.3)" stroke-width="0.8" fill="none"/>
+                <line x1="12" y1="2" x2="12" y2="22" stroke="rgba(255,255,255,0.3)" stroke-width="0.8"/>
+              </svg>
+            </div>
+            <span>Map</span>
           </button>
         </div>
       </div>
@@ -1360,7 +1489,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.162) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.193) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1969,6 +2098,9 @@
               <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)">
               <button id="locationClearBtn" type="button" tabindex="0" onclick="clearLocationInput()" onkeydown="handleLocationClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear search text">✕</button>
             </div>
+            <button id="voiceSearchBtn" type="button" tabindex="0" onclick="toggleVoiceSearch()" onkeydown="handleVoiceSearchKeydown(event)" class="tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-300/50 shadow-[0_0_12px_rgba(168,85,247,0.4)] text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" title="Voice Search (speak town or postcode)">
+              <span id="voiceSearchIcon" class="text-base sm:text-lg select-none leading-none">🎤</span>
+            </button>
             <button id="searchLocBtn" tabindex="0" onclick="searchLocationFromModal()" class="tv-focus-amber h-[38px] px-4 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 focus:outline-none cursor-pointer flex-shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.35)] border border-sky-300/40" onkeydown="handleSearchBtnKeydown(event)">
               <span>Search</span>
             </button>
@@ -2024,23 +2156,73 @@
               </button>
             </div>
           </div>
-          <div id="recentLocationsInfoBox" class="hidden my-1.5 p-2 rounded-xl bg-sky-950/40 border border-sky-400/30 text-[10px] text-sky-200 leading-relaxed shadow-lg">
-            <div class="flex items-start justify-between gap-1.5">
-              <div class="space-y-1">
-                <div class="font-bold text-white flex items-center gap-1">
-                  <span>🔒</span> 100% Private &amp; Local to Your Device
+          <div id="recentLocationsInfoBox" class="hidden my-1.5 p-2.5 rounded-xl bg-sky-950/50 border border-sky-400/35 text-[10px] text-sky-200 leading-relaxed shadow-xl backdrop-blur-sm">
+            <div class="flex items-start justify-between gap-2">
+              <div class="space-y-2 text-slate-200 w-full">
+                <!-- Section 1: Local Storage vs Shared Map -->
+                <div>
+                  <div class="font-bold text-white flex items-center gap-1.5 text-xs mb-1">
+                    <span>📍</span> Local Storage vs. Shared Map
+                  </div>
+                  <ul class="space-y-1 text-slate-300 pl-0.5">
+                    <li>
+                      <strong class="text-white">💾 Saved Locally:</strong> All your recent searches, locked favourites, and custom titles are saved directly in this browser (<code class="text-sky-300 font-mono text-[9.5px]">localStorage</code>). They persist across visits and restarts without requiring an account.
+                    </li>
+                    <li>
+                      <strong class="text-sky-300">🌐 Shared to Public Map:</strong> General searches are recorded on the 30-day shared database. Custom titles are always stripped to the generic geographical town name, so private titles are never shared.
+                    </li>
+                    <li>
+                      <strong class="text-amber-300">🔒 What Locking Does:</strong> Locking marks a place as a permanent local favourite. Once locked, it stays saved on this device, is protected from <span class="text-rose-300">"Clear"</span>, and no subsequent visits or searches will be sent to the shared database.
+                    </li>
+                  </ul>
                 </div>
-                <p class="text-slate-300">
-                  Your locations are stored only inside your browser/TV's local memory (<code class="text-sky-300 font-mono">localStorage</code>). No personal accounts or tracking servers are used.
-                </p>
-                <p class="text-slate-300">
-                  Locations persist automatically across visits, restarts, and months away. If you return to a saved spot and click <span class="text-sky-300 font-semibold">"Locate Me"</span>, your custom title and settings are recalled automatically!
-                </p>
-                <p class="text-amber-200/90 flex items-center gap-1">
-                  <span>📌</span> Hold any location (or press <code class="text-amber-300 font-mono">Delete</code>) to <strong class="text-amber-300">🔒 Lock</strong> regular favourites so they never get pushed off the end and aren't wiped by <span class="font-semibold text-rose-300">"Clear"</span>.
-                </p>
+
+                <!-- Section 2: How to Lock or Delete Favourites -->
+                <div class="pt-2 border-t border-sky-400/20">
+                  <div class="font-bold text-amber-300 flex items-center gap-1.5 text-xs mb-1">
+                    <span>💡</span> How to Lock or Delete Favourites
+                  </div>
+                  <p class="text-slate-300 mb-1">
+                    To manage any location in your recent list:
+                  </p>
+                  <ul class="space-y-1 text-slate-300 pl-0.5">
+                    <li>
+                      <strong class="text-white">Touch / Mouse:</strong> Press and hold (long-press) or right-click any location button.
+                    </li>
+                    <li>
+                      <strong class="text-white">TV Remote / Keyboard:</strong> Highlight the location button and press <code class="text-amber-300 font-mono bg-black/40 px-1 py-0.5 rounded">Delete</code>, <code class="text-amber-300 font-mono bg-black/40 px-1 py-0.5 rounded">Backspace</code>, or hold <code class="text-amber-300 font-mono bg-black/40 px-1 py-0.5 rounded">Enter</code>.
+                    </li>
+                  </ul>
+                  <p class="text-slate-300 mt-1.5">
+                    An action bar will open below the chips with these choices:
+                  </p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-1 text-[9.5px]">
+                    <div class="bg-black/30 border border-amber-400/30 rounded-lg p-1.5">
+                      <span class="font-semibold text-amber-300">🔒 Lock / Unlock:</span> Pins it permanently to this device so it never rolls off the list and won't be cleared by <span class="text-rose-300">"Clear"</span>.
+                    </div>
+                    <div class="bg-black/30 border border-rose-400/30 rounded-lg p-1.5">
+                      <span class="font-semibold text-rose-300">🗑️ Delete:</span> Removes that individual location from your device history and database cache.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 3: Privacy Database Wipe (User's Own Data Only) -->
+                <div class="pt-2 border-t border-sky-400/20">
+                  <div class="font-bold text-rose-300 flex items-center gap-1 mb-1 text-[11px]">
+                    <span>🛡️</span> Privacy Database Wipe (Your Data Only)
+                  </div>
+                  <p class="text-slate-300 text-[9.5px]">
+                    To permanently erase all your saved places from this device AND remove them from the public shared map database, tap below. This only purges your own queries and will never affect other users' public data.
+                  </p>
+                  <div class="mt-2 flex items-center gap-2 flex-wrap">
+                    <button id="purgeMyDataBtn" type="button" tabindex="0" onclick="handlePurgeAllMyDataClick()" class="tv-focus-amber text-[9.5px] font-bold text-rose-200 hover:text-white bg-rose-500/25 hover:bg-rose-500/40 border border-rose-400/50 rounded-lg px-2.5 py-1 transition flex items-center gap-1.5 focus:outline-none cursor-pointer">
+                      <span>🗑️</span> Purge My Saved Places &amp; Public History
+                    </button>
+                    <span id="purgeDataStatus" class="text-[9.5px] text-emerald-300 hidden font-semibold"></span>
+                  </div>
+                </div>
               </div>
-              <button type="button" onclick="toggleRecentLocationsInfo(false)" class="text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
+              <button id="closeRecentInfoBtn" type="button" tabindex="0" onclick="toggleRecentLocationsInfo(false)" class="tv-focus-amber text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer flex-shrink-0" title="Close info">✕</button>
             </div>
           </div>
           <div id="recentLocationChips" class="flex flex-wrap gap-1"></div>
@@ -2191,8 +2373,8 @@
               </svg>
             </div>
             <h3 id="mapModalTitleText" class="text-sm md:text-base font-bold text-white leading-none whitespace-nowrap">30-Day Location Map</h3>
-            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-mono font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
-              <span>🗺️</span><span id="mapQueryCountText">0 locations</span>
+            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
+              <span>🗺️</span><span id="mapQueryCountText">View <span class="text-amber-300 font-mono font-bold">0</span> Locations</span>
             </button>
           </div>
           <div class="flex items-center gap-1.5 flex-wrap">
@@ -2218,7 +2400,7 @@
             </button>
           </div>
         </div>
-        <p class="text-[10px] text-slate-400 mt-1.5 leading-tight">Sorted by distance from current location • Tap location count to fit all pins • TV: Use bottom bar</p>
+        <p class="text-[10px] text-slate-400 mt-1.5 leading-tight">Sorted by distance • Tap 'View Locations' to fit all pins • TV remote: use D-pad to scroll the bottom carousel</p>
       </div>
 
       <!-- Leaflet Map Container -->
@@ -2236,11 +2418,7 @@
           <div class="space-y-1.5 text-[11px]">
             <p>
               <span class="font-semibold text-sky-300">🌐 All (Shared 30-Day Map):</span>
-              Recent location searches are stored <strong class="text-white">anonymously</strong> on the central database. Personal or custom names are always stripped to the generic local town name so nobody's private titles are shared.
-            </p>
-            <p>
-              <span class="font-semibold text-emerald-300">📍 Recent</span> &amp; <span class="font-semibold text-amber-300">🔒 Locked:</span>
-              Stored <strong class="text-white">only in your browser cache</strong> (<code class="text-sky-300 font-mono text-[10px]">localStorage</code>) on this device—never uploaded to the central database. Your custom location names appear here privately for your eyes only.
+              Recent location searches are stored on the central database. Custom names are always stripped to the generic geographical name, so private titles are not shared.
             </p>
             <p class="text-[10px] text-slate-300/90 pt-1.5 border-t border-white/10 leading-relaxed">
               💡 <strong class="text-amber-300">How to 🔒 Lock a favourite:</strong> Open the Location menu, press and hold any Recent Location (or right-click it), then choose <strong class="text-white">Lock</strong>. Locked places stay saved on this device and appear in the <strong class="text-amber-300">Locked</strong> map view.
@@ -3052,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 326;
-    const APP_VERSION = '1.10.162';
+    const APP_BUILD = 357;
+    const APP_VERSION = '1.10.193';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3063,6 +3241,69 @@
     let lastDownClickTarget = null;
     let lastDownClickTime = 0;
     const modalTimerLocks = {};
+    let closeTimerLockHintModalId = null;
+    let closeTimerLockStatusTimer = null;
+
+    function getOrCreateCloseTimerLockHint() {
+      let el = document.getElementById('closeTimerLockHint');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'closeTimerLockHint';
+        el.setAttribute('role', 'status');
+        el.setAttribute('aria-live', 'polite');
+        document.body.appendChild(el);
+      }
+      return el;
+    }
+
+    function positionCloseTimerLockHint(anchorBtn) {
+      const hint = getOrCreateCloseTimerLockHint();
+      if (!anchorBtn) return hint;
+      const rect = anchorBtn.getBoundingClientRect();
+      if (!rect || (rect.width === 0 && rect.height === 0)) return hint;
+      const vpW = window.innerWidth || 1024;
+      const rightOffset = Math.max(8, Math.round(vpW - rect.right));
+      hint.style.top = `${Math.round(rect.bottom + 7)}px`;
+      hint.style.right = `${rightOffset}px`;
+      hint.style.left = 'auto';
+      return hint;
+    }
+
+    function hideCloseTimerLockHint(onlyForModalId = null) {
+      if (onlyForModalId && closeTimerLockHintModalId && closeTimerLockHintModalId !== onlyForModalId) return;
+      const el = document.getElementById('closeTimerLockHint');
+      if (el) {
+        el.classList.remove('hint-flashing', 'hint-locked');
+        el.style.display = 'none';
+      }
+      closeTimerLockHintModalId = null;
+    }
+
+    function syncCloseBtnLockWarning(modalId, secsLeft, isLocked, btnIds) {
+      const modal = document.getElementById(modalId);
+      const isVisible = !!(modal && !modal.classList.contains('hidden'));
+      const shouldWarn = isVisible && !isLocked && typeof secsLeft === 'number' && secsLeft > 0 && secsLeft <= 8;
+      const ids = Array.isArray(btnIds) ? btnIds : [btnIds];
+      let primaryBtn = null;
+
+      ids.forEach((id, idx) => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        if (idx === 0) primaryBtn = b;
+        b.classList.toggle('close-btn-countdown-flash', shouldWarn);
+      });
+
+      if (shouldWarn && primaryBtn) {
+        const hint = positionCloseTimerLockHint(primaryBtn);
+        hint.textContent = '🔒 Long-press Close to lock open';
+        hint.classList.remove('hint-locked');
+        hint.classList.add('hint-flashing');
+        hint.style.display = 'inline-flex';
+        closeTimerLockHintModalId = modalId;
+      } else {
+        hideCloseTimerLockHint(modalId);
+      }
+    }
 
     function isModalTimerLocked(modalId) {
       return !!modalTimerLocks[modalId];
@@ -3169,10 +3410,19 @@
       }
 
       // Visual feedback: amber pulse on active close button
-      const activeClose = document.activeElement;
-      if (activeClose) {
-        activeClose.classList.add('ring-2', 'ring-amber-400', 'scale-105');
-        setTimeout(() => activeClose.classList.remove('ring-2', 'ring-amber-400', 'scale-105'), 350);
+      const modalCloseMap = {
+        historyMapModal: 'closeMapBtnTop',
+        locationModal: 'closeLocationBtnTop',
+        wondersModal: 'closeWondersBtnTop',
+        shareModal: 'closeShareBtnTop',
+        radarModal: 'closeRadarBtnTop',
+        trafficModal: 'closeTrafficBtnTop',
+        riverModal: 'closeRiverBtnTop'
+      };
+      const anchorCloseBtn = document.getElementById(modalCloseMap[id]) || document.activeElement;
+      if (anchorCloseBtn) {
+        anchorCloseBtn.classList.add('ring-2', 'ring-amber-400', 'scale-105');
+        setTimeout(() => anchorCloseBtn.classList.remove('ring-2', 'ring-amber-400', 'scale-105'), 350);
       }
     }
 
@@ -4083,13 +4333,24 @@
     const USER_RECENTS_STORAGE_KEY = 'ambient_user_recent_locations';
     const PUBLIC_MAP_CACHE_KEY = 'ambient_public_map_cache';
 
-    // Startup storage sanitization & migration: purge unwanted test queries (Sturgeon County, Iran, IN, and previous Eiffel Tower test entries)
+    // Startup storage sanitization & migration: purge unwanted test queries (Workshop, Sturgeon County, Iran, IN, and previous Eiffel Tower test entries)
     const EIFFEL_PURGE_CUTOFF = 1794999600000;
     try {
       const rawLoc = localStorage.getItem('ambient_weather_loc');
-      if (rawLoc && /eiffel/i.test(rawLoc)) {
-        localStorage.removeItem('ambient_weather_loc');
-        sessionStorage.removeItem('ambient_weather_loc');
+      if (rawLoc) {
+        if (/eiffel/i.test(rawLoc)) {
+          localStorage.removeItem('ambient_weather_loc');
+          sessionStorage.removeItem('ambient_weather_loc');
+        } else if (/workshop/i.test(rawLoc)) {
+          try {
+            const parsed = JSON.parse(rawLoc);
+            if (parsed && parsed.name && /workshop/i.test(parsed.name)) {
+              parsed.name = parsed.geoName || 'Location';
+              parsed.isCustomTitle = false;
+              localStorage.setItem('ambient_weather_loc', JSON.stringify(parsed));
+            }
+          } catch (_) {}
+        }
       }
     } catch (_) {}
     try {
@@ -4099,7 +4360,7 @@
           localStorage.setItem(USER_RECENTS_STORAGE_KEY, legacy);
         }
       }
-      [USER_RECENTS_STORAGE_KEY, PUBLIC_MAP_CACHE_KEY, 'ambient_location_queries'].forEach(k => {
+      [USER_RECENTS_STORAGE_KEY, PUBLIC_MAP_CACHE_KEY, 'ambient_location_queries', 'weather_public_map_cache', 'weather_dashboard_user_recents'].forEach(k => {
         try {
           const raw = localStorage.getItem(k);
           if (raw) {
@@ -4109,6 +4370,7 @@
                 if (!q || !q.name) return false;
                 const n = q.name.trim().toLowerCase();
                 const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
+                if (n.includes('workshop')) return false;
                 if (n.includes('eiffel') && ts <= EIFFEL_PURGE_CUTOFF) return false;
                 if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
                 if (typeof q.lat === 'number' && typeof q.lon === 'number') {
@@ -4144,19 +4406,16 @@
       if (!name) return true;
       const s = String(name).trim().toLowerCase();
       // Explicitly allow landmarks & heritage sites
-      if (/dunkirk|amberley|stroud hotel|the stroud|egypt mill|olive tree|starbase|boca chica|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false;
+      if (/dunkirk|amberley|stroud hotel|the stroud|egypt mill|olive tree|duntisbourne|starbase|boca chica|white house|opera house|london eye|taj mahal|eiffel|colosseum|pyramid|golden gate|stonehenge|burj khalifa/i.test(s)) return false;
       if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
         if (POPULAR_LANDMARKS_DATABASE.some(lm => (lm.name && s.includes(lm.name.toLowerCase())) || (Array.isArray(lm.aliases) && lm.aliases.some(a => s.includes(a.toLowerCase()))))) return false;
       }
       if (s === 'location' || s === 'local area' || s === 'unknown' || s === 'current location' || s === 'gps' || s === 'geo') return true;
-      if (/['’]s\b/i.test(s)) return true; // e.g. Phil's, Mum's, John's
-      if (/^(my|our)\s+/i.test(s)) return true; // e.g. My House, Our Cottage
-      const personalWords = [
-        'home', 'flat', 'apartment', 'desk', 'shed', 'garage', 'yard',
-        'retreat', 'hideaway', 'base', 'mum', 'mums', 'mom', 'moms', 'dad', 'dads', 'nan',
-        'nana', 'nanna', 'nanny', 'grandma', 'grandpa', 'gran', 'granny', 'dentiste', 'jeth'
-      ];
-      return personalWords.some(w => new RegExp('\\b' + w + '\\b', 'i').test(s));
+      // Personal possessive or personal prefix
+      if (/['’]s\b|^(my|our)\s+/i.test(s)) return true;
+      // Common personal/private property words that are never public towns or cities
+      if (/\b(workshop|workshops|shed|sheds|garage|garages|desk|office|offices|flat|flats|apartment|apartments|home|house|houses|cabin|cabins|cottage|cottages|barn|barns|unit|units|lockup|lock-up|boat|allotment|hideaway|retreat)\b/i.test(s)) return true;
+      return false;
     }
     const isCustomOrPersonalLocationName = isPersonalLocationName;
 
@@ -4199,56 +4458,56 @@
     function getDepersonalizedLocationName(loc) {
       if (!loc) return '';
       const raw = typeof loc === 'string' ? loc : (loc.name || loc.geoName || '');
-      if (!loc.isCustomTitle) {
-        if (/dunkirk/i.test(raw)) return 'Dunkirk Mills';
-        if (loc.geoName && /dunkirk/i.test(loc.geoName)) return 'Dunkirk Mills';
-        if (loc.name && /amberley/i.test(loc.name)) return 'Amberley Church';
-        if (loc.geoName && /amberley/i.test(loc.geoName)) return 'Amberley Church';
-        if (loc.name && /stroud hotel|the stroud/i.test(loc.name)) return 'The Stroud Hotel';
-        if (loc.geoName && /stroud hotel|the stroud/i.test(loc.geoName)) return 'The Stroud Hotel';
-        if (loc.name && /egypt mill/i.test(loc.name)) return 'Egypt Mill';
-        if (loc.geoName && /egypt mill/i.test(loc.geoName)) return 'Egypt Mill';
-        if (loc.name && /olive tree/i.test(loc.name)) return 'The Olive Tree';
-        if (loc.geoName && /olive tree/i.test(loc.geoName)) return 'The Olive Tree';
-      }
-
       const lat = typeof loc.lat === 'number' ? loc.lat : parseFloat(loc.lat);
       const lon = typeof loc.lon === 'number' ? loc.lon : parseFloat(loc.lon);
+      const geo = (typeof loc === 'object' && loc.geoName ? loc.geoName : '').trim();
+      const isCustom = Boolean(typeof loc === 'object' && loc.isCustomTitle) ||
+                       Boolean(geo && raw.trim().toLowerCase() !== geo.toLowerCase()) ||
+                       isPersonalLocationName(raw);
 
-      // 0. Landmark Preservation: Public world wonders & heritage sites preserve their iconic identity
-      // (Skipped if this is a low-confidence Wi-Fi/cell fix so we never falsely label a coarse town fix as a venue)
-      if (!loc.lowConfidenceGps && !loc.isCustomTitle && typeof matchActiveLandmark === 'function') {
-        const lm = matchActiveLandmark({ name: raw, lat, lon, postcode: loc.postcode, lowConfidenceGps: Boolean(loc.lowConfidenceGps) });
-        if (lm) {
+      // 1. Verified Public Landmark / Hotel / Heritage Site (Publicly Known Places)
+      if (typeof matchActiveLandmark === 'function') {
+        const lm = matchActiveLandmark({
+          name: isCustom && geo ? geo : raw,
+          lat,
+          lon,
+          postcode: typeof loc === 'object' ? loc.postcode : '',
+          lowConfidenceGps: Boolean(typeof loc === 'object' && loc.lowConfidenceGps)
+        });
+        if (lm && lm.name) {
           return lm.name;
         }
       }
 
-      // 1. Demarcation Principle: If the title is NOT a custom/personal title edited by the user, keep the official searched name!
-      const isCustom = Boolean(loc.isCustomTitle) || isPersonalLocationName(raw);
+      // Check explicit landmark shortcuts
+      if (/dunkirk/i.test(raw) || /dunkirk/i.test(geo)) return 'Dunkirk Mills';
+      if (/amberley/i.test(raw) || /amberley/i.test(geo)) return 'Amberley Church';
+      if (/stroud hotel|the stroud/i.test(raw) || /stroud hotel|the stroud/i.test(geo)) return 'The Stroud Hotel';
+      if (/egypt mill/i.test(raw) || /egypt mill/i.test(geo)) return 'Egypt Mill';
+      if (/olive tree/i.test(raw) || /olive tree/i.test(geo)) return 'The Olive Tree';
+
+      // 2. In the Middle of a Known Town (Coordinates Match a Known Settlement)
+      const knownTown = getKnownGenericTown(lat, lon);
+      if (knownTown) return knownTown;
+
+      // 3. Official Geocoded Town (geoName from Geocoder)
+      if (geo && !isPersonalLocationName(geo) && geo.toLowerCase() !== 'united kingdom' && geo.toLowerCase() !== 'uk') {
+        const cleanGeo = shortenPlaceName(geo);
+        if (cleanGeo && !isPersonalLocationName(cleanGeo)) {
+          return cleanGeo;
+        }
+      }
+
+      // 4. Non-custom searched location: If it wasn't a custom name and matches an official town name
       if (!isCustom) {
         const cleanName = shortenPlaceName(raw);
-        if (cleanName && cleanName.toLowerCase() !== 'united kingdom' && cleanName.toLowerCase() !== 'uk') {
+        if (cleanName && cleanName.toLowerCase() !== 'united kingdom' && cleanName.toLowerCase() !== 'uk' && !isPersonalLocationName(cleanName)) {
           return cleanName;
         }
       }
 
-      // 2. If it IS a custom/personal title (e.g. user renamed in the title box like "Jeth"):
-      // ALWAYS default to the real generic local town name, NEVER let the custom title leak onto the public world map!
-      const geo = (loc.geoName || '').trim();
-      const rawLower = String(raw || '').trim().toLowerCase();
-      if (geo && geo.toLowerCase() !== rawLower && !isPersonalLocationName(geo) && geo.toLowerCase() !== 'united kingdom' && geo.toLowerCase() !== 'uk') {
-        return shortenPlaceName(geo);
-      }
-
-      // (b) Coordinate match to known generic town takes priority for custom titles
-      const knownTown = getKnownGenericTown(lat, lon);
-      if (knownTown) return knownTown;
-
-      // (c) Safe generic fallback to outward postcode district
-      const outward = getOutwardPostcode(loc.postcode);
-      if (outward) return `${outward} Area`;
-
+      // 5. User Rule: If a custom/personal location cannot be attached to a generic local town or a verified public place,
+      // DO NOT SHOW IT AT ALL on the wide map!
       return '';
     }
 
@@ -4261,6 +4520,7 @@
           if (!q || !q.name) return false;
           const n = q.name.trim().toLowerCase();
           const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
+          if (n.includes('workshop')) return false;
           if (n.includes('eiffel') && ts <= 1794999600000) return false;
           if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
           if (typeof q.lat === 'number' && typeof q.lon === 'number') {
@@ -4342,6 +4602,7 @@
       { name: 'Nailsworth', postcode: 'GL6', lat: 51.6950, lon: -2.2220 },
       { name: 'The Stroud Hotel', postcode: 'GL5', lat: 51.7448, lon: -2.2188 },
       { name: 'Stroud', postcode: 'GL5', lat: 51.7458, lon: -2.2178 },
+      { name: 'Duntisbourne Abbots', postcode: 'GL7', lat: 51.7694, lon: -2.0543 },
       { name: 'Cirencester', postcode: 'GL7', lat: 51.7180, lon: -1.9680 },
       { name: 'Gloucester', postcode: 'GL1', lat: 51.8642, lon: -2.2431 },
       { name: 'Cheltenham', postcode: 'GL50', lat: 51.8994, lon: -2.0783 },
@@ -4364,7 +4625,7 @@
       if (!lowConfidenceGps && typeof matchActiveLandmark === 'function') {
         const lm = matchActiveLandmark({ name, lat: outLat, lon: outLon, postcode: outPc, lowConfidenceGps: false });
         if (lm && typeof lm.lat === 'number' && typeof lm.lon === 'number') {
-          const isLocalCustom = lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'the_olive_tree' || lm.id === 'stroud_hotel';
+          const isLocalCustom = lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'the_olive_tree' || lm.id === 'stroud_hotel' || lm.id === 'duntisbourne_abbots';
           if (isLocalCustom) {
             outLat = lm.lat;
             outLon = lm.lon;
@@ -4382,19 +4643,63 @@
       const cutoff = now - 30 * 24 * 60 * 60 * 1000;
       const combined = [];
 
-      // 1. Load public map cache
+      // 1. Load public map cache and purge any unverified/custom titles
       try {
         const rawPublic = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
         if (rawPublic) {
-          const arr = JSON.parse(rawPublic);
-          if (Array.isArray(arr)) combined.push(...arr);
+          let arr = JSON.parse(rawPublic);
+          if (Array.isArray(arr)) {
+            const sanitized = arr.map(q => {
+              if (!q || q.locked || (q.name && q.name.toLowerCase().includes('workshop'))) return null;
+              const pubName = getDepersonalizedLocationName(q);
+              return (pubName && !pubName.toLowerCase().includes('workshop')) ? { ...q, name: pubName } : null;
+            }).filter(Boolean);
+            if (sanitized.length !== arr.length) {
+              try { localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(sanitized)); } catch (_) {}
+            }
+            combined.push(...sanitized);
+          }
         }
       } catch (_) {}
 
-      // 2. Always merge local user recent locations so locations are NEVER missing right after a refresh!
+      // 2. Merge local user recents (RULE: No locked location is ever displayed on the wider map!)
+      // And always depersonalize to generic local town name:
       try {
         const userRecents = loadUserRecentQueries();
-        if (Array.isArray(userRecents)) combined.push(...userRecents);
+        if (Array.isArray(userRecents)) {
+          userRecents.forEach(r => {
+            if (!r || !r.name || r.name.toLowerCase().includes('workshop')) return;
+            // Strict rule: No locked location is displayed on the wider map!
+            if (r.locked) return;
+            const depName = getDepersonalizedLocationName(r);
+            if (depName && !depName.toLowerCase().includes('workshop')) {
+              combined.push({
+                ...r,
+                name: depName,
+                isCustomTitle: false
+              });
+            }
+          });
+        }
+      } catch (_) {}
+
+      // 3. Always include CURRENT_LOCATION (unless locked)
+      try {
+        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number' && typeof CURRENT_LOCATION.lon === 'number') {
+          if (!CURRENT_LOCATION.locked && (!CURRENT_LOCATION.name || !CURRENT_LOCATION.name.toLowerCase().includes('workshop'))) {
+            const depName = getDepersonalizedLocationName(CURRENT_LOCATION);
+            if (depName && !depName.toLowerCase().includes('workshop')) {
+              const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
+              combined.unshift({
+                name: depName,
+                postcode: getOutwardPostcode(norm.postcode || CURRENT_LOCATION.postcode) || norm.postcode || CURRENT_LOCATION.postcode || '',
+                lat: norm.lat,
+                lon: norm.lon,
+                timestamp: now
+              });
+            }
+          }
+        }
       } catch (_) {}
 
       // 4. Always seed from built-in verified default locations so the map is NEVER empty on initial load/refresh!
@@ -4402,43 +4707,55 @@
         combined.push(...DEFAULT_PUBLIC_MAP_LOCATIONS);
       }
 
-      // Deduplicate by coordinates / name and apply filters
+      // Deduplicate by coordinates (< 140m) / name:
+      // If 5 different people store a town and one has it locked, only ONE single unified public pin is shown!
       const deduped = [];
       combined.forEach(q => {
         if (!q || typeof q.lat !== 'number' || typeof q.lon !== 'number' || !q.name) return;
+        if (q.locked) return;
         const n = (q.name || '').toLowerCase().trim();
         const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
+        if (n.includes('workshop')) return;
         if (n.includes('eiffel') && ts <= 1794999600000) return;
+        if (n.includes('minchinhampton') && ts <= 1795202600000) return;
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
         if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return;
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
 
         const publicName = getDepersonalizedLocationName(q);
-        if (!publicName || isPersonalLocationName(publicName)) return;
+        if (!publicName || publicName.toLowerCase().includes('workshop')) return;
 
         if (ts < cutoff) return;
 
         const norm = normalizeKnownLandmarkCoords(publicName, q.lat, q.lon, q.postcode);
         const nameLower = publicName.toLowerCase().trim();
-        if (!deduped.some(d => {
+        const existing = deduped.find(d => {
           const sameName = (d.name || '').toLowerCase().trim() === nameLower;
           const distKm = (typeof calculateHaversineKm === 'function')
             ? calculateHaversineKm(d.lat, d.lon, norm.lat, norm.lon)
             : Math.hypot(d.lat - norm.lat, d.lon - norm.lon) * 111;
           const sameCoords = distKm < 0.14;
           return sameName || sameCoords;
-        })) {
+        });
+
+        if (!existing) {
           deduped.push({
             ...q,
             name: publicName,
             lat: norm.lat,
             lon: norm.lon,
-            postcode: norm.postcode
+            postcode: norm.postcode,
+            timestamp: ts
           });
+        } else {
+          // Keep the latest query timestamp among all users who searched this town!
+          if (ts > (existing.timestamp ? new Date(existing.timestamp).getTime() : 0)) {
+            existing.timestamp = ts;
+          }
         }
       });
 
-      return deduped.filter(q => q.name && !isPersonalLocationName(q.name) && q.name.toLowerCase() !== 'united kingdom' && q.name.toLowerCase() !== 'uk');
+      return deduped.filter(q => q.name && !q.locked && !q.name.toLowerCase().includes('workshop') && !isPersonalLocationName(q.name) && q.name.toLowerCase() !== 'united kingdom' && q.name.toLowerCase() !== 'uk');
     }
 
     function recordLocationQuery(loc) {
@@ -4446,10 +4763,13 @@
       // 1. Record personal custom title into the user's private recent locations list
       recordUserRecentLocation(loc);
 
+      // Rule: If this is a LOCKED location, NEVER upload or record it to the public wide map!
+      if (loc.locked) return;
+
       // 2. Generate depersonalized, purely geographic name for the public world map & shared sheet
       try {
         const publicName = getDepersonalizedLocationName(loc);
-        if (!publicName || isPersonalLocationName(publicName)) return;
+        if (!publicName) return;
         const norm = normalizeKnownLandmarkCoords(publicName, loc.lat, loc.lon, loc.postcode, Boolean(loc.lowConfidenceGps));
         const outwardPostcode = getOutwardPostcode(norm.postcode || loc.postcode);
         let mapQueries = getHistoryQueries();
@@ -4470,6 +4790,14 @@
         });
         if (mapQueries.length > 300) mapQueries = mapQueries.slice(0, 300);
         localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(mapQueries));
+
+        // If history map is currently open, immediately reflect the new location
+        const mapModal = document.getElementById('historyMapModal');
+        if (mapModal && !mapModal.classList.contains('hidden') && historyLeafletMap) {
+          const curFilter = getMapViewFilter();
+          const activeQueries = getQueriesForMapFilter(curFilter);
+          renderHistoryMarkersAndChips(activeQueries, false, curFilter);
+        }
 
         const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
@@ -4504,6 +4832,7 @@
       const bottomBtnTimer = document.getElementById('mapBtnCountdownBottom');
       if (topBtnTimer) topBtnTimer.textContent = `(${historyMapAutoCloseSecs}s${suffix})`;
       if (bottomBtnTimer) bottomBtnTimer.textContent = `(${historyMapAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('historyMapModal', historyMapAutoCloseSecs, isLocked, ['closeMapBtnTop', 'closeMapBtnBottom']);
     }
 
     function resetHistoryMapAutoCloseTimer() {
@@ -4514,7 +4843,7 @@
       historyMapAutoCloseTimer = setInterval(() => {
         historyMapAutoCloseSecs--;
         updateHistoryMapCountdownDisplay();
-        if (historyMapAutoCloseSecs === 5) {
+        if (historyMapAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeMapBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -4548,6 +4877,8 @@
       lastDownClickTarget = null;
       lastDownClickTime = 0;
       mapLastFocusedChipIndex = 0;
+      mapActivePopupKey = null;
+      lastScrolledChipKey = null;
       historyMapAutoCloseSecs = 45;
       savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
@@ -5008,6 +5339,255 @@
       });
     }
 
+    let adaptivePlacementRafId = null;
+    let adaptiveLastSide = null;
+    let adaptiveLastSideTime = 0;
+    let adaptiveLastSource = null;
+
+    function updateAdaptivePopupPlacement() {
+      if (!historyLeafletMap) return;
+      const popup = historyLeafletMap._popup;
+      if (!popup) return;
+      if (typeof popup.isOpen === 'function' && !popup.isOpen()) return;
+      const popupEl = (typeof popup.getElement === 'function' && popup.getElement()) || document.querySelector('.history-map-tall-popup');
+      if (!popupEl) return;
+      const wrapperEl = popupEl.querySelector('.leaflet-popup-content-wrapper');
+      if (!wrapperEl) return;
+
+      const activeLatLng = popup.getLatLng();
+      if (!activeLatLng) return;
+
+      const mapContainer = historyLeafletMap.getContainer();
+      if (!mapContainer) return;
+      const mapW = mapContainer.clientWidth;
+      const mapH = mapContainer.clientHeight;
+      if (!mapW || !mapH) return;
+
+      const pinPt = historyLeafletMap.latLngToContainerPoint(activeLatLng);
+
+      // Reset side memory if the popup belongs to a different marker
+      if (adaptiveLastSource !== popup._source) {
+        adaptiveLastSide = null;
+        adaptiveLastSideTime = 0;
+        adaptiveLastSource = popup._source;
+      }
+
+      // Measure card dimensions (with fallback)
+      const boxW = wrapperEl.offsetWidth || 210;
+      const boxH = wrapperEl.offsetHeight || 135;
+
+      const pad = 14;
+      const minX = pad;
+      const maxX = Math.max(minX, mapW - pad - boxW);
+      const minY = pad;
+      const maxY = Math.max(minY, mapH - pad - boxH);
+
+      // Collect visible neighbor pins on the map
+      const otherPins = [];
+      if (typeof mapMarkerMap === 'object' && mapMarkerMap) {
+        const markerList = Object.values(mapMarkerMap);
+        for (let i = 0; i < markerList.length; i++) {
+          const entry = markerList[i];
+          if (!entry || !entry.marker || entry.marker === popup._source) continue;
+          const opt = historyLeafletMap.latLngToContainerPoint([entry.lat, entry.lon]);
+          if (opt.x >= -30 && opt.x <= mapW + 30 && opt.y >= -30 && opt.y <= mapH + 30) {
+            otherPins.push(opt);
+          }
+        }
+      }
+
+      // Generous gap for prominent, elegant pointer arrow
+      const gap = 52;
+      const candidates = [
+        { id: 'right', x: pinPt.x + gap, y: pinPt.y - boxH / 2 },
+        { id: 'left', x: pinPt.x - boxW - gap, y: pinPt.y - boxH / 2 },
+        { id: 'top', x: pinPt.x - boxW / 2, y: pinPt.y - boxH - gap },
+        { id: 'bottom', x: pinPt.x - boxW / 2, y: pinPt.y + gap },
+        { id: 'top-right', x: pinPt.x + gap * 0.75, y: pinPt.y - boxH - gap * 0.5 },
+        { id: 'top-left', x: pinPt.x - boxW - gap * 0.75, y: pinPt.y - boxH - gap * 0.5 },
+        { id: 'bottom-right', x: pinPt.x + gap * 0.75, y: pinPt.y + gap * 0.5 },
+        { id: 'bottom-left', x: pinPt.x - boxW - gap * 0.75, y: pinPt.y + gap * 0.5 }
+      ];
+
+      let bestScore = Infinity;
+      let best = candidates[0];
+      let bestClampedX = Math.max(minX, Math.min(maxX, best.x));
+      let bestClampedY = Math.max(minY, Math.min(maxY, best.y));
+
+      let currentSideCandidate = null;
+      let currentSideScore = Infinity;
+      let currentSideClampedX = 0;
+      let currentSideClampedY = 0;
+
+      for (let i = 0; i < candidates.length; i++) {
+        const c = candidates[i];
+        const clampedX = Math.max(minX, Math.min(maxX, c.x));
+        const clampedY = Math.max(minY, Math.min(maxY, c.y));
+        const clampDist = Math.hypot(clampedX - c.x, clampedY - c.y);
+        let score = clampDist * 6;
+
+        // Reject candidates that would cover the active pin itself
+        const pinBuf = 16;
+        if (pinPt.x >= clampedX - pinBuf && pinPt.x <= clampedX + boxW + pinBuf &&
+            pinPt.y >= clampedY - pinBuf && pinPt.y <= clampedY + boxH + pinBuf) {
+          score += 20000;
+        }
+
+        // Strongly penalize candidates that obscure other location pins
+        let obscured = 0;
+        for (let j = 0; j < otherPins.length; j++) {
+          const opt = otherPins[j];
+          if (opt.x >= clampedX - 10 && opt.x <= clampedX + boxW + 10 &&
+              opt.y >= clampedY - 10 && opt.y <= clampedY + boxH + 10) {
+            obscured++;
+          }
+        }
+        score += obscured * 3000;
+
+        // Distance from pin center
+        const boxCenterX = clampedX + boxW / 2;
+        const boxCenterY = clampedY + boxH / 2;
+        score += Math.hypot(boxCenterX - pinPt.x, boxCenterY - pinPt.y) * 0.2;
+
+        // Slight ergonomic preference for horizontal right/left callouts
+        if (c.id === 'right' || c.id === 'left') score -= 15;
+
+        // Hysteresis Damping: Give the currently active direction a strong sticky preference
+        // so hovering near center boundaries does NOT oscillate or jump back and forth!
+        if (adaptiveLastSide && c.id === adaptiveLastSide) {
+          score -= 350;
+          currentSideCandidate = c;
+          currentSideScore = score;
+          currentSideClampedX = clampedX;
+          currentSideClampedY = clampedY;
+        }
+
+        if (score < bestScore) {
+          bestScore = score;
+          best = c;
+          bestClampedX = clampedX;
+          bestClampedY = clampedY;
+        }
+      }
+
+      // Temporal Damping: Require minimum hold time before switching sides unless current side is obscured
+      const now = Date.now();
+      if (adaptiveLastSide && best.id !== adaptiveLastSide && currentSideCandidate) {
+        const timeSinceChange = now - adaptiveLastSideTime;
+        const currentIsSeverelyCompromised = currentSideScore > 2000;
+        if (!currentIsSeverelyCompromised && timeSinceChange < 450) {
+          best = currentSideCandidate;
+          bestClampedX = currentSideClampedX;
+          bestClampedY = currentSideClampedY;
+        }
+      }
+
+      if (adaptiveLastSide !== best.id) {
+        adaptiveLastSide = best.id;
+        adaptiveLastSideTime = now;
+      }
+
+      const offsetX = Math.round(bestClampedX - pinPt.x);
+      const offsetY = Math.round(bestClampedY - pinPt.y);
+
+      wrapperEl.style.setProperty('--popup-x', `${offsetX}px`);
+      wrapperEl.style.setProperty('--popup-y', `${offsetY}px`);
+
+      // Compute Elastic Arrow Geometry
+      const boxLeft = offsetX;
+      const boxRight = offsetX + boxW;
+      const boxTop = offsetY;
+      const boxBottom = offsetY + boxH;
+
+      let side = 'left';
+      if (boxRight < 0) {
+        if (boxBottom < 0 && Math.abs(boxBottom) > Math.abs(boxRight)) side = 'bottom';
+        else if (boxTop > 0 && boxTop > Math.abs(boxRight)) side = 'top';
+        else side = 'right';
+      } else if (boxLeft > 0) {
+        if (boxBottom < 0 && Math.abs(boxBottom) > boxLeft) side = 'bottom';
+        else if (boxTop > 0 && boxTop > boxLeft) side = 'top';
+        else side = 'left';
+      } else {
+        if (boxBottom < 0) side = 'bottom';
+        else side = 'top';
+      }
+
+      const halfBase = 12;
+      const cornerPad = 18;
+      let anchor = { x: 0, y: 0 };
+      let b1 = { x: 0, y: 0 };
+      let b2 = { x: 0, y: 0 };
+
+      if (side === 'left') {
+        anchor.x = boxLeft;
+        anchor.y = Math.max(boxTop + cornerPad, Math.min(boxBottom - cornerPad, 0));
+        b1 = { x: boxLeft, y: anchor.y - halfBase };
+        b2 = { x: boxLeft, y: anchor.y + halfBase };
+      } else if (side === 'right') {
+        anchor.x = boxRight;
+        anchor.y = Math.max(boxTop + cornerPad, Math.min(boxBottom - cornerPad, 0));
+        b1 = { x: boxRight, y: anchor.y - halfBase };
+        b2 = { x: boxRight, y: anchor.y + halfBase };
+      } else if (side === 'top') {
+        anchor.y = boxTop;
+        anchor.x = Math.max(boxLeft + cornerPad, Math.min(boxRight - cornerPad, 0));
+        b1 = { x: anchor.x - halfBase, y: boxTop };
+        b2 = { x: anchor.x + halfBase, y: boxTop };
+      } else { // bottom
+        anchor.y = boxBottom;
+        anchor.x = Math.max(boxLeft + cornerPad, Math.min(boxRight - cornerPad, 0));
+        b1 = { x: anchor.x - halfBase, y: boxBottom };
+        b2 = { x: anchor.x + halfBase, y: boxBottom };
+      }
+
+      // Pin radius is 10px from center (halo border)
+      const pinRadius = 10;
+      const dx = -anchor.x;
+      const dy = -anchor.y;
+      const len = Math.hypot(dx, dy);
+
+      let svgEl = popupEl.querySelector('svg.popup-elastic-arrow');
+      if (len < pinRadius + 2) {
+        if (svgEl) svgEl.style.display = 'none';
+        return;
+      }
+
+      const ux = dx / len;
+      const uy = dy / len;
+      const tipX = Math.round(-ux * pinRadius);
+      const tipY = Math.round(-uy * pinRadius);
+
+      if (!svgEl) {
+        svgEl = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svgEl.setAttribute('class', 'popup-elastic-arrow');
+        popupEl.appendChild(svgEl);
+      }
+      svgEl.style.display = 'block';
+
+      const fillPath = `M ${b1.x} ${b1.y} L ${tipX} ${tipY} L ${b2.x} ${b2.y} Z`;
+      const strokePath = `M ${b1.x} ${b1.y} L ${tipX} ${tipY} L ${b2.x} ${b2.y}`;
+
+      svgEl.innerHTML = `
+        <defs>
+          <filter id="popupArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="rgba(56,189,248,0.4)" />
+          </filter>
+        </defs>
+        <path d="${fillPath}" fill="#0f172a" />
+        <path d="${strokePath}" fill="none" stroke="rgba(56, 189, 248, 0.6)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#popupArrowGlow)" />
+        <line x1="${b1.x}" y1="${b1.y}" x2="${b2.x}" y2="${b2.y}" stroke="#0f172a" stroke-width="2.5" stroke-linecap="square" />
+      `;
+    }
+
+    function scheduleAdaptivePopupPlacement() {
+      if (adaptivePlacementRafId) cancelAnimationFrame(adaptivePlacementRafId);
+      adaptivePlacementRafId = requestAnimationFrame(() => {
+        adaptivePlacementRafId = null;
+        updateAdaptivePopupPlacement();
+      });
+    }
+
     function autoOpenCenterMarkerPopup(force = false) {
       if (!historyLeafletMap) return;
       if (!force && Date.now() < mapProgrammaticFlyUntil) return;
@@ -5039,6 +5619,7 @@
           lastScrolledChipKey = closestKey;
           closestMarker.openPopup();
           stripMapCanvasFocusables();
+          scheduleAdaptivePopupPlacement();
 
           // Tablet/Touch UX: Automatically scroll the bottom list to bring the active chip to the left position
           const chipsEl = document.getElementById('mapRecentChips');
@@ -5591,7 +6172,9 @@
       currentMapQueries = sortedQueries;
 
       const countTextEl = document.getElementById('mapQueryCountText') || document.getElementById('mapQueryCount');
-      if (countTextEl) countTextEl.textContent = `${sortedQueries.length} location${sortedQueries.length === 1 ? '' : 's'}`;
+      if (countTextEl) {
+        countTextEl.innerHTML = `View <span class="text-amber-300 font-mono font-bold">${sortedQueries.length}</span> Location${sortedQueries.length === 1 ? '' : 's'}`;
+      }
 
       const chipsEl = document.getElementById('mapRecentChips');
       if (chipsEl) {
@@ -5656,6 +6239,7 @@
               setTimeout(() => {
                 entry.marker.openPopup();
                 stripMapCanvasFocusables();
+                scheduleAdaptivePopupPlacement();
               }, 220);
             }
           };
@@ -6056,6 +6640,7 @@
           updateChipHighlightStates();
           marker.openPopup();
           stripMapCanvasFocusables();
+          scheduleAdaptivePopupPlacement();
         });
 
         if (historyMarkersLayer) {
@@ -6076,6 +6661,7 @@
           if (entryToOpen && entryToOpen.marker) {
             entryToOpen.marker.openPopup();
             stripMapCanvasFocusables();
+            scheduleAdaptivePopupPlacement();
           }
         }, 100);
       }
@@ -6139,7 +6725,28 @@
 
         historyLeafletMap.on('popupopen', () => {
           stripMapCanvasFocusables();
+          scheduleAdaptivePopupPlacement();
         });
+
+        historyLeafletMap.on('move', () => {
+          scheduleAdaptivePopupPlacement();
+        });
+
+        historyLeafletMap.on('zoomend', () => {
+          scheduleAdaptivePopupPlacement();
+        });
+
+        historyLeafletMap.on('popupclose', () => {
+          adaptiveLastSide = null;
+          adaptiveLastSideTime = 0;
+          adaptiveLastSource = null;
+          if (adaptivePlacementRafId) {
+            cancelAnimationFrame(adaptivePlacementRafId);
+            adaptivePlacementRafId = null;
+          }
+        });
+
+        window.addEventListener('resize', scheduleAdaptivePopupPlacement);
 
         historyMarkersLayer = L.layerGroup().addTo(historyLeafletMap);
         switchHistoryMapStyle(getHistoryMapStyle(), false);
@@ -6196,8 +6803,8 @@
                 const nLower = (depName || sq.name || '').trim().toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000);
-                if (depName && !isPurged && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
+                const isPurged = nLower.includes('workshop') || nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
+                if (depName && !isPurged && !depName.toLowerCase().includes('workshop') && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
                   const norm = normalizeKnownLandmarkCoords(depName, latNum, lonNum, sq.postcode);
                   sheetQueries.push({
                     name: depName,
@@ -6215,15 +6822,69 @@
             const deduped = [];
             sheetQueries.forEach(sq => {
               const nameLower = (sq.name || '').toLowerCase().trim();
-              if (!deduped.some(d => {
+              const existing = deduped.find(d => {
                 const sameName = (d.name || '').toLowerCase().trim() === nameLower;
                 const distKm = (typeof calculateHaversineKm === 'function')
                   ? calculateHaversineKm(d.lat, d.lon, sq.lat, sq.lon)
                   : Math.hypot(d.lat - sq.lat, d.lon - sq.lon) * 111;
-                const sameCoords = distKm < 0.14;
-                return sameName || sameCoords;
-              })) {
+                return sameName || distKm < 0.14;
+              });
+              if (!existing) {
                 deduped.push(sq);
+              } else if (sq.timestamp > (existing.timestamp || 0)) {
+                existing.timestamp = sq.timestamp;
+              }
+            });
+
+            // CRITICAL FIX: Merge Supabase rows with locally saved cache and recent queries
+            // so recent searches (e.g. Minchinhampton) are never erased if Supabase hasn't committed them yet!
+            const localRecents = (typeof loadUserRecentQueries === 'function') ? loadUserRecentQueries() : [];
+            let existingCache = [];
+            try {
+              const existingCacheRaw = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+              if (existingCacheRaw) existingCache = JSON.parse(existingCacheRaw);
+            } catch (_) {}
+            if (!Array.isArray(existingCache)) existingCache = [];
+
+            const mergePool = [...existingCache, ...localRecents];
+            if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && !CURRENT_LOCATION.locked && typeof CURRENT_LOCATION.lat === 'number' && typeof CURRENT_LOCATION.lon === 'number') {
+              const depName = getDepersonalizedLocationName(CURRENT_LOCATION);
+              if (depName && !depName.toLowerCase().includes('workshop') && !isPersonalLocationName(depName)) {
+                const norm = normalizeKnownLandmarkCoords(depName, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, CURRENT_LOCATION.postcode, Boolean(CURRENT_LOCATION.lowConfidenceGps));
+                mergePool.unshift({
+                  name: depName,
+                  postcode: getOutwardPostcode(norm.postcode || CURRENT_LOCATION.postcode) || norm.postcode || CURRENT_LOCATION.postcode || '',
+                  lat: norm.lat,
+                  lon: norm.lon,
+                  timestamp: Date.now()
+                });
+              }
+            }
+
+            mergePool.forEach(mq => {
+              if (!mq || mq.locked || typeof mq.lat !== 'number' || typeof mq.lon !== 'number' || !mq.name) return;
+              const depName = getDepersonalizedLocationName(mq);
+              if (!depName || depName.toLowerCase().includes('workshop') || isPersonalLocationName(depName)) return;
+              const norm = normalizeKnownLandmarkCoords(depName, mq.lat, mq.lon, mq.postcode);
+              const nameLower = depName.toLowerCase().trim();
+              const existing = deduped.find(d => {
+                const sameName = (d.name || '').toLowerCase().trim() === nameLower;
+                const distKm = (typeof calculateHaversineKm === 'function')
+                  ? calculateHaversineKm(d.lat, d.lon, norm.lat, norm.lon)
+                  : Math.hypot(d.lat - norm.lat, d.lon - norm.lon) * 111;
+                return sameName || distKm < 0.14;
+              });
+              if (!existing) {
+                deduped.unshift({
+                  ...mq,
+                  name: depName,
+                  postcode: norm.postcode || mq.postcode || '',
+                  lat: norm.lat,
+                  lon: norm.lon,
+                  timestamp: mq.timestamp || Date.now()
+                });
+              } else if ((mq.timestamp || 0) > (existing.timestamp || 0)) {
+                existing.timestamp = mq.timestamp;
               }
             });
 
@@ -6233,11 +6894,9 @@
 
             const mapModal = document.getElementById('historyMapModal');
             if (mapModal && !mapModal.classList.contains('hidden') && historyLeafletMap) {
-              if (getMapViewFilter() === 'all') {
-                renderHistoryMarkersAndChips(queries, false, 'all');
-              } else {
-                updateMapFilterButtonUI(getMapViewFilter());
-              }
+              const curFilter = getMapViewFilter();
+              const finalQueries = getQueriesForMapFilter(curFilter);
+              renderHistoryMarkersAndChips(finalQueries, false, curFilter);
             }
           }
         }
@@ -6260,16 +6919,199 @@
       } catch (_) {}
     }
 
+    async function deleteLocationFromHistoryAndDatabase(loc) {
+      if (!loc) return;
+      try {
+        const placeName = loc.displayName || loc.name || 'Location';
+
+        // 1. Remove from personal recent & locked locations in localStorage
+        if (typeof loadUserRecentQueries === 'function' && typeof saveUserRecentQueries === 'function') {
+          const remainingRecents = loadUserRecentQueries().filter(r => !doesRecentQueryMatch(r, loc, 0.0035));
+          saveUserRecentQueries(remainingRecents);
+        }
+
+        // 2. Remove from public map cache in localStorage
+        try {
+          const rawCache = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+          if (rawCache) {
+            const cachedArr = JSON.parse(rawCache);
+            if (Array.isArray(cachedArr)) {
+              const remainingMap = cachedArr.filter(m => !doesRecentQueryMatch(m, loc, 0.0035));
+              localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(remainingMap));
+            }
+          }
+        } catch (_) {}
+
+        // 3. Delete from Supabase public database table
+        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+        const tol = 0.0025;
+        const deletePromises = [];
+
+        if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+          const coordUrl = `${SUPABASE_URL}/rest/v1/locations?lat=gte.${loc.lat - tol}&lat=lte.${loc.lat + tol}&lon=gte.${loc.lon - tol}&lon=lte.${loc.lon + tol}`;
+          deletePromises.push(fetch(coordUrl, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY
+            }
+          }).catch(() => {}));
+        }
+
+        if (loc.name && typeof loc.name === 'string' && loc.name.trim().length > 1) {
+          const nameUrl = `${SUPABASE_URL}/rest/v1/locations?name=eq.${encodeURIComponent(loc.name.trim())}`;
+          deletePromises.push(fetch(nameUrl, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_KEY
+            }
+          }).catch(() => {}));
+        }
+
+        await Promise.all(deletePromises);
+
+        // 4. Close the popup
+        if (historyLeafletMap) {
+          try { historyLeafletMap.closePopup(); } catch (_) {}
+        }
+
+        // 5. Refresh the map view and chips to immediately reflect the deletion
+        if (typeof renderLocationModalPicks === 'function') {
+          renderLocationModalPicks();
+        }
+        if (typeof setMapViewFilter === 'function') {
+          setMapViewFilter(getMapViewFilter(), false);
+        } else if (typeof renderHistoryMarkersAndChips === 'function') {
+          const updatedQueries = getLocalMapQueries(getMapViewFilter() === 'locked');
+          renderHistoryMarkersAndChips(updatedQueries, false, getMapViewFilter());
+        }
+
+        // 6. Show toast notification on the map
+        if (typeof showMapToast === 'function') {
+          showMapToast(`🔒 Deleted "${placeName}" from device & database`);
+        }
+      } catch (err) {
+        console.error('Error deleting location:', err);
+        if (typeof showMapToast === 'function') {
+          showMapToast('Deletion notice: ' + (err.message || err));
+        }
+      }
+    }
+
+    async function handlePurgeAllMyDataClick() {
+      const btn = document.getElementById('purgeMyDataBtn');
+      const status = document.getElementById('purgeDataStatus');
+      if (!btn) return;
+
+      const userRecents = (typeof loadUserRecentQueries === 'function') ? loadUserRecentQueries() : [];
+      if (userRecents.length === 0) {
+        if (status) {
+          status.textContent = 'No saved locations on this device to purge.';
+          status.style.color = '#94a3b8';
+          status.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!btn.dataset.confirming) {
+        btn.dataset.confirming = 'true';
+        btn.innerHTML = `<span>⚠️ Confirm Wipe ${userRecents.length} Place${userRecents.length === 1 ? '' : 's'} from Device &amp; Database?</span>`;
+        btn.classList.add('bg-rose-600', 'text-white', 'border-rose-300');
+        setTimeout(() => {
+          if (btn && btn.dataset.confirming) {
+            btn.dataset.confirming = '';
+            btn.innerHTML = '<span>🗑️</span> Purge My Saved Places &amp; Public History';
+            btn.classList.remove('bg-rose-600', 'text-white', 'border-rose-300');
+          }
+        }, 5000);
+        return;
+      }
+
+      // Confirmed wipe!
+      btn.dataset.confirming = '';
+      btn.innerHTML = '<span>⏳ Purging database &amp; device...</span>';
+      btn.disabled = true;
+
+      try {
+        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+        const tol = 0.0025;
+        const deletePromises = [];
+
+        for (const loc of userRecents) {
+          if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+            const coordUrl = `${SUPABASE_URL}/rest/v1/locations?lat=gte.${loc.lat - tol}&lat=lte.${loc.lat + tol}&lon=gte.${loc.lon - tol}&lon=lte.${loc.lon + tol}`;
+            deletePromises.push(fetch(coordUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+          if (loc.name && typeof loc.name === 'string' && loc.name.trim().length > 1) {
+            const nameUrl = `${SUPABASE_URL}/rest/v1/locations?name=eq.${encodeURIComponent(loc.name.trim())}`;
+            deletePromises.push(fetch(nameUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+        }
+
+        await Promise.all(deletePromises);
+
+        // Clear local storage
+        saveUserRecentQueries([]);
+        try {
+          const rawCache = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+          if (rawCache) {
+            const cachedArr = JSON.parse(rawCache);
+            if (Array.isArray(cachedArr)) {
+              const remainingMap = cachedArr.filter(m => !userRecents.some(ur => doesRecentQueryMatch(ur, m, 0.0035)));
+              localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(remainingMap));
+            }
+          }
+        } catch (_) {}
+
+        btn.innerHTML = '<span>✅ Purge Complete</span>';
+        btn.classList.remove('bg-rose-600', 'text-white', 'border-rose-300');
+        btn.classList.add('bg-emerald-600/30', 'text-emerald-200', 'border-emerald-400/50');
+        if (status) {
+          status.textContent = 'All your locations wiped from device and public database.';
+          status.style.color = '#34d399';
+          status.classList.remove('hidden');
+        }
+
+        renderLocationModalPicks();
+        if (typeof showRecentStatusMessage === 'function') {
+          showRecentStatusMessage('🔒 All your places wiped from device & public database.', '#34d399');
+        }
+      } catch (err) {
+        console.error('Error during full purge:', err);
+        btn.disabled = false;
+        btn.innerHTML = '<span>🗑️</span> Purge My Saved Places &amp; Public History';
+        if (status) {
+          status.textContent = 'Purge notice: ' + (err.message || err);
+          status.style.color = '#f87171';
+          status.classList.remove('hidden');
+        }
+      }
+    }
+
     async function reloadDashboard(forceHardReload = false) {
       const btn = document.getElementById('reloadBtn');
       if (btn) btn.blur();
       hideReloadBadge();
 
-      // If document is currently in fullscreen or user prefers fullscreen, remember preference
+      // If document is currently in fullscreen, remember preference
       if (document.fullscreenElement) {
         try {
           sessionStorage.setItem('ambient_restore_fullscreen', 'true');
-          localStorage.setItem('ambient_pref_fullscreen', 'true');
         } catch (_) {}
       }
 
@@ -6300,7 +7142,6 @@
               if (document.fullscreenElement) {
                 try {
                   sessionStorage.setItem('ambient_restore_fullscreen', 'true');
-                  localStorage.setItem('ambient_pref_fullscreen', 'true');
                 } catch (_) {}
               }
               saveSavedLocation();
@@ -6492,7 +7333,7 @@
           // Auto-heal stale/drifted coordinates or mis-labeled generic town names for known local custom landmarks
           if (!CURRENT_LOCATION.lowConfidenceGps && !CURRENT_LOCATION.isCustomTitle && typeof matchActiveLandmark === 'function') {
             const lm = matchActiveLandmark(CURRENT_LOCATION);
-            if (lm && (lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'the_olive_tree' || lm.id === 'stroud_hotel')) {
+            if (lm && (lm.id === 'dunkirk_mills' || lm.id === 'amberley_church' || lm.id === 'egypt_mill' || lm.id === 'the_olive_tree' || lm.id === 'stroud_hotel' || lm.id === 'duntisbourne_abbots')) {
               const driftKm = (typeof calculateHaversineKm === 'function')
                 ? calculateHaversineKm(CURRENT_LOCATION.lat, CURRENT_LOCATION.lon, lm.lat, lm.lon)
                 : Math.hypot(CURRENT_LOCATION.lat - lm.lat, CURRENT_LOCATION.lon - lm.lon) * 111;
@@ -7150,6 +7991,68 @@
         </svg>`
       },
       {
+        id: 'duntisbourne_abbots',
+        name: 'Duntisbourne Abbots',
+        city: 'Cirencester, Cotswolds',
+        country: 'United Kingdom',
+        postcode: 'GL7 7JN',
+        postcodes: ['GL7 7JN', 'GL7 7TA', 'GL7 7TB', 'GL7 7TD', 'GL7 7TE', 'GL7 7TF', 'GL7 7TG', 'GL7 7TH', 'GL7 7TJ', 'GL7 7TL', 'GL7 7TN', 'GL7 7TP', 'GL7 7TQ', 'GL7 7TR', 'GL7 7TS', 'GL7 7TT', 'GL7 7TU', 'GL7 7TW', 'GL7 7TX', 'GL7 7TY', 'GL7 7TZ', 'GL7 7UB'],
+        lat: 51.7694,
+        lon: -2.0543,
+        radiusKm: 6.0,
+        snapRadiusKm: 0.8,
+        aliases: [
+          'duntisbourne abbots',
+          'duntisbourne',
+          'duntisbourne abbotts',
+          'duntisbourn abbots',
+          'duntisbourne rouse',
+          'duntisbourne leer',
+          'duntisbourne abbots land rover',
+          'gl7 7jn',
+          'gl77jn'
+        ],
+        badgeStyle: 'bg-emerald-500/15 border-emerald-400/40 shadow-[0_0_10px_rgba(52,211,153,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 20 C10 16, 24 18, 48 16 L48 36 L0 36 Z" fill="#14532d" opacity="0.5"/>
+          <circle cx="4" cy="15" r="4.5" fill="#15803d" opacity="0.65"/>
+          <circle cx="44" cy="14" r="4" fill="#166534" opacity="0.6"/>
+          <rect x="0" y="29" width="48" height="7" fill="#1e293b"/>
+          <line x1="0" y1="29" x2="48" y2="29" stroke="#64748b" stroke-width="0.6" stroke-dasharray="2 2"/>
+          <ellipse cx="24" cy="33.5" rx="19" ry="2" fill="#020617" opacity="0.6"/>
+          <rect x="2.5" y="16.5" width="4" height="8.5" rx="1.8" fill="#0f172a" stroke="#1e293b" stroke-width="0.5"/>
+          <line x1="4.5" y1="18" x2="4.5" y2="23.5" stroke="#94a3b8" stroke-width="0.8"/>
+          <path d="M6 19 L26.5 19 L28 19 L42.5 20.5 L43 25 L41.5 27.5 L6 27.5 Z" fill="#166534" stroke="#14532d" stroke-width="0.5"/>
+          <path d="M27.5 19 L42.5 20.5 L42.5 24.5 L27.5 24.5 Z" fill="#15803d"/>
+          <line x1="28" y1="22" x2="42" y2="22" stroke="#14532d" stroke-width="0.5"/>
+          <line x1="6" y1="22" x2="42" y2="22" stroke="#94a3b8" stroke-width="0.6" opacity="0.85"/>
+          <line x1="18" y1="19" x2="18" y2="27.5" stroke="#0f172a" stroke-width="0.6" opacity="0.6"/>
+          <line x1="27.5" y1="19" x2="27.5" y2="27.5" stroke="#0f172a" stroke-width="0.6" opacity="0.6"/>
+          <path d="M6.5 12 L25 12 L27.5 19 L6.5 19 Z" fill="#166534"/>
+          <ellipse cx="14" cy="11.8" rx="2.2" ry="0.7" fill="#38bdf8" opacity="0.9"/>
+          <ellipse cx="20" cy="11.8" rx="2.2" ry="0.7" fill="#38bdf8" opacity="0.9"/>
+          <rect x="5.8" y="10.2" width="21.8" height="2" rx="0.6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.4"/>
+          <path d="M27 10.8 L28.2 13.5 L27.5 19" stroke="#cbd5e1" stroke-width="0.5" fill="none"/>
+          <rect x="8" y="13" width="8.5" height="5" rx="0.4" fill="#38bdf8" opacity="0.85"/>
+          <polygon points="18.5,13 24,13 26.5,18 18.5,18" fill="#38bdf8" opacity="0.85"/>
+          <line x1="12.2" y1="13" x2="12.2" y2="18" stroke="#14532d" stroke-width="0.5"/>
+          <circle cx="42.5" cy="22" r="1.4" fill="#fef08a" stroke="#ca8a04" stroke-width="0.4"/>
+          <circle cx="42.5" cy="22" r="0.6" fill="#ffffff"/>
+          <circle cx="42.3" cy="24" r="0.7" fill="#f97316"/>
+          <rect x="42" y="25.5" width="3.5" height="2.2" rx="0.4" fill="#64748b" stroke="#334155" stroke-width="0.4"/>
+          <path d="M7 27.5 C7 23.5, 16 23.5, 16 27.5" stroke="#0f172a" stroke-width="1.4" fill="none"/>
+          <path d="M30 27.5 C30 23.5, 39 23.5, 39 27.5" stroke="#0f172a" stroke-width="1.4" fill="none"/>
+          <circle cx="11.5" cy="28.5" r="5.2" fill="#090d16" stroke="#1e293b" stroke-width="0.6"/>
+          <circle cx="11.5" cy="28.5" r="3.3" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.5"/>
+          <circle cx="11.5" cy="28.5" r="1.4" fill="#090d16"/>
+          <circle cx="34.5" cy="28.5" r="5.2" fill="#090d16" stroke="#1e293b" stroke-width="0.6"/>
+          <circle cx="34.5" cy="28.5" r="3.3" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.5"/>
+          <circle cx="34.5" cy="28.5" r="1.4" fill="#090d16"/>
+          <path d="M9 33.5 Q11.5 32 14 33.5" stroke="#7dd3fc" stroke-width="0.8" fill="none"/>
+          <path d="M32 33.5 Q34.5 32 37 33.5" stroke="#7dd3fc" stroke-width="0.8" fill="none"/>
+        </svg>`
+      },
+      {
         id: 'starbase_texas',
         name: 'Starbase, Texas',
         city: 'Boca Chica, TX',
@@ -7775,7 +8678,7 @@
         cleanupGpsHandles();
         isDetectingLocation = false;
         if (gpsIcon) gpsIcon.textContent = '📍';
-        if (gpsBtn) gpsBtn.textContent = 'Locate Me';
+        if (gpsBtn) gpsBtn.textContent = 'Find Me';
         if (statusEl) {
           statusEl.style.color = '#94a3b8';
           statusEl.textContent = 'Location search cancelled.';
@@ -7792,7 +8695,7 @@
           statusEl.textContent = 'Geolocation is not supported on this device/browser.';
           setTimeout(() => { statusEl.textContent = ''; }, 3000);
         }
-        setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+        setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 2500);
         return;
       }
 
@@ -7808,7 +8711,7 @@
               statusEl.textContent = 'Location access is denied in browser settings.';
               setTimeout(() => { statusEl.textContent = ''; }, 3000);
             }
-            setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+            setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 2500);
             return;
           }
         } catch (_) {}
@@ -7840,7 +8743,7 @@
             statusEl.textContent = message;
             setTimeout(() => { if (statusEl.textContent === message) statusEl.textContent = ''; }, 3000);
           }
-          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 3000);
+          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 3000);
         } else {
           // Clean, silent failure with NO browser alerts or popups
           if (gpsIcon) gpsIcon.textContent = '📍';
@@ -7850,7 +8753,7 @@
             statusEl.textContent = message || 'Location unavailable.';
             setTimeout(() => { if (statusEl.textContent === (message || 'Location unavailable.')) statusEl.textContent = ''; }, 3000);
           }
-          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Locate Me'; }, 2500);
+          setTimeout(() => { if (gpsBtn) gpsBtn.textContent = 'Find Me'; }, 2500);
         }
       };
 
@@ -8025,8 +8928,13 @@
         }
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        const searchBtn = document.getElementById('searchLocBtn');
-        if (searchBtn) searchBtn.focus();
+        const voiceBtn = document.getElementById('voiceSearchBtn');
+        if (voiceBtn) {
+          voiceBtn.focus();
+        } else {
+          const searchBtn = document.getElementById('searchLocBtn');
+          if (searchBtn) searchBtn.focus();
+        }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         const renameBtn = document.getElementById('customRenameBtn');
@@ -8052,8 +8960,14 @@
           e.preventDefault();
           clearBtn.focus();
         } else {
-          const searchBtn = document.getElementById('searchLocBtn');
-          if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
+          const voiceBtn = document.getElementById('voiceSearchBtn');
+          if (voiceBtn) {
+            e.preventDefault();
+            voiceBtn.focus();
+          } else {
+            const searchBtn = document.getElementById('searchLocBtn');
+            if (searchBtn) { e.preventDefault(); searchBtn.focus(); }
+          }
         }
       } else if (e.key === 'ArrowDown') {
         // Step down to Save Title button (bypassing text inputs on vertical scroll)
@@ -8062,6 +8976,172 @@
       } else if (e.key === 'ArrowUp') {
         const closeBtn = document.getElementById('closeLocationBtnTop');
         if (closeBtn) { e.preventDefault(); closeBtn.focus(); }
+      }
+    }
+
+    function handleVoiceSearchKeydown(e) {
+      if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23 || e.key === ' ') {
+        e.preventDefault();
+        toggleVoiceSearch();
+        return;
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const searchBtn = document.getElementById('searchLocBtn');
+        if (searchBtn) searchBtn.focus();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const clearBtn = document.getElementById('locationClearBtn');
+        if (clearBtn && !clearBtn.classList.contains('hidden')) {
+          clearBtn.focus();
+        } else {
+          const input = document.getElementById('locationInput');
+          if (input) {
+            input.focus();
+            try { input.click(); } catch (_) {}
+            const len = input.value.length;
+            try { input.setSelectionRange(len, len); } catch (_) {}
+          }
+        }
+      } else if (e.key === 'ArrowDown') {
+        const renameBtn = document.getElementById('customRenameBtn');
+        if (renameBtn) { e.preventDefault(); renameBtn.focus(); }
+      } else if (e.key === 'ArrowUp') {
+        const closeBtn = document.getElementById('closeLocationBtnTop');
+        if (closeBtn) { e.preventDefault(); closeBtn.focus(); }
+      }
+    }
+
+    let voiceRecognition = null;
+    let isVoiceListening = false;
+
+    function resetVoiceSearchBtn() {
+      const btn = document.getElementById('voiceSearchBtn');
+      const icon = document.getElementById('voiceSearchIcon');
+      if (btn) {
+        btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-300/50 shadow-[0_0_12px_rgba(168,85,247,0.4)] text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0';
+        btn.title = 'Voice Search (speak town or postcode)';
+      }
+      if (icon) {
+        icon.textContent = '🎤';
+      }
+    }
+
+    function stopVoiceSearch() {
+      if (voiceRecognition) {
+        try { voiceRecognition.stop(); } catch (_) {}
+        voiceRecognition = null;
+      }
+      isVoiceListening = false;
+      resetVoiceSearchBtn();
+    }
+
+    function toggleVoiceSearch() {
+      if (typeof onLocationModalActivity === 'function') onLocationModalActivity();
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const status = document.getElementById('locationSearchStatus');
+      const input = document.getElementById('locationInput');
+      const btn = document.getElementById('voiceSearchBtn');
+      const icon = document.getElementById('voiceSearchIcon');
+
+      if (!SpeechRec) {
+        if (status) {
+          status.style.color = '#f87171';
+          status.textContent = 'Voice search is not supported by this browser. Please type or use your on-screen keyboard.';
+        }
+        return;
+      }
+
+      if (isVoiceListening) {
+        stopVoiceSearch();
+        if (status) {
+          status.style.color = '#94a3b8';
+          status.textContent = 'Voice search stopped.';
+        }
+        return;
+      }
+
+      try {
+        voiceRecognition = new SpeechRec();
+        voiceRecognition.lang = 'en-GB';
+        voiceRecognition.interimResults = true;
+        voiceRecognition.continuous = false;
+        voiceRecognition.maxAlternatives = 1;
+
+        voiceRecognition.onstart = () => {
+          isVoiceListening = true;
+          if (btn) {
+            btn.className = 'tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 border-2 border-rose-300 text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0 animate-pulse ring-2 ring-rose-400 shadow-[0_0_16px_rgba(244,63,94,0.8)]';
+            btn.title = 'Listening... Tap to cancel';
+          }
+          if (icon) icon.textContent = '🔴';
+          if (status) {
+            status.style.color = '#38bdf8';
+            status.textContent = '🎙️ Listening... Speak a town, city, or UK postcode';
+          }
+        };
+
+        voiceRecognition.onresult = (e) => {
+          if (typeof onLocationModalActivity === 'function') onLocationModalActivity();
+          let transcript = '';
+          for (let i = e.resultIndex; i < e.results.length; ++i) {
+            transcript += e.results[i][0].transcript;
+          }
+          if (transcript && transcript.trim()) {
+            const raw = transcript.trim();
+            const normalized = normalizeSpokenUkPostcode(joinSpacedLetters(raw));
+            if (input) {
+              input.value = normalized;
+              updateLocationClearBtnVisibility();
+            }
+            if (status) {
+              status.style.color = '#38bdf8';
+              status.textContent = `🎙️ Heard: "${normalized}"`;
+            }
+          }
+        };
+
+        voiceRecognition.onerror = (e) => {
+          console.warn('Speech recognition error:', e.error);
+          isVoiceListening = false;
+          resetVoiceSearchBtn();
+          if (status) {
+            if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+              status.style.color = '#f87171';
+              status.textContent = '⚠️ Microphone blocked. Please allow microphone permission in Chrome settings.';
+            } else if (e.error === 'no-speech') {
+              status.style.color = '#94a3b8';
+              status.textContent = 'No speech heard. Tap 🎤 to try again.';
+            } else {
+              status.style.color = '#f87171';
+              status.textContent = `Microphone notice: ${e.error}`;
+            }
+          }
+        };
+
+        voiceRecognition.onend = () => {
+          isVoiceListening = false;
+          resetVoiceSearchBtn();
+          if (input && input.value && input.value.trim().length > 0) {
+            if (status) {
+              status.style.color = '#34d399';
+              status.textContent = `Searching for "${input.value.trim()}"...`;
+            }
+            setTimeout(() => {
+              searchLocationFromModal();
+            }, 350);
+          }
+        };
+
+        voiceRecognition.start();
+      } catch (err) {
+        console.error('Failed to start voice recognition:', err);
+        isVoiceListening = false;
+        resetVoiceSearchBtn();
+        if (status) {
+          status.style.color = '#f87171';
+          status.textContent = 'Could not start voice search: ' + (err.message || err);
+        }
       }
     }
 
@@ -8077,6 +9157,12 @@
         return;
       }
       if (e.key === 'ArrowLeft') {
+        const voiceBtn = document.getElementById('voiceSearchBtn');
+        if (voiceBtn) {
+          e.preventDefault();
+          voiceBtn.focus();
+          return;
+        }
         const clearBtn = document.getElementById('locationClearBtn');
         if (clearBtn && !clearBtn.classList.contains('hidden')) {
           e.preventDefault();
@@ -8580,6 +9666,7 @@ function joinSpacedLetters(text) {
       const suffix = isLocked ? ' 🔒' : '';
       const btnTimerEl = document.getElementById('locationBtnCountdown');
       if (btnTimerEl) btnTimerEl.textContent = `(${locationAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('locationModal', locationAutoCloseSecs, isLocked, ['closeLocationBtnTop']);
     }
 
     function resetLocationIdleExitFocusTimer() {
@@ -8618,7 +9705,7 @@ function joinSpacedLetters(text) {
       locationAutoCloseTimer = setInterval(() => {
         locationAutoCloseSecs--;
         updateLocationCountdownDisplay();
-        if (locationAutoCloseSecs === 5) {
+        if (locationAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeLocationBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -8783,6 +9870,7 @@ function joinSpacedLetters(text) {
     }
 
     function proceedOpenLocationModal() {
+      if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       const modal = document.getElementById('locationModal');
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
@@ -8853,6 +9941,7 @@ function joinSpacedLetters(text) {
     }
 
     function closeLocationModal(pop = true) {
+      if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       window._locModalReopenGuardUntil = Date.now() + 850;
       modalTimerLocks['locationModal'] = false;
       recentLocationsExpanded = false;
@@ -9262,6 +10351,7 @@ function joinSpacedLetters(text) {
     }
 
     async function searchLocationFromModal() {
+      if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       if (typeof cancelSearchAutoContinue === 'function') cancelSearchAutoContinue();
       const input = document.getElementById('locationInput');
       const status = document.getElementById('locationSearchStatus');
@@ -9527,6 +10617,7 @@ function joinSpacedLetters(text) {
       { name: 'Nailsworth', query: 'GL5 5HH', lat: 51.695, lon: -2.222 },
       { name: 'Amberley', query: 'Amberley Church', lat: 51.7093, lon: -2.2241 },
       { name: 'Stroud', query: 'Stroud', lat: 51.7458, lon: -2.2178 },
+      { name: 'Duntisbourne Abbots', query: 'Duntisbourne Abbots', lat: 51.7694, lon: -2.0543 },
       { name: 'Cirencester', query: 'Cirencester', lat: 51.718, lon: -1.968 },
       { name: 'Cheltenham', query: 'Cheltenham', lat: 51.899, lon: -2.078 },
       { name: 'Gloucester', query: 'Gloucester', lat: 51.864, lon: -2.243 },
@@ -9745,6 +10836,10 @@ function joinSpacedLetters(text) {
       const queries = loadUserRecentQueries().filter(q => !doesRecentQueryMatch(q, item, 0.002));
       saveUserRecentQueries(queries);
       renderLocationModalPicks();
+
+      if (typeof deleteLocationFromHistoryAndDatabase === 'function') {
+        deleteLocationFromHistoryAndDatabase(item).catch(() => {});
+      }
 
       showRecentStatusMessage(`Removed "${item.displayName}" from recent locations.`);
 
@@ -10617,7 +11712,7 @@ function joinSpacedLetters(text) {
       wondersAutoCloseTimer = setInterval(() => {
         wondersAutoCloseSecs--;
         updateWondersCountdownDisplay();
-        if (wondersAutoCloseSecs === 5) {
+        if (wondersAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeWondersBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -10639,6 +11734,7 @@ function joinSpacedLetters(text) {
       const suffix = isLocked ? ' 🔒' : '';
       const el = document.getElementById('wondersBtnCountdown');
       if (el) el.textContent = `(${Math.max(0, wondersAutoCloseSecs)}s${suffix})`;
+      syncCloseBtnLockWarning('wondersModal', wondersAutoCloseSecs, isLocked, ['closeWondersBtnTop']);
     }
 
     function onWondersModalActivity() {
@@ -11338,10 +12434,30 @@ function joinSpacedLetters(text) {
         if (t) t.textContent = CURRENT_LOCATION.name;
       }
       const rawPc = CURRENT_LOCATION.postcode ? CURRENT_LOCATION.postcode.trim() : '';
-      const displayPc = (rawPc && rawPc !== 'undefined' && rawPc !== 'GEO' && rawPc !== 'GPS') ? rawPc : 'Search';
+      const hasValidPostcode = (rawPc && rawPc !== 'undefined' && rawPc !== 'GEO' && rawPc !== 'GPS');
       const badgeEl = document.getElementById('headerPostcodeBadge');
-      if (badgeEl) badgeEl.textContent = displayPc;
-      document.getElementById('headerCoords').textContent = CURRENT_LOCATION.desc;
+      const prefixEl = document.getElementById('headerSearchPrefix');
+      if (hasValidPostcode) {
+        if (prefixEl) {
+          prefixEl.textContent = '';
+          prefixEl.className = 'hidden';
+        }
+        if (badgeEl) {
+          badgeEl.textContent = rawPc;
+          badgeEl.className = 'font-mono text-white font-bold tracking-wide';
+        }
+      } else {
+        if (prefixEl) {
+          prefixEl.textContent = 'Search';
+          prefixEl.className = 'inline text-sky-200 font-semibold';
+        }
+        if (badgeEl) {
+          badgeEl.textContent = '';
+          badgeEl.className = 'hidden';
+        }
+      }
+      const coordsEl = document.getElementById('headerCoords');
+      if (coordsEl) coordsEl.textContent = CURRENT_LOCATION.desc;
       document.title = `${CURRENT_LOCATION.name} - Ambient Weather`;
 
       const minLocName = document.getElementById('minimalLocationName');
@@ -11456,9 +12572,31 @@ function joinSpacedLetters(text) {
         }
       }
 
+      // Handle Duntisbourne Abbots (Cotswolds Land Rover)
+      const duntisbourneIcon = document.getElementById('duntisbourneIcon');
+      if (duntisbourneIcon) {
+        const locName = String((CURRENT_LOCATION && CURRENT_LOCATION.name) || '').trim().toLowerCase();
+        const locPc = String((CURRENT_LOCATION && CURRENT_LOCATION.postcode) || '').trim().toUpperCase().replace(/\s+/g, '');
+        const latNum = Number(CURRENT_LOCATION && CURRENT_LOCATION.lat) || 0;
+        const lonNum = Number(CURRENT_LOCATION && CURRENT_LOCATION.lon) || 0;
+        const isNearDuntisbourne = Math.abs(latNum - 51.7694) < 0.05 && Math.abs(lonNum - (-2.0543)) < 0.05;
+        const isDuntisbourne = (activeLandmark && activeLandmark.id === 'duntisbourne_abbots') ||
+          locName.includes('duntisbourne') ||
+          locName.includes('duntisbourn') ||
+          (locPc.startsWith('GL7') && (locName.includes('duntis') || isNearDuntisbourne)) ||
+          locPc === 'GL77JN' || locPc === 'GL77TA' || locPc === 'GL77TB';
+        if (isDuntisbourne) {
+          duntisbourneIcon.classList.remove('hidden');
+          duntisbourneIcon.classList.add('inline-flex');
+        } else {
+          duntisbourneIcon.classList.add('hidden');
+          duntisbourneIcon.classList.remove('inline-flex');
+        }
+      }
+
       // Handle Global Landmarks in dynamic badge container
       if (landmarkIconCont && landmarkBadge) {
-        if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel' && activeLandmark.id !== 'egypt_mill' && activeLandmark.id !== 'the_olive_tree') {
+        if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel' && activeLandmark.id !== 'egypt_mill' && activeLandmark.id !== 'the_olive_tree' && activeLandmark.id !== 'duntisbourne_abbots') {
           landmarkBadge.className = `inline-flex items-center justify-center w-7 h-7 rounded-lg ${activeLandmark.badgeStyle || 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]'} p-0.5 transform hover:scale-110 transition cursor-pointer`;
           landmarkBadge.innerHTML = activeLandmark.svg;
           landmarkIconCont.title = `${activeLandmark.name} • ${activeLandmark.city ? activeLandmark.city + ', ' : ''}${activeLandmark.country}`;
@@ -12148,7 +13286,7 @@ function joinSpacedLetters(text) {
       if (feelsLike <= 3) {
         if (isWet) return `🧥 Heavy waterproof coat & gloves (${flRound}°C)`;
         if (isBlustery) return `🧥 Big winter coat & scarf — bitter wind (${flRound}°C)`;
-        return `🧥 Big winter coat & gloves needed (${flRound}°C)`;
+        return `🧥 Winter coat & gloves needed (${flRound}°C)`;
       }
 
       // Cold (Feels like 4°C to 8°C)
@@ -14231,35 +15369,21 @@ function joinSpacedLetters(text) {
     }
 
     function tryRestoreFullscreen() {
-      const shouldRestore = (
-        sessionStorage.getItem('ambient_restore_fullscreen') === 'true' ||
-        localStorage.getItem('ambient_pref_fullscreen') === 'true'
-      );
-      if (!shouldRestore) return;
-      if (document.fullscreenElement) return;
-
-      const doFullscreen = () => {
+      // Passive check only - zero interference with scrolling or touch
+      if (sessionStorage.getItem('ambient_restore_fullscreen') === 'true') {
+        try { sessionStorage.removeItem('ambient_restore_fullscreen'); } catch (_) {}
         if (!document.fullscreenElement && document.documentElement && document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen().then(() => {
-            sessionStorage.removeItem('ambient_restore_fullscreen');
-          }).catch(() => {});
+          document.documentElement.requestFullscreen().catch(() => {});
         }
-      };
-
-      // 1. Try immediately (works on TV / delegated webview / PWA)
-      doFullscreen();
-
-      // 2. Fallback to first user tap or key interaction
-      const onFirstGesture = () => {
-        doFullscreen();
-        window.removeEventListener('click', onFirstGesture, true);
-        window.removeEventListener('keydown', onFirstGesture, true);
-        window.removeEventListener('touchstart', onFirstGesture, true);
-      };
-      window.addEventListener('click', onFirstGesture, { capture: true, once: true });
-      window.addEventListener('keydown', onFirstGesture, { capture: true, once: true });
-      window.addEventListener('touchstart', onFirstGesture, { capture: true, once: true });
+      }
     }
+
+    // Clean up any lingering resume banner from DOM or storage
+    try {
+      const oldB = document.getElementById('resumeFullscreenBanner');
+      if (oldB) oldB.remove();
+      sessionStorage.removeItem('ambient_restore_fullscreen');
+    } catch (_) {}
 
     document.addEventListener('fullscreenchange', checkFullscreenState);
     window.addEventListener('resize', checkFullscreenState);
@@ -14343,7 +15467,7 @@ function joinSpacedLetters(text) {
       shareAutoCloseTimer = setInterval(() => {
         shareAutoCloseSecs--;
         updateShareCountdownDisplay();
-        if (shareAutoCloseSecs === 5) {
+        if (shareAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeShareBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -14361,6 +15485,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${shareAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('shareBtnCountdown');
       if (btnEl) btnEl.textContent = `(${shareAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('shareModal', shareAutoCloseSecs, isLocked, ['closeShareBtnTop']);
     }
 
     function stopShareAutoCloseTimer() {
@@ -15926,7 +17051,7 @@ function joinSpacedLetters(text) {
       radarAutoCloseTimer = setInterval(() => {
         radarAutoCloseSecs--;
         updateRadarCountdownDisplay();
-        if (radarAutoCloseSecs === 5) {
+        if (radarAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeRadarBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -15946,6 +17071,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${radarAutoCloseSecs}s${suffix}`;
       const btnTimerEl = document.getElementById('radarBtnCountdown');
       if (btnTimerEl) btnTimerEl.textContent = `(${radarAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('radarModal', radarAutoCloseSecs, isLocked, ['closeRadarBtnTop']);
     }
 
     function stopRadarAutoCloseTimer() {
@@ -16129,7 +17255,7 @@ function joinSpacedLetters(text) {
       trafficAutoCloseTimer = setInterval(() => {
         trafficAutoCloseSecs--;
         updateTrafficCountdownDisplay();
-        if (trafficAutoCloseSecs === 5) {
+        if (trafficAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeTrafficBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -16148,6 +17274,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${trafficAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('trafficBtnCountdown');
       if (btnEl) btnEl.textContent = `(${trafficAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('trafficModal', trafficAutoCloseSecs, isLocked, ['closeTrafficBtnTop']);
     }
 
     function stopTrafficAutoCloseTimer() {
@@ -16457,7 +17584,7 @@ function joinSpacedLetters(text) {
       riverAutoCloseTimer = setInterval(() => {
         riverAutoCloseSecs--;
         updateRiverCountdownDisplay();
-        if (riverAutoCloseSecs === 5) {
+        if (riverAutoCloseSecs === 8) {
           const closeBtn = document.getElementById('closeRiverBtnTop');
           if (closeBtn && document.activeElement !== closeBtn) closeBtn.focus();
         }
@@ -16475,6 +17602,7 @@ function joinSpacedLetters(text) {
       if (secsEl) secsEl.textContent = `${riverAutoCloseSecs}s${suffix}`;
       const btnEl = document.getElementById('riverBtnCountdown');
       if (btnEl) btnEl.textContent = `(${riverAutoCloseSecs}s${suffix})`;
+      syncCloseBtnLockWarning('riverModal', riverAutoCloseSecs, isLocked, ['closeRiverBtnTop']);
     }
 
     function stopRiverAutoCloseTimer() {
