@@ -3230,8 +3230,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 356;
-    const APP_VERSION = '1.10.192-dev';
+    const APP_BUILD = 357;
+    const APP_VERSION = '1.10.193-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6573,49 +6573,8 @@
         }
 
         const timeEl = document.createElement('div');
-        timeEl.style.cssText = 'font-size: 10px; color: #94a3b8; margin-top: 3px; display: flex; align-items: center; justify-content: space-between; gap: 6px;';
-        const timeText = document.createElement('span');
-        timeText.textContent = `Last queried: ${dateStr}`;
-        timeEl.appendChild(timeText);
-
-        const userRecents = (typeof loadUserRecentQueries === 'function') ? loadUserRecentQueries() : [];
-        const isOwnLocation = userRecents.some(r => doesRecentQueryMatch(r, q, 0.0035));
-        if (isOwnLocation) {
-          const delBtn = document.createElement('button');
-          delBtn.type = 'button';
-          delBtn.tabIndex = -1;
-          delBtn.title = 'Remove this location from your saved places and delete from public map database';
-          delBtn.style.cssText = 'background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fda4af; border-radius: 5px; padding: 1.5px 6px; font-size: 9px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; transition: all 0.2s; white-space: nowrap; line-height: 1.2;';
-          delBtn.innerHTML = '<span>🗑️</span><span>Delete</span>';
-          delBtn.onclick = async (e) => {
-            if (e) {
-              e.stopPropagation();
-              if (e.preventDefault) e.preventDefault();
-            }
-            if (!delBtn.dataset.confirming) {
-              delBtn.dataset.confirming = 'true';
-              delBtn.innerHTML = '<span>Confirm?</span>';
-              delBtn.style.background = 'rgba(244, 63, 94, 0.45)';
-              delBtn.style.color = '#ffffff';
-              delBtn.style.borderColor = '#f43f5e';
-              setTimeout(() => {
-                if (delBtn) {
-                  delBtn.dataset.confirming = '';
-                  delBtn.innerHTML = '<span>🗑️</span><span>Delete</span>';
-                  delBtn.style.background = 'rgba(244, 63, 94, 0.15)';
-                  delBtn.style.color = '#fda4af';
-                  delBtn.style.borderColor = 'rgba(244, 63, 94, 0.35)';
-                }
-              }, 4000);
-              return;
-            }
-            delBtn.innerHTML = '<span>Deleting...</span>';
-            delBtn.disabled = true;
-            await deleteLocationFromHistoryAndDatabase(q);
-          };
-          timeEl.appendChild(delBtn);
-        }
-
+        timeEl.style.cssText = 'font-size: 10px; color: #94a3b8; margin-top: 3px;';
+        timeEl.textContent = `Last queried: ${dateStr}`;
         popupWrapper.appendChild(timeEl);
 
         // For non-current locations, show the button to load forecast.
