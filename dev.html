@@ -2474,8 +2474,19 @@
 
       <!-- Quick Location Shortcuts Bar (Sorted by Distance from Current Location) & Compact Controls -->
       <div class="pt-1.5 border-t border-white/10 flex flex-col gap-1 flex-shrink-0">
-        <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 w-full min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
-          <!-- Chips injected dynamically -->
+        <div class="flex items-center gap-1.5 w-full min-w-0">
+          <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 flex-1 min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
+            <!-- Chips injected dynamically -->
+          </div>
+          <!-- Next Location Button at right-hand end of Carousel -->
+          <div class="flex items-center gap-1 flex-shrink-0 pr-0.5">
+            <button id="mapCarouselPrevBtn" type="button" onclick="stepMapCarousel(-1)" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const nxt=document.getElementById('mapCarouselNextBtn');if(nxt)nxt.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] text-slate-300 hover:text-white transition flex-shrink-0 cursor-pointer hidden sm:flex items-center justify-center leading-none" title="Previous Location" tabindex="0">
+              ◀
+            </button>
+            <button id="mapCarouselNextBtn" type="button" onclick="stepMapCarousel(1)" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const prev=document.getElementById('mapCarouselPrevBtn');if(prev&&prev.offsetParent!==null){prev.focus();}else{const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2.5 rounded-lg bg-sky-500/25 hover:bg-sky-500/40 active:bg-sky-500/50 border border-sky-400/40 hover:border-sky-300/70 text-sky-200 hover:text-white text-[11px] font-semibold transition flex items-center gap-1 flex-shrink-0 cursor-pointer shadow-[0_0_8px_rgba(56,189,248,0.2)] hover:shadow-[0_0_12px_rgba(56,189,248,0.35)] leading-none select-none" title="Next Location (or swipe carousel sideways)" tabindex="0">
+              <span>Next</span><span class="text-[10px]">▶</span>
+            </button>
+          </div>
         </div>
         <!-- Bottom Controls: Close button on bottom left, Swipe to browse in center, Map controls on right -->
         <div class="flex items-center justify-between gap-2 px-1 pb-0 -mt-0.5 flex-wrap">
@@ -3252,8 +3263,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 370;
-    const APP_VERSION = '1.10.203-dev';
+    const APP_BUILD = 371;
+    const APP_VERSION = '1.10.204-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6045,6 +6056,36 @@
       }
     }
 
+    function stepMapCarousel(direction = 1) {
+      resetHistoryMapAutoCloseTimer();
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (!chipsEl) return;
+      const allButtons = Array.from(chipsEl.querySelectorAll('button'));
+      if (allButtons.length === 0) return;
+
+      let curIdx = mapLastFocusedChipIndex;
+      if (typeof curIdx !== 'number' || curIdx < 0 || curIdx >= allButtons.length) {
+        curIdx = 0;
+        if (mapActivePopupKey) {
+          const found = allButtons.findIndex(b => b._chipKey === mapActivePopupKey);
+          if (found !== -1) curIdx = found;
+        }
+      }
+
+      let nextIdx = curIdx + direction;
+      if (nextIdx >= allButtons.length) nextIdx = 0;
+      if (nextIdx < 0) nextIdx = allButtons.length - 1;
+
+      const targetBtn = allButtons[nextIdx];
+      if (targetBtn) {
+        mapLastFocusedChipIndex = nextIdx;
+        if (typeof targetBtn._panAction === 'function') {
+          targetBtn._panAction(false); // false = programmatic scroll so chipsEl scrolls to target
+        }
+        updateChipHighlightStates();
+      }
+    }
+
     function loadLocationFromMap(name, lat, lon, postcode, options = {}) {
       closeHistoryMapModal();
       applySelectedLocation(name, lat, lon, (postcode && postcode !== 'undefined') ? postcode : 'GEO', true, options || {});
@@ -6330,8 +6371,10 @@
                 if (nextBtn) {
                   try { nextBtn.focus({ preventScroll: true }); } catch (_) { nextBtn.focus(); }
                 }
+              } else {
+                const nxt = document.getElementById('mapCarouselNextBtn');
+                if (nxt) nxt.focus();
               }
-              // If already on the last chip, stay firmly on the last chip; do NOT jump to close!
             } else if (e.key === 'ArrowLeft') {
               e.preventDefault();
               e.stopPropagation();
@@ -6421,7 +6464,9 @@
               document.activeElement.id === 'mapStyleSatelliteBtn' ||
               document.activeElement.id === 'mapStyleDarkBtn' ||
               document.activeElement.id === 'mapRadarBtn' ||
-              document.activeElement.id === 'mapReturnCurrentBtn'
+              document.activeElement.id === 'mapReturnCurrentBtn' ||
+              document.activeElement.id === 'mapCarouselNextBtn' ||
+              document.activeElement.id === 'mapCarouselPrevBtn'
             );
             if (!isBottomCtrlActive) {
               try {
