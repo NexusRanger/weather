@@ -3252,8 +3252,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 367;
-    const APP_VERSION = '1.10.200-dev';
+    const APP_BUILD = 368;
+    const APP_VERSION = '1.10.201-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5197,7 +5197,32 @@
         }
       }
 
-      // 2. Deduplicate queries by distinct geographic coordinate (rounded to 3 decimal places)
+    function getSafeLatLngBounds(points) {
+      if (!points || points.length === 0) return null;
+      if (points.length === 1) {
+        const p = points[0];
+        const lat = (typeof p.lat === 'number') ? p.lat : p[0];
+        const lon = (typeof p.lon === 'number') ? p.lon : p[1];
+        return L.latLngBounds([[lat, lon], [lat, lon]]);
+      }
+      const rawPts = points.map(p => [
+        (typeof p.lat === 'number') ? p.lat : p[0],
+        (typeof p.lon === 'number') ? p.lon : p[1]
+      ]);
+      const normal = L.latLngBounds(rawPts);
+      const spanNorm = normal.getEast() - normal.getWest();
+      if (spanNorm > 180) {
+        const wrappedPts = rawPts.map(([lat, lon]) => [lat, lon < 0 ? lon + 360 : lon]);
+        const wrappedBounds = L.latLngBounds(wrappedPts);
+        const spanWrapped = wrappedBounds.getEast() - wrappedBounds.getWest();
+        if (spanWrapped < spanNorm) {
+          return wrappedBounds;
+        }
+      }
+      return normal;
+    }
+
+    // 2. Deduplicate queries by distinct geographic coordinate (rounded to 3 decimal places)
       const seen = new Set();
       const uniqueQueries = [];
       for (const q of queries) {
@@ -5224,7 +5249,7 @@
       if (targetPoints.length === 0) return;
 
       // 5. Compute bounds and determine optimal zoom clamped strictly between 5 (continental limit) and 10 (regional context)
-      const bounds = L.latLngBounds(targetPoints.map(p => [p.lat, p.lon]));
+      const bounds = getSafeLatLngBounds(targetPoints) || L.latLngBounds(targetPoints.map(p => [p.lat, p.lon]));
       let targetZoom = 8;
       try {
         const bZoom = historyLeafletMap.getBoundsZoom(bounds, false, [60, 60]);
@@ -5811,14 +5836,13 @@
         historyLeafletMap.removeLayer(historyRefTileLayer);
       }
 
-      // Strictly single-world bounded: noWrap ensures only ONE world is rendered without duplicate instances!
+      // Seamless wrapping across 180° antimeridian so places like Fiji / Taveuni Island never hit a boundary wall
       historyBaseTileLayer = L.tileLayer(conf.base, {
         attribution: '',
         maxNativeZoom: conf.maxNativeZoom || conf.maxZoom || 16,
         maxZoom: conf.maxZoom || 16,
         detectRetina: false,
-        noWrap: true,
-        bounds: [[-85.0511, -180], [85.0511, 180]]
+        noWrap: false
       }).addTo(historyLeafletMap);
 
       if (conf.ref) {
@@ -5827,8 +5851,7 @@
           maxNativeZoom: conf.maxRefNativeZoom || conf.maxZoom || 16,
           maxZoom: conf.maxZoom || 16,
           detectRetina: false,
-          noWrap: true,
-          bounds: [[-85.0511, -180], [85.0511, 180]]
+          noWrap: false
         }).addTo(historyLeafletMap);
       }
 
@@ -5961,7 +5984,7 @@
         const maxZ = (typeof historyLeafletMap.getMaxZoom === 'function') ? Math.min(9, historyLeafletMap.getMaxZoom()) : 9;
         historyLeafletMap.flyTo(validPts[0], maxZ, { duration: 0.6 });
       } else {
-        const bounds = L.latLngBounds(validPts);
+        const bounds = getSafeLatLngBounds(validPts) || L.latLngBounds(validPts);
         const maxZ = (typeof historyLeafletMap.getMaxZoom === 'function') ? Math.min(11, historyLeafletMap.getMaxZoom()) : 11;
         historyLeafletMap.fitBounds(bounds, {
           padding: [38, 38],
@@ -6718,9 +6741,9 @@
           fadeAnimation: false,
           minZoom: 1,
           maxZoom: (HISTORY_MAP_STYLES[getHistoryMapStyle()] && HISTORY_MAP_STYLES[getHistoryMapStyle()].maxZoom) || 8,
-          maxBounds: [[-85.0511, -180], [85.0511, 180]],
-          maxBoundsViscosity: 1.0,
-          worldCopyJump: false
+          maxBounds: [[-85.0511, -540], [85.0511, 540]],
+          maxBoundsViscosity: 0.8,
+          worldCopyJump: true
         }).setView([currentRef.lat, currentRef.lon], Math.min(defaultZoom, (HISTORY_MAP_STYLES[getHistoryMapStyle()] && HISTORY_MAP_STYLES[getHistoryMapStyle()].maxZoom) || 8));
 
         // Remove Leaflet map container and controls from D-pad tab order so TV remote only uses bottom shortcuts & Close
