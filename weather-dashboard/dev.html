@@ -3268,8 +3268,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 373;
-    const APP_VERSION = '1.10.206-dev';
+    const APP_BUILD = 374;
+    const APP_VERSION = '1.10.207-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -14439,10 +14439,11 @@ function joinSpacedLetters(text) {
         const date = new Date(daily.time[i]);
         const dayName = i === 0 ? 'Today' : date.toLocaleDateString('en-GB', { weekday: 'short' });
         const dateSub = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        const isToday = (i === 0);
         const info = getWeatherInfo(daily.weather_code[i], 1);
         const max = Math.round(daily.temperature_2m_max[i]);
         const min = Math.round(daily.temperature_2m_min[i]);
-        const rainProb = daily.precipitation_probability_max[i] || 0;
+        let rainProb = daily.precipitation_probability_max[i] || 0;
         const hasFrostRisk = min <= 3.5;
         let windMax = (daily.wind_speed_10m_max && daily.wind_speed_10m_max[i] != null) ? Math.round(daily.wind_speed_10m_max[i]) : 0;
         let gustMax = (daily.wind_gusts_10m_max && daily.wind_gusts_10m_max[i] != null) ? Math.round(daily.wind_gusts_10m_max[i]) : windMax;
@@ -14456,20 +14457,67 @@ function joinSpacedLetters(text) {
               const hourNum = parseInt(hourly.time[h].slice(11, 13), 10);
               const spd = (hourly.wind_speed_10m && hourly.wind_speed_10m[h] != null) ? hourly.wind_speed_10m[h] : 0;
               const gst = (hourly.wind_gusts_10m && hourly.wind_gusts_10m[h] != null) ? hourly.wind_gusts_10m[h] : spd;
-              dayHours.push({ hour: hourNum, speed: spd, gust: gst });
+              const prob = (hourly.precipitation_probability && hourly.precipitation_probability[h] != null) ? hourly.precipitation_probability[h] : 0;
+              dayHours.push({ hour: hourNum, speed: spd, gust: gst, rainProb: prob });
             }
           }
 
           if (dayHours.length > 0) {
-            // Find peak wind hour so the tooltip clearly specifies exact timing (e.g. peak gusts around 23:00)
-            const peakHourObj = dayHours.reduce((max, x) => x.gust > max.gust ? x : max, dayHours[0]);
-            if (peakHourObj && peakHourObj.gust >= 25) {
+            let evalHours = dayHours;
+            let earlierPeakGust = 0;
+            let earlierPeakHour = -1;
+
+            if (isToday) {
+              // Determine current hour in the active location's timezone
+              let currentHour = 0;
+              const livePrefix = (typeof getLiveLocationHourPrefix === 'function') ? getLiveLocationHourPrefix() : '';
+              if (livePrefix && livePrefix.length >= 13) {
+                currentHour = parseInt(livePrefix.slice(11, 13), 10) || 0;
+              } else if (hourly && hourly._currentLocalTime && hourly._currentLocalTime.length >= 13) {
+                currentHour = parseInt(hourly._currentLocalTime.slice(11, 13), 10) || 0;
+              } else {
+                currentHour = new Date().getHours();
+              }
+
+              const remainingHours = dayHours.filter(h => h.hour >= currentHour);
+              const pastHours = dayHours.filter(h => h.hour < currentHour);
+
+              if (pastHours.length > 0) {
+                const pastPeak = pastHours.reduce((max, x) => x.gust > max.gust ? x : max, pastHours[0]);
+                earlierPeakGust = pastPeak.gust;
+                earlierPeakHour = pastPeak.hour;
+              }
+
+              // For Today, indicators forecast remaining hours ahead so passed morning peaks don't trigger false alerts
+              if (remainingHours.length > 0) {
+                evalHours = remainingHours;
+                const remMaxSpd = evalHours.reduce((max, x) => x.speed > max.speed ? x : max, evalHours[0]);
+                const remMaxGst = evalHours.reduce((max, x) => x.gust > max.gust ? x : max, evalHours[0]);
+                windMax = Math.round(remMaxSpd.speed);
+                gustMax = Math.round(remMaxGst.gust);
+
+                const remMaxRain = evalHours.reduce((max, x) => x.rainProb > max.rainProb ? x : max, evalHours[0]);
+                rainProb = Math.round(remMaxRain.rainProb);
+              }
+            }
+
+            // Find peak wind hour so the tooltip clearly specifies exact timing
+            const peakHourObj = evalHours.reduce((max, x) => x.gust > max.gust ? x : max, evalHours[0]);
+            if (peakHourObj && peakHourObj.gust >= 20) {
               const hourLabel = (peakHourObj.hour < 10 ? '0' : '') + peakHourObj.hour + ':00';
-              if (peakHourObj.hour >= 20 || peakHourObj.hour < 6) {
+              if (isToday) {
+                lateNightSuffix = `• Peak remaining gusts ~${Math.round(peakHourObj.gust)} mph around ${hourLabel}`;
+              } else if (peakHourObj.hour >= 20 || peakHourObj.hour < 6) {
                 lateNightSuffix = `• Peak gusts ~${Math.round(peakHourObj.gust)} mph late around ${hourLabel}`;
               } else {
                 lateNightSuffix = `• Peak gusts ~${Math.round(peakHourObj.gust)} mph around ${hourLabel}`;
               }
+            }
+
+            // If an earlier peak was notably higher and has already passed, clearly indicate this in the tooltip
+            if (isToday && earlierPeakHour >= 0 && earlierPeakGust >= 25 && earlierPeakGust > (gustMax + 5)) {
+              const pastHourLabel = (earlierPeakHour < 10 ? '0' : '') + earlierPeakHour + ':00';
+              lateNightSuffix += ` (Earlier peak ~${Math.round(earlierPeakGust)} mph at ${pastHourLabel} has passed)`;
             }
           }
         }
