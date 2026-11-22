@@ -2479,12 +2479,9 @@
             <!-- Chips injected dynamically -->
           </div>
           <!-- Next Location Button at right-hand end of Carousel -->
-          <div class="flex items-center gap-1 flex-shrink-0 pr-0.5">
-            <button id="mapCarouselPrevBtn" type="button" onclick="stepMapCarousel(-1)" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const nxt=document.getElementById('mapCarouselNextBtn');if(nxt)nxt.focus();}else if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] text-slate-300 hover:text-white transition flex-shrink-0 cursor-pointer hidden sm:flex items-center justify-center leading-none" title="Previous Location" tabindex="0">
-              ◀
-            </button>
-            <button id="mapCarouselNextBtn" type="button" onclick="stepMapCarousel(1)" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const prev=document.getElementById('mapCarouselPrevBtn');if(prev&&prev.offsetParent!==null){prev.focus();}else{const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2.5 rounded-lg bg-sky-500/25 hover:bg-sky-500/40 active:bg-sky-500/50 border border-sky-400/40 hover:border-sky-300/70 text-sky-200 hover:text-white text-[11px] font-semibold transition flex items-center gap-1 flex-shrink-0 cursor-pointer shadow-[0_0_8px_rgba(56,189,248,0.2)] hover:shadow-[0_0_12px_rgba(56,189,248,0.35)] leading-none select-none" title="Next Location (or swipe carousel sideways)" tabindex="0">
-              <span>Next</span><span class="text-[10px]">▶</span>
+          <div class="flex items-center flex-shrink-0 pr-0.5">
+            <button id="mapCarouselNextBtn" type="button" onclick="stepMapCarousel(1)" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2.5 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 hover:border-white/30 text-slate-300 hover:text-white text-[11px] font-medium transition flex items-center gap-1 flex-shrink-0 cursor-pointer shadow-sm leading-none select-none" title="Next Location (or swipe carousel sideways)" tabindex="0">
+              <span>Next</span><span class="text-[10px] text-slate-400">▶</span>
             </button>
           </div>
         </div>
@@ -3263,8 +3260,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 371;
-    const APP_VERSION = '1.10.204-dev';
+    const APP_BUILD = 372;
+    const APP_VERSION = '1.10.205-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6465,8 +6462,7 @@
               document.activeElement.id === 'mapStyleDarkBtn' ||
               document.activeElement.id === 'mapRadarBtn' ||
               document.activeElement.id === 'mapReturnCurrentBtn' ||
-              document.activeElement.id === 'mapCarouselNextBtn' ||
-              document.activeElement.id === 'mapCarouselPrevBtn'
+              document.activeElement.id === 'mapCarouselNextBtn'
             );
             if (!isBottomCtrlActive) {
               try {
