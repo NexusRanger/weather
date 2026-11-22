@@ -2340,6 +2340,14 @@
           <div id="wondersSkiChips" class="flex flex-wrap gap-1.5"></div>
         </div>
 
+        <!-- ⛰️ Famous Mountain Peaks & Alpine Summits -->
+        <div>
+          <div class="text-[10px] font-semibold uppercase tracking-wider text-teal-300 mb-1 flex items-center gap-1">
+            <span>⛰️</span> Famous Mountain Peaks &amp; Summits
+          </div>
+          <div id="wondersPeaksChips" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
         <!-- ⚡ Live Extreme Weather Hotspots -->
         <div>
           <div class="text-[10px] font-semibold uppercase tracking-wider text-amber-300 mb-1 flex items-center gap-1">
@@ -3260,8 +3268,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 372;
-    const APP_VERSION = '1.10.205-dev';
+    const APP_BUILD = 373;
+    const APP_VERSION = '1.10.206-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -11740,6 +11748,26 @@ function joinSpacedLetters(text) {
       { name: 'Sun Peaks', desc: 'British Columbia, Canada • Second-largest ski area in Canada across three mountain faces', category: 'ski', icon: '🎿', lat: 50.8847, lon: -119.8828, country: 'Canada' },
       { name: 'Hemsedal', desc: 'Viken, Norway • Scandinavian Alps premier ski resort with long groomed alpine trails', category: 'ski', icon: '❄️', lat: 60.8617, lon: 8.5528, country: 'Norway' },
 
+      // ⛰️ Famous Mountain Peaks & Alpine Summits
+      { name: 'Snowdon (Yr Wyddfa)', desc: 'Gwynedd, Wales • Highest peak in Wales (1,085m) & rugged Snowdonia ridge', category: 'peaks', icon: '⛰️', lat: 53.0685, lon: -4.0763, country: 'Wales, UK' },
+      { name: 'Ben Nevis', desc: 'Fort William, Scotland • Highest mountain in the British Isles (1,345m) & towering North Face', category: 'peaks', icon: '⛰️', lat: 56.7969, lon: -5.0036, country: 'Scotland, UK' },
+      { name: 'Scafell Pike', desc: 'Lake District, England • Highest mountain summit in England (978m) & volcanic boulder plateau', category: 'peaks', icon: '⛰️', lat: 54.4542, lon: -3.2116, country: 'England, UK' },
+      { name: 'Pen y Fan', desc: 'Brecon Beacons, Wales • Iconic South Wales peak (886m) & Bannau Brycheiniog ridge', category: 'peaks', icon: '⛰️', lat: 51.8841, lon: -3.4367, country: 'Wales, UK' },
+      { name: 'Helvellyn', desc: 'Lake District, England • Famed Striding Edge arête & glacial Red Tarn (950m)', category: 'peaks', icon: '⛰️', lat: 54.5269, lon: -3.0180, country: 'England, UK' },
+      { name: 'Ben Lomond', desc: 'Loch Lomond, Scotland • Southernmost Scottish Munro peak overlooking the loch (974m)', category: 'peaks', icon: '⛰️', lat: 56.1903, lon: -4.6331, country: 'Scotland, UK' },
+      { name: 'Mont Blanc', desc: 'Haute-Savoie, France • Highest peak in Western Europe and monarch of the Alps (4,809m)', category: 'peaks', icon: '🏔️', lat: 45.8326, lon: 6.8652, country: 'France' },
+      { name: 'Matterhorn', desc: 'Valais, Switzerland • Legendary jagged pyramid alpine pinnacle (4,478m)', category: 'peaks', icon: '🏔️', lat: 45.9763, lon: 7.6586, country: 'Switzerland' },
+      { name: 'Mount Everest', desc: 'Himalayas, Nepal • Highest summit on Earth standing at 8,848m in the jet stream', category: 'peaks', icon: '🏔️', lat: 27.9881, lon: 86.9250, country: 'Nepal' },
+      { name: 'Mount Fuji', desc: 'Honshu, Japan • Sacred snow-capped volcanic stratocone & Japan\'s highest peak (3,776m)', category: 'peaks', icon: '🗻', lat: 35.3606, lon: 138.7274, country: 'Japan' },
+      { name: 'Mount Kilimanjaro', desc: 'Tanzania • Africa\'s highest freestanding snow-capped volcanic colossus (5,895m)', category: 'peaks', icon: '🗻', lat: -3.0674, lon: 37.3556, country: 'Tanzania' },
+      { name: 'Mount Denali', desc: 'Alaska, USA • Highest mountain peak in North America (6,190m) with extreme sub-polar cold', category: 'peaks', icon: '🏔️', lat: 63.0692, lon: -151.0070, country: 'USA' },
+      { name: 'Aconcagua', desc: 'Mendoza, Argentina • Highest peak in the Americas and Southern Hemisphere (6,961m)', category: 'peaks', icon: '🏔️', lat: -32.6532, lon: -70.0109, country: 'Argentina' },
+      { name: 'Table Mountain', desc: 'Cape Town, South Africa • World-famous flat-topped landmark plateau overlooking the ocean', category: 'peaks', icon: '⛰️', lat: -33.9628, lon: 18.4098, country: 'South Africa' },
+      { name: 'Mount Cook (Aoraki)', desc: 'Southern Alps, New Zealand • Highest glaciated peak in New Zealand (3,724m)', category: 'peaks', icon: '🏔️', lat: -43.5950, lon: 170.1418, country: 'New Zealand' },
+      { name: 'Jungfrau', desc: 'Bernese Alps, Switzerland • Spectacular high alpine summit (4,158m) above the Aletsch Glacier', category: 'peaks', icon: '🏔️', lat: 46.5368, lon: 7.9626, country: 'Switzerland' },
+      { name: 'Mount Rainier', desc: 'Washington, USA • Massive glaciated active Cascade stratovolcano (4,392m)', category: 'peaks', icon: '🏔️', lat: 46.8523, lon: -121.7603, country: 'USA' },
+      { name: 'Mount Teide', desc: 'Tenerife, Spain • Highest summit in Spain (3,718m) rising above Atlantic cloud inversions', category: 'peaks', icon: '🌋', lat: 28.2723, lon: -16.6425, country: 'Spain' },
+
       // ⚡ Live Extreme Weather Hotspots (Lightning, Winds, Deluges & Scorching Deserts)
       { name: 'Catatumbo Lightning', desc: 'Lake Maracaibo, Venezuela • Earth\'s Most Intense Lightning Storms (280/hr)', category: 'weather', icon: '⚡', lat: 9.8000, lon: -71.5667, country: 'Venezuela' },
       { name: 'Mount Washington', desc: 'New Hampshire, USA • Extreme Hurricane-Force Winds (372 km/h record)', category: 'weather', icon: '💨', lat: 44.2705, lon: -71.3033, country: 'USA' },
@@ -12075,6 +12103,7 @@ function joinSpacedLetters(text) {
         '#wondersCapitalChips',
         '#wondersTouristChips',
         '#wondersSkiChips',
+        '#wondersPeaksChips',
         '#wondersWeatherChips',
         '#wondersVolcanoChips',
         '#wondersColdChips',
@@ -12406,6 +12435,7 @@ function joinSpacedLetters(text) {
         capitals: document.getElementById('wondersCapitalChips'),
         tourist: document.getElementById('wondersTouristChips'),
         ski: document.getElementById('wondersSkiChips'),
+        peaks: document.getElementById('wondersPeaksChips'),
         weather: document.getElementById('wondersWeatherChips'),
         volcano: document.getElementById('wondersVolcanoChips'),
         cold: document.getElementById('wondersColdChips'),
@@ -12416,6 +12446,7 @@ function joinSpacedLetters(text) {
         capitals: 14,
         tourist: 12,
         ski: 11,
+        peaks: 12,
         landmark: 11,
         weather: 10,
         volcano: 10,
@@ -12446,6 +12477,8 @@ function joinSpacedLetters(text) {
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 hover:border-rose-400/60 text-xs text-rose-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
             : (w.category === 'ski')
             ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/30 hover:border-cyan-400/60 text-xs text-cyan-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
+            : (w.category === 'peaks')
+            ? 'tv-focus-amber px-2.5 py-1 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 border border-teal-400/30 hover:border-teal-400/60 text-xs text-teal-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none'
             : 'tv-focus-amber px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/25 text-xs text-slate-200 hover:text-white transition cursor-pointer flex items-center gap-1 focus:outline-none';
           btn.title = `${w.name}: ${w.desc}`;
           btn.innerHTML = `<span class="text-xs">${w.icon}</span><span class="font-medium">${w.name}</span>`;
