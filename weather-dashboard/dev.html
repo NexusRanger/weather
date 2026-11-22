@@ -3252,8 +3252,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 368;
-    const APP_VERSION = '1.10.201-dev';
+    const APP_BUILD = 369;
+    const APP_VERSION = '1.10.202-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5173,30 +5173,7 @@
       return Math.min(currentZoom, neededZoom);
     }
 
-    // Auto Zoom: Frames at least 3 distinct nearby locations within a continental boundary
-    function applyHistoryMapAutoZoom(isInitialOpen = false) {
-      if (!historyLeafletMap) return;
-      try { historyLeafletMap.invalidateSize(false); } catch (_) {}
-      const queries = currentMapQueries && currentMapQueries.length > 0 ? currentMapQueries : Object.values(mapMarkerMap).map(e => e.query || e.q);
-      if (!queries || queries.length === 0) return;
-
-      // 1. Determine reference point: on initial open, always anchor to Current Location; otherwise active popup or map center
-      const currentRef = getMapCurrentReference();
-      let refLat = currentRef.lat, refLon = currentRef.lon;
-      if (!isInitialOpen) {
-        if (mapActivePopupKey && mapMarkerMap[mapActivePopupKey] && (mapMarkerMap[mapActivePopupKey].query || mapMarkerMap[mapActivePopupKey].q)) {
-          const activeQ = mapMarkerMap[mapActivePopupKey].query || mapMarkerMap[mapActivePopupKey].q;
-          refLat = activeQ.lat;
-          refLon = activeQ.lon;
-        } else {
-          const c = historyLeafletMap.getCenter();
-          if (c && typeof c.lat === 'number') {
-            refLat = c.lat;
-            refLon = c.lng;
-          }
-        }
-      }
-
+    // Geographic bounds helper: calculates true bounding box even when points cross the 180° antimeridian
     function getSafeLatLngBounds(points) {
       if (!points || points.length === 0) return null;
       if (points.length === 1) {
@@ -5222,7 +5199,31 @@
       return normal;
     }
 
-    // 2. Deduplicate queries by distinct geographic coordinate (rounded to 3 decimal places)
+    // Auto Zoom: Frames at least 3 distinct nearby locations within a continental boundary
+    function applyHistoryMapAutoZoom(isInitialOpen = false) {
+      if (!historyLeafletMap) return;
+      try { historyLeafletMap.invalidateSize(false); } catch (_) {}
+      const queries = currentMapQueries && currentMapQueries.length > 0 ? currentMapQueries : Object.values(mapMarkerMap).map(e => e.query || e.q);
+      if (!queries || queries.length === 0) return;
+
+      // 1. Determine reference point: on initial open, always anchor to Current Location; otherwise active popup or map center
+      const currentRef = getMapCurrentReference();
+      let refLat = currentRef.lat, refLon = currentRef.lon;
+      if (!isInitialOpen) {
+        if (mapActivePopupKey && mapMarkerMap[mapActivePopupKey] && (mapMarkerMap[mapActivePopupKey].query || mapMarkerMap[mapActivePopupKey].q)) {
+          const activeQ = mapMarkerMap[mapActivePopupKey].query || mapMarkerMap[mapActivePopupKey].q;
+          refLat = activeQ.lat;
+          refLon = activeQ.lon;
+        } else {
+          const c = historyLeafletMap.getCenter();
+          if (c && typeof c.lat === 'number') {
+            refLat = c.lat;
+            refLon = c.lng;
+          }
+        }
+      }
+
+      // 2. Deduplicate queries by distinct geographic coordinate (rounded to 3 decimal places)
       const seen = new Set();
       const uniqueQueries = [];
       for (const q of queries) {
@@ -5243,7 +5244,7 @@
       // 4. Stay strictly within a continental boundary (max 2,500 km radius):
       // Prefer locations within 2,500 km so we never zoom out to ludicrous multi-continent or world levels
       const continental = sortedByDist.filter(q => q._d <= 2500);
-      const pool = continental.length > 0 ? continental : sortedByDist.slice(0, 1);
+      const pool = continental.length > 0 ? continental : sortedByDist.slice(0, Math.min(3, sortedByDist.length));
       const count = Math.min(3, pool.length);
       const targetPoints = pool.slice(0, count);
       if (targetPoints.length === 0) return;
@@ -5259,6 +5260,10 @@
         }
       } catch (_) {
         targetZoom = 8;
+      }
+      if (count === 1) {
+        // Isolated location (e.g. South Pacific islands): frame at regional zoom 7 with plenty of breathing room
+        targetZoom = 7;
       }
 
       const center = count === 1 ? [targetPoints[0].lat, targetPoints[0].lon] : bounds.getCenter();
@@ -5642,6 +5647,7 @@
       const size = historyLeafletMap.getSize();
       if (!size || !size.x || !size.y) return;
       const centerPt = L.point(size.x / 2, size.y / 2);
+      const center = historyLeafletMap.getCenter();
 
       let closestKey = null;
       let closestMarker = null;
@@ -5649,7 +5655,12 @@
 
       for (const [key, entry] of Object.entries(mapMarkerMap)) {
         if (!entry || !entry.marker) continue;
-        const pt = historyLeafletMap.latLngToContainerPoint([entry.lat, entry.lon]);
+        let adjLon = entry.lon;
+        if (center && typeof center.lng === 'number') {
+          while (adjLon - center.lng > 180) adjLon -= 360;
+          while (adjLon - center.lng < -180) adjLon += 360;
+        }
+        const pt = historyLeafletMap.latLngToContainerPoint([entry.lat, adjLon]);
         const distPx = centerPt.distanceTo(pt);
         if (distPx < minDistPx) {
           minDistPx = distPx;
@@ -5976,7 +5987,7 @@
         showMapToast('No locations in this view to frame');
         return;
       }
-      mapProgrammaticFlyUntil = Date.now() + 1000;
+      mapProgrammaticFlyUntil = Date.now() + 1400;
       try { historyLeafletMap.closePopup(); } catch (_) {}
       try { historyLeafletMap.invalidateSize(false); } catch (_) {}
 
@@ -6251,6 +6262,7 @@
             mapLastFocusedChipIndex = idx;
             if (!fromUserScroll) {
               isProgrammaticChipScroll = true;
+              mapProgrammaticChipScrollUntil = Date.now() + 1000;
               try {
                 const targetLeft = Math.max(0, btn.offsetLeft - 6);
                 chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
@@ -6259,7 +6271,7 @@
                   btn.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
                 } catch (_) {}
               }
-              setTimeout(() => { isProgrammaticChipScroll = false; }, 350);
+              setTimeout(() => { isProgrammaticChipScroll = false; }, 600);
             }
             const isSameLocation = (mapActivePopupKey === key);
             mapActivePopupKey = key;
@@ -6268,7 +6280,7 @@
 
             const entry = mapMarkerMap[key];
             if (historyLeafletMap && entry && entry.marker) {
-              mapProgrammaticFlyUntil = Date.now() + 650;
+              mapProgrammaticFlyUntil = Date.now() + 1200;
 
               const currentZoom = historyLeafletMap.getZoom();
               const targetZoom = getOptimalMoveZoom(q.lat, q.lon);
@@ -6426,8 +6438,11 @@
         let chipScrollSettledTimer = null;
         let lastMapInteractionType = 'keyboard';
 
-        const onUserTouchChips = () => {
+        const onUserTouchChips = (evt) => {
           resetHistoryMapAutoCloseTimer();
+          if (evt && evt.target && evt.target.closest && evt.target.closest('button')) {
+            return;
+          }
           lastMapInteractionType = 'touch';
           mapProgrammaticChipScrollUntil = 0;
           isProgrammaticChipScroll = false;
@@ -6440,6 +6455,7 @@
         // Determine which location chip is currently sitting at the leftmost position,
         // pan the map to that location, open its popup, and highlight it in blue.
         const syncLeftmostChipToMap = (isSettled = false) => {
+          if (isProgrammaticChipScroll || Date.now() < mapProgrammaticChipScrollUntil) return;
           const containerRect = chipsEl.getBoundingClientRect();
           const allButtons = Array.from(chipsEl.querySelectorAll('button'));
           if (allButtons.length === 0) return;
@@ -6662,7 +6678,7 @@
           className: 'history-map-tall-popup'
         });
 
-        marker.on('click', (e) => {
+        const onMarkerClick = (e) => {
           if (e && e.originalEvent) {
             L.DomEvent.stopPropagation(e.originalEvent);
           }
@@ -6686,13 +6702,44 @@
           marker.openPopup();
           stripMapCanvasFocusables();
           scheduleAdaptivePopupPlacement();
-        });
+        };
+
+        marker.on('click', onMarkerClick);
 
         if (historyMarkersLayer) {
           historyMarkersLayer.addLayer(marker);
         }
 
-        mapMarkerMap[key] = { marker, lat: q.lat, lon: q.lon, query: q, distEl, weatherEl, distKm: q.distKm };
+        let cloneMarker = null;
+        if (q.lon < -165) {
+          cloneMarker = L.marker([q.lat, q.lon + 360], {
+            icon: customIcon,
+            riseOnHover: true,
+            keyboard: false
+          });
+        } else if (q.lon > 165) {
+          cloneMarker = L.marker([q.lat, q.lon - 360], {
+            icon: customIcon,
+            riseOnHover: true,
+            keyboard: false
+          });
+        }
+        if (cloneMarker) {
+          cloneMarker.bindPopup(popupWrapper, {
+            closeButton: false,
+            autoPan: false,
+            closeOnClick: false,
+            minWidth: 175,
+            offset: [0, 0],
+            className: 'history-map-tall-popup'
+          });
+          cloneMarker.on('click', onMarkerClick);
+          if (historyMarkersLayer) {
+            historyMarkersLayer.addLayer(cloneMarker);
+          }
+        }
+
+        mapMarkerMap[key] = { marker, cloneMarker, lat: q.lat, lon: q.lon, query: q, distEl, weatherEl, distKm: q.distKm };
       });
 
       // Keep or open the active popup:
@@ -6742,8 +6789,8 @@
           minZoom: 1,
           maxZoom: (HISTORY_MAP_STYLES[getHistoryMapStyle()] && HISTORY_MAP_STYLES[getHistoryMapStyle()].maxZoom) || 8,
           maxBounds: [[-85.0511, -540], [85.0511, 540]],
-          maxBoundsViscosity: 0.8,
-          worldCopyJump: true
+          maxBoundsViscosity: 0.5,
+          worldCopyJump: false
         }).setView([currentRef.lat, currentRef.lon], Math.min(defaultZoom, (HISTORY_MAP_STYLES[getHistoryMapStyle()] && HISTORY_MAP_STYLES[getHistoryMapStyle()].maxZoom) || 8));
 
         // Remove Leaflet map container and controls from D-pad tab order so TV remote only uses bottom shortcuts & Close
