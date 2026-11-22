@@ -3252,8 +3252,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 369;
-    const APP_VERSION = '1.10.202-dev';
+    const APP_BUILD = 370;
+    const APP_VERSION = '1.10.203-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -6438,17 +6438,14 @@
         let chipScrollSettledTimer = null;
         let lastMapInteractionType = 'keyboard';
 
-        const onUserTouchChips = (evt) => {
+        const onUserTouchChips = () => {
           resetHistoryMapAutoCloseTimer();
-          if (evt && evt.target && evt.target.closest && evt.target.closest('button')) {
-            return;
-          }
           lastMapInteractionType = 'touch';
           mapProgrammaticChipScrollUntil = 0;
           isProgrammaticChipScroll = false;
         };
 
-        ['pointerdown', 'touchstart', 'wheel', 'mousedown'].forEach(evt => {
+        ['pointerdown', 'touchstart', 'touchmove', 'wheel', 'mousedown'].forEach(evt => {
           chipsEl.addEventListener(evt, onUserTouchChips, { passive: true });
         });
 
@@ -6532,6 +6529,9 @@
         };
 
         chipsEl.onwheel = (e) => {
+          lastMapInteractionType = 'touch';
+          mapProgrammaticChipScrollUntil = 0;
+          isProgrammaticChipScroll = false;
           if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
             chipsEl.scrollLeft += e.deltaY;
           }
