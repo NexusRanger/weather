@@ -1482,7 +1482,7 @@
               <line x1="8" y1="11" x2="14" y2="11"></line>
             </svg>
           </button>
-          <span id="scaleLabel" class="text-[10px] font-mono px-1 text-slate-400">100%</span>
+          <span id="scaleLabel" onclick="adjustScale(1.0 - currentScale)" title="Display Scale • Click to reset to 100%" class="text-[10px] font-mono px-1 text-slate-400 hover:text-white cursor-pointer select-none transition">100%</span>
           <button id="zoomInBtn" tabindex="0" onclick="adjustScale(0.05)" title="Zoom In / Enlarge layout" class="tv-focus-amber p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white transition flex items-center justify-center focus:outline-none cursor-pointer">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7"></circle>
@@ -3252,8 +3252,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 366;
-    const APP_VERSION = '1.10.199-dev';
+    const APP_BUILD = 367;
+    const APP_VERSION = '1.10.200-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -12659,20 +12659,72 @@ function joinSpacedLetters(text) {
       checkLocationTitleScroll();
     }
 
-    let currentScale = 1.0;
-    function adjustScale(delta) {
-      currentScale = Math.max(0.75, Math.min(1.25, currentScale + delta));
-      const root = document.getElementById('dashboardRoot');
-      if (window.innerWidth > 600 && window.matchMedia("(orientation: landscape) and (min-height: 520px)").matches) {
-        root.style.transform = `scale(${currentScale})`;
-      }
-      document.getElementById('scaleLabel').textContent = `${Math.round(currentScale * 100)}%`;
-      localStorage.setItem('dashboard_scale', currentScale);
+    function isCurrentFullscreen() {
+      return !!(
+        document.fullscreenElement ||
+        (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) ||
+        (Math.abs(window.innerHeight - screen.height) <= 8 && Math.abs(window.innerWidth - screen.width) <= 8)
+      );
     }
 
-    const savedScale = localStorage.getItem('dashboard_scale');
-    if (savedScale && window.innerWidth > 600) {
-      currentScale = parseFloat(savedScale);
+    let lastKnownFullscreenState = null;
+    let currentScale = 1.0;
+
+    function getActiveModeScaleKey(inFs = isCurrentFullscreen()) {
+      return inFs ? 'dashboard_scale_fullscreen' : 'dashboard_scale_windowed';
+    }
+
+    function loadScaleForActiveMode() {
+      const inFs = isCurrentFullscreen();
+      const key = getActiveModeScaleKey(inFs);
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const val = parseFloat(saved);
+        if (!isNaN(val) && val >= 0.75 && val <= 1.25) return val;
+      }
+      // Fallback for windowed mode: check legacy 'dashboard_scale'
+      if (!inFs) {
+        const legacy = localStorage.getItem('dashboard_scale');
+        if (legacy) {
+          const val = parseFloat(legacy);
+          if (!isNaN(val) && val >= 0.75 && val <= 1.25) return val;
+        }
+      }
+      return 1.0; // Default 100%
+    }
+
+    function adjustScale(delta) {
+      currentScale = Math.max(0.75, Math.min(1.25, Math.round((currentScale + delta) * 100) / 100));
+      const root = document.getElementById('dashboardRoot');
+      if (root && window.innerWidth > 600 && window.matchMedia("(orientation: landscape) and (min-height: 520px)").matches) {
+        root.style.transform = `scale(${currentScale})`;
+      }
+      const label = document.getElementById('scaleLabel');
+      if (label) {
+        label.textContent = `${Math.round(currentScale * 100)}%`;
+      }
+      const inFs = isCurrentFullscreen();
+      try {
+        localStorage.setItem(getActiveModeScaleKey(inFs), currentScale);
+        if (!inFs) {
+          localStorage.setItem('dashboard_scale', currentScale);
+        }
+      } catch (_) {}
+    }
+
+    function syncScaleForFullscreenMode() {
+      if (window.innerWidth <= 600) return;
+      const inFs = isCurrentFullscreen();
+      if (lastKnownFullscreenState === inFs) return;
+      lastKnownFullscreenState = inFs;
+      currentScale = loadScaleForActiveMode();
+      adjustScale(0);
+    }
+
+    // Initialize scale on startup
+    if (window.innerWidth > 600) {
+      lastKnownFullscreenState = isCurrentFullscreen();
+      currentScale = loadScaleForActiveMode();
       setTimeout(() => adjustScale(0), 10);
     }
 
@@ -15388,16 +15440,23 @@ function joinSpacedLetters(text) {
     function checkFullscreenState() {
       const fsBtn = document.getElementById('fullscreenBtn');
       const hintDot = document.getElementById('fullscreenHintDot');
-      const inFullscreen = !!(
-        document.fullscreenElement ||
-        (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) ||
-        (Math.abs(window.innerHeight - screen.height) <= 8 && Math.abs(window.innerWidth - screen.width) <= 8)
-      );
+      const inFullscreen = (typeof isCurrentFullscreen === 'function')
+        ? isCurrentFullscreen()
+        : !!(
+          document.fullscreenElement ||
+          (window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) ||
+          (Math.abs(window.innerHeight - screen.height) <= 8 && Math.abs(window.innerWidth - screen.width) <= 8)
+        );
 
       if (inFullscreen) {
         try { localStorage.setItem('ambient_pref_fullscreen', 'true'); } catch (_) {}
       } else {
         try { localStorage.removeItem('ambient_pref_fullscreen'); } catch (_) {}
+      }
+
+      // Dual Memory: Windowed vs. Fullscreen zoom memory
+      if (typeof syncScaleForFullscreenMode === 'function') {
+        syncScaleForFullscreenMode();
       }
 
       if (fsBtn) {
