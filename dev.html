@@ -2505,7 +2505,7 @@
               <span class="text-sm leading-none">📍</span>
               <span>Drop Pin Here</span>
             </div>
-            <button type="button" onclick="closeDropPinDialog()" class="text-slate-400 hover:text-white text-xs p-1 rounded-lg bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer" title="Cancel (Esc)">✕</button>
+            <button type="button" onclick="closeDropPinDialog()" class="text-slate-400 hover:text-rose-300 text-xs p-1 rounded-lg bg-white/5 hover:bg-rose-500/20 transition focus:outline-none cursor-pointer" title="Cancel (Esc)">✕</button>
           </div>
 
           <div id="mapDropPinCoords" class="text-[9.5px] font-mono text-sky-300 bg-black/40 px-2 py-0.5 rounded-md border border-white/10 flex items-center justify-between">
@@ -2519,7 +2519,7 @@
             <button id="mapDropPinConfirmBtn" type="button" onclick="confirmCreateDropPinLocation()" class="tv-focus-amber flex-1 py-1 px-3 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white font-bold text-xs shadow transition flex items-center justify-center gap-1 cursor-pointer focus:outline-none">
               <span>✓ Confirm &amp; Create</span>
             </button>
-            <button type="button" onclick="closeDropPinDialog()" class="tv-focus-amber py-1 px-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-medium text-xs transition cursor-pointer focus:outline-none">
+            <button type="button" onclick="closeDropPinDialog()" class="tv-focus-amber py-1 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 active:bg-rose-500/40 border border-rose-400/40 hover:border-rose-300/60 text-rose-200 hover:text-white font-semibold text-xs transition cursor-pointer focus:outline-none flex items-center justify-center">
               Cancel
             </button>
           </div>
@@ -3321,8 +3321,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 382;
-    const APP_VERSION = '1.10.215-dev';
+    const APP_BUILD = 383;
+    const APP_VERSION = '1.10.216-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -7517,12 +7517,15 @@
           }, { passive: true });
         }
 
-        // Reset idle auto-close timer on direct map interactions (and dismiss info popover on tap/drag)
+        // Reset idle auto-close timer on direct map interactions (and dismiss info popover / drop-pin dialog on tap/drag/zoom)
         historyLeafletMap.on('dragstart zoomstart movestart', () => {
           resetHistoryMapAutoCloseTimer();
         });
         historyLeafletMap.on('click dragstart', () => {
           if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
+        });
+        historyLeafletMap.on('dragstart zoomstart click', () => {
+          if (typeof closeDropPinDialog === 'function') closeDropPinDialog();
         });
 
         // Tablet / Touch Gesture UX: As you pan or zoom the map, automatically pop up the info card
