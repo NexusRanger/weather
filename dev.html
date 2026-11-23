@@ -3321,8 +3321,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 385;
-    const APP_VERSION = '1.10.218-dev';
+    const APP_BUILD = 386;
+    const APP_VERSION = '1.10.219-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4088,41 +4088,19 @@
     const PUBLIC_FEEDBACK_ENABLED = false;
 
     function isLocationAdmin() {
-      // 1. URL parameter check (?admin=1, ?admin=true, ?admin=phil, ?admin=showfeedback, ?admin=showmethemap)
+      // Authenticate exclusively via ?admin=1 URL parameter
       try {
         const params = new URLSearchParams(window.location.search);
-        const a = (params.get('admin') || params.get('pwd') || params.get('key') || '').toLowerCase().trim();
-        if (a === '1' || a === 'true' || a === 'phil' || a === 'nexusranger' || a === 'showfeedback' || a === 'showmethemap') {
+        if (params.get('admin') === '1') {
           try { localStorage.setItem('ambient_admin_unlocked', 'true'); } catch (_) {}
           return true;
         }
       } catch (_) {}
 
-      // 2. Persistent local storage admin flag
+      // Retain authenticated admin status on this device once visited with ?admin=1
       try {
         if (localStorage.getItem('ambient_admin_unlocked') === 'true') {
           return true;
-        }
-        // Inherit if admin already used feedback or map unlock parameter on this device
-        if (localStorage.getItem('ambient_feedback_unlocked') === 'true' || localStorage.getItem('ambient_map_unlocked') === 'true') {
-          return true;
-        }
-      } catch (_) {}
-
-      // 3. Localhost or local file dev environment
-      try {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') {
-          return true;
-        }
-      } catch (_) {}
-
-      // 4. Phil's saved workshop location
-      try {
-        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && CURRENT_LOCATION.name) {
-          if (CURRENT_LOCATION.name.toLowerCase().includes('workshop')) {
-            try { localStorage.setItem('ambient_admin_unlocked', 'true'); } catch (_) {}
-            return true;
-          }
         }
       } catch (_) {}
 
@@ -11487,29 +11465,6 @@ function joinSpacedLetters(text) {
       q = normalizeSpokenUkPostcode(q);
       q = joinSpacedLetters(q).trim();
       input.value = q;
-
-      // Check for secret location admin unlock keyword ("admin", "unlock admin", "admin on", "phil")
-      const normAdmin = q.toLowerCase().trim();
-      if (normAdmin === 'admin' || normAdmin === 'admin on' || normAdmin === 'unlock admin' || normAdmin === 'phil') {
-        try { localStorage.setItem('ambient_admin_unlocked', 'true'); } catch (_) {}
-        if (status) {
-          status.style.color = '#34d399';
-          status.textContent = '👑 Admin privileges activated: Location deletion unlocked.';
-        }
-        input.value = '';
-        setTimeout(() => closeLocationModal(false), 1200);
-        return;
-      }
-      if (normAdmin === 'admin off' || normAdmin === 'lock admin') {
-        try { localStorage.removeItem('ambient_admin_unlocked'); } catch (_) {}
-        if (status) {
-          status.style.color = '#f59e0b';
-          status.textContent = '🔒 Admin privileges deactivated.';
-        }
-        input.value = '';
-        setTimeout(() => closeLocationModal(false), 1200);
-        return;
-      }
 
       // Check for secret map unlock password
       if (q.toLowerCase() === 'showmethemap') {
