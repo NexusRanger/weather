@@ -26,7 +26,7 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=312">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link rel="manifest" href="manifest.json?v=374">
+  <link rel="manifest" href="manifest.json?v=376">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=312">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=312">
@@ -1508,7 +1508,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.207) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.209) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3268,8 +3268,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 374;
-    const APP_VERSION = '1.10.207';
+    const APP_BUILD = 376;
+    const APP_VERSION = '1.10.209';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -7512,9 +7512,26 @@
         if (loc) {
           pendingCustomLocationName = loc;
         }
-        await lookupPostcode(pc);
+        let success = await lookupPostcode(pc);
+        if (!success) {
+          pendingCustomLocationName = '';
+          if (loc) {
+            success = await lookupTown(loc);
+          }
+          if (!success) {
+            success = await lookupTown(pc);
+          }
+        }
+        if (!success) {
+          updateLocationHeader();
+          fetchWeatherData();
+        }
       } else if (loc) {
-        await lookupTown(loc);
+        const ok = await lookupTown(loc);
+        if (!ok) {
+          updateLocationHeader();
+          fetchWeatherData();
+        }
       } else {
         updateLocationHeader();
         fetchWeatherData();
@@ -8472,23 +8489,41 @@
     }
 
     async function lookupPostcode(postcode) {
-      const prefMatch = matchLocationPreference(postcode);
+      if (!postcode || !postcode.trim()) return false;
+      const cleanPC = postcode.trim();
+      const prefMatch = matchLocationPreference(cleanPC);
       if (prefMatch && applyLocationPreference(prefMatch)) {
         return true;
       }
-      try {
-        const cleanPC = postcode.replace(/\s+/g, '');
-        const res = await fetch(`https://api.postcodes.io/postcodes/${cleanPC}`);
-        if (res.ok) {
-          const json = await res.json();
-          const r = json.result;
-          const town = r.parish || r.admin_ward || r.admin_district || 'Gloucestershire';
-          applySelectedLocation(town, r.latitude, r.longitude, r.postcode);
-          return true;
+
+      // Check if this matches a UK postcode or outward code structure
+      // Full UK: e.g. GL5 5HH, SW1A 1AA, EC1A 1BB, W1A 0AX, B33 8TH
+      // Partial UK outward code: e.g. GL5, SW1A, EC1A
+      const rawNoSpaces = cleanPC.replace(/\s+/g, '').toUpperCase();
+      const isUkPostcodePattern = /^[A-Z]{1,2}[0-9][A-Z0-9]?([0-9][A-Z]{2})?$/.test(rawNoSpaces);
+
+      if (isUkPostcodePattern) {
+        try {
+          const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(rawNoSpaces)}`);
+          if (res.ok) {
+            const json = await res.json();
+            const r = json.result;
+            const town = r.parish || r.admin_ward || r.admin_district || 'Gloucestershire';
+            applySelectedLocation(town, r.latitude, r.longitude, r.postcode);
+            return true;
+          }
+        } catch (err) {
+          console.warn('Postcode lookup error:', err);
         }
-      } catch (err) {
-        console.warn('Postcode lookup error:', err);
       }
+
+      // Fallback for international postal codes (e.g. US ZIP 55401, French 75001, German 10115)
+      // or when postcodes.io is unreachable: query OpenStreetMap Nominatim & Open-Meteo
+      if (typeof lookupTown === 'function') {
+        const ok = await lookupTown(cleanPC);
+        if (ok) return true;
+      }
+
       return false;
     }
 
@@ -12854,6 +12889,9 @@ function joinSpacedLetters(text) {
           localStorage.setItem('dashboard_scale', currentScale);
         }
       } catch (_) {}
+      if (typeof checkFullscreenState === 'function') {
+        checkFullscreenState();
+      }
     }
 
     function syncScaleForFullscreenMode() {
@@ -15652,16 +15690,33 @@ function joinSpacedLetters(text) {
       }
 
       if (fsBtn) {
+        const isHundredPercent = (typeof currentScale === 'number' && Math.round(currentScale * 100) === 100);
+
+        // Clear previous state classes
+        fsBtn.classList.remove(
+          'ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse',
+          'bg-emerald-500/20', 'hover:bg-emerald-500/30', 'border-emerald-400/50', 'text-emerald-300', 'hover:text-emerald-200', 'shadow-[0_0_8px_rgba(52,211,153,0.35)]',
+          'bg-white/5', 'hover:bg-white/10', 'border-white/10', 'text-slate-300', 'hover:text-white'
+        );
+
         if (!inFullscreen) {
           // Windowed mode: pulse gently with cyan glow and beacon dot to hint full immersion
-          fsBtn.classList.add('ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse');
+          fsBtn.classList.add('bg-white/5', 'hover:bg-white/10', 'border-white/10', 'text-slate-300', 'hover:text-white', 'ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse');
           if (hintDot) hintDot.classList.remove('hidden');
           fsBtn.title = 'Expand to Fullscreen (F) • Best viewing experience';
         } else {
-          // Fullscreen mode: calm and clear
-          fsBtn.classList.remove('ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse');
+          // Fullscreen mode: calm hint dot
           if (hintDot) hintDot.classList.add('hidden');
-          fsBtn.title = 'Exit Fullscreen (F)';
+
+          if (isHundredPercent) {
+            // Fullscreen active AND 100% scale: highlight green!
+            fsBtn.classList.add('bg-emerald-500/20', 'hover:bg-emerald-500/30', 'border-emerald-400/50', 'text-emerald-300', 'hover:text-emerald-200', 'shadow-[0_0_8px_rgba(52,211,153,0.35)]');
+            fsBtn.title = 'Exit Fullscreen (F) • Fullscreen active at 100% scale';
+          } else {
+            // Fullscreen active, but custom magnification level
+            fsBtn.classList.add('bg-white/5', 'hover:bg-white/10', 'border-white/10', 'text-slate-300', 'hover:text-white');
+            fsBtn.title = `Exit Fullscreen (F) • Scale: ${Math.round(currentScale * 100)}%`;
+          }
         }
       }
     }
@@ -15848,11 +15903,13 @@ function joinSpacedLetters(text) {
             u.searchParams.set('q', placeName);
           }
 
-          if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
-            u.searchParams.set('postcode', pc);
-          } else if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
+          if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
             u.searchParams.set('lat', CURRENT_LOCATION.lat);
             u.searchParams.set('lon', CURRENT_LOCATION.lon);
+          }
+
+          if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
+            u.searchParams.set('postcode', pc);
           }
         }
         shareUrl = u.toString();
@@ -16539,12 +16596,14 @@ function joinSpacedLetters(text) {
             locLabel = placeName;
           }
 
+          if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
+            u.searchParams.set('lat', CURRENT_LOCATION.lat);
+            u.searchParams.set('lon', CURRENT_LOCATION.lon);
+          }
+
           if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
             u.searchParams.set('postcode', pc);
             locLabel = placeName ? `${placeName} (${pc})` : pc;
-          } else if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
-            u.searchParams.set('lat', CURRENT_LOCATION.lat);
-            u.searchParams.set('lon', CURRENT_LOCATION.lon);
           }
         }
         shareUrl = u.toString();
