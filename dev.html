@@ -2496,9 +2496,9 @@
         </div>
 
         <!-- Drop Pin at Center Confirmation Dialog -->
-        <div id="mapDropPinDialog" onclick="event.stopPropagation()" class="hidden absolute left-1/2 z-[570] w-[min(320px,calc(100%-24px))] p-2.5 rounded-xl bg-slate-900/95 border-2 border-amber-400/80 shadow-[0_8px_30px_rgba(0,0,0,0.85),0_0_16px_rgba(245,158,11,0.35)] backdrop-blur-md text-left flex flex-col gap-1.5 transition-all duration-200" style="top: max(146px, 50%); transform: translate(-50%, calc(-100% - 8px));">
+        <div id="mapDropPinDialog" onclick="event.stopPropagation()" class="hidden absolute left-1/2 z-[570] w-[min(320px,calc(100%-24px))] p-2.5 rounded-xl bg-slate-900/95 border-2 border-amber-400/80 shadow-[0_8px_30px_rgba(0,0,0,0.85),0_0_16px_rgba(245,158,11,0.35)] backdrop-blur-md text-left flex flex-col gap-1.5 transition-all duration-200" style="top: max(142px, 50%); transform: translate(-50%, calc(-100% - 10px));">
           <!-- Downward pointer arrow pointing exactly to center target reticle -->
-          <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-6 border-x-transparent border-t-[8px] border-t-amber-400 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"></div>
+          <div class="absolute -bottom-[10px] left-1/2 -translate-x-1/2 w-0 h-0 border-x-[8px] border-x-transparent border-t-[10px] border-t-amber-400 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)] z-10 pointer-events-none"></div>
 
           <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
             <div class="flex items-center gap-1.5 font-bold text-white text-xs">
@@ -3321,8 +3321,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 381;
-    const APP_VERSION = '1.10.214-dev';
+    const APP_BUILD = 382;
+    const APP_VERSION = '1.10.215-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5715,6 +5715,11 @@
       const dialog = document.getElementById('mapDropPinDialog');
       if (!dialog) return;
 
+      // Close and hide any open popup (including Current Location box) so the confirmation dialog is the only box visible
+      try { historyLeafletMap.closePopup(); } catch (_) {}
+      mapActivePopupKey = null;
+      updateChipHighlightStates();
+
       const center = historyLeafletMap.getCenter();
       let lat = Math.round(center.lat * 10000) / 10000;
       let lon = Math.round(center.lng * 10000) / 10000;
@@ -6277,6 +6282,8 @@
     function autoOpenCenterMarkerPopup(force = false) {
       if (!historyLeafletMap) return;
       if (!force && Date.now() < mapProgrammaticFlyUntil) return;
+      const dropDialog = document.getElementById('mapDropPinDialog');
+      if (dropDialog && !dropDialog.classList.contains('hidden')) return;
 
       const size = historyLeafletMap.getSize();
       if (!size || !size.x || !size.y) return;
