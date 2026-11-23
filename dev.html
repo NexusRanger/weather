@@ -3268,8 +3268,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 374;
-    const APP_VERSION = '1.10.207-dev';
+    const APP_BUILD = 375;
+    const APP_VERSION = '1.10.208-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -12854,6 +12854,9 @@ function joinSpacedLetters(text) {
           localStorage.setItem('dashboard_scale', currentScale);
         }
       } catch (_) {}
+      if (typeof checkFullscreenState === 'function') {
+        checkFullscreenState();
+      }
     }
 
     function syncScaleForFullscreenMode() {
@@ -15652,16 +15655,33 @@ function joinSpacedLetters(text) {
       }
 
       if (fsBtn) {
+        const isHundredPercent = (typeof currentScale === 'number' && Math.round(currentScale * 100) === 100);
+
+        // Clear previous state classes
+        fsBtn.classList.remove(
+          'ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse',
+          'bg-emerald-500/20', 'hover:bg-emerald-500/30', 'border-emerald-400/50', 'text-emerald-300', 'hover:text-emerald-200', 'shadow-[0_0_8px_rgba(52,211,153,0.35)]',
+          'bg-white/5', 'hover:bg-white/10', 'border-white/10', 'text-slate-300', 'hover:text-white'
+        );
+
         if (!inFullscreen) {
           // Windowed mode: pulse gently with cyan glow and beacon dot to hint full immersion
-          fsBtn.classList.add('ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse');
+          fsBtn.classList.add('bg-white/5', 'hover:bg-white/10', 'border-white/10', 'text-slate-300', 'hover:text-white', 'ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse');
           if (hintDot) hintDot.classList.remove('hidden');
           fsBtn.title = 'Expand to Fullscreen (F) • Best viewing experience';
         } else {
-          // Fullscreen mode: calm and clear
-          fsBtn.classList.remove('ring-2', 'ring-sky-400', 'shadow-[0_0_10px_rgba(56,189,248,0.6)]', 'animate-pulse');
+          // Fullscreen mode: calm hint dot
           if (hintDot) hintDot.classList.add('hidden');
-          fsBtn.title = 'Exit Fullscreen (F)';
+
+          if (isHundredPercent) {
+            // Fullscreen active AND 100% scale: highlight green!
+            fsBtn.classList.add('bg-emerald-500/20', 'hover:bg-emerald-500/30', 'border-emerald-400/50', 'text-emerald-300', 'hover:text-emerald-200', 'shadow-[0_0_8px_rgba(52,211,153,0.35)]');
+            fsBtn.title = 'Exit Fullscreen (F) • Fullscreen active at 100% scale';
+          } else {
+            // Fullscreen active, but custom magnification level
+            fsBtn.classList.add('bg-white/5', 'hover:bg-white/10', 'border-white/10', 'text-slate-300', 'hover:text-white');
+            fsBtn.title = `Exit Fullscreen (F) • Scale: ${Math.round(currentScale * 100)}%`;
+          }
         }
       }
     }
