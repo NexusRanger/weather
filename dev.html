@@ -3325,8 +3325,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 379;
-    const APP_VERSION = '1.10.212-dev';
+    const APP_BUILD = 380;
+    const APP_VERSION = '1.10.213-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -8215,7 +8215,17 @@
         lon: -5.3536,
         radiusKm: 25,
         aliases: ['gibraltar', 'rock of gibraltar', 'south mole', 'strait of gibraltar', 'gibraltar rock'],
-        badgeStyle: 'bg-amber-500/20 border-amber-400/40 text-amber-200'
+        badgeStyle: 'bg-amber-500/20 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="25" width="48" height="11" fill="#0284c7" opacity="0.85"/>
+          <path d="M0 27 C12 26 24 28 48 27" stroke="#38bdf8" stroke-width="0.7" opacity="0.8"/>
+          <path d="M4 26 L11 25 L17 22 L23 16 L29 10 L34 7 L37 9 L39 15 L40 25 L44 26 Z" fill="#64748b" stroke="#94a3b8" stroke-width="0.6"/>
+          <path d="M29 10 L34 7 L37 9 L39 15 L40 25 L32 25 L23 16 Z" fill="#94a3b8" opacity="0.8"/>
+          <path d="M34 7 L37 9 L39 15 L40 25 L37 25 Z" fill="#cbd5e1" opacity="0.95"/>
+          <rect x="32" y="14" width="3" height="4" fill="#f8fafc" stroke="#475569" stroke-width="0.4"/>
+          <rect x="7" y="22" width="2.5" height="4" fill="#ef4444"/>
+          <circle cx="8.2" cy="21.5" r="1.1" fill="#fef08a"/>
+        </svg>`
       },
       {
         id: 'white_house',
@@ -13498,7 +13508,7 @@ function joinSpacedLetters(text) {
       if (landmarkIconCont && landmarkBadge) {
         if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel' && activeLandmark.id !== 'egypt_mill' && activeLandmark.id !== 'the_olive_tree' && activeLandmark.id !== 'duntisbourne_abbots') {
           landmarkBadge.className = `inline-flex items-center justify-center w-7 h-7 rounded-lg ${activeLandmark.badgeStyle || 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]'} p-0.5 transform hover:scale-110 transition cursor-pointer`;
-          landmarkBadge.innerHTML = activeLandmark.svg;
+          landmarkBadge.innerHTML = activeLandmark.svg || '<span class="text-xs">⛰️</span>';
           landmarkIconCont.title = `${activeLandmark.name} • ${activeLandmark.city ? activeLandmark.city + ', ' : ''}${activeLandmark.country}`;
           landmarkIconCont.classList.remove('hidden');
           landmarkIconCont.classList.add('inline-flex');
