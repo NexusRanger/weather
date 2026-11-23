@@ -3325,8 +3325,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 378;
-    const APP_VERSION = '1.10.211-dev';
+    const APP_BUILD = 379;
+    const APP_VERSION = '1.10.212-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4428,12 +4428,13 @@
     const USER_RECENTS_STORAGE_KEY = 'ambient_user_recent_locations';
     const PUBLIC_MAP_CACHE_KEY = 'ambient_public_map_cache';
 
-    // Startup storage sanitization & migration: purge unwanted test queries (Workshop, Sturgeon County, Iran, IN, and previous Eiffel Tower test entries)
+    // Startup storage sanitization & migration: purge unwanted test queries (Workshop, Sturgeon County, Iran, IN, Eiffel Tower, and previous Gibraltar test entries)
     const EIFFEL_PURGE_CUTOFF = 1794999600000;
+    const GIBRALTAR_PURGE_CUTOFF = 1795471000000;
     try {
       const rawLoc = localStorage.getItem('ambient_weather_loc');
       if (rawLoc) {
-        if (/eiffel/i.test(rawLoc)) {
+        if (/eiffel/i.test(rawLoc) || /gibraltar/i.test(rawLoc)) {
           localStorage.removeItem('ambient_weather_loc');
           sessionStorage.removeItem('ambient_weather_loc');
         } else if (/workshop/i.test(rawLoc)) {
@@ -4467,9 +4468,11 @@
                 const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
                 if (n.includes('workshop')) return false;
                 if (n.includes('eiffel') && ts <= EIFFEL_PURGE_CUTOFF) return false;
+                if (n.includes('gibraltar') && ts <= GIBRALTAR_PURGE_CUTOFF) return false;
                 if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
                 if (typeof q.lat === 'number' && typeof q.lon === 'number') {
                   if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
+                  if (q.lat >= 35.8 && q.lat <= 36.4 && q.lon >= -5.6 && q.lon <= -5.1 && ts <= GIBRALTAR_PURGE_CUTOFF) return false;
                 }
                 return true;
               });
@@ -4617,9 +4620,11 @@
           const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
           if (n.includes('workshop')) return false;
           if (n.includes('eiffel') && ts <= 1794999600000) return false;
+          if (n.includes('gibraltar') && ts <= 1795471000000) return false;
           if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
           if (typeof q.lat === 'number' && typeof q.lon === 'number') {
             if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
+            if (q.lat >= 35.8 && q.lat <= 36.4 && q.lon >= -5.6 && q.lon <= -5.1 && ts <= 1795471000000) return false;
           }
           return true;
         });
@@ -4812,10 +4817,12 @@
         const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
         if (n.includes('workshop')) return;
         if (n.includes('eiffel') && ts <= 1794999600000) return;
+        if (n.includes('gibraltar') && ts <= 1795471000000) return;
         if (n.includes('minchinhampton') && ts <= 1795202600000) return;
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
         if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return;
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
+        if (q.lat >= 35.8 && q.lat <= 36.4 && q.lon >= -5.6 && q.lon <= -5.1 && ts <= 1795471000000) return;
 
         const publicName = getDepersonalizedLocationName(q);
         if (!publicName || publicName.toLowerCase().includes('workshop')) return;
@@ -5834,107 +5841,65 @@
       const geoName = (dropPinActiveCoords.geoName || chosenName);
       const postcode = (dropPinActiveCoords.postcode || '');
 
-      const newLoc = {
-        name: chosenName,
-        geoName: geoName,
-        postcode: postcode,
-        lat: lat,
-        lon: lon,
-        desc: (typeof formatCoordDesc === 'function') ? formatCoordDesc(lat, lon) : `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+      const depName = (typeof getDepersonalizedLocationName === 'function')
+        ? (getDepersonalizedLocationName({ name: chosenName, geoName, lat, lon, postcode }) || chosenName)
+        : chosenName;
+      const norm = (typeof normalizeKnownLandmarkCoords === 'function')
+        ? normalizeKnownLandmarkCoords(depName, lat, lon, postcode)
+        : { lat, lon, postcode };
+      const finalLat = (typeof norm.lat === 'number') ? norm.lat : lat;
+      const finalLon = (typeof norm.lon === 'number') ? norm.lon : lon;
+
+      // 1. Update the Current Location of the dashboard to the newly created location!
+      await applySelectedLocation(chosenName, finalLat, finalLon, postcode || '', true, {
         isCustomTitle: false,
-        timestamp: Date.now()
-      };
+        geoName: geoName || depName
+      });
 
-      // 1. Record in user's saved/recent queries
-      if (typeof recordUserRecentLocation === 'function') {
-        recordUserRecentLocation(newLoc);
-      }
-
-      // 2. Record in public map queries
-      try {
-        let mapQueries = getHistoryQueries();
-        mapQueries = mapQueries.filter(q => {
-          const sameName = (q.name || '').toLowerCase() === chosenName.toLowerCase();
-          const distKm = (typeof calculateHaversineKm === 'function')
-            ? calculateHaversineKm(q.lat, q.lon, lat, lon)
-            : Math.hypot(q.lat - lat, q.lon - lon) * 111;
-          return !sameName && distKm >= 0.08;
-        });
-        mapQueries.unshift({
-          name: chosenName,
-          geoName: geoName,
-          postcode: postcode,
-          lat: lat,
-          lon: lon,
-          timestamp: Date.now()
-        });
-        if (mapQueries.length > 300) mapQueries = mapQueries.slice(0, 300);
-        localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(mapQueries));
-      } catch (_) {}
-
-      // 3. Sync to Supabase in background
-      try {
-        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
-        fetch(`${SUPABASE_URL}/rest/v1/locations`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': 'Bearer ' + SUPABASE_KEY,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
-            name: chosenName,
-            postcode: (typeof getOutwardPostcode === 'function') ? getOutwardPostcode(postcode) : postcode,
-            lat: lat,
-            lon: lon,
-            timestamp: new Date().toISOString()
-          })
-        }).catch(() => {});
-      } catch (_) {}
-
-      const key = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+      const key = `${finalLat.toFixed(4)}_${finalLon.toFixed(4)}`;
       mapActivePopupKey = key;
       lastScrolledChipKey = key;
 
-      // 4. Refresh markers & chips
+      // 2. Refresh map markers & bottom carousel
       const curFilter = getMapViewFilter();
       const currentQueries = getQueriesForMapFilter(curFilter);
       renderHistoryMarkersAndChips(currentQueries, false, curFilter);
 
-      // 5. Glide map and immediately pop up the location info box on the new location!
+      // 3. Center map and immediately pop up the location info box on the new location!
       if (historyLeafletMap) {
-        historyLeafletMap.panTo([lat, lon], { duration: 0.35 });
+        historyLeafletMap.panTo([finalLat, finalLon], { duration: 0.35 });
       }
 
       setTimeout(() => {
-        const entry = mapMarkerMap[key];
+        let entry = mapMarkerMap[key];
+        if (!entry) {
+          entry = Object.values(mapMarkerMap).find(e => {
+            return e && typeof e.lat === 'number' &&
+              Math.hypot(e.lat - finalLat, e.lon - finalLon) * 111 < 1.0;
+          }) || Object.values(mapMarkerMap).find(e => e.query && e.query.isCurrent);
+        }
         if (entry && entry.marker) {
+          mapActivePopupKey = (entry.query && typeof entry.query.lat === 'number')
+            ? `${entry.query.lat.toFixed(4)}_${entry.query.lon.toFixed(4)}`
+            : key;
           entry.marker.openPopup();
           stripMapCanvasFocusables();
           scheduleAdaptivePopupPlacement();
         }
-      }, 150);
+      }, 180);
 
-      // 6. Highlight & scroll to chip in bottom carousel
+      // 4. Highlight & scroll carousel to the new Current Location (first chip)
       const chipsEl = document.getElementById('mapRecentChips');
       if (chipsEl) {
-        const allChips = chipsEl.querySelectorAll('button');
-        const chipIdx = Array.from(allChips).findIndex(b => b._chipKey === key);
-        if (chipIdx !== -1) {
-          mapLastFocusedChipIndex = chipIdx;
-          const targetChip = allChips[chipIdx];
-          if (targetChip) {
-            const targetLeft = Math.max(0, targetChip.offsetLeft - 6);
-            chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
-            try { targetChip.focus({ preventScroll: true }); } catch (_) { targetChip.focus(); }
-          }
+        chipsEl.scrollTo({ left: 0, behavior: 'smooth' });
+        const firstChip = chipsEl.querySelector('button');
+        if (firstChip) {
+          try { firstChip.focus({ preventScroll: true }); } catch (_) { firstChip.focus(); }
         }
       }
       updateChipHighlightStates();
 
-      showMapToast(`📍 Created location: ${chosenName}`);
+      showMapToast(`📍 Current location updated to: ${chosenName}`);
     }
 
     function initMapSwipeGuidanceBar() {
@@ -7641,7 +7606,7 @@
                 const nLower = (depName || sq.name || '').trim().toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('workshop') || nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
+                const isPurged = nLower.includes('workshop') || nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000) || (nLower.includes('gibraltar') && ts <= 1795471000000) || (latNum >= 35.8 && latNum <= 36.4 && lonNum >= -5.6 && lonNum <= -5.1 && ts <= 1795471000000);
                 if (depName && !isPurged && !depName.toLowerCase().includes('workshop') && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
                   const norm = normalizeKnownLandmarkCoords(depName, latNum, lonNum, sq.postcode);
                   sheetQueries.push({
@@ -8158,7 +8123,7 @@
       // Priority 1: Always keep the user's saved location across reloads unless an explicit shared URL param was just opened
       const saved = loadSavedLocation();
       if (saved && saved.lat && saved.lon && !pc && !loc && !(lat && lon)) {
-        if (saved.name && /eiffel/i.test(saved.name)) {
+        if (saved.name && (/eiffel/i.test(saved.name) || (/gibraltar/i.test(saved.name) && (saved.timestamp ? new Date(saved.timestamp).getTime() <= 1795471000000 : true)))) {
           CURRENT_LOCATION = {
             name: 'Dunkirk Mills',
             postcode: 'GL5 5HH',
