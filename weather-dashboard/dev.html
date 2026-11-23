@@ -3268,8 +3268,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 375;
-    const APP_VERSION = '1.10.208-dev';
+    const APP_BUILD = 376;
+    const APP_VERSION = '1.10.209-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -7512,9 +7512,26 @@
         if (loc) {
           pendingCustomLocationName = loc;
         }
-        await lookupPostcode(pc);
+        let success = await lookupPostcode(pc);
+        if (!success) {
+          pendingCustomLocationName = '';
+          if (loc) {
+            success = await lookupTown(loc);
+          }
+          if (!success) {
+            success = await lookupTown(pc);
+          }
+        }
+        if (!success) {
+          updateLocationHeader();
+          fetchWeatherData();
+        }
       } else if (loc) {
-        await lookupTown(loc);
+        const ok = await lookupTown(loc);
+        if (!ok) {
+          updateLocationHeader();
+          fetchWeatherData();
+        }
       } else {
         updateLocationHeader();
         fetchWeatherData();
@@ -8472,23 +8489,41 @@
     }
 
     async function lookupPostcode(postcode) {
-      const prefMatch = matchLocationPreference(postcode);
+      if (!postcode || !postcode.trim()) return false;
+      const cleanPC = postcode.trim();
+      const prefMatch = matchLocationPreference(cleanPC);
       if (prefMatch && applyLocationPreference(prefMatch)) {
         return true;
       }
-      try {
-        const cleanPC = postcode.replace(/\s+/g, '');
-        const res = await fetch(`https://api.postcodes.io/postcodes/${cleanPC}`);
-        if (res.ok) {
-          const json = await res.json();
-          const r = json.result;
-          const town = r.parish || r.admin_ward || r.admin_district || 'Gloucestershire';
-          applySelectedLocation(town, r.latitude, r.longitude, r.postcode);
-          return true;
+
+      // Check if this matches a UK postcode or outward code structure
+      // Full UK: e.g. GL5 5HH, SW1A 1AA, EC1A 1BB, W1A 0AX, B33 8TH
+      // Partial UK outward code: e.g. GL5, SW1A, EC1A
+      const rawNoSpaces = cleanPC.replace(/\s+/g, '').toUpperCase();
+      const isUkPostcodePattern = /^[A-Z]{1,2}[0-9][A-Z0-9]?([0-9][A-Z]{2})?$/.test(rawNoSpaces);
+
+      if (isUkPostcodePattern) {
+        try {
+          const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(rawNoSpaces)}`);
+          if (res.ok) {
+            const json = await res.json();
+            const r = json.result;
+            const town = r.parish || r.admin_ward || r.admin_district || 'Gloucestershire';
+            applySelectedLocation(town, r.latitude, r.longitude, r.postcode);
+            return true;
+          }
+        } catch (err) {
+          console.warn('Postcode lookup error:', err);
         }
-      } catch (err) {
-        console.warn('Postcode lookup error:', err);
       }
+
+      // Fallback for international postal codes (e.g. US ZIP 55401, French 75001, German 10115)
+      // or when postcodes.io is unreachable: query OpenStreetMap Nominatim & Open-Meteo
+      if (typeof lookupTown === 'function') {
+        const ok = await lookupTown(cleanPC);
+        if (ok) return true;
+      }
+
       return false;
     }
 
@@ -15868,11 +15903,13 @@ function joinSpacedLetters(text) {
             u.searchParams.set('q', placeName);
           }
 
-          if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
-            u.searchParams.set('postcode', pc);
-          } else if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
+          if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
             u.searchParams.set('lat', CURRENT_LOCATION.lat);
             u.searchParams.set('lon', CURRENT_LOCATION.lon);
+          }
+
+          if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
+            u.searchParams.set('postcode', pc);
           }
         }
         shareUrl = u.toString();
@@ -16559,12 +16596,14 @@ function joinSpacedLetters(text) {
             locLabel = placeName;
           }
 
+          if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
+            u.searchParams.set('lat', CURRENT_LOCATION.lat);
+            u.searchParams.set('lon', CURRENT_LOCATION.lon);
+          }
+
           if (pc && pc !== 'GEO' && pc !== 'GPS' && pc !== 'UK') {
             u.searchParams.set('postcode', pc);
             locLabel = placeName ? `${placeName} (${pc})` : pc;
-          } else if (CURRENT_LOCATION.lat && CURRENT_LOCATION.lon) {
-            u.searchParams.set('lat', CURRENT_LOCATION.lat);
-            u.searchParams.set('lon', CURRENT_LOCATION.lon);
           }
         }
         shareUrl = u.toString();
