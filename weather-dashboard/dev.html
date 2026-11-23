@@ -788,6 +788,20 @@
     .close-btn-countdown-flash {
       animation: closeBtnWarnFlash 0.85s ease-in-out infinite !important;
     }
+    /* Search Box Attention Pulse when Location Modal Opens */
+    @keyframes searchBoxAttentionPulse {
+      0%, 100% {
+        border-color: rgba(56, 189, 248, 0.6);
+        box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+      }
+      50% {
+        border-color: #38bdf8;
+        box-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 40px rgba(56, 189, 248, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.35);
+      }
+    }
+    .search-box-attention-pulse {
+      animation: searchBoxAttentionPulse 1.05s ease-in-out 4 !important;
+    }
     @keyframes closeHintPulse {
       0%, 100% { opacity: 1; transform: translateY(0); }
       50% { opacity: 0.72; transform: translateY(1.5px); }
@@ -2135,7 +2149,7 @@
           <div class="flex gap-1.5">
             <div class="relative flex-1 flex items-center">
               <span class="pointer-events-none absolute left-2.5 text-sky-300/90 text-xs select-none" aria-hidden="true">🔍</span>
-              <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)">
+              <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)" onfocus="stopSearchBoxPulse()" oninput="stopSearchBoxPulse()" onpointerdown="stopSearchBoxPulse()">
               <button id="locationClearBtn" type="button" tabindex="0" onclick="clearLocationInput()" onkeydown="handleLocationClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear search text">✕</button>
             </div>
             <button id="voiceSearchBtn" type="button" tabindex="0" onclick="toggleVoiceSearch()" onkeydown="handleVoiceSearchKeydown(event)" class="tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-300/50 shadow-[0_0_12px_rgba(168,85,247,0.4)] text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" title="Voice Search (speak town or postcode)">
@@ -3321,8 +3335,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 386;
-    const APP_VERSION = '1.10.219-dev';
+    const APP_BUILD = 387;
+    const APP_VERSION = '1.10.220-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10038,6 +10052,7 @@
     }
 
     function handleLocationInputKeydown(e) {
+      stopSearchBoxPulse();
       if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23) {
         e.preventDefault();
         e.stopPropagation();
@@ -10960,6 +10975,11 @@ function joinSpacedLetters(text) {
       }
     }
 
+    function stopSearchBoxPulse() {
+      const input = document.getElementById('locationInput');
+      if (input) input.classList.remove('search-box-attention-pulse');
+    }
+
     function proceedOpenLocationModal() {
       if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       const modal = document.getElementById('locationModal');
@@ -11005,6 +11025,14 @@ function joinSpacedLetters(text) {
         modal.classList.add('flex');
         try { history.pushState({ modal: 'locationModal' }, ''); } catch (_) {}
       }
+
+      // Attention pulse on search box when opened
+      if (input) {
+        input.classList.remove('search-box-attention-pulse');
+        void input.offsetWidth;
+        input.classList.add('search-box-attention-pulse');
+      }
+
       renderLocationModalPicks();
       // Reset scroll & position AFTER the modal is visible (browsers ignore scrollTop=0 while display:none)
       resetLocationModalPosition();
@@ -11032,6 +11060,7 @@ function joinSpacedLetters(text) {
     }
 
     function closeLocationModal(pop = true) {
+      stopSearchBoxPulse();
       if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       window._locModalReopenGuardUntil = Date.now() + 850;
       modalTimerLocks['locationModal'] = false;
