@@ -2496,34 +2496,30 @@
         </div>
 
         <!-- Drop Pin at Center Confirmation Dialog -->
-        <div id="mapDropPinDialog" onclick="event.stopPropagation()" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[calc(100%+20px)] z-[570] w-[min(340px,calc(100%-32px))] p-3.5 rounded-2xl bg-slate-900/95 border-2 border-amber-400/80 shadow-[0_12px_36px_rgba(0,0,0,0.85),0_0_20px_rgba(245,158,11,0.35)] backdrop-blur-md text-left flex flex-col gap-2 transition-all duration-200">
+        <div id="mapDropPinDialog" onclick="event.stopPropagation()" class="hidden absolute left-1/2 z-[570] w-[min(320px,calc(100%-24px))] p-2.5 rounded-xl bg-slate-900/95 border-2 border-amber-400/80 shadow-[0_8px_30px_rgba(0,0,0,0.85),0_0_16px_rgba(245,158,11,0.35)] backdrop-blur-md text-left flex flex-col gap-1.5 transition-all duration-200" style="top: max(146px, 50%); transform: translate(-50%, calc(-100% - 8px));">
           <!-- Downward pointer arrow pointing exactly to center target reticle -->
-          <div class="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-[10px] border-t-amber-400 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"></div>
+          <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-x-6 border-x-transparent border-t-[8px] border-t-amber-400 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"></div>
 
-          <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+          <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
             <div class="flex items-center gap-1.5 font-bold text-white text-xs">
-              <span class="text-base leading-none">📍</span>
+              <span class="text-sm leading-none">📍</span>
               <span>Drop Pin Here</span>
             </div>
             <button type="button" onclick="closeDropPinDialog()" class="text-slate-400 hover:text-white text-xs p-1 rounded-lg bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer" title="Cancel (Esc)">✕</button>
           </div>
 
-          <p class="text-[11px] text-slate-300 leading-tight">Create a new location at the center of the map:</p>
-
-          <div class="flex flex-col gap-1">
-            <div id="mapDropPinCoords" class="text-[10px] font-mono text-sky-300 bg-black/40 px-2 py-1 rounded-lg border border-white/10 flex items-center justify-between">
-              <span id="mapDropPinCoordsText">51.5074°N, 0.1278°W</span>
-              <span id="mapDropPinStatus" class="text-[9px] text-amber-300 font-sans">Finding name...</span>
-            </div>
-            <label for="mapDropPinNameInput" class="text-[10px] text-slate-400 font-medium">Location Name:</label>
-            <input id="mapDropPinNameInput" type="text" maxlength="60" placeholder="e.g. Minneapolis, MN" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmCreateDropPinLocation();}else if(event.key==='Escape'){event.preventDefault();closeDropPinDialog();}" class="w-full px-2.5 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white font-semibold text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+          <div id="mapDropPinCoords" class="text-[9.5px] font-mono text-sky-300 bg-black/40 px-2 py-0.5 rounded-md border border-white/10 flex items-center justify-between">
+            <span id="mapDropPinCoordsText">51.5074°N, 0.1278°W</span>
+            <span id="mapDropPinStatus" class="text-[9px] text-amber-300 font-sans font-medium">Finding name...</span>
           </div>
 
-          <div class="flex items-center gap-2 pt-1">
-            <button id="mapDropPinConfirmBtn" type="button" onclick="confirmCreateDropPinLocation()" class="tv-focus-amber flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer focus:outline-none">
+          <input id="mapDropPinNameInput" type="text" maxlength="60" placeholder="Location name..." onkeydown="if(event.key==='Enter'){event.preventDefault();confirmCreateDropPinLocation();}else if(event.key==='Escape'){event.preventDefault();closeDropPinDialog();}" class="w-full px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 text-white font-semibold text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+
+          <div class="flex items-center gap-1.5 pt-0.5">
+            <button id="mapDropPinConfirmBtn" type="button" onclick="confirmCreateDropPinLocation()" class="tv-focus-amber flex-1 py-1 px-3 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white font-bold text-xs shadow transition flex items-center justify-center gap-1 cursor-pointer focus:outline-none">
               <span>✓ Confirm &amp; Create</span>
             </button>
-            <button type="button" onclick="closeDropPinDialog()" class="tv-focus-amber py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-semibold text-xs transition cursor-pointer focus:outline-none">
+            <button type="button" onclick="closeDropPinDialog()" class="tv-focus-amber py-1 px-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-medium text-xs transition cursor-pointer focus:outline-none">
               Cancel
             </button>
           </div>
@@ -3325,8 +3321,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 380;
-    const APP_VERSION = '1.10.213-dev';
+    const APP_BUILD = 381;
+    const APP_VERSION = '1.10.214-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5779,8 +5775,10 @@
           }
           if (inputEl) {
             inputEl.value = suitable.name || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
-            inputEl.focus();
-            inputEl.select();
+          }
+          const confirmBtn = document.getElementById('mapDropPinConfirmBtn');
+          if (confirmBtn) {
+            try { confirmBtn.focus({ preventScroll: true }); } catch (_) { confirmBtn.focus(); }
           }
           if (statusEl) {
             if (suitable.snapped) {
