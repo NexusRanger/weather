@@ -3325,8 +3325,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 377;
-    const APP_VERSION = '1.10.210-dev';
+    const APP_BUILD = 378;
+    const APP_VERSION = '1.10.211-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5491,6 +5491,7 @@
     let dropPinLookupAbort = null;
 
     async function resolveSuitablePlaceName(lat, lon, signal) {
+      // 1. Check POPULAR_LANDMARKS_DATABASE (instant zero-latency match within radius)
       if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
         let nearestLm = null;
         let nearestDistKm = Infinity;
@@ -5499,7 +5500,7 @@
             const d = (typeof calculateHaversineKm === 'function')
               ? calculateHaversineKm(lat, lon, lm.lat, lm.lon)
               : Math.hypot(lat - lm.lat, lon - lm.lon) * 111;
-            const maxRadius = lm.radiusKm || 20;
+            const maxRadius = lm.radiusKm || 25;
             if (d <= maxRadius && d < nearestDistKm) {
               nearestDistKm = d;
               nearestLm = lm;
@@ -5509,53 +5510,141 @@
         if (nearestLm) {
           return {
             name: nearestLm.name + (nearestLm.country ? `, ${nearestLm.country}` : ''),
-            postcode: (Array.isArray(nearestLm.postcodes) && nearestLm.postcodes[0]) || nearestLm.postcode || ''
+            geoName: nearestLm.city || nearestLm.name,
+            postcode: (Array.isArray(nearestLm.postcodes) && nearestLm.postcodes[0]) || nearestLm.postcode || '',
+            lat: nearestLm.lat,
+            lon: nearestLm.lon,
+            snapped: true,
+            snappedDistanceKm: nearestDistKm
           };
         }
       }
 
+      // 2. Check DISCOVER_LOCATIONS_DATABASE (famous mountain peaks, summits & world landmarks)
+      if (typeof DISCOVER_LOCATIONS_DATABASE !== 'undefined' && Array.isArray(DISCOVER_LOCATIONS_DATABASE)) {
+        let nearestDisc = null;
+        let nearestDistKm = Infinity;
+        for (const loc of DISCOVER_LOCATIONS_DATABASE) {
+          if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+            const d = (typeof calculateHaversineKm === 'function')
+              ? calculateHaversineKm(lat, lon, loc.lat, loc.lon)
+              : Math.hypot(lat - loc.lat, lon - loc.lon) * 111;
+            if (d <= 25 && d < nearestDistKm) {
+              nearestDistKm = d;
+              nearestDisc = loc;
+            }
+          }
+        }
+        if (nearestDisc) {
+          return {
+            name: nearestDisc.name + (nearestDisc.country ? `, ${nearestDisc.country}` : ''),
+            geoName: nearestDisc.name,
+            postcode: '',
+            lat: nearestDisc.lat,
+            lon: nearestDisc.lon,
+            snapped: true,
+            snappedDistanceKm: nearestDistKm
+          };
+        }
+      }
+
+      // 3. UK Postcodes match (if in UK territory)
       if (lat >= 49.5 && lat <= 61.0 && lon >= -9.0 && lon <= 2.5) {
         try {
-          const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`, { signal });
+          const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=2000&wideSearch=true`, { signal });
           if (pcRes && pcRes.ok) {
             const pcData = await pcRes.json();
             if (pcData.result && pcData.result.length > 0) {
               const r = pcData.result[0];
               const town = r.parish || r.admin_ward || r.admin_district || r.ced || 'Local';
               const name = (typeof shortenPlaceName === 'function') ? shortenPlaceName(town) : town;
-              return { name, postcode: r.postcode || '' };
+              const pcLat = typeof r.latitude === 'number' ? r.latitude : lat;
+              const pcLon = typeof r.longitude === 'number' ? r.longitude : lon;
+              const dKm = Math.hypot(lat - pcLat, lon - pcLon) * 111;
+              return {
+                name,
+                geoName: town,
+                postcode: r.postcode || '',
+                lat: dKm <= 5 ? pcLat : lat,
+                lon: dKm <= 5 ? pcLon : lon,
+                snapped: dKm <= 5,
+                snappedDistanceKm: dKm
+              };
             }
           }
         } catch (_) {}
       }
 
+      // 4. Reverse Geocoding with BigDataCloud
+      let bdcTown = '';
+      let bdcCountry = '';
+      let bdcPostcode = '';
+      let snappedName = '';
+      let snappedGeoName = '';
       try {
         const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`, { signal });
         if (bdcRes && bdcRes.ok) {
           const d = await bdcRes.json();
-          const place = d.locality || d.city || '';
+          bdcTown = d.locality || d.city || '';
+          bdcCountry = d.countryName || '';
+          bdcPostcode = d.postcode || '';
           const sub = d.principalSubdivision || '';
-          const country = d.countryName || '';
-          let name = '';
-          if (place && sub && place !== sub) {
-            name = `${place}, ${sub}`;
-          } else if (place && country && place !== country) {
-            name = `${place}, ${country}`;
-          } else if (place) {
-            name = place;
-          } else if (sub && country) {
-            name = `${sub}, ${country}`;
-          } else {
-            name = sub || country || '';
+          if (bdcTown && sub && bdcTown !== sub) {
+            snappedName = `${bdcTown}, ${sub}`;
+          } else if (bdcTown && bdcCountry && bdcTown !== bdcCountry) {
+            snappedName = `${bdcTown}, ${bdcCountry}`;
+          } else if (bdcTown) {
+            snappedName = bdcTown;
+          } else if (sub && bdcCountry) {
+            snappedName = `${sub}, ${bdcCountry}`;
           }
-          if (name) {
-            return { name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(name) : name, postcode: d.postcode || '' };
-          }
+          snappedGeoName = bdcTown || sub || bdcCountry || '';
         }
       } catch (_) {}
 
+      // 5. Query Open-Meteo Geocoding to snap coordinates onto the official town/city center
+      const targetQueryName = bdcTown || (snappedGeoName && snappedGeoName.split(',')[0].trim());
+      if (targetQueryName) {
+        try {
+          const omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(targetQueryName)}&count=5&language=en&format=json`, { signal });
+          if (omRes && omRes.ok) {
+            const om = await omRes.json();
+            if (om && om.results && om.results.length > 0) {
+              let bestOm = null;
+              let minOmDistKm = Infinity;
+              for (const r of om.results) {
+                const dKm = (typeof calculateHaversineKm === 'function')
+                  ? calculateHaversineKm(lat, lon, r.latitude, r.longitude)
+                  : Math.hypot(lat - r.latitude, lon - r.longitude) * 111;
+                if (dKm < minOmDistKm) {
+                  minOmDistKm = dKm;
+                  bestOm = r;
+                }
+              }
+              // If the town/city center is within 25 km, SNAP onto its official center!
+              if (bestOm && minOmDistKm <= 25) {
+                const fullPlace = bestOm.name + (bestOm.country ? `, ${bestOm.country}` : '');
+                return {
+                  name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(fullPlace) : fullPlace,
+                  geoName: bestOm.name,
+                  postcode: bdcPostcode,
+                  lat: bestOm.latitude,
+                  lon: bestOm.longitude,
+                  snapped: true,
+                  snappedDistanceKm: minOmDistKm
+                };
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 6. Fallback to Nominatim Reverse Geocoding
       try {
-        const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`, { signal });
+        const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`, {
+          headers: { 'User-Agent': 'WeatherAppDev/1.0' },
+          signal
+        });
         if (nomRes && nomRes.ok) {
           const nom = await nomRes.json();
           const addr = nom.address || {};
@@ -5566,13 +5655,55 @@
           if (place && sub && place !== sub) name += `, ${sub}`;
           else if (place && country) name += `, ${country}`;
           else if (!place) name = sub || country || '';
-          if (name) return { name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(name) : name, postcode: addr.postcode || '' };
+
+          let nomLat = lat;
+          let nomLon = lon;
+          let nomSnapped = false;
+          if (nom.lat && nom.lon) {
+            const nLat = parseFloat(nom.lat);
+            const nLon = parseFloat(nom.lon);
+            const dKm = Math.hypot(lat - nLat, lon - nLon) * 111;
+            if (dKm <= 20) {
+              nomLat = nLat;
+              nomLon = nLon;
+              nomSnapped = true;
+            }
+          }
+
+          if (name) {
+            return {
+              name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(name) : name,
+              geoName: place || sub || country,
+              postcode: addr.postcode || bdcPostcode || '',
+              lat: nomLat,
+              lon: nomLon,
+              snapped: nomSnapped,
+              snappedDistanceKm: 0
+            };
+          }
         }
       } catch (_) {}
 
+      // 7. If BDC found at least a name without OM snap
+      if (snappedName) {
+        return {
+          name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(snappedName) : snappedName,
+          geoName: snappedGeoName,
+          postcode: bdcPostcode,
+          lat,
+          lon,
+          snapped: false
+        };
+      }
+
+      // 8. Custom ocean/remote point
       return {
         name: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
-        postcode: ''
+        geoName: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+        postcode: '',
+        lat,
+        lon,
+        snapped: false
       };
     }
 
@@ -5622,14 +5753,38 @@
 
       try {
         const suitable = await resolveSuitablePlaceName(lat, lon, dropPinLookupAbort.signal);
-        if (inputEl && dialog && !dialog.classList.contains('hidden')) {
-          inputEl.value = suitable.name || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
-          if (statusEl) {
-            statusEl.textContent = suitable.postcode ? `Postcode: ${suitable.postcode}` : 'Ready';
-            statusEl.style.color = '#34d399';
+        if (dialog && !dialog.classList.contains('hidden')) {
+          if (suitable.snapped) {
+            dropPinActiveCoords = {
+              lat: suitable.lat,
+              lon: suitable.lon,
+              geoName: suitable.geoName || suitable.name,
+              postcode: suitable.postcode || ''
+            };
+            if (historyLeafletMap) {
+              historyLeafletMap.panTo([suitable.lat, suitable.lon], { duration: 0.35 });
+            }
+            if (coordsTextEl) {
+              coordsTextEl.textContent = (typeof formatCoordDesc === 'function')
+                ? formatCoordDesc(suitable.lat, suitable.lon)
+                : `${suitable.lat.toFixed(2)}°, ${suitable.lon.toFixed(2)}°`;
+            }
           }
-          inputEl.focus();
-          inputEl.select();
+          if (inputEl) {
+            inputEl.value = suitable.name || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+            inputEl.focus();
+            inputEl.select();
+          }
+          if (statusEl) {
+            if (suitable.snapped) {
+              const shortCity = suitable.geoName || suitable.name.split(',')[0].trim();
+              statusEl.textContent = `✓ Centered on ${shortCity}`;
+              statusEl.style.color = '#34d399';
+            } else {
+              statusEl.textContent = suitable.postcode ? `Postcode: ${suitable.postcode}` : 'Ready';
+              statusEl.style.color = '#38bdf8';
+            }
+          }
         }
       } catch (err) {
         if (err.name !== 'AbortError' && inputEl) {
@@ -5676,25 +5831,110 @@
 
       closeDropPinDialog();
 
-      // Apply location and save to user's saved/recent queries
-      await applySelectedLocation(chosenName, lat, lon, '', true, {
-        isCustomTitle: true,
-        geoName: chosenName
-      });
+      const geoName = (dropPinActiveCoords.geoName || chosenName);
+      const postcode = (dropPinActiveCoords.postcode || '');
 
-      // Refresh map pins and carousel so the new location appears
-      if (typeof renderHistoryMapPins === 'function') {
-        renderHistoryMapPins(false);
+      const newLoc = {
+        name: chosenName,
+        geoName: geoName,
+        postcode: postcode,
+        lat: lat,
+        lon: lon,
+        desc: (typeof formatCoordDesc === 'function') ? formatCoordDesc(lat, lon) : `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+        isCustomTitle: false,
+        timestamp: Date.now()
+      };
+
+      // 1. Record in user's saved/recent queries
+      if (typeof recordUserRecentLocation === 'function') {
+        recordUserRecentLocation(newLoc);
       }
 
-      showMapToast(`📍 Created location: ${chosenName}`);
+      // 2. Record in public map queries
+      try {
+        let mapQueries = getHistoryQueries();
+        mapQueries = mapQueries.filter(q => {
+          const sameName = (q.name || '').toLowerCase() === chosenName.toLowerCase();
+          const distKm = (typeof calculateHaversineKm === 'function')
+            ? calculateHaversineKm(q.lat, q.lon, lat, lon)
+            : Math.hypot(q.lat - lat, q.lon - lon) * 111;
+          return !sameName && distKm >= 0.08;
+        });
+        mapQueries.unshift({
+          name: chosenName,
+          geoName: geoName,
+          postcode: postcode,
+          lat: lat,
+          lon: lon,
+          timestamp: Date.now()
+        });
+        if (mapQueries.length > 300) mapQueries = mapQueries.slice(0, 300);
+        localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(mapQueries));
+      } catch (_) {}
+
+      // 3. Sync to Supabase in background
+      try {
+        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+        fetch(`${SUPABASE_URL}/rest/v1/locations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            name: chosenName,
+            postcode: (typeof getOutwardPostcode === 'function') ? getOutwardPostcode(postcode) : postcode,
+            lat: lat,
+            lon: lon,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(() => {});
+      } catch (_) {}
 
       const key = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
       mapActivePopupKey = key;
-      updateChipHighlightStates();
-      if (typeof focusMapMarkerByKey === 'function') {
-        focusMapMarkerByKey(key);
+      lastScrolledChipKey = key;
+
+      // 4. Refresh markers & chips
+      const curFilter = getMapViewFilter();
+      const currentQueries = getQueriesForMapFilter(curFilter);
+      renderHistoryMarkersAndChips(currentQueries, false, curFilter);
+
+      // 5. Glide map and immediately pop up the location info box on the new location!
+      if (historyLeafletMap) {
+        historyLeafletMap.panTo([lat, lon], { duration: 0.35 });
       }
+
+      setTimeout(() => {
+        const entry = mapMarkerMap[key];
+        if (entry && entry.marker) {
+          entry.marker.openPopup();
+          stripMapCanvasFocusables();
+          scheduleAdaptivePopupPlacement();
+        }
+      }, 150);
+
+      // 6. Highlight & scroll to chip in bottom carousel
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (chipsEl) {
+        const allChips = chipsEl.querySelectorAll('button');
+        const chipIdx = Array.from(allChips).findIndex(b => b._chipKey === key);
+        if (chipIdx !== -1) {
+          mapLastFocusedChipIndex = chipIdx;
+          const targetChip = allChips[chipIdx];
+          if (targetChip) {
+            const targetLeft = Math.max(0, targetChip.offsetLeft - 6);
+            chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+            try { targetChip.focus({ preventScroll: true }); } catch (_) { targetChip.focus(); }
+          }
+        }
+      }
+      updateChipHighlightStates();
+
+      showMapToast(`📍 Created location: ${chosenName}`);
     }
 
     function initMapSwipeGuidanceBar() {
@@ -8000,6 +8240,18 @@
     // Embedded directly in GitHub codebase for zero-latency instant recognition
     // =========================================================================
     const POPULAR_LANDMARKS_DATABASE = [
+      {
+        id: 'rock_of_gibraltar',
+        name: 'Rock of Gibraltar',
+        city: 'Gibraltar',
+        country: 'Gibraltar',
+        postcode: 'GX11 1AA',
+        lat: 36.1408,
+        lon: -5.3536,
+        radiusKm: 25,
+        aliases: ['gibraltar', 'rock of gibraltar', 'south mole', 'strait of gibraltar', 'gibraltar rock'],
+        badgeStyle: 'bg-amber-500/20 border-amber-400/40 text-amber-200'
+      },
       {
         id: 'white_house',
         name: 'The White House',
