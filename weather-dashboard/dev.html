@@ -2421,14 +2421,17 @@
               </svg>
             </div>
             <h3 id="mapModalTitleText" class="text-sm md:text-base font-bold text-white leading-none whitespace-nowrap">30-Day Location Map</h3>
-            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
+            <button id="mapQueryCount" type="button" tabindex="0" onclick="fitAllMapLocationsView()" onkeydown="if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapClearTestPinsBtn')||document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-[11px] font-semibold text-sky-200 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Zoom map to fit all locations in this view">
               <span>🗺️</span><span id="mapQueryCountText">View <span class="text-amber-300 font-mono font-bold">0</span> Locations</span>
+            </button>
+            <button id="mapClearTestPinsBtn" type="button" tabindex="0" onclick="handleClearTestPinsClick()" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapQueryCount');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber inline-flex items-center justify-center gap-1 h-[30px] px-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/35 text-[11px] font-semibold text-rose-300 hover:text-white leading-none transition cursor-pointer focus:outline-none whitespace-nowrap box-border shadow-sm flex-shrink-0" title="Delete custom test locations created on this device">
+              <span>🗑️</span><span>Clear Test Pins</span>
             </button>
           </div>
           <div class="flex items-center gap-1.5 flex-wrap">
             <!-- 3-Way Map View Filter: All (Public) | Recent (Saved up to 30) | Locked (Favourites) -->
             <div class="flex items-center rounded-xl bg-white/10 border border-white/15 p-0.5 h-[30px] box-border" role="group" aria-label="Map location view filter">
-              <button id="mapFilterAllBtn" type="button" onclick="setMapViewFilter('all')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapQueryCount');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show everyone's shared 30-day locations">
+              <button id="mapFilterAllBtn" type="button" onclick="setMapViewFilter('all')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapClearTestPinsBtn')||document.getElementById('mapQueryCount');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLocalBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-bold bg-sky-500/40 text-white shadow-sm transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show everyone's shared 30-day locations">
                 <span>🌐</span><span>All</span>
               </button>
               <button id="mapFilterLocalBtn" type="button" onclick="setMapViewFilter('local')" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const b=document.getElementById('mapFilterAllBtn');if(b)b.focus();}else if(event.key==='ArrowRight'){event.preventDefault();const b=document.getElementById('mapFilterLockedBtn');if(b)b.focus();}else if(event.key==='ArrowDown'){event.preventDefault();const zIn=document.querySelector('#historyLeafletMap .leaflet-control-zoom-in');if(zIn && zIn.offsetParent!==null){zIn.focus();}else{const t=document.querySelector('#mapRecentChips button');if(t)t.focus();}}" class="tv-focus-amber h-full px-2.5 rounded-lg text-[11px] font-medium text-slate-300 hover:text-white transition cursor-pointer focus:outline-none inline-flex items-center justify-center gap-1 leading-none whitespace-nowrap" tabindex="0" title="Show your locally saved recent locations (private custom names included)">
@@ -3321,8 +3324,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 383;
-    const APP_VERSION = '1.10.216-dev';
+    const APP_BUILD = 384;
+    const APP_VERSION = '1.10.217-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5710,21 +5713,99 @@
       };
     }
 
+    function findExistingLocationAtCenter(centerLat, centerLon) {
+      if (!historyLeafletMap || !mapMarkerMap) return null;
+      let size;
+      try { size = historyLeafletMap.getSize(); } catch (_) { size = { x: 400, y: 300 }; }
+      const centerPt = L.point(size.x / 2, size.y / 2);
+      let bestMatch = null;
+      let minPixelDist = Infinity;
+
+      for (const key in mapMarkerMap) {
+        const entry = mapMarkerMap[key];
+        if (!entry || typeof entry.lat !== 'number' || typeof entry.lon !== 'number') continue;
+
+        // Container screen pixel distance check (reticle is 32px diameter, threshold 38px)
+        try {
+          const pt = historyLeafletMap.latLngToContainerPoint([entry.lat, entry.lon]);
+          const pixelDist = centerPt.distanceTo(pt);
+          if (pixelDist < 38 && pixelDist < minPixelDist) {
+            minPixelDist = pixelDist;
+            bestMatch = entry;
+          }
+        } catch (_) {}
+
+        // Geographic distance check (< 0.6 km)
+        if (!bestMatch) {
+          const geoKm = (typeof calculateHaversineKm === 'function')
+            ? calculateHaversineKm(centerLat, centerLon, entry.lat, entry.lon)
+            : Math.hypot(centerLat - entry.lat, centerLon - entry.lon) * 111;
+          if (geoKm < 0.6) {
+            bestMatch = entry;
+          }
+        }
+      }
+
+      // Check CURRENT_LOCATION reference as well
+      if (!bestMatch && typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') {
+        const curKm = (typeof calculateHaversineKm === 'function')
+          ? calculateHaversineKm(centerLat, centerLon, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon)
+          : Math.hypot(centerLat - CURRENT_LOCATION.lat, centerLon - CURRENT_LOCATION.lon) * 111;
+        if (curKm < 0.6) {
+          const curKey = `${CURRENT_LOCATION.lat.toFixed(4)}_${CURRENT_LOCATION.lon.toFixed(4)}`;
+          return mapMarkerMap[curKey] || {
+            lat: CURRENT_LOCATION.lat,
+            lon: CURRENT_LOCATION.lon,
+            query: CURRENT_LOCATION,
+            isCurrent: true
+          };
+        }
+      }
+
+      return bestMatch;
+    }
+
     async function openDropPinDialog() {
       if (!historyLeafletMap) return;
       const dialog = document.getElementById('mapDropPinDialog');
       if (!dialog) return;
-
-      // Close and hide any open popup (including Current Location box) so the confirmation dialog is the only box visible
-      try { historyLeafletMap.closePopup(); } catch (_) {}
-      mapActivePopupKey = null;
-      updateChipHighlightStates();
 
       const center = historyLeafletMap.getCenter();
       let lat = Math.round(center.lat * 10000) / 10000;
       let lon = Math.round(center.lng * 10000) / 10000;
       lon = ((lon + 180) % 360 + 360) % 360 - 180;
       lat = Math.max(-85, Math.min(85, lat));
+
+      // Prevent duplicate creation if reticle is already directly over an existing location
+      const existingAtCenter = findExistingLocationAtCenter(lat, lon);
+      if (existingAtCenter) {
+        const placeName = (existingAtCenter.query && (existingAtCenter.query.name || existingAtCenter.query.displayName)) || 'This location';
+        if (typeof showMapToast === 'function') {
+          showMapToast(`📍 "${placeName}" is already on your map`);
+        }
+        const key = `${existingAtCenter.lat.toFixed(4)}_${existingAtCenter.lon.toFixed(4)}`;
+        mapActivePopupKey = key;
+        if (existingAtCenter.marker) {
+          existingAtCenter.marker.openPopup();
+        }
+        const allChips = document.querySelectorAll('#mapRecentChips button');
+        const chip = Array.from(allChips).find(b => b._chipKey === key);
+        if (chip) {
+          try {
+            const chipsEl = document.getElementById('mapRecentChips');
+            if (chipsEl) chipsEl.scrollTo({ left: Math.max(0, chip.offsetLeft - 6), behavior: 'smooth' });
+            chip.focus({ preventScroll: true });
+          } catch (_) {}
+        }
+        updateChipHighlightStates();
+        return;
+      }
+
+      // Close and hide any open popup (including Current Location box) so the confirmation dialog is the only box visible
+      try { historyLeafletMap.closePopup(); } catch (_) {}
+      mapActivePopupKey = null;
+      updateChipHighlightStates();
+
       dropPinActiveCoords = { lat, lon };
 
       const coordsTextEl = document.getElementById('mapDropPinCoordsText');
@@ -5763,6 +5844,33 @@
         const suitable = await resolveSuitablePlaceName(lat, lon, dropPinLookupAbort.signal);
         if (dialog && !dialog.classList.contains('hidden')) {
           if (suitable.snapped) {
+            // Check if snapped town/landmark is already on the map
+            const snappedExisting = findExistingLocationAtCenter(suitable.lat, suitable.lon) ||
+              Object.values(mapMarkerMap).find(e => e.query && e.query.name && suitable.name && e.query.name.toLowerCase() === suitable.name.toLowerCase());
+            if (snappedExisting) {
+              closeDropPinDialog();
+              const placeName = suitable.name || 'This location';
+              if (typeof showMapToast === 'function') {
+                showMapToast(`📍 "${placeName}" is already on your map`);
+              }
+              const key = `${snappedExisting.lat.toFixed(4)}_${snappedExisting.lon.toFixed(4)}`;
+              mapActivePopupKey = key;
+              if (snappedExisting.marker) {
+                snappedExisting.marker.openPopup();
+              }
+              const allChips = document.querySelectorAll('#mapRecentChips button');
+              const chip = Array.from(allChips).find(b => b._chipKey === key);
+              if (chip) {
+                try {
+                  const chipsEl = document.getElementById('mapRecentChips');
+                  if (chipsEl) chipsEl.scrollTo({ left: Math.max(0, chip.offsetLeft - 6), behavior: 'smooth' });
+                  chip.focus({ preventScroll: true });
+                } catch (_) {}
+              }
+              updateChipHighlightStates();
+              return;
+            }
+
             dropPinActiveCoords = {
               lat: suitable.lat,
               lon: suitable.lon,
@@ -7340,6 +7448,86 @@
           popupWrapper.appendChild(currentBadge);
         }
 
+        // Easy Delete Location button (for custom drop-pins, user test locations & searched spots)
+        const isDefaultPublicPlace = (typeof DEFAULT_PUBLIC_MAP_LOCATIONS !== 'undefined' && Array.isArray(DEFAULT_PUBLIC_MAP_LOCATIONS))
+          ? DEFAULT_PUBLIC_MAP_LOCATIONS.some(def =>
+              (Math.abs(def.lat - q.lat) < 0.002 && Math.abs(def.lon - q.lon) < 0.002) ||
+              (def.name && q.name && def.name.toLowerCase() === q.name.toLowerCase())
+            )
+          : false;
+
+        const deleteLocBtn = document.createElement('button');
+        deleteLocBtn.type = 'button';
+        deleteLocBtn.tabIndex = -1;
+        deleteLocBtn.style.cssText = 'margin-top: 6px; width: 100%; padding: 5px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; outline: none; box-sizing: border-box;';
+
+        if (isDefaultPublicPlace) {
+          deleteLocBtn.innerHTML = '<span>🔒</span> <span>Built-in Default Place</span>';
+          deleteLocBtn.style.background = 'rgba(255, 255, 255, 0.04)';
+          deleteLocBtn.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+          deleteLocBtn.style.color = '#64748b';
+          deleteLocBtn.style.cursor = 'default';
+          deleteLocBtn.title = 'Built-in public landmark (cannot be deleted)';
+        } else {
+          deleteLocBtn.innerHTML = '<span>🗑️</span> <span>Delete Location</span>';
+          deleteLocBtn.style.background = 'rgba(244, 63, 94, 0.12)';
+          deleteLocBtn.style.border = '1px solid rgba(251, 113, 133, 0.3)';
+          deleteLocBtn.style.color = '#fda4af';
+          deleteLocBtn.style.cursor = 'pointer';
+          deleteLocBtn.title = 'Remove this test location from your map and database';
+
+          let deleteConfirmPending = false;
+          let deleteConfirmTimer = null;
+
+          deleteLocBtn.onclick = async (e) => {
+            if (e) {
+              e.stopPropagation();
+              if (e.preventDefault) e.preventDefault();
+            }
+            if (!deleteConfirmPending) {
+              deleteConfirmPending = true;
+              deleteLocBtn.innerHTML = '<span>⚠️</span> <span>Tap again to confirm delete</span>';
+              deleteLocBtn.style.background = 'rgba(239, 68, 68, 0.38)';
+              deleteLocBtn.style.border = '1px solid rgba(239, 68, 68, 0.8)';
+              deleteLocBtn.style.color = '#ffffff';
+              deleteConfirmTimer = setTimeout(() => {
+                deleteConfirmPending = false;
+                deleteLocBtn.innerHTML = '<span>🗑️</span> <span>Delete Location</span>';
+                deleteLocBtn.style.background = 'rgba(244, 63, 94, 0.12)';
+                deleteLocBtn.style.border = '1px solid rgba(251, 113, 133, 0.3)';
+                deleteLocBtn.style.color = '#fda4af';
+              }, 4000);
+              return;
+            }
+
+            if (deleteConfirmTimer) clearTimeout(deleteConfirmTimer);
+            deleteLocBtn.innerHTML = '<span>⏳</span> <span>Deleting...</span>';
+            deleteLocBtn.disabled = true;
+
+            // If deleting the active CURRENT_LOCATION, revert gracefully to default
+            try {
+              if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION) {
+                const curName = (CURRENT_LOCATION.name || '').toLowerCase();
+                const qName = (q.name || '').toLowerCase();
+                const distTol = Math.hypot(CURRENT_LOCATION.lat - q.lat, CURRENT_LOCATION.lon - q.lon) * 111;
+                if (curName === qName || distTol < 0.25) {
+                  localStorage.removeItem('ambient_weather_loc');
+                  sessionStorage.removeItem('ambient_weather_loc');
+                  if (typeof DEFAULT_PUBLIC_MAP_LOCATIONS !== 'undefined' && DEFAULT_PUBLIC_MAP_LOCATIONS.length > 0) {
+                    const fallback = DEFAULT_PUBLIC_MAP_LOCATIONS[0];
+                    if (typeof applySelectedLocation === 'function') {
+                      applySelectedLocation(fallback.name, fallback.lat, fallback.lon, fallback.postcode || 'GEO', false);
+                    }
+                  }
+                }
+              }
+            } catch (_) {}
+
+            await deleteLocationFromHistoryAndDatabase(q);
+          };
+        }
+        popupWrapper.appendChild(deleteLocBtn);
+
         const marker = L.marker([q.lat, q.lon], {
           icon: customIcon,
           riseOnHover: true,
@@ -7910,6 +8098,124 @@
           status.textContent = 'Purge notice: ' + (err.message || err);
           status.style.color = '#f87171';
           status.classList.remove('hidden');
+        }
+      }
+    }
+
+    async function handleClearTestPinsClick() {
+      const btn = document.getElementById('mapClearTestPinsBtn');
+      const userRecents = (typeof loadUserRecentQueries === 'function') ? loadUserRecentQueries() : [];
+      if (!userRecents || userRecents.length === 0) {
+        if (typeof showMapToast === 'function') {
+          showMapToast('ℹ️ No custom test pins to clear');
+        }
+        return;
+      }
+
+      if (!window._mapClearPending) {
+        window._mapClearPending = true;
+        if (btn) {
+          btn.innerHTML = `<span>⚠️</span><span>Confirm Delete ${userRecents.length} Pin${userRecents.length === 1 ? '' : 's'}?</span>`;
+          btn.classList.add('bg-rose-600/40', 'border-rose-300', 'text-white');
+        }
+        window._mapClearTimer = setTimeout(() => {
+          window._mapClearPending = false;
+          if (btn) {
+            btn.innerHTML = '<span>🗑️</span><span>Clear Test Pins</span>';
+            btn.classList.remove('bg-rose-600/40', 'border-rose-300', 'text-white');
+          }
+        }, 4500);
+        return;
+      }
+
+      if (window._mapClearTimer) clearTimeout(window._mapClearTimer);
+      window._mapClearPending = false;
+      if (btn) {
+        btn.innerHTML = '<span>⏳</span><span>Clearing...</span>';
+        btn.disabled = true;
+      }
+
+      try {
+        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+        const tol = 0.0035;
+        const deletePromises = [];
+
+        for (const loc of userRecents) {
+          if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+            const coordUrl = `${SUPABASE_URL}/rest/v1/locations?lat=gte.${loc.lat - tol}&lat=lte.${loc.lat + tol}&lon=gte.${loc.lon - tol}&lon=lte.${loc.lon + tol}`;
+            deletePromises.push(fetch(coordUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+          if (loc.name && typeof loc.name === 'string' && loc.name.trim().length > 1) {
+            const nameUrl = `${SUPABASE_URL}/rest/v1/locations?name=eq.${encodeURIComponent(loc.name.trim())}`;
+            deletePromises.push(fetch(nameUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+        }
+        await Promise.all(deletePromises);
+
+        saveUserRecentQueries([]);
+        try {
+          const rawCache = localStorage.getItem(PUBLIC_MAP_CACHE_KEY);
+          if (rawCache) {
+            const cachedArr = JSON.parse(rawCache);
+            if (Array.isArray(cachedArr)) {
+              const remainingMap = cachedArr.filter(m => !userRecents.some(ur => doesRecentQueryMatch(ur, m, 0.0035)));
+              localStorage.setItem(PUBLIC_MAP_CACHE_KEY, JSON.stringify(remainingMap));
+            }
+          }
+        } catch (_) {}
+
+        // Reset CURRENT_LOCATION if it was a user test pin
+        if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION) {
+          const wasTestPin = userRecents.some(ur => doesRecentQueryMatch(ur, CURRENT_LOCATION, 0.0035) || (ur.name && ur.name === CURRENT_LOCATION.name));
+          if (wasTestPin) {
+            localStorage.removeItem('ambient_weather_loc');
+            sessionStorage.removeItem('ambient_weather_loc');
+            if (typeof DEFAULT_PUBLIC_MAP_LOCATIONS !== 'undefined' && DEFAULT_PUBLIC_MAP_LOCATIONS.length > 0) {
+              const fallback = DEFAULT_PUBLIC_MAP_LOCATIONS[0];
+              if (typeof applySelectedLocation === 'function') {
+                applySelectedLocation(fallback.name, fallback.lat, fallback.lon, fallback.postcode || 'GEO', false);
+              }
+            }
+          }
+        }
+
+        if (historyLeafletMap) {
+          try { historyLeafletMap.closePopup(); } catch (_) {}
+        }
+        mapActivePopupKey = null;
+
+        if (typeof setMapViewFilter === 'function') {
+          setMapViewFilter(getMapViewFilter(), false);
+        } else if (typeof initOrRefreshHistoryMap === 'function') {
+          initOrRefreshHistoryMap(false);
+        }
+
+        if (typeof showMapToast === 'function') {
+          showMapToast(`🗑️ Cleared all ${userRecents.length} test pins from map`);
+        }
+      } catch (err) {
+        console.error('Error clearing test pins:', err);
+        if (typeof showMapToast === 'function') {
+          showMapToast('Clear notice: ' + (err.message || err));
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🗑️</span><span>Clear Test Pins</span>';
+          btn.classList.remove('bg-rose-600/40', 'border-rose-300', 'text-white');
         }
       }
     }
