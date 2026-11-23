@@ -712,6 +712,25 @@
       border-bottom-left-radius: 8px !important;
       border-bottom-right-radius: 8px !important;
     }
+    #historyLeafletMap .leaflet-control-zoom a.leaflet-control-zoom-out:not(:last-child) {
+      border-bottom-left-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+    #historyLeafletMap .leaflet-control-drop-pin {
+      border-bottom-left-radius: 8px !important;
+      border-bottom-right-radius: 8px !important;
+      font-size: 16px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-decoration: none !important;
+      cursor: pointer !important;
+    }
+    #historyLeafletMap .leaflet-control-drop-pin:hover {
+      background: rgba(30, 41, 59, 0.95) !important;
+      color: #ffffff !important;
+    }
     #historyLeafletMap .leaflet-control-zoom a:hover,
     #radarLeafletMap .leaflet-control-zoom a:hover {
       background: rgba(30, 41, 59, 0.95) !important;
@@ -746,6 +765,8 @@
       scroll-snap-type: x proximity;
       touch-action: pan-x;
       scroll-padding-left: 6px;
+      padding-top: 12px !important;
+      margin-top: -12px !important;
     }
     #mapRecentChips > button {
       scroll-snap-align: start;
@@ -2461,16 +2482,50 @@
           <div id="mapEmptyFilterSub" class="text-[11px] text-slate-300">Open the Location menu, press and hold any Recent Location, then choose Lock to pin it here.</div>
         </div>
         <!-- Luminous Center Target Reticle for Tablet/Touch Auto-Popup -->
-        <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
+        <div id="mapCenterReticle" class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
           <div class="relative flex items-center justify-center">
             <!-- Subtle Crosshair Hairlines extending slightly beyond the ring -->
             <div class="absolute w-11 h-[1.5px] bg-gradient-to-r from-transparent via-sky-400/80 to-transparent"></div>
             <div class="absolute h-11 w-[1.5px] bg-gradient-to-b from-transparent via-sky-400/80 to-transparent"></div>
             <!-- Luminous Outer Ring -->
-            <div class="w-8 h-8 rounded-full border-2 border-sky-400/80 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.55),inset_0_0_8px_rgba(56,189,248,0.25)]">
+            <div id="mapCenterReticleRing" class="w-8 h-8 rounded-full border-2 border-sky-400/80 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.55),inset_0_0_8px_rgba(56,189,248,0.25)] transition-colors">
               <!-- Crisp Center Dot -->
-              <div class="w-1.5 h-1.5 rounded-full bg-sky-300 shadow-[0_0_8px_#38bdf8]"></div>
+              <div id="mapCenterReticleDot" class="w-1.5 h-1.5 rounded-full bg-sky-300 shadow-[0_0_8px_#38bdf8] transition-colors"></div>
             </div>
+          </div>
+        </div>
+
+        <!-- Drop Pin at Center Confirmation Dialog -->
+        <div id="mapDropPinDialog" onclick="event.stopPropagation()" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[calc(100%+20px)] z-[570] w-[min(340px,calc(100%-32px))] p-3.5 rounded-2xl bg-slate-900/95 border-2 border-amber-400/80 shadow-[0_12px_36px_rgba(0,0,0,0.85),0_0_20px_rgba(245,158,11,0.35)] backdrop-blur-md text-left flex flex-col gap-2 transition-all duration-200">
+          <!-- Downward pointer arrow pointing exactly to center target reticle -->
+          <div class="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-x-8 border-x-transparent border-t-[10px] border-t-amber-400 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"></div>
+
+          <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-2">
+            <div class="flex items-center gap-1.5 font-bold text-white text-xs">
+              <span class="text-base leading-none">📍</span>
+              <span>Drop Pin Here</span>
+            </div>
+            <button type="button" onclick="closeDropPinDialog()" class="text-slate-400 hover:text-white text-xs p-1 rounded-lg bg-white/5 hover:bg-white/15 focus:outline-none cursor-pointer" title="Cancel (Esc)">✕</button>
+          </div>
+
+          <p class="text-[11px] text-slate-300 leading-tight">Create a new location at the center of the map:</p>
+
+          <div class="flex flex-col gap-1">
+            <div id="mapDropPinCoords" class="text-[10px] font-mono text-sky-300 bg-black/40 px-2 py-1 rounded-lg border border-white/10 flex items-center justify-between">
+              <span id="mapDropPinCoordsText">51.5074°N, 0.1278°W</span>
+              <span id="mapDropPinStatus" class="text-[9px] text-amber-300 font-sans">Finding name...</span>
+            </div>
+            <label for="mapDropPinNameInput" class="text-[10px] text-slate-400 font-medium">Location Name:</label>
+            <input id="mapDropPinNameInput" type="text" maxlength="60" placeholder="e.g. Minneapolis, MN" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmCreateDropPinLocation();}else if(event.key==='Escape'){event.preventDefault();closeDropPinDialog();}" class="w-full px-2.5 py-1.5 rounded-lg bg-white/10 border border-white/20 text-white font-semibold text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+          </div>
+
+          <div class="flex items-center gap-2 pt-1">
+            <button id="mapDropPinConfirmBtn" type="button" onclick="confirmCreateDropPinLocation()" class="tv-focus-amber flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer focus:outline-none">
+              <span>✓ Confirm &amp; Create</span>
+            </button>
+            <button type="button" onclick="closeDropPinDialog()" class="tv-focus-amber py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white font-semibold text-xs transition cursor-pointer focus:outline-none">
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -2481,14 +2536,16 @@
       </div>
 
       <!-- Quick Location Shortcuts Bar (Sorted by Distance from Current Location) & Compact Controls -->
-      <div class="pt-1.5 border-t border-white/10 flex flex-col gap-1 flex-shrink-0">
+      <div class="pt-1.5 border-t border-white/10 flex flex-col gap-1 flex-shrink-0 relative">
+        <!-- Extended touch swipe sensitivity zone above location chips for effortless finger swiping -->
+        <div id="mapChipsTopSwipeZone" class="w-full h-4 -mb-3 z-10 cursor-ew-resize touch-none select-none relative" title="Swipe to browse locations" style="touch-action: pan-x;"></div>
         <div class="flex items-center gap-1.5 w-full min-w-0">
           <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 flex-1 min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
             <!-- Chips injected dynamically -->
           </div>
           <!-- Next Location Button at right-hand end of Carousel -->
           <div class="flex items-center flex-shrink-0 pr-0.5">
-            <button id="mapCarouselNextBtn" type="button" onclick="stepMapCarousel(1)" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2.5 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 hover:border-white/30 text-slate-300 hover:text-white text-[11px] font-medium transition flex items-center gap-1 flex-shrink-0 cursor-pointer shadow-sm leading-none select-none" title="Next Location (or swipe carousel sideways)" tabindex="0">
+            <button id="mapCarouselNextBtn" type="button" onclick="stepMapCarousel(1)" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-drop-pin')||document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2.5 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 hover:border-white/30 text-slate-300 hover:text-white text-[11px] font-medium transition flex items-center gap-1 flex-shrink-0 cursor-pointer shadow-sm leading-none select-none" title="Next Location (or swipe carousel sideways)" tabindex="0">
               <span>Next</span><span class="text-[10px] text-slate-400">▶</span>
             </button>
           </div>
@@ -2500,11 +2557,11 @@
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
           </button>
 
-          <!-- Center Midpoint: Touch gesture indicator -->
-          <div class="hidden sm:flex items-center justify-center gap-1.5 text-[10px] text-slate-400 select-none py-0.5 font-medium tracking-wide pointer-events-none mx-auto">
-            <span class="text-sky-400 font-mono text-[9px]">◀</span>
-            <span class="text-slate-300">Swipe to browse</span>
-            <span class="text-sky-400 font-mono text-[9px]">▶</span>
+          <!-- Center Midpoint: Interactive Swipable / Tappable gesture indicator -->
+          <div id="mapSwipeGuidanceBar" class="flex items-center justify-center gap-1.5 text-[10.5px] text-slate-300 select-none px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 active:bg-sky-500/25 border border-white/15 hover:border-sky-400/40 cursor-ew-resize font-medium tracking-wide shadow-sm touch-none transition mx-auto" title="Swipe left or right to browse locations">
+            <span class="text-sky-400 font-mono text-[10px] pointer-events-none">◀</span>
+            <span class="pointer-events-none font-semibold">Swipe to browse</span>
+            <span class="text-sky-400 font-mono text-[10px] pointer-events-none">▶</span>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
@@ -3268,8 +3325,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 376;
-    const APP_VERSION = '1.10.209-dev';
+    const APP_BUILD = 377;
+    const APP_VERSION = '1.10.210-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -4939,6 +4996,8 @@
 
       resetHistoryMapAutoCloseTimer();
       updateHistoryMapCountdownDisplay();
+      initMapSwipeGuidanceBar();
+      initMapChipsTopSwipeZone();
 
       initOrRefreshHistoryMap(true);
       try { switchHistoryMapStyle(getHistoryMapStyle(), false); } catch (_) {}
@@ -5095,6 +5154,7 @@
       const toast = document.getElementById('mapToast');
       if (toast) { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }
       if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
+      if (typeof closeDropPinDialog === 'function') closeDropPinDialog();
       stopHistoryMapAutoCloseTimer();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
@@ -5312,6 +5372,24 @@
       if (!container) return;
       const zoomIn = container.querySelector('.leaflet-control-zoom-in');
       const zoomOut = container.querySelector('.leaflet-control-zoom-out');
+      let pinBtn = container.querySelector('.leaflet-control-drop-pin');
+
+      if (!pinBtn && zoomOut && zoomOut.parentNode) {
+        pinBtn = document.createElement('a');
+        pinBtn.className = 'leaflet-control-drop-pin tv-focus-amber';
+        pinBtn.href = '#';
+        pinBtn.title = 'Drop Pin at Center (Create Location)';
+        pinBtn.setAttribute('role', 'button');
+        pinBtn.setAttribute('aria-label', 'Drop Pin at Center to create a location');
+        pinBtn.setAttribute('tabindex', '0');
+        pinBtn.innerHTML = '<span style="font-size: 16px; display: flex; align-items: center; justify-content: center; height: 100%; pointer-events: none;">📍</span>';
+        pinBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openDropPinDialog();
+        };
+        zoomOut.parentNode.appendChild(pinBtn);
+      }
 
       if (zoomIn) {
         zoomIn.setAttribute('tabindex', '0');
@@ -5347,18 +5425,21 @@
           zoomOut._dpadAttached = true;
           zoomOut.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown') {
-              // Down from minus (-) moves to the active/last-focused location
               e.preventDefault();
-              const target = getActiveOrLastFocusedChip();
-              if (target) {
-                try {
-                  const chipsEl = document.getElementById('mapRecentChips');
-                  if (chipsEl) {
-                    const targetLeft = Math.max(0, target.offsetLeft - 6);
-                    chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
-                  }
-                } catch (_) {}
-                try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+              if (pinBtn) {
+                pinBtn.focus();
+              } else {
+                const target = getActiveOrLastFocusedChip();
+                if (target) {
+                  try {
+                    const chipsEl = document.getElementById('mapRecentChips');
+                    if (chipsEl) {
+                      const targetLeft = Math.max(0, target.offsetLeft - 6);
+                      chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                    }
+                  } catch (_) {}
+                  try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+                }
               }
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
@@ -5374,6 +5455,340 @@
           });
         }
       }
+
+      if (pinBtn && !pinBtn._dpadAttached) {
+        pinBtn._dpadAttached = true;
+        pinBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const target = getActiveOrLastFocusedChip();
+            if (target) {
+              try {
+                const chipsEl = document.getElementById('mapRecentChips');
+                if (chipsEl) {
+                  const targetLeft = Math.max(0, target.offsetLeft - 6);
+                  chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                }
+              } catch (_) {}
+              try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (zoomOut) zoomOut.focus();
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const topClose = document.getElementById('closeMapBtnTop');
+            if (topClose) topClose.focus();
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openDropPinDialog();
+          }
+        });
+      }
+    }
+
+    let dropPinActiveCoords = null;
+    let dropPinLookupAbort = null;
+
+    async function resolveSuitablePlaceName(lat, lon, signal) {
+      if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
+        let nearestLm = null;
+        let nearestDistKm = Infinity;
+        for (const lm of POPULAR_LANDMARKS_DATABASE) {
+          if (typeof lm.lat === 'number' && typeof lm.lon === 'number') {
+            const d = (typeof calculateHaversineKm === 'function')
+              ? calculateHaversineKm(lat, lon, lm.lat, lm.lon)
+              : Math.hypot(lat - lm.lat, lon - lm.lon) * 111;
+            const maxRadius = lm.radiusKm || 20;
+            if (d <= maxRadius && d < nearestDistKm) {
+              nearestDistKm = d;
+              nearestLm = lm;
+            }
+          }
+        }
+        if (nearestLm) {
+          return {
+            name: nearestLm.name + (nearestLm.country ? `, ${nearestLm.country}` : ''),
+            postcode: (Array.isArray(nearestLm.postcodes) && nearestLm.postcodes[0]) || nearestLm.postcode || ''
+          };
+        }
+      }
+
+      if (lat >= 49.5 && lat <= 61.0 && lon >= -9.0 && lon <= 2.5) {
+        try {
+          const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=1000&wideSearch=true`, { signal });
+          if (pcRes && pcRes.ok) {
+            const pcData = await pcRes.json();
+            if (pcData.result && pcData.result.length > 0) {
+              const r = pcData.result[0];
+              const town = r.parish || r.admin_ward || r.admin_district || r.ced || 'Local';
+              const name = (typeof shortenPlaceName === 'function') ? shortenPlaceName(town) : town;
+              return { name, postcode: r.postcode || '' };
+            }
+          }
+        } catch (_) {}
+      }
+
+      try {
+        const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`, { signal });
+        if (bdcRes && bdcRes.ok) {
+          const d = await bdcRes.json();
+          const place = d.locality || d.city || '';
+          const sub = d.principalSubdivision || '';
+          const country = d.countryName || '';
+          let name = '';
+          if (place && sub && place !== sub) {
+            name = `${place}, ${sub}`;
+          } else if (place && country && place !== country) {
+            name = `${place}, ${country}`;
+          } else if (place) {
+            name = place;
+          } else if (sub && country) {
+            name = `${sub}, ${country}`;
+          } else {
+            name = sub || country || '';
+          }
+          if (name) {
+            return { name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(name) : name, postcode: d.postcode || '' };
+          }
+        }
+      } catch (_) {}
+
+      try {
+        const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`, { signal });
+        if (nomRes && nomRes.ok) {
+          const nom = await nomRes.json();
+          const addr = nom.address || {};
+          const place = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || nom.name || '';
+          const sub = addr.state || addr.county || '';
+          const country = addr.country || '';
+          let name = place;
+          if (place && sub && place !== sub) name += `, ${sub}`;
+          else if (place && country) name += `, ${country}`;
+          else if (!place) name = sub || country || '';
+          if (name) return { name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(name) : name, postcode: addr.postcode || '' };
+        }
+      } catch (_) {}
+
+      return {
+        name: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+        postcode: ''
+      };
+    }
+
+    async function openDropPinDialog() {
+      if (!historyLeafletMap) return;
+      const dialog = document.getElementById('mapDropPinDialog');
+      if (!dialog) return;
+
+      const center = historyLeafletMap.getCenter();
+      let lat = Math.round(center.lat * 10000) / 10000;
+      let lon = Math.round(center.lng * 10000) / 10000;
+      lon = ((lon + 180) % 360 + 360) % 360 - 180;
+      lat = Math.max(-85, Math.min(85, lat));
+      dropPinActiveCoords = { lat, lon };
+
+      const coordsTextEl = document.getElementById('mapDropPinCoordsText');
+      const statusEl = document.getElementById('mapDropPinStatus');
+      const inputEl = document.getElementById('mapDropPinNameInput');
+      const reticleRing = document.getElementById('mapCenterReticleRing');
+      const reticleDot = document.getElementById('mapCenterReticleDot');
+
+      const coordStr = (typeof formatCoordDesc === 'function') ? formatCoordDesc(lat, lon) : `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+      if (coordsTextEl) coordsTextEl.textContent = coordStr;
+      if (statusEl) {
+        statusEl.textContent = 'Finding name...';
+        statusEl.style.color = '#f59e0b';
+      }
+      if (inputEl) inputEl.value = 'Locating...';
+
+      if (reticleRing) {
+        reticleRing.classList.remove('border-sky-400/80');
+        reticleRing.classList.add('border-amber-400', 'shadow-[0_0_16px_rgba(245,158,11,0.7)]');
+      }
+      if (reticleDot) {
+        reticleDot.classList.remove('bg-sky-300');
+        reticleDot.classList.add('bg-amber-400', 'shadow-[0_0_10px_#f59e0b]');
+      }
+
+      dialog.classList.remove('hidden');
+      dialog.classList.add('flex');
+
+      if (dropPinLookupAbort) {
+        dropPinLookupAbort.abort();
+        dropPinLookupAbort = null;
+      }
+      dropPinLookupAbort = new AbortController();
+
+      try {
+        const suitable = await resolveSuitablePlaceName(lat, lon, dropPinLookupAbort.signal);
+        if (inputEl && dialog && !dialog.classList.contains('hidden')) {
+          inputEl.value = suitable.name || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+          if (statusEl) {
+            statusEl.textContent = suitable.postcode ? `Postcode: ${suitable.postcode}` : 'Ready';
+            statusEl.style.color = '#34d399';
+          }
+          inputEl.focus();
+          inputEl.select();
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError' && inputEl) {
+          inputEl.value = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+          if (statusEl) {
+            statusEl.textContent = 'Custom point';
+            statusEl.style.color = '#94a3b8';
+          }
+        }
+      }
+    }
+
+    function closeDropPinDialog() {
+      const dialog = document.getElementById('mapDropPinDialog');
+      if (dialog) {
+        dialog.classList.add('hidden');
+        dialog.classList.remove('flex');
+      }
+      const reticleRing = document.getElementById('mapCenterReticleRing');
+      const reticleDot = document.getElementById('mapCenterReticleDot');
+      if (reticleRing) {
+        reticleRing.classList.add('border-sky-400/80');
+        reticleRing.classList.remove('border-amber-400', 'shadow-[0_0_16px_rgba(245,158,11,0.7)]');
+      }
+      if (reticleDot) {
+        reticleDot.classList.add('bg-sky-300');
+        reticleDot.classList.remove('bg-amber-400', 'shadow-[0_0_10px_#f59e0b]');
+      }
+      if (dropPinLookupAbort) {
+        dropPinLookupAbort.abort();
+        dropPinLookupAbort = null;
+      }
+    }
+
+    async function confirmCreateDropPinLocation() {
+      if (!dropPinActiveCoords) return;
+      const inputEl = document.getElementById('mapDropPinNameInput');
+      let chosenName = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : '';
+      const { lat, lon } = dropPinActiveCoords;
+
+      if (!chosenName) {
+        chosenName = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+      }
+
+      closeDropPinDialog();
+
+      // Apply location and save to user's saved/recent queries
+      await applySelectedLocation(chosenName, lat, lon, '', true, {
+        isCustomTitle: true,
+        geoName: chosenName
+      });
+
+      // Refresh map pins and carousel so the new location appears
+      if (typeof renderHistoryMapPins === 'function') {
+        renderHistoryMapPins(false);
+      }
+
+      showMapToast(`📍 Created location: ${chosenName}`);
+
+      const key = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
+      mapActivePopupKey = key;
+      updateChipHighlightStates();
+      if (typeof focusMapMarkerByKey === 'function') {
+        focusMapMarkerByKey(key);
+      }
+    }
+
+    function initMapSwipeGuidanceBar() {
+      const bar = document.getElementById('mapSwipeGuidanceBar');
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (!bar || !chipsEl || bar._swipeAttached) return;
+      bar._swipeAttached = true;
+
+      let isDragging = false;
+      let startX = 0;
+      let startScroll = 0;
+      let totalDx = 0;
+
+      const onPointerDown = (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startScroll = chipsEl.scrollLeft;
+        totalDx = 0;
+        try { bar.setPointerCapture(e.pointerId); } catch (_) {}
+        bar.classList.add('bg-sky-500/25', 'border-sky-400/60', 'text-white');
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onPointerMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        totalDx = dx;
+        chipsEl.scrollLeft = startScroll - dx * 1.5;
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onPointerUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { bar.releasePointerCapture(e.pointerId); } catch (_) {}
+        bar.classList.remove('bg-sky-500/25', 'border-sky-400/60', 'text-white');
+
+        if (Math.abs(totalDx) < 6) {
+          const rect = bar.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          if (clickX < rect.width / 2) {
+            stepMapCarousel(-1);
+          } else {
+            stepMapCarousel(1);
+          }
+        }
+      };
+
+      bar.addEventListener('pointerdown', onPointerDown);
+      bar.addEventListener('pointermove', onPointerMove);
+      bar.addEventListener('pointerup', onPointerUp);
+      bar.addEventListener('pointercancel', onPointerUp);
+      bar.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        chipsEl.scrollLeft += (e.deltaY || e.deltaX) * 1.2;
+        resetHistoryMapAutoCloseTimer();
+      }, { passive: false });
+    }
+
+    function initMapChipsTopSwipeZone() {
+      const topZone = document.getElementById('mapChipsTopSwipeZone');
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (!topZone || !chipsEl || topZone._swipeAttached) return;
+      topZone._swipeAttached = true;
+
+      let isDragging = false;
+      let startX = 0;
+      let startScroll = 0;
+
+      const onDown = (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startScroll = chipsEl.scrollLeft;
+        try { topZone.setPointerCapture(e.pointerId); } catch (_) {}
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        chipsEl.scrollLeft = startScroll - dx * 1.5;
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { topZone.releasePointerCapture(e.pointerId); } catch (_) {}
+      };
+
+      topZone.addEventListener('pointerdown', onDown);
+      topZone.addEventListener('pointermove', onMove);
+      topZone.addEventListener('pointerup', onUp);
+      topZone.addEventListener('pointercancel', onUp);
     }
 
     function getMapCurrentReference() {
@@ -5400,8 +5815,8 @@
       if (!container) return;
       container.setAttribute('tabindex', '-1');
       setupHistoryMapZoomDpad();
-      // Keep map canvas tiles, links, and attribution at tabindex="-1" while keeping zoom buttons focusable
-      const nonZoomFocusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), button:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out)');
+      // Keep map canvas tiles, links, and attribution at tabindex="-1" while keeping zoom buttons & drop pin focusable
+      const nonZoomFocusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-drop-pin), button:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-drop-pin), [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-drop-pin)');
       nonZoomFocusables.forEach(el => {
         el.setAttribute('tabindex', '-1');
       });
@@ -6398,11 +6813,14 @@
               const botClose = document.getElementById('closeMapBtnBottom');
               if (botClose) botClose.focus();
             } else if (e.key === 'ArrowUp') {
-              // Pressing up from location goes up to the minus (-) zoom button!
+              // Pressing up from location goes up to the drop pin button (or minus (-) zoom button)!
               e.preventDefault();
               e.stopPropagation();
+              const pinBtn = document.querySelector('#historyLeafletMap .leaflet-control-drop-pin');
               const zOut = document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');
-              if (zOut && zOut.offsetParent !== null) {
+              if (pinBtn && pinBtn.offsetParent !== null) {
+                pinBtn.focus();
+              } else if (zOut && zOut.offsetParent !== null) {
                 zOut.focus();
               } else {
                 const topClose = document.getElementById('closeMapBtnTop');
@@ -6848,6 +7266,45 @@
           mapCanvasEl.setAttribute('tabindex', '-1');
           mapCanvasEl.addEventListener('keydown', handleGlobalBack, true);
           mapCanvasEl.addEventListener('keyup', handleGlobalBack, true);
+
+          // Fat-finger touch swipe forwarder: gestures starting in the bottom 32px of the map area scroll the location carousel
+          let ffStartX = 0;
+          let ffStartY = 0;
+          let ffStartScroll = 0;
+          let ffActive = false;
+
+          mapCanvasEl.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            const rect = mapCanvasEl.getBoundingClientRect();
+            if (touch.clientY >= rect.bottom - 32) {
+              ffActive = true;
+              ffStartX = touch.clientX;
+              ffStartY = touch.clientY;
+              const chipsEl = document.getElementById('mapRecentChips');
+              ffStartScroll = chipsEl ? chipsEl.scrollLeft : 0;
+            } else {
+              ffActive = false;
+            }
+          }, { passive: true });
+
+          mapCanvasEl.addEventListener('touchmove', (e) => {
+            if (!ffActive || e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            const dx = touch.clientX - ffStartX;
+            const dy = touch.clientY - ffStartY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+              const chipsEl = document.getElementById('mapRecentChips');
+              if (chipsEl) {
+                chipsEl.scrollLeft = ffStartScroll - dx * 1.5;
+                resetHistoryMapAutoCloseTimer();
+              }
+            }
+          }, { passive: true });
+
+          mapCanvasEl.addEventListener('touchend', () => {
+            ffActive = false;
+          }, { passive: true });
         }
 
         // Reset idle auto-close timer on direct map interactions (and dismiss info popover on tap/drag)
