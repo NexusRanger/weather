@@ -788,23 +788,40 @@
     .close-btn-countdown-flash {
       animation: closeBtnWarnFlash 0.85s ease-in-out infinite !important;
     }
-    /* Search Box Attention Pulse when Location Modal Opens (matches main page search box amber pulse) */
+    /* Search Box Attention Pulse when Location Modal Opens (electric cyan glow) */
     @keyframes searchBoxAttentionPulse {
       0%, 100% {
         border-color: rgba(56, 189, 248, 0.6);
         background-color: rgba(2, 6, 23, 0.85);
-        box-shadow: 0 0 0 rgba(251, 191, 36, 0);
+        box-shadow: 0 0 0 rgba(56, 189, 248, 0);
         transform: scale(1);
       }
       50% {
-        border-color: #fbbf24;
-        background-color: rgba(245, 158, 11, 0.25);
-        box-shadow: 0 0 0 1.5px #fbbf24, 0 0 18px rgba(251, 191, 36, 0.8), inset 0 0 10px rgba(251, 191, 36, 0.3);
-        transform: scale(1.02);
+        border-color: #38bdf8;
+        background-color: rgba(14, 165, 233, 0.18);
+        box-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 40px rgba(56, 189, 248, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.35);
+        transform: scale(1.015);
       }
     }
     .search-box-attention-pulse {
-      animation: searchBoxAttentionPulse 0.95s ease-in-out 4 !important;
+      animation: searchBoxAttentionPulse 1.05s ease-in-out 4 !important;
+    }
+
+    /* Main Page Search Box Attention Pulse when first opened (matches location modal glowing cyan pulse) */
+    @keyframes headerSearchAttentionPulse {
+      0%, 100% {
+        border-color: rgba(56, 189, 248, 0.4);
+        box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+        transform: scale(1);
+      }
+      50% {
+        border-color: #38bdf8;
+        box-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 38px rgba(56, 189, 248, 0.5), inset 0 0 8px rgba(56, 189, 248, 0.3);
+        transform: scale(1.03);
+      }
+    }
+    .header-search-pulse {
+      animation: headerSearchAttentionPulse 1.1s ease-in-out 5 !important;
     }
     @keyframes closeHintPulse {
       0%, 100% { opacity: 1; transform: translateY(0); }
@@ -1478,7 +1495,7 @@
           </button>
         </div>
         <div class="header-actions-group flex items-center gap-1.5 flex-shrink-0">
-          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Search or change location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" onmouseenter="this.classList.remove('header-search-pulse')" onpointerdown="this.classList.remove('header-search-pulse')" onfocus="this.classList.remove('header-search-pulse')" title="Search or change location (Press OK)" class="header-search-pulse tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span class="text-[16px] sm:text-[17px] leading-none inline-flex items-center flex-shrink-0 select-none">🔍</span>
             <span id="headerSearchPrefix" class="hidden"></span>
             <span id="headerPostcodeBadge" class="font-mono text-white font-bold tracking-wide">GL5 5HH</span>
@@ -3339,8 +3356,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 388;
-    const APP_VERSION = '1.10.221-dev';
+    const APP_BUILD = 389;
+    const APP_VERSION = '1.10.222-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -10842,6 +10859,7 @@ function joinSpacedLetters(text) {
 
       // Flash the location search button rectangle amber for 220ms before opening the dialog
       if (locBtn) {
+        locBtn.classList.remove('header-search-pulse');
         isOpeningLocationModal = true;
         document.body.classList.remove('focus-dormant');
         locBtn.focus({ preventScroll: true });
