@@ -804,10 +804,10 @@
       }
     }
     .search-box-attention-pulse {
-      animation: searchBoxAttentionPulse 1.05s ease-in-out 4 !important;
+      animation: searchBoxAttentionPulse 1s ease-in-out 4 !important;
     }
 
-    /* Main Page Search Box Attention Pulse when first opened (matches location modal glowing cyan pulse) */
+    /* Main Page Search Box Attention Pulse when first opened (matches location modal glowing cyan pulse, lasts 4 seconds) */
     @keyframes headerSearchAttentionPulse {
       0%, 100% {
         border-color: rgba(56, 189, 248, 0.4);
@@ -816,12 +816,12 @@
       }
       50% {
         border-color: #38bdf8;
-        box-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 38px rgba(56, 189, 248, 0.5), inset 0 0 8px rgba(56, 189, 248, 0.3);
-        transform: scale(1.03);
+        box-shadow: 0 0 24px rgba(56, 189, 248, 0.95), 0 0 42px rgba(56, 189, 248, 0.55), inset 0 0 8px rgba(56, 189, 248, 0.35);
+        transform: scale(1.035);
       }
     }
     .header-search-pulse {
-      animation: headerSearchAttentionPulse 1.1s ease-in-out 5 !important;
+      animation: headerSearchAttentionPulse 1s ease-in-out 4 !important;
     }
     @keyframes closeHintPulse {
       0%, 100% { opacity: 1; transform: translateY(0); }
@@ -1495,7 +1495,7 @@
           </button>
         </div>
         <div class="header-actions-group flex items-center gap-1.5 flex-shrink-0">
-          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" onmouseenter="this.classList.remove('header-search-pulse')" onpointerdown="this.classList.remove('header-search-pulse')" onfocus="this.classList.remove('header-search-pulse')" title="Search or change location (Press OK)" class="header-search-pulse tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" onmouseenter="this.classList.remove('header-search-pulse')" onpointerdown="this.classList.remove('header-search-pulse')" onanimationend="this.classList.remove('header-search-pulse')" title="Search or change location (Press OK)" class="header-search-pulse tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span class="text-[16px] sm:text-[17px] leading-none inline-flex items-center flex-shrink-0 select-none">🔍</span>
             <span id="headerSearchPrefix" class="hidden"></span>
             <span id="headerPostcodeBadge" class="font-mono text-white font-bold tracking-wide">GL5 5HH</span>
@@ -3356,8 +3356,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 389;
-    const APP_VERSION = '1.10.222-dev';
+    const APP_BUILD = 390;
+    const APP_VERSION = '1.10.223-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3869,7 +3869,10 @@
           e.stopPropagation();
           document.body.classList.remove('focus-dormant');
           const locBtn = document.getElementById('headerLocationBtn');
-          if (locBtn) locBtn.focus({ preventScroll: true });
+          if (locBtn) {
+            locBtn.classList.remove('header-search-pulse');
+            locBtn.focus({ preventScroll: true });
+          }
           resetMainPageFocusActivity();
           return;
         }
