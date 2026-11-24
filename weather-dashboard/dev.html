@@ -829,6 +829,30 @@
     .header-search-pulse #headerPostcodeBadge {
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
     }
+
+    /* Map Modal Bloom / Grow Outwards From Map Button */
+    @keyframes mapModalBloomGrow {
+      0% {
+        opacity: 0;
+        transform: scale(0.18) translateY(-25px);
+        filter: blur(10px);
+      }
+      65% {
+        opacity: 0.98;
+        transform: scale(1.015) translateY(0);
+        filter: blur(0px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+        filter: blur(0px);
+      }
+    }
+    .map-modal-growing {
+      animation: mapModalBloomGrow 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      will-change: transform, opacity;
+    }
+
     @keyframes closeHintPulse {
       0%, 100% { opacity: 1; transform: translateY(0); }
       50% { opacity: 0.72; transform: translateY(1.5px); }
@@ -2447,7 +2471,7 @@
 
   <!-- 30-DAY LOCATION HISTORY WORLD MAP MODAL -->
   <div id="historyMapModal" onclick="closeHistoryMapModal()" onmousemove="resetHistoryMapAutoCloseTimer()" onkeydown="resetHistoryMapAutoCloseTimer()" ontouchstart="resetHistoryMapAutoCloseTimer()" onpointerdown="resetHistoryMapAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-5 text-left cursor-pointer">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
+    <div id="historyMapModalCard" onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
       
       <!-- Modal Header -->
       <div class="pb-2 border-b border-white/10 flex-shrink-0">
@@ -2495,6 +2519,29 @@
       <!-- Leaflet Map Container -->
       <div class="flex-1 min-h-0 mt-2 mb-1 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
         <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
+        
+        <!-- Sleek Map Tile Loading / Radar Pulse Overlay -->
+        <div id="mapTileLoadingOverlay" class="absolute inset-0 z-[550] bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center gap-3 transition-opacity duration-300 pointer-events-none opacity-0 hidden">
+          <div class="relative w-16 h-16 flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-2 border-sky-400/30 animate-ping"></div>
+            <div class="absolute inset-2 rounded-full border border-sky-400/60 animate-pulse"></div>
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 border border-sky-300 flex items-center justify-center text-xl shadow-[0_0_20px_rgba(56,189,248,0.55)]">
+              🌍
+            </div>
+          </div>
+          <div class="flex flex-col items-center gap-1">
+            <span class="text-xs font-bold text-sky-200 tracking-wide flex items-center gap-1.5">
+              <span>Loading World Map</span>
+              <span class="inline-flex gap-0.5">
+                <span class="w-1 h-1 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0s;"></span>
+                <span class="w-1 h-1 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0.15s;"></span>
+                <span class="w-1 h-1 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0.3s;"></span>
+              </span>
+            </span>
+            <span class="text-[10px] text-slate-400 font-medium">Fetching satellite imagery &amp; weather pins</span>
+          </div>
+        </div>
+
         <!-- Floating Map Views & Privacy Info Box (toggled by the round 'i' button) -->
         <div id="mapViewInfoBox" onclick="event.stopPropagation()" class="hidden absolute top-3 right-3 z-[560] w-[min(360px,calc(100%-24px))] p-3 rounded-xl bg-slate-900/95 border border-sky-400/45 text-[11px] text-slate-200 leading-relaxed shadow-2xl backdrop-blur-md">
           <div class="flex items-start justify-between gap-2 mb-1.5">
@@ -3362,8 +3409,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 391;
-    const APP_VERSION = '1.10.224-dev';
+    const APP_BUILD = 392;
+    const APP_VERSION = '1.10.225-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5015,6 +5062,34 @@
       updateHistoryMapCountdownDisplay();
     }
 
+    let mapLoadingOverlayTimer = null;
+    function showMapTileLoadingOverlay() {
+      const overlay = document.getElementById('mapTileLoadingOverlay');
+      if (!overlay) return;
+      if (mapLoadingOverlayTimer) {
+        clearTimeout(mapLoadingOverlayTimer);
+        mapLoadingOverlayTimer = null;
+      }
+      overlay.classList.remove('hidden');
+      void overlay.offsetWidth;
+      overlay.classList.remove('opacity-0');
+      // Safety timeout: automatically fade out after 1200ms so it never obstructs map usage
+      mapLoadingOverlayTimer = setTimeout(hideMapTileLoadingOverlay, 1200);
+    }
+
+    function hideMapTileLoadingOverlay() {
+      if (mapLoadingOverlayTimer) {
+        clearTimeout(mapLoadingOverlayTimer);
+        mapLoadingOverlayTimer = null;
+      }
+      const overlay = document.getElementById('mapTileLoadingOverlay');
+      if (!overlay || overlay.classList.contains('hidden')) return;
+      overlay.classList.add('opacity-0');
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+      }, 300);
+    }
+
     function openHistoryMapModal() {
       if (!isMapUnlocked()) {
         // Without the password, clicking the globe does nothing
@@ -5034,6 +5109,25 @@
       savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+
+      // GPU-accelerated grow / bloom animation directly from the Map button outwards
+      const globeBtn = document.getElementById('headerGlobeBtn');
+      const card = document.getElementById('historyMapModalCard') || modal.querySelector('.glass-card');
+      if (card) {
+        if (globeBtn) {
+          const rect = globeBtn.getBoundingClientRect();
+          const originX = Math.round(rect.left + rect.width / 2);
+          const originY = Math.round(rect.top + rect.height / 2);
+          card.style.transformOrigin = `${originX}px ${originY}px`;
+        } else {
+          card.style.transformOrigin = 'center top';
+        }
+        card.classList.remove('map-modal-growing');
+        void card.offsetWidth;
+        card.classList.add('map-modal-growing');
+      }
+
+      showMapTileLoadingOverlay();
       if (!modal._focusSyncAttached) {
         modal._focusSyncAttached = true;
         modal.addEventListener('focusin', () => { setTimeout(updateChipHighlightStates, 15); });
@@ -5212,8 +5306,11 @@
       if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
       if (typeof closeDropPinDialog === 'function') closeDropPinDialog();
       stopHistoryMapAutoCloseTimer();
+      hideMapTileLoadingOverlay();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
+      const card = document.getElementById('historyMapModalCard') || modal.querySelector('.glass-card');
+      if (card) card.classList.remove('map-modal-growing');
       modal.classList.add('hidden');
       modal.classList.remove('flex');
       if (pop && history.state && history.state.modal === 'historyMap') {
@@ -6654,6 +6751,10 @@
         detectRetina: false,
         noWrap: false
       }).addTo(historyLeafletMap);
+
+      historyBaseTileLayer.once('load', () => {
+        setTimeout(hideMapTileLoadingOverlay, 150);
+      });
 
       if (conf.ref) {
         historyRefTileLayer = L.tileLayer(conf.ref, {
