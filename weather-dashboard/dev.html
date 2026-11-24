@@ -830,41 +830,44 @@
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
     }
 
-    /* Map Modal Bloom / Grow Outwards From Map Button */
-    @keyframes mapModalBloomGrow {
+    /* Dedicated Expanding Graphic ("Pretends to expand the map out from button") */
+    @keyframes launchGraphicExpand {
       0% {
-        opacity: 0.85;
+        opacity: 0.95;
         transform: scale(0.06);
-        box-shadow: 0 0 35px rgba(56, 189, 248, 0.95), 0 0 70px rgba(56, 189, 248, 0.6);
-        border-color: rgba(56, 189, 248, 0.9);
+        box-shadow: 0 0 45px rgba(56, 189, 248, 0.95), 0 0 90px rgba(56, 189, 248, 0.6);
+        border-color: #38bdf8;
       }
-      35% {
-        opacity: 0.96;
-        transform: scale(0.42);
-        box-shadow: 0 0 45px rgba(56, 189, 248, 0.75), 0 0 90px rgba(56, 189, 248, 0.4);
-      }
-      75% {
+      50% {
         opacity: 1;
-        transform: scale(1.02);
-        box-shadow: 0 0 30px rgba(56, 189, 248, 0.5), 0 20px 40px rgba(0, 0, 0, 0.6);
+        transform: scale(0.65);
+        box-shadow: 0 0 60px rgba(56, 189, 248, 0.8), 0 0 120px rgba(56, 189, 248, 0.45);
+      }
+      80% {
+        opacity: 1;
+        transform: scale(1.015);
+        box-shadow: 0 0 35px rgba(56, 189, 248, 0.5);
+      }
+      92% {
+        opacity: 0.9;
+        transform: scale(1);
       }
       100% {
-        opacity: 1;
+        opacity: 0;
         transform: scale(1);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-        border-color: rgba(255, 255, 255, 0.2);
+        pointer-events: none;
       }
     }
-    .map-modal-growing {
-      animation: mapModalBloomGrow 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-      will-change: transform, opacity, box-shadow;
+    .launch-graphic-expanding {
+      animation: launchGraphicExpand 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      will-change: transform, opacity;
     }
     @keyframes mapBackdropFadeIn {
       0% { opacity: 0; }
       100% { opacity: 1; }
     }
     .map-backdrop-fade {
-      animation: mapBackdropFadeIn 0.35s ease-out forwards !important;
+      animation: mapBackdropFadeIn 0.3s ease-out forwards !important;
     }
 
     @keyframes closeHintPulse {
@@ -2485,6 +2488,34 @@
 
   <!-- 30-DAY LOCATION HISTORY WORLD MAP MODAL -->
   <div id="historyMapModal" onclick="closeHistoryMapModal()" onmousemove="resetHistoryMapAutoCloseTimer()" onkeydown="resetHistoryMapAutoCloseTimer()" ontouchstart="resetHistoryMapAutoCloseTimer()" onpointerdown="resetHistoryMapAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-5 text-left cursor-pointer">
+    
+    <!-- Dedicated Expanding Launch Graphic ("Pretends to expand the map out from button") -->
+    <div id="mapExpandingLaunchGraphic" class="absolute inset-0 z-[600] pointer-events-none hidden items-center justify-center p-2 sm:p-4 md:p-5">
+      <div id="mapExpandingLaunchCard" class="w-full max-w-4xl h-[88vh] max-h-[820px] rounded-2xl bg-slate-900/95 border-2 border-sky-400 shadow-[0_0_50px_rgba(56,189,248,0.5)] backdrop-blur-xl flex flex-col items-center justify-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:24px_24px] opacity-25"></div>
+        <div class="absolute w-[500px] h-[500px] rounded-full border border-sky-400/20 animate-ping" style="animation-duration: 2s;"></div>
+        <div class="absolute w-[320px] h-[320px] rounded-full border border-sky-400/40"></div>
+        <div class="absolute w-[180px] h-[180px] rounded-full border border-sky-300/60"></div>
+        
+        <div class="relative z-10 flex flex-col items-center gap-3">
+          <div class="w-16 h-16 rounded-2xl bg-sky-500/20 border-2 border-sky-400 shadow-[0_0_30px_rgba(56,189,248,0.7)] flex items-center justify-center text-3xl animate-pulse">
+            🌍
+          </div>
+          <div class="text-center">
+            <div class="text-sm sm:text-base font-extrabold text-white tracking-wide flex items-center justify-center gap-2">
+              <span>Expanding World Map</span>
+              <span class="inline-flex gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0s;"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0.15s;"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0.3s;"></span>
+              </span>
+            </div>
+            <div class="text-xs text-sky-300/80 mt-0.5 font-medium">Preparing satellite imagery &amp; weather locations</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="historyMapModalCard" onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
       
       <!-- Modal Header -->
@@ -2533,29 +2564,6 @@
       <!-- Leaflet Map Container -->
       <div class="flex-1 min-h-0 mt-2 mb-1 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
         <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
-        
-        <!-- Sleek Map Tile Loading / Radar Pulse Overlay -->
-        <div id="mapTileLoadingOverlay" class="absolute inset-0 z-[550] bg-slate-950/85 backdrop-blur-sm flex flex-col items-center justify-center gap-3 transition-opacity duration-300 pointer-events-none opacity-0 hidden">
-          <div class="relative w-16 h-16 flex items-center justify-center">
-            <div class="absolute inset-0 rounded-full border-2 border-sky-400/30 animate-ping"></div>
-            <div class="absolute inset-2 rounded-full border border-sky-400/60 animate-pulse"></div>
-            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 border border-sky-300 flex items-center justify-center text-xl shadow-[0_0_20px_rgba(56,189,248,0.55)]">
-              🌍
-            </div>
-          </div>
-          <div class="flex flex-col items-center gap-1">
-            <span class="text-xs font-bold text-sky-200 tracking-wide flex items-center gap-1.5">
-              <span>Loading World Map</span>
-              <span class="inline-flex gap-0.5">
-                <span class="w-1 h-1 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0s;"></span>
-                <span class="w-1 h-1 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0.15s;"></span>
-                <span class="w-1 h-1 rounded-full bg-sky-300 animate-bounce" style="animation-delay: 0.3s;"></span>
-              </span>
-            </span>
-            <span class="text-[10px] text-slate-400 font-medium">Fetching satellite imagery &amp; weather pins</span>
-          </div>
-        </div>
-
         <!-- Floating Map Views & Privacy Info Box (toggled by the round 'i' button) -->
         <div id="mapViewInfoBox" onclick="event.stopPropagation()" class="hidden absolute top-3 right-3 z-[560] w-[min(360px,calc(100%-24px))] p-3 rounded-xl bg-slate-900/95 border border-sky-400/45 text-[11px] text-slate-200 leading-relaxed shadow-2xl backdrop-blur-md">
           <div class="flex items-start justify-between gap-2 mb-1.5">
@@ -3423,8 +3431,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 393;
-    const APP_VERSION = '1.10.226-dev';
+    const APP_BUILD = 394;
+    const APP_VERSION = '1.10.227-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5076,34 +5084,6 @@
       updateHistoryMapCountdownDisplay();
     }
 
-    let mapLoadingOverlayTimer = null;
-    function showMapTileLoadingOverlay() {
-      const overlay = document.getElementById('mapTileLoadingOverlay');
-      if (!overlay) return;
-      if (mapLoadingOverlayTimer) {
-        clearTimeout(mapLoadingOverlayTimer);
-        mapLoadingOverlayTimer = null;
-      }
-      overlay.classList.remove('hidden');
-      void overlay.offsetWidth;
-      overlay.classList.remove('opacity-0');
-      // Safety timeout: automatically fade out after 1200ms so it never obstructs map usage
-      mapLoadingOverlayTimer = setTimeout(hideMapTileLoadingOverlay, 1200);
-    }
-
-    function hideMapTileLoadingOverlay() {
-      if (mapLoadingOverlayTimer) {
-        clearTimeout(mapLoadingOverlayTimer);
-        mapLoadingOverlayTimer = null;
-      }
-      const overlay = document.getElementById('mapTileLoadingOverlay');
-      if (!overlay || overlay.classList.contains('hidden')) return;
-      overlay.classList.add('opacity-0');
-      setTimeout(() => {
-        overlay.classList.add('hidden');
-      }, 300);
-    }
-
     function openHistoryMapModal() {
       if (!isMapUnlocked()) {
         // Without the password, clicking the globe does nothing
@@ -5125,25 +5105,35 @@
       modal.classList.add('flex');
       modal.classList.add('map-backdrop-fade');
 
-      // GPU-accelerated grow / bloom animation directly from the Map button outwards
+      // Dedicated Expanding Graphic ("Pretends to expand the map out from button")
       const globeBtn = document.getElementById('headerGlobeBtn');
-      const card = document.getElementById('historyMapModalCard') || modal.querySelector('.glass-card');
-      if (card) {
+      const launchOverlay = document.getElementById('mapExpandingLaunchGraphic');
+      const launchCard = document.getElementById('mapExpandingLaunchCard');
+      if (launchOverlay && launchCard) {
+        launchOverlay.classList.remove('hidden');
+        launchOverlay.classList.add('flex');
         if (globeBtn) {
           const btnRect = globeBtn.getBoundingClientRect();
-          const cardRect = card.getBoundingClientRect();
+          const cardRect = launchCard.getBoundingClientRect();
           const originX = Math.round((btnRect.left + btnRect.width / 2) - cardRect.left);
           const originY = Math.round((btnRect.top + btnRect.height / 2) - cardRect.top);
-          card.style.transformOrigin = `${originX}px ${originY}px`;
+          launchCard.style.transformOrigin = `${originX}px ${originY}px`;
         } else {
-          card.style.transformOrigin = 'center top';
+          launchCard.style.transformOrigin = 'center top';
         }
-        card.classList.remove('map-modal-growing');
-        void card.offsetWidth;
-        card.classList.add('map-modal-growing');
-      }
+        launchCard.classList.remove('launch-graphic-expanding');
+        void launchCard.offsetWidth;
+        launchCard.classList.add('launch-graphic-expanding');
 
-      showMapTileLoadingOverlay();
+        setTimeout(() => {
+          launchOverlay.classList.add('hidden');
+          launchOverlay.classList.remove('flex');
+          launchCard.classList.remove('launch-graphic-expanding');
+          if (historyLeafletMap) {
+            try { historyLeafletMap.invalidateSize(); } catch (_) {}
+          }
+        }, 740);
+      }
       if (!modal._focusSyncAttached) {
         modal._focusSyncAttached = true;
         modal.addEventListener('focusin', () => { setTimeout(updateChipHighlightStates, 15); });
@@ -5322,14 +5312,18 @@
       if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
       if (typeof closeDropPinDialog === 'function') closeDropPinDialog();
       stopHistoryMapAutoCloseTimer();
-      hideMapTileLoadingOverlay();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
       modal.classList.remove('map-backdrop-fade');
-      const card = document.getElementById('historyMapModalCard') || modal.querySelector('.glass-card');
-      if (card) {
-        card.classList.remove('map-modal-growing');
-        card.style.transformOrigin = '';
+      const launchOverlay = document.getElementById('mapExpandingLaunchGraphic');
+      const launchCard = document.getElementById('mapExpandingLaunchCard');
+      if (launchOverlay) {
+        launchOverlay.classList.add('hidden');
+        launchOverlay.classList.remove('flex');
+      }
+      if (launchCard) {
+        launchCard.classList.remove('launch-graphic-expanding');
+        launchCard.style.transformOrigin = '';
       }
       modal.classList.add('hidden');
       modal.classList.remove('flex');
@@ -6771,10 +6765,6 @@
         detectRetina: false,
         noWrap: false
       }).addTo(historyLeafletMap);
-
-      historyBaseTileLayer.once('load', () => {
-        setTimeout(hideMapTileLoadingOverlay, 650);
-      });
 
       if (conf.ref) {
         historyRefTileLayer = L.tileLayer(conf.ref, {
