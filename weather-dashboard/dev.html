@@ -833,24 +833,38 @@
     /* Map Modal Bloom / Grow Outwards From Map Button */
     @keyframes mapModalBloomGrow {
       0% {
-        opacity: 0;
-        transform: scale(0.18) translateY(-25px);
-        filter: blur(10px);
+        opacity: 0.85;
+        transform: scale(0.06);
+        box-shadow: 0 0 35px rgba(56, 189, 248, 0.95), 0 0 70px rgba(56, 189, 248, 0.6);
+        border-color: rgba(56, 189, 248, 0.9);
       }
-      65% {
-        opacity: 0.98;
-        transform: scale(1.015) translateY(0);
-        filter: blur(0px);
+      35% {
+        opacity: 0.96;
+        transform: scale(0.42);
+        box-shadow: 0 0 45px rgba(56, 189, 248, 0.75), 0 0 90px rgba(56, 189, 248, 0.4);
+      }
+      75% {
+        opacity: 1;
+        transform: scale(1.02);
+        box-shadow: 0 0 30px rgba(56, 189, 248, 0.5), 0 20px 40px rgba(0, 0, 0, 0.6);
       }
       100% {
         opacity: 1;
-        transform: scale(1) translateY(0);
-        filter: blur(0px);
+        transform: scale(1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        border-color: rgba(255, 255, 255, 0.2);
       }
     }
     .map-modal-growing {
-      animation: mapModalBloomGrow 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
-      will-change: transform, opacity;
+      animation: mapModalBloomGrow 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+      will-change: transform, opacity, box-shadow;
+    }
+    @keyframes mapBackdropFadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    .map-backdrop-fade {
+      animation: mapBackdropFadeIn 0.35s ease-out forwards !important;
     }
 
     @keyframes closeHintPulse {
@@ -3409,8 +3423,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 392;
-    const APP_VERSION = '1.10.225-dev';
+    const APP_BUILD = 393;
+    const APP_VERSION = '1.10.226-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -5109,15 +5123,17 @@
       savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      modal.classList.add('map-backdrop-fade');
 
       // GPU-accelerated grow / bloom animation directly from the Map button outwards
       const globeBtn = document.getElementById('headerGlobeBtn');
       const card = document.getElementById('historyMapModalCard') || modal.querySelector('.glass-card');
       if (card) {
         if (globeBtn) {
-          const rect = globeBtn.getBoundingClientRect();
-          const originX = Math.round(rect.left + rect.width / 2);
-          const originY = Math.round(rect.top + rect.height / 2);
+          const btnRect = globeBtn.getBoundingClientRect();
+          const cardRect = card.getBoundingClientRect();
+          const originX = Math.round((btnRect.left + btnRect.width / 2) - cardRect.left);
+          const originY = Math.round((btnRect.top + btnRect.height / 2) - cardRect.top);
           card.style.transformOrigin = `${originX}px ${originY}px`;
         } else {
           card.style.transformOrigin = 'center top';
@@ -5309,8 +5325,12 @@
       hideMapTileLoadingOverlay();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
+      modal.classList.remove('map-backdrop-fade');
       const card = document.getElementById('historyMapModalCard') || modal.querySelector('.glass-card');
-      if (card) card.classList.remove('map-modal-growing');
+      if (card) {
+        card.classList.remove('map-modal-growing');
+        card.style.transformOrigin = '';
+      }
       modal.classList.add('hidden');
       modal.classList.remove('flex');
       if (pop && history.state && history.state.modal === 'historyMap') {
@@ -6753,7 +6773,7 @@
       }).addTo(historyLeafletMap);
 
       historyBaseTileLayer.once('load', () => {
-        setTimeout(hideMapTileLoadingOverlay, 150);
+        setTimeout(hideMapTileLoadingOverlay, 650);
       });
 
       if (conf.ref) {
