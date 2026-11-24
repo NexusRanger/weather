@@ -3368,8 +3368,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 395;
-    const APP_VERSION = '1.10.228-dev';
+    const APP_BUILD = 396;
+    const APP_VERSION = '1.10.229-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -14115,7 +14115,12 @@ function joinSpacedLetters(text) {
       const now = getLocationWallClockNow(hourly && hourly._currentLocalTime);
       const currentHour = now.getHours();
 
-      const isTomorrow = currentHour >= 9;
+      // Time partitions:
+      // 1. Midnight to 08:59 AM -> evaluates "This Morning (05-08 AM)"
+      // 2. 09:00 AM to 15:59 PM (Daytime) -> morning frost has thawed; evaluates today's daytime driving & road conditions
+      // 3. 16:00 PM (4 PM) onwards -> advance forecast evaluating "Tomorrow (05-08 AM)"
+      const isTomorrow = currentHour >= 16;
+      const isDaytime = currentHour >= 9 && currentHour < 16;
       const targetDate = new Date(now);
       if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
       const targetDay = targetDate.getDate();
@@ -14159,45 +14164,23 @@ function joinSpacedLetters(text) {
       const rainProbToday = (daily && daily.precipitation_probability_max && daily.precipitation_probability_max[0] !== undefined) ? Number(daily.precipitation_probability_max[0]) : 0;
       const windSpeed = Math.round((cur && cur.wind_speed_10m) || 0);
       const humidity = Math.round((cur && cur.relative_humidity_2m) || 70);
+      const curTemp = (cur && cur.temperature_2m !== undefined) ? cur.temperature_2m : minAir;
 
-      let sectionTitle = "Cold & Frost Watch";
-      let pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
-      let subLabel = "Windscreen Condition";
-      let timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : "This Morning (05-08 AM)";
-      let status = "Frost-Free";
-      let badgeText = "Glass Clear";
+      let sectionTitle = isTomorrow ? "Cold & Frost Watch" : (isDaytime ? "Outdoor & Driving" : "Cold & Frost Watch");
+      let pillClass = isDaytime ? "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1" : "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
+      let subLabel = isDaytime ? "Road & Driving Conditions" : "Windscreen Condition";
+      let timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : (isDaytime ? `Daytime • High ${todayMax}°C` : "This Morning (05-08 AM)");
+      let status = isTomorrow ? "Frost-Free Tomorrow" : "Frost-Free";
+      let badgeText = isTomorrow ? "Tomorrow: Clear" : "Glass Clear";
       let badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
       let cardBgClass = "bg-slate-900/60 border border-white/10";
       let icon = "🚗";
-      let detail = `Air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`;
+      let detail = isTomorrow
+        ? `Tomorrow morning air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`
+        : `Air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`;
 
-      // MODE 1: Cold / Frost Watch (when morning air <= 5.5°C or glass temp <= 4.0°C)
-      if (minAir <= 5.5 || estimatedGlassTemp <= 4.0) {
-        if (estimatedGlassTemp <= -0.5 || minAir <= 0.5 || minSurface <= 0.0) {
-          status = "Heavy Frost Alert";
-          icon = "❄️";
-          badgeText = "Warm Car 10m Early!";
-          badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
-          cardBgClass = "bg-rose-950/40 border border-rose-500/50 frost-alert-rose-pulse";
-          detail = `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
-        } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
-          status = "Frost Likely";
-          icon = "🧊";
-          badgeText = "Warm Car 10m Early";
-          badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
-          cardBgClass = "bg-sky-950/40 border border-sky-400/80 frost-alert-pulse";
-          detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
-        } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
-          status = "Slight Frost Risk";
-          icon = "⚠️";
-          badgeText = "Patchy Ice";
-          badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
-          cardBgClass = "bg-amber-950/30 border border-amber-500/20";
-          detail = `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`;
-        }
-      }
-      // MODE 2: Warm / Hot / High UV Watch (Summer or warm climates like Australia: peak >= 21°C or UV >= 6)
-      else if (todayMax >= 21 || maxUv >= 6.0) {
+      // 1. Summer / Warm / High UV Watch (peak >= 21°C or UV >= 6) takes precedence whenever warm
+      if (todayMax >= 21 || maxUv >= 6.0) {
         sectionTitle = "Sun & Heat Watch";
         pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
         subLabel = "Cabin & Sun Exposure";
@@ -14226,7 +14209,81 @@ function joinSpacedLetters(text) {
           detail = `Warm high of ${todayMax}°C with moderate UV (${maxUv.toFixed(1)}). Pleasant for driving & outdoors.`;
         }
       }
-      // MODE 3: Mild / Spring & Autumn Outdoor & Driving Watch (min > 5.5°C and max < 21°C)
+      // 2. Daytime (09:00 - 15:59): morning frost has passed; show daytime driving conditions
+      else if (isDaytime) {
+        sectionTitle = "Outdoor & Driving";
+        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1";
+        subLabel = "Road & Driving Conditions";
+        timeLabel = `Daytime • High ${todayMax}°C`;
+
+        if (curTemp <= 1.0) {
+          sectionTitle = "Cold & Road Ice Watch";
+          pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
+          icon = "🧊";
+          status = "Freezing Day • Ice Risk";
+          badgeText = "Icy Road Risk";
+          badgeClass = "bg-amber-500/30 text-amber-200 border border-amber-400/50 font-bold";
+          cardBgClass = "bg-amber-950/35 border border-amber-500/30";
+          detail = `Current temp ${curTemp.toFixed(1)}°C. Watch for ice on bridges, shaded spots & untreated roads.`;
+        } else if (rainProbToday >= 55 || windSpeed >= 22) {
+          icon = "🌦️";
+          status = "Wet / Breezy Roads";
+          badgeText = windSpeed >= 22 ? `Gusty (${windSpeed} mph)` : `${rainProbToday}% Rain Risk`;
+          badgeClass = "bg-sky-500/25 text-sky-200 border border-sky-400/40 font-bold";
+          cardBgClass = "bg-sky-950/30 border border-sky-500/30";
+          detail = `Frost-free daytime (${Math.round(curTemp)}°C now). Watch for surface spray & ${windSpeed} mph breeze on open roads.`;
+        } else if (humidity >= 86 && windSpeed < 10) {
+          icon = "🌫️";
+          status = "Mild & Damp Roads";
+          badgeText = "Damp Roads";
+          badgeClass = "bg-sky-500/20 text-sky-300 border border-sky-400/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = `Frost-free daytime (${Math.round(curTemp)}°C now), ${humidity}% humidity. Clear glass; roads may stay damp in shade.`;
+        } else {
+          icon = "🌿";
+          status = "Good Driving Day";
+          badgeText = "Clear Glass & Roads";
+          badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = `Mild daytime (${Math.round(curTemp)}°C now, ${todayMax}°C high) with ${windSpeed} mph breeze. Clear glass & good driving conditions.`;
+        }
+      }
+      // 3. Morning (00:00 - 08:59) or Evening Advance Forecast (16:00 - 23:59): evaluate frost for target morning
+      else if (minAir <= 5.5 || estimatedGlassTemp <= 4.0) {
+        sectionTitle = "Cold & Frost Watch";
+        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
+        subLabel = "Windscreen Condition";
+
+        if (estimatedGlassTemp <= -0.5 || minAir <= 0.5 || minSurface <= 0.0) {
+          status = "Heavy Frost Alert";
+          icon = "❄️";
+          badgeText = isTomorrow ? "Tomorrow: Warm Car Early" : "Warm Car 10m Early!";
+          badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
+          cardBgClass = "bg-rose-950/40 border border-rose-500/50 frost-alert-rose-pulse";
+          detail = isTomorrow
+            ? `Tomorrow morning glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`
+            : `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
+        } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
+          status = "Frost Likely";
+          icon = "🧊";
+          badgeText = isTomorrow ? "Tomorrow: Frost Likely" : "Warm Car 10m Early";
+          badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
+          cardBgClass = "bg-sky-950/40 border border-sky-400/80 frost-alert-pulse";
+          detail = isTomorrow
+            ? `Tomorrow morning air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`
+            : `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
+        } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
+          status = "Slight Frost Risk";
+          icon = "⚠️";
+          badgeText = isTomorrow ? "Tomorrow: Patchy Frost" : "Patchy Ice";
+          badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
+          cardBgClass = "bg-amber-950/30 border border-amber-500/20";
+          detail = isTomorrow
+            ? `Borderline tomorrow (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`
+            : `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`;
+        }
+      }
+      // 4. Mild morning/evening without frost
       else {
         sectionTitle = "Outdoor & Driving";
         pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1";
