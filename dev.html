@@ -3368,8 +3368,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 396;
-    const APP_VERSION = '1.10.229-dev';
+    const APP_BUILD = 397;
+    const APP_VERSION = '1.10.230-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13874,10 +13874,15 @@ function joinSpacedLetters(text) {
           if (!isNaN(val) && val >= 0.75 && val <= 1.25) return val;
         }
       }
+      // On Chromecast hardware receiver (CrKey): default to 1.15 (115%) so living room TV text is bold and nicely spaced
+      const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
+      if (isCastHardwareReceiver) {
+        return 1.15;
+      }
       return 1.0; // Default 100%
     }
 
-    function adjustScale(delta) {
+    function adjustScale(delta, broadcast = true) {
       currentScale = Math.max(0.75, Math.min(1.25, Math.round((currentScale + delta) * 100) / 100));
       const root = document.getElementById('dashboardRoot');
       if (root && window.innerWidth > 600 && window.matchMedia("(orientation: landscape) and (min-height: 520px)").matches) {
@@ -13896,6 +13901,9 @@ function joinSpacedLetters(text) {
       } catch (_) {}
       if (typeof checkFullscreenState === 'function') {
         checkFullscreenState();
+      }
+      if (broadcast && typeof broadcastScaleToCast === 'function') {
+        broadcastScaleToCast(currentScale);
       }
     }
 
@@ -14155,8 +14163,11 @@ function joinSpacedLetters(text) {
       if (minAir === 999) minAir = (daily && daily.temperature_2m_min && daily.temperature_2m_min[0] !== undefined) ? daily.temperature_2m_min[0] : 8.0;
       if (minSurface === 999) minSurface = minAir;
 
+      // Real-world glass cooling:
+      // In clear sky, unobstructed open ground can radiate ~2.0°C below ambient air.
+      // In sheltered areas/valleys, thermal radiation from surrounding trees/slopes limits offset to ~1.4°C - 1.8°C.
       const isClearSky = minCloud < 45;
-      const radiativeOffset = isClearSky ? 2.5 : 0.8;
+      const radiativeOffset = isClearSky ? 1.6 : 0.5;
       const estimatedGlassTemp = Math.min(minSurface, minAir - radiativeOffset);
 
       const todayMax = (daily && daily.temperature_2m_max && daily.temperature_2m_max[0] !== undefined) ? Math.round(daily.temperature_2m_max[0]) : Math.round((cur && cur.temperature_2m) || 15);
@@ -14249,12 +14260,12 @@ function joinSpacedLetters(text) {
         }
       }
       // 3. Morning (00:00 - 08:59) or Evening Advance Forecast (16:00 - 23:59): evaluate frost for target morning
-      else if (minAir <= 5.5 || estimatedGlassTemp <= 4.0) {
+      else if (minAir <= 5.0 || estimatedGlassTemp <= 3.0) {
         sectionTitle = "Cold & Frost Watch";
         pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
         subLabel = "Windscreen Condition";
 
-        if (estimatedGlassTemp <= -0.5 || minAir <= 0.5 || minSurface <= 0.0) {
+        if (estimatedGlassTemp <= -1.0 || minAir <= -0.5 || (minAir <= 0.2 && minSurface <= -0.5)) {
           status = "Heavy Frost Alert";
           icon = "❄️";
           badgeText = isTomorrow ? "Tomorrow: Warm Car Early" : "Warm Car 10m Early!";
@@ -14263,7 +14274,7 @@ function joinSpacedLetters(text) {
           detail = isTomorrow
             ? `Tomorrow morning glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`
             : `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
-        } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
+        } else if (estimatedGlassTemp < 0.0 || (minAir <= 1.0 && minSurface <= 0.2)) {
           status = "Frost Likely";
           icon = "🧊";
           badgeText = isTomorrow ? "Tomorrow: Frost Likely" : "Warm Car 10m Early";
@@ -14272,15 +14283,24 @@ function joinSpacedLetters(text) {
           detail = isTomorrow
             ? `Tomorrow morning air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`
             : `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
-        } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
+        } else if (estimatedGlassTemp <= 0.8 || minAir <= 2.0) {
           status = "Slight Frost Risk";
           icon = "⚠️";
-          badgeText = isTomorrow ? "Tomorrow: Patchy Frost" : "Patchy Ice";
+          badgeText = isTomorrow ? "Tomorrow: Patchy Frost" : "Patchy Frost Risk";
           badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
           cardBgClass = "bg-amber-950/30 border border-amber-500/20";
           detail = isTomorrow
-            ? `Borderline tomorrow (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`
-            : `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`;
+            ? `Borderline tomorrow (${minAir.toFixed(1)}°C at ${criticalHour} AM). Open hollows may catch patchy frost; sheltered glass often stays clear.`
+            : `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Open hollows may catch patchy frost; sheltered glass often stays clear.`;
+        } else {
+          status = isTomorrow ? "Frost-Free Tomorrow" : "Frost-Free • Cold Dew";
+          icon = "💧";
+          badgeText = isTomorrow ? "Tomorrow: Clear" : "Morning Dew";
+          badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = isTomorrow
+            ? `Frost-free tomorrow (~${minAir.toFixed(1)}°C low). Cold morning dew on glass; no ice scraping needed.`
+            : `Frost-free (${minAir.toFixed(1)}°C low). Cold morning dew on windscreen; wipers or demister may be needed.`;
         }
       }
       // 4. Mild morning/evening without frost
@@ -15966,7 +15986,7 @@ function joinSpacedLetters(text) {
       }, 45000);
     }
 
-    function stepPanoramicDay(delta, startDragPx = 0) {
+    function stepPanoramicDay(delta, startDragPx = 0, broadcast = true) {
       if (!isHourlyCompressed) return;
       const nextOffset = Math.max(-1, Math.min(9, panoramicDayOffset + delta));
       if (nextOffset !== panoramicDayOffset) {
@@ -15975,6 +15995,9 @@ function joinSpacedLetters(text) {
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
         renderHourly(cachedHourlyData, dir, startDragPx);
+        if (broadcast && typeof broadcastPanoramicDayToCast === 'function') {
+          broadcastPanoramicDayToCast(panoramicDayOffset);
+        }
       } else {
         // At boundary (-1 or +9): spring current row gently back to center
         const container = document.getElementById('hourlyTimeline');
@@ -15992,7 +16015,7 @@ function joinSpacedLetters(text) {
       resetPanoramicAutoTimer();
     }
 
-    function stepPanoramicDayTo(targetOffset) {
+    function stepPanoramicDayTo(targetOffset, broadcast = true) {
       if (!isHourlyCompressed) return;
       const nextOffset = Math.max(-1, Math.min(9, targetOffset));
       if (nextOffset !== panoramicDayOffset) {
@@ -16001,6 +16024,9 @@ function joinSpacedLetters(text) {
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
         renderHourly(cachedHourlyData, dir);
+        if (broadcast && typeof broadcastPanoramicDayToCast === 'function') {
+          broadcastPanoramicDayToCast(panoramicDayOffset);
+        }
       }
       resetPanoramicAutoTimer();
     }
@@ -16501,7 +16527,7 @@ function joinSpacedLetters(text) {
       }, 60);
     });
 
-    function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true, animDirection = null) {
+    function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true, animDirection = null, broadcast = true) {
       const prevCompressed = isHourlyCompressed;
       const prevOffset = (typeof panoramicDayOffset === 'number') ? panoramicDayOffset : 0;
       isHourlyCompressed = compressed;
@@ -16572,6 +16598,10 @@ function joinSpacedLetters(text) {
         renderHourly(cachedHourlyData);
 
         if (shouldFocus && footer) footer.focus({ preventScroll: true });
+      }
+
+      if (broadcast && typeof broadcastHourlyCompressedToCast === 'function') {
+        broadcastHourlyCompressedToCast(isHourlyCompressed, panoramicDayOffset);
       }
     }
 
@@ -17128,30 +17158,74 @@ function joinSpacedLetters(text) {
     const CAST_NAMESPACE = 'urn:x-cast:com.nexusranger.weather';
     let isCastConnected = false;
 
-    function broadcastLocationToCast(loc) {
-      if (!loc || !loc.lat || !loc.lon) return;
+    function sendCastMessage(payload) {
       if (typeof cast === 'undefined' || !cast.framework) return;
       try {
         const castCtx = cast.framework.CastContext.getInstance();
         const session = castCtx.getCurrentSession();
         if (session && typeof session.sendMessage === 'function') {
-          const payload = {
-            type: 'SYNC_LOCATION',
-            location: {
-              name: loc.name || '',
-              geoName: loc.geoName || loc.name || '',
-              lat: loc.lat,
-              lon: loc.lon,
-              postcode: loc.postcode || ''
-            }
-          };
           session.sendMessage(CAST_NAMESPACE, JSON.stringify(payload)).catch(err => {
             console.warn('Cast sendMessage warning:', err);
           });
         }
       } catch (err) {
-        console.warn('broadcastLocationToCast error:', err);
+        console.warn('sendCastMessage error:', err);
       }
+    }
+
+    function broadcastLocationToCast(loc) {
+      if (!loc || !loc.lat || !loc.lon) return;
+      sendCastMessage({
+        type: 'SYNC_LOCATION',
+        location: {
+          name: loc.name || '',
+          geoName: loc.geoName || loc.name || '',
+          lat: loc.lat,
+          lon: loc.lon,
+          postcode: loc.postcode || ''
+        }
+      });
+    }
+
+    function broadcastFullStateToCast(loc = (typeof CURRENT_LOCATION !== 'undefined' ? CURRENT_LOCATION : null)) {
+      if (!loc || !loc.lat || !loc.lon) return;
+      sendCastMessage({
+        type: 'SET_FULL_STATE',
+        location: {
+          name: loc.name || '',
+          geoName: loc.geoName || loc.name || '',
+          lat: loc.lat,
+          lon: loc.lon,
+          postcode: loc.postcode || ''
+        },
+        isHourlyCompressed: typeof isHourlyCompressed !== 'undefined' ? isHourlyCompressed : false,
+        panoramicDayOffset: typeof panoramicDayOffset !== 'undefined' ? panoramicDayOffset : 0,
+        isPanoramicLocked: typeof isPanoramicLocked !== 'undefined' ? isPanoramicLocked : false,
+        scale: typeof currentScale !== 'undefined' ? currentScale : 1.0,
+        displayMode: typeof CURRENT_DISPLAY_MODE !== 'undefined' ? CURRENT_DISPLAY_MODE : 'full'
+      });
+    }
+
+    function broadcastHourlyCompressedToCast(compressed, offset = 0) {
+      sendCastMessage({
+        type: 'SET_HOURLY_COMPRESSED',
+        compressed: !!compressed,
+        offset: typeof offset === 'number' ? offset : 0
+      });
+    }
+
+    function broadcastPanoramicDayToCast(offset) {
+      sendCastMessage({
+        type: 'SET_PANORAMIC_DAY',
+        offset: typeof offset === 'number' ? offset : 0
+      });
+    }
+
+    function broadcastScaleToCast(scale) {
+      sendCastMessage({
+        type: 'SET_SCALE',
+        scale: typeof scale === 'number' ? scale : 1.0
+      });
     }
 
     let isTvDeviceDetected = false;
@@ -17247,7 +17321,7 @@ function joinSpacedLetters(text) {
             if (window.cast && cast.framework && cast.framework.CastReceiverContext) {
               const recCtx = cast.framework.CastReceiverContext.getInstance();
 
-              // Listen for custom location sync messages from the sender tablet/phone
+              // Listen for custom messages from the sender tablet/phone
               recCtx.addCustomMessageListener(CAST_NAMESPACE, function(customEvent) {
                 try {
                   console.log('Received Cast custom message on TV:', customEvent.data);
@@ -17255,13 +17329,41 @@ function joinSpacedLetters(text) {
                   if (typeof msg === 'string') {
                     try { msg = JSON.parse(msg); } catch (_) {}
                   }
-                  if (msg && msg.type === 'SYNC_LOCATION' && msg.location) {
+                  if (!msg) return;
+
+                  if (msg.type === 'SYNC_LOCATION' && msg.location) {
                     const loc = msg.location;
                     if (loc.lat && loc.lon) {
                       applySelectedLocation(loc.name || loc.geoName, loc.lat, loc.lon, loc.postcode || '', false);
                     }
-                  }
-                  if (msg && msg.type === 'SET_DISPLAY_MODE') {
+                  } else if (msg.type === 'SET_FULL_STATE') {
+                    if (msg.location && msg.location.lat && msg.location.lon) {
+                      applySelectedLocation(msg.location.name || msg.location.geoName, msg.location.lat, msg.location.lon, msg.location.postcode || '', false);
+                    }
+                    if (typeof msg.isHourlyCompressed === 'boolean' && typeof setHourlyCompressedMode === 'function') {
+                      setHourlyCompressedMode(msg.isHourlyCompressed, msg.panoramicDayOffset || 0, false, null, false);
+                    }
+                    if (typeof msg.scale === 'number' && typeof adjustScale === 'function') {
+                      currentScale = Math.max(0.75, Math.min(1.25, msg.scale));
+                      adjustScale(0, false);
+                    }
+                    if (msg.displayMode && typeof setDisplayMode === 'function') {
+                      setDisplayMode(msg.displayMode);
+                    }
+                  } else if (msg.type === 'SET_HOURLY_COMPRESSED') {
+                    if (typeof setHourlyCompressedMode === 'function') {
+                      setHourlyCompressedMode(!!msg.compressed, msg.offset || 0, false, null, false);
+                    }
+                  } else if (msg.type === 'SET_PANORAMIC_DAY') {
+                    if (typeof stepPanoramicDayTo === 'function' && typeof msg.offset === 'number') {
+                      stepPanoramicDayTo(msg.offset, false);
+                    }
+                  } else if (msg.type === 'SET_SCALE') {
+                    if (typeof msg.scale === 'number' && typeof adjustScale === 'function') {
+                      currentScale = Math.max(0.75, Math.min(1.25, msg.scale));
+                      adjustScale(0, false);
+                    }
+                  } else if (msg.type === 'SET_DISPLAY_MODE') {
                     if (msg.location && msg.location.lat && msg.location.lon) {
                       applySelectedLocation(msg.location.name || msg.location.geoName, msg.location.lat, msg.location.lon, msg.location.postcode || '', false);
                     }
@@ -17353,17 +17455,17 @@ function joinSpacedLetters(text) {
                         if (typeof parsed === 'string') {
                           try { parsed = JSON.parse(parsed); } catch (_) {}
                         }
-                        if (parsed && parsed.type === 'REQUEST_LOCATION') {
-                          broadcastLocationToCast(CURRENT_LOCATION);
+                        if (parsed && (parsed.type === 'REQUEST_LOCATION' || parsed.type === 'REQUEST_FULL_STATE')) {
+                          broadcastFullStateToCast(CURRENT_LOCATION);
                         }
                       });
                     } catch (_) {}
 
-                    // Immediately beam current location across with staggered retries to ensure receiver receives it once loaded
-                    broadcastLocationToCast(CURRENT_LOCATION);
-                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 800);
-                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 2000);
-                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 4000);
+                    // Immediately beam full state across with staggered retries to ensure receiver receives it once loaded
+                    broadcastFullStateToCast(CURRENT_LOCATION);
+                    setTimeout(() => broadcastFullStateToCast(CURRENT_LOCATION), 800);
+                    setTimeout(() => broadcastFullStateToCast(CURRENT_LOCATION), 2000);
+                    setTimeout(() => broadcastFullStateToCast(CURRENT_LOCATION), 4000);
                   }
                 }
               }
@@ -17879,6 +17981,15 @@ function joinSpacedLetters(text) {
         modalGps.title = 'GPS Locate not available on TV receiver';
         modalGps.tabIndex = -1;
       }
+
+      // Apply living room TV scale boost (1.15) if user has not explicitly customized scale
+      try {
+        const saved = localStorage.getItem('dashboard_scale_windowed') || localStorage.getItem('dashboard_scale');
+        if (!saved && typeof adjustScale === 'function') {
+          currentScale = 1.15;
+          adjustScale(0, false);
+        }
+      } catch (_) {}
     }
 
     initGoogleCast();
