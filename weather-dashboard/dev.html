@@ -823,11 +823,17 @@
       }
     }
     .header-search-pulse {
-      animation: headerSearchAttentionPulse 1.15s ease-in-out 6 !important;
+      animation: headerSearchAttentionPulse 1.25s ease-in-out 16 !important;
       transition: none !important;
     }
+    .header-search-pulse #headerSearchPrefix {
+      display: inline-block !important;
+      color: #38bdf8 !important;
+      font-weight: 700 !important;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+    }
     .header-search-pulse #headerPostcodeBadge {
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
+      display: none !important;
     }
     @keyframes closeHintPulse {
       0%, 100% { opacity: 1; transform: translateY(0); }
@@ -955,6 +961,15 @@
     .text-lg {
       font-size: calc(18px * var(--text-scale, 1)) !important;
     }
+    .text-xl {
+      font-size: calc(20px * var(--text-scale, 1)) !important;
+    }
+    .text-2xl {
+      font-size: calc(24px * var(--text-scale, 1)) !important;
+    }
+    .text-\[9\.5px\] {
+      font-size: calc(10.5px * var(--text-scale, 1)) !important;
+    }
 
     /* 10-Day Forecast strict proportional track alignment */
     .ten-day-grid {
@@ -962,15 +977,15 @@
       align-items: center;
       gap: 2px;
       grid-template-columns: 
-        calc(48px * var(--text-scale, 1))
         calc(38px * var(--text-scale, 1))
-        calc(22px * var(--text-scale, 1))
-        calc(28px * var(--text-scale, 1))
-        calc(16px * var(--text-scale, 1))
+        calc(32px * var(--text-scale, 1))
+        calc(18px * var(--text-scale, 1))
+        calc(24px * var(--text-scale, 1))
+        calc(14px * var(--text-scale, 1))
+        calc(18px * var(--text-scale, 1))
         calc(20px * var(--text-scale, 1))
-        calc(22px * var(--text-scale, 1))
-        minmax(24px, 1fr)
-        calc(24px * var(--text-scale, 1));
+        minmax(40px, 1fr)
+        calc(22px * var(--text-scale, 1));
     }
 
     /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 520px) - Zero scroll with TV Safe Area */
@@ -1546,7 +1561,7 @@
         <div class="header-actions-group flex items-center gap-1.5 flex-shrink-0">
           <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" onpointerdown="this.classList.remove('header-search-pulse')" onanimationend="this.classList.remove('header-search-pulse')" title="Search or change location (Press OK)" class="header-search-pulse tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span class="text-[16px] sm:text-[17px] leading-none inline-flex items-center flex-shrink-0 select-none">🔍</span>
-            <span id="headerSearchPrefix" class="hidden"></span>
+            <span id="headerSearchPrefix" class="font-semibold text-sky-200">Search</span>
             <span id="headerPostcodeBadge" class="font-mono text-white font-bold tracking-wide">GL5 5HH</span>
           </button>
           <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Find my current GPS location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-500/25 via-sky-500/20 to-emerald-500/15 text-emerald-200 hover:text-white border border-emerald-400/40 hover:border-emerald-300/70 shadow-[0_0_12px_rgba(52,211,153,0.2)] hover:shadow-[0_0_16px_rgba(52,211,153,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
@@ -1680,24 +1695,24 @@
           </div>
 
           <!-- 6 Dense Tiles (2 cols x 3 rows) -->
-          <div class="grid grid-cols-2 gap-1 mt-0.5 pt-0.5 border-t border-white/10 flex-1 min-h-0">
+          <div class="grid grid-cols-2 gap-1.5 mt-0.5 pt-0.5 border-t border-white/10 flex-1 min-h-0">
             
             <!-- Rain -->
-            <div id="rainTodayTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="rainTodayTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Rain</span>
-                <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono leading-none whitespace-nowrap flex-shrink-0">--%</span>
+                <span id="precipProbToday" class="text-[9.5px] sm:text-[10px] text-sky-400 font-mono font-bold leading-tight whitespace-nowrap flex-shrink-0">--%</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="precipToday" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">0.0</span>
-                    <span class="text-[9px] text-slate-400 leading-none">mm</span>
+                    <span id="precipToday" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">0.0</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">mm</span>
                   </div>
-                  <div id="rainTileNowcast" class="text-[9px] text-slate-400 leading-none truncate">Accumulated</div>
+                  <div id="rainTileNowcast" class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Accumulated</div>
                 </div>
                 <div id="rainTileIconSlot" class="flex items-center justify-center flex-shrink-0" title="Rain / Dry status">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <path d="M10 24h15a5 5 0 0 0 .8-9.93A6.5 6.5 0 0 0 13.2 12.2 4.8 4.8 0 0 0 10 24z" fill="#cbd5e1"/>
                     <path d="M13 27l-1.2 3M18 27l-1.2 3M23 27l-1.2 3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
                   </svg>
@@ -1706,28 +1721,28 @@
             </div>
 
             <!-- Wind -->
-            <div id="windTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="windTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <div class="flex items-center gap-1.5">
                   <span>Wind</span>
                   <span id="windNearDots" class="inline-flex items-center" title="Peak wind expected in the next 3 hours"></span>
                 </div>
-                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[10px] leading-none whitespace-nowrap flex-shrink-0">--</span>
+                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[10px] sm:text-[11px] leading-tight whitespace-nowrap flex-shrink-0">--</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="windSpeed" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">mph</span>
+                    <span id="windSpeed" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">mph</span>
                   </div>
-                  <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
+                  <div id="windGust" class="text-[9.5px] sm:text-[10px] text-slate-400 truncate leading-tight">Gusts: -- mph</div>
                 </div>
-                <div class="w-7 h-7 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_6px_rgba(56,189,248,0.2)] flex-shrink-0" title="Wind flow compass">
+                <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_6px_rgba(56,189,248,0.2)] flex-shrink-0" title="Wind flow compass">
                   <span class="absolute top-0.5 text-[5px] font-mono font-bold text-sky-300/75 leading-none">N</span>
                   <span class="absolute bottom-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
                   <span class="absolute left-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
                   <span class="absolute right-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
-                  <svg id="windArrowIcon" class="w-3.5 h-3.5 text-sky-300 transition-transform duration-700 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]" viewBox="0 0 24 24" fill="currentColor">
+                  <svg id="windArrowIcon" class="w-3 h-3 text-sky-300 transition-transform duration-700 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                   </svg>
                 </div>
@@ -1735,21 +1750,21 @@
             </div>
 
             <!-- Barometer -->
-            <div id="barometerTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="barometerTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Barometer</span>
-                <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400 leading-none whitespace-nowrap flex-shrink-0">Steady</span>
+                <span id="pressureTrend" class="text-[9.5px] sm:text-[10px] font-mono font-medium text-emerald-400 leading-tight whitespace-nowrap flex-shrink-0">Steady</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="barometer" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">----</span>
-                    <span class="text-[9px] text-slate-400 leading-none">hPa</span>
+                    <span id="barometer" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">----</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">hPa</span>
                   </div>
-                  <div class="text-[9px] text-slate-500 leading-none truncate">Surface pressure</div>
+                  <div class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Surface pressure</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Barometer dial">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <circle cx="18" cy="18" r="13" fill="rgba(15,23,42,0.55)" stroke="rgba(148,163,184,0.45)" stroke-width="2"/>
                     <path d="M9.5 24.5a11 11 0 1 1 17 0" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
                     <line id="baroNeedle" x1="18" y1="18" x2="18" y2="8.5" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" style="transform-origin: 18px 18px; transition: transform 0.6s ease;"/>
@@ -1760,21 +1775,21 @@
             </div>
 
             <!-- Humidity & Dew -->
-            <div class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Humidity</span>
-                <span id="dewPoint" class="text-[9px] font-mono text-slate-300 leading-none whitespace-nowrap flex-shrink-0">Dew --°</span>
+                <span id="dewPoint" class="text-[9.5px] sm:text-[10px] font-mono text-slate-300 leading-tight whitespace-nowrap flex-shrink-0">Dew --°</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="humidity" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">%</span>
+                    <span id="humidity" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">%</span>
                   </div>
-                  <div class="text-[9px] text-slate-500 leading-none truncate">Moisture level</div>
+                  <div class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Moisture level</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Humidity droplet">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <defs>
                       <linearGradient id="humDropGrad" x1="12" y1="6" x2="24" y2="30" gradientUnits="userSpaceOnUse">
                         <stop offset="0%" stop-color="#7dd3fc"/>
@@ -1789,21 +1804,21 @@
             </div>
 
             <!-- Air Quality (AQI) -->
-            <div id="aqiTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="aqiTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Air Quality</span>
-                <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300 leading-none whitespace-nowrap flex-shrink-0">Good</span>
+                <span id="aqiBadge" class="text-[9.5px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 leading-tight whitespace-nowrap flex-shrink-0">Good</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="aqiVal" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">AQI</span>
+                    <span id="aqiVal" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">AQI</span>
                   </div>
-                  <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
+                  <div id="pm25Val" class="text-[9.5px] sm:text-[10px] text-slate-400 truncate leading-tight">PM2.5: --</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Air Quality">
-                  <svg id="aqiLeafIcon" class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg id="aqiLeafIcon" class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <path d="M28 8C17 8 10 14 10 24c0 1.4.2 2.6.5 3.6 1 .3 2.2.4 3.5.4 10 0 14-7 14-20z" fill="#34d399" fill-opacity="0.28" stroke="#34d399" stroke-width="1.8" stroke-linejoin="round"/>
                     <path d="M9 28c4-4.5 9-9.5 15-14" stroke="#6ee7b7" stroke-width="1.8" stroke-linecap="round"/>
                   </svg>
@@ -1812,21 +1827,21 @@
             </div>
 
             <!-- Cloud & UV -->
-            <div id="cloudUvTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="cloudUvTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Cloud &amp; UV</span>
-                <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400 leading-none whitespace-nowrap flex-shrink-0">UV: --</span>
+                <span id="uvIndexBadge" class="text-[9.5px] sm:text-[10px] font-mono font-medium text-amber-400 leading-tight whitespace-nowrap flex-shrink-0">UV: --</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="cloudCover" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">%</span>
+                    <span id="cloudCover" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">%</span>
                   </div>
-                  <div class="text-[9px] text-slate-500 leading-none truncate">Sky cover</div>
+                  <div class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Sky cover</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Cloud & UV">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <circle cx="23" cy="13" r="5.5" fill="#fbbf24"/>
                     <path d="M23 4.5v2M23 19.5v2M14.5 13h2M29.5 13h2M17 7l1.4 1.4M27.6 17.6L29 19M29 7l-1.4 1.4" stroke="#fbbf24" stroke-width="1.6" stroke-linecap="round"/>
                     <path d="M9 26.5h14.5a4.5 4.5 0 0 0 .7-8.94A5.8 5.8 0 0 0 12.8 16a4.3 4.3 0 0 0-3.8 10.5z" fill="#e2e8f0" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
@@ -1993,8 +2008,8 @@
                   <svg class="w-2.5 h-2.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M5 5l14 14M5 19L19 5"/></svg>
                   <span>Frost</span>
                 </span>
-                <span class="inline-flex items-center gap-0.5" title="Wind indicators: green (gentle), blue (moderate), amber (strong), red (gale)">
-                  <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_3px_rgba(52,211,153,0.8)]"></span>
+                <span class="inline-flex items-center gap-0.5" title="Wind indicators: green (gentle), amber (moderate), orange (strong), red (gale)">
+                  <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_3px_rgba(251,191,36,0.8)]"></span>
                   <span>Wind</span>
                 </span>
               </div>
@@ -2109,7 +2124,7 @@
           <span id="timelineHintText" class="text-[8px] text-slate-400 opacity-85 hidden sm:inline-flex flex-col items-end leading-tight text-right whitespace-nowrap truncate">◀ Scroll left for overnight history • Click / OK for 24h glance</span>
           <span class="flex items-center gap-1 whitespace-nowrap flex-shrink-0"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp</span>
           <span class="flex items-center gap-1 whitespace-nowrap flex-shrink-0"><span class="w-3 h-1.5 rounded-sm bg-sky-400"></span> Rain %</span>
-          <span class="inline-flex items-center gap-1 whitespace-nowrap flex-shrink-0" title="Wind: Grey (Calm), Green (Gentle), Yellow (Strong), Red (Gale)"><span class="inline-flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span><span class="w-2.5 h-1.5 rounded-sm bg-red-500"></span></span> Wind</span>
+          <span class="inline-flex items-center gap-1 whitespace-nowrap flex-shrink-0" title="Wind: Grey (Calm), Green (Gentle), Amber (Moderate), Orange (Strong), Red (Gale)"><span class="inline-flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span><span class="w-2.5 h-1.5 rounded-sm bg-rose-500"></span></span> Wind</span>
         </div>
       </div>
 
@@ -3433,8 +3448,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 400;
-    const APP_VERSION = '1.10.233-dev';
+    const APP_BUILD = 401;
+    const APP_VERSION = '1.10.234-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13735,8 +13750,7 @@ function joinSpacedLetters(text) {
       const prefixEl = document.getElementById('headerSearchPrefix');
       if (hasValidPostcode) {
         if (prefixEl) {
-          prefixEl.textContent = '';
-          prefixEl.className = 'hidden';
+          prefixEl.textContent = 'Search';
         }
         if (badgeEl) {
           badgeEl.textContent = rawPc;
@@ -16128,22 +16142,22 @@ function joinSpacedLetters(text) {
       } else if (maxW < 25) {
         return {
           level: 'Moderate',
-          color: 'text-sky-400',
-          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span></span>',
+          color: 'text-amber-400',
+          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_3px_rgba(251,191,36,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_3px_rgba(251,191,36,0.7)]"></span></span>',
           title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate breeze)'
         };
       } else if (maxW < 35) {
         return {
           level: 'Strong Gusts',
-          color: 'text-yellow-400',
-          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong Gusts)"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span></span>',
+          color: 'text-orange-400',
+          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong Gusts)"><span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.7)]"></span></span>',
           title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong gusts)'
         };
       } else {
         return {
           level: 'Severe Gale',
-          color: 'text-red-400',
-          html: '<span class="inline-block max-w-full w-[18px] h-1.5 rounded-sm bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Gale Warning)"></span>',
+          color: 'text-rose-400',
+          html: '<span class="inline-block max-w-full w-[18px] h-1.5 rounded-sm bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.9)]" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Gale Warning)"></span>',
           title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe gale warning)'
         };
       }
@@ -16172,21 +16186,21 @@ function joinSpacedLetters(text) {
         const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)' + suffix;
         return {
           level: 'Moderate',
-          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span></span>',
+          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_3px_rgba(251,191,36,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_3px_rgba(251,191,36,0.7)]"></span></span>',
           title: title
         };
       } else if (maxW < 35) {
         const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Strong Gusts)' + suffix;
         return {
           level: 'Strong Gusts',
-          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_4px_rgba(250,204,21,0.65)]"></span></span>',
+          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_4px_rgba(249,115,22,0.7)]"></span></span>',
           title: title
         };
       } else {
         const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Gale Alert)' + suffix;
         return {
           level: 'Severe Gale',
-          html: '<span class="inline-block w-[22px] h-1.5 rounded-sm bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" style="width: 22px;" title="' + title.replace(/"/g, '&quot;') + '"></span>',
+          html: '<span class="inline-block w-[22px] h-1.5 rounded-sm bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.9)]" style="width: 22px;" title="' + title.replace(/"/g, '&quot;') + '"></span>',
           title: title
         };
       }
@@ -16381,7 +16395,7 @@ function joinSpacedLetters(text) {
             <div class="w-full flex items-center justify-center h-2 my-0.5 cursor-help" title="${windBadge.title}">
               ${windBadge.html}
             </div>
-            <div class="h-1.5 w-full bg-slate-800/90 rounded-full overflow-hidden border border-white/10" title="Rain: ${rainProb}%">
+            <div class="h-1.5 w-full bg-slate-900/95 rounded-full overflow-hidden border border-sky-400/40 shadow-[inset_0_0_2px_rgba(0,0,0,0.6)]" title="Rain: ${rainProb}%">
               <div class="h-full ${rainProb >= 50 ? 'bg-sky-400' : rainProb > 0 ? 'bg-sky-500/80' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
             </div>
           `;
@@ -16514,7 +16528,7 @@ function joinSpacedLetters(text) {
               <span class="text-[8px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
                 ${rainProb}%
               </span>
-              <div class="h-2 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10">
+              <div class="h-2 w-full bg-slate-900/95 rounded-full mt-0.5 overflow-hidden border border-sky-400/40 shadow-[inset_0_0_2px_rgba(0,0,0,0.6)]">
                 <div class="h-full ${rainProb >= 50 ? 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : rainProb > 0 ? 'bg-sky-400' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
               </div>
             </div>
