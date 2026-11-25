@@ -26,7 +26,7 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=312">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link id="appManifestLink" rel="manifest" href="manifest.json?v=403">
+  <link id="appManifestLink" rel="manifest" href="manifest.json?v=404">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=312">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=312">
@@ -1059,6 +1059,11 @@
       }
       #colSevenDay {
         grid-column: 1 / -1 !important;
+        width: 100% !important;
+        max-width: 380px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        justify-self: center !important;
       }
       #mainGrid > div {
         height: auto !important;
@@ -1638,7 +1643,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.236) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.237) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3458,8 +3463,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 403;
-    const APP_VERSION = '1.10.236';
+    const APP_BUILD = 404;
+    const APP_VERSION = '1.10.237';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
