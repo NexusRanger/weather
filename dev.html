@@ -930,6 +930,32 @@
       background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 70%);
     }
 
+    /* Dynamic Typography Scaling driven by % scale buttons */
+    :root {
+      --text-scale: 1.0;
+    }
+    .text-\[9px\] {
+      font-size: calc(10px * var(--text-scale, 1)) !important;
+    }
+    .text-\[10px\] {
+      font-size: calc(11px * var(--text-scale, 1)) !important;
+    }
+    .text-\[11px\] {
+      font-size: calc(12px * var(--text-scale, 1)) !important;
+    }
+    .text-xs {
+      font-size: calc(12.5px * var(--text-scale, 1)) !important;
+    }
+    .text-sm {
+      font-size: calc(14px * var(--text-scale, 1)) !important;
+    }
+    .text-base {
+      font-size: calc(16px * var(--text-scale, 1)) !important;
+    }
+    .text-lg {
+      font-size: calc(18px * var(--text-scale, 1)) !important;
+    }
+
     /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 520px) - Zero scroll with TV Safe Area */
     @media (orientation: landscape) and (min-height: 520px) {
       html, body {
@@ -3368,8 +3394,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 397;
-    const APP_VERSION = '1.10.230-dev';
+    const APP_BUILD = 398;
+    const APP_VERSION = '1.10.231-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13879,14 +13905,22 @@ function joinSpacedLetters(text) {
       if (isCastHardwareReceiver) {
         return 1.15;
       }
+      // On tablet in landscape: default to 1.08 (108%)
+      const isTabletLandscape = ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
+        window.matchMedia("(orientation: landscape) and (min-height: 520px) and (max-width: 1200px)").matches;
+      if (isTabletLandscape) {
+        return 1.08;
+      }
       return 1.0; // Default 100%
     }
 
     function adjustScale(delta, broadcast = true) {
       currentScale = Math.max(0.75, Math.min(1.25, Math.round((currentScale + delta) * 100) / 100));
+      document.documentElement.style.setProperty('--text-scale', currentScale);
       const root = document.getElementById('dashboardRoot');
-      if (root && window.innerWidth > 600 && window.matchMedia("(orientation: landscape) and (min-height: 520px)").matches) {
-        root.style.transform = `scale(${currentScale})`;
+      if (root) {
+        // Keep layout naturally fitted to 100vw x 100vh without distortion or black letterbox borders
+        root.style.transform = '';
       }
       const label = document.getElementById('scaleLabel');
       if (label) {
@@ -13920,6 +13954,7 @@ function joinSpacedLetters(text) {
     if (window.innerWidth > 600) {
       lastKnownFullscreenState = isCurrentFullscreen();
       currentScale = loadScaleForActiveMode();
+      document.documentElement.style.setProperty('--text-scale', currentScale);
       setTimeout(() => adjustScale(0), 10);
     }
 
@@ -15659,7 +15694,7 @@ function joinSpacedLetters(text) {
         const row = document.createElement('div');
         row.setAttribute('data-day-index', i);
         row.className = `grid items-center gap-0.5 py-[2px] px-1.5 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none w-full box-border`;
-        row.style.gridTemplateColumns = '38px 34px 18px 24px 14px 22px 20px minmax(16px, 1fr) 24px';
+        row.style.gridTemplateColumns = 'minmax(36px, auto) minmax(32px, auto) 18px minmax(22px, auto) 14px 20px minmax(20px, auto) minmax(16px, 1fr) minmax(22px, auto)';
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
           setHourlyCompressedMode(true, i);
