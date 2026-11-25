@@ -956,6 +956,23 @@
       font-size: calc(18px * var(--text-scale, 1)) !important;
     }
 
+    /* 10-Day Forecast strict proportional track alignment */
+    .ten-day-grid {
+      display: grid;
+      align-items: center;
+      gap: 2px;
+      grid-template-columns: 
+        calc(48px * var(--text-scale, 1))
+        calc(38px * var(--text-scale, 1))
+        calc(22px * var(--text-scale, 1))
+        calc(28px * var(--text-scale, 1))
+        calc(16px * var(--text-scale, 1))
+        calc(20px * var(--text-scale, 1))
+        calc(22px * var(--text-scale, 1))
+        minmax(24px, 1fr)
+        calc(24px * var(--text-scale, 1));
+    }
+
     /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 520px) - Zero scroll with TV Safe Area */
     @media (orientation: landscape) and (min-height: 520px) {
       html, body {
@@ -1967,11 +1984,11 @@
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div class="flex flex-col flex-1 min-h-0">
             <!-- Header Title & Mini Legend -->
-            <div class="flex items-center justify-between gap-1 mb-1 flex-shrink-0">
-              <span id="tenDayForecastTitle" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5">
-                10-Day Forecast &bull; Frost &amp; Wind
+            <div class="flex items-center justify-between gap-1 mb-1 flex-shrink-0 min-w-0">
+              <span id="tenDayForecastTitle" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5 flex-shrink-0">
+                10-Day Forecast
               </span>
-              <div class="flex items-center gap-2 text-[9px] text-slate-400 font-medium whitespace-nowrap">
+              <div class="flex items-center gap-2 text-[9px] text-slate-400 font-medium whitespace-nowrap flex-shrink-0">
                 <span class="inline-flex items-center gap-0.5" title="Blue ice crystal = overnight frost risk (low <= 3.5°C)">
                   <svg class="w-2.5 h-2.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M5 5l14 14M5 19L19 5"/></svg>
                   <span>Frost</span>
@@ -1984,16 +2001,14 @@
             </div>
 
             <!-- Column Headers Key Row -->
-            <div class="grid items-center gap-0.5 py-0.5 px-2 text-[8.5px] uppercase tracking-wider font-semibold text-slate-400/90 border-b border-white/10 select-none mb-0.5 flex-shrink-0" style="grid-template-columns: minmax(36px, auto) minmax(32px, auto) 18px minmax(22px, auto) 14px 20px minmax(20px, auto) minmax(16px, 1fr) minmax(22px, auto);">
-              <span class="truncate">Day</span>
-              <span class="truncate">Date</span>
+            <div class="ten-day-grid py-0.5 px-2 rounded-lg text-[8.5px] uppercase tracking-wider font-semibold text-slate-400/90 border-b border-white/10 border-l-2 border-l-transparent select-none mb-0.5 flex-shrink-0 box-border">
+              <span></span>
+              <span></span>
               <span class="text-center" title="Sky conditions">Sky</span>
               <span class="text-right" title="Rain probability">Rain</span>
               <span class="flex items-center justify-center text-cyan-300" title="Frost alert">Ice</span>
               <span class="text-center" title="Peak wind">Wind</span>
-              <span class="text-right" title="Overnight / morning low">Low</span>
-              <span class="text-center text-[7.5px] text-slate-500" title="Temperature range">Range</span>
-              <span class="text-right" title="Daytime high">High</span>
+              <span class="col-span-3 text-center tracking-wider text-[8px] text-slate-400/80" style="grid-column: span 3 / span 3;" title="Temperature Range (Overnight Low to Daytime High)">Temp Range</span>
             </div>
 
             <div id="sevenDayList" class="flex-1 flex flex-col justify-between gap-[3px] min-h-0">
@@ -3418,8 +3433,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 399;
-    const APP_VERSION = '1.10.232-dev';
+    const APP_BUILD = 400;
+    const APP_VERSION = '1.10.233-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -15607,11 +15622,10 @@ function joinSpacedLetters(text) {
       }
       const periodSpan = Math.max(6, periodMax - periodMin);
 
-      // Dynamic panel title: include Frost & Wind
+      // Keep panel title clean and concise: "10-Day Forecast"
       const titleEl = document.getElementById('tenDayForecastTitle');
       if (titleEl) {
-        const subFeatures = hasAnyFrostRisk ? 'Frost &amp; Wind' : 'Wind';
-        titleEl.innerHTML = `10-Day Forecast &bull; ${subFeatures}`;
+        titleEl.textContent = '10-Day Forecast';
       }
 
       for (let i = 0; i < daysToShow; i++) {
@@ -15721,8 +15735,7 @@ function joinSpacedLetters(text) {
 
         const row = document.createElement('div');
         row.setAttribute('data-day-index', i);
-        row.className = `grid items-center gap-0.5 py-1 px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none w-full box-border`;
-        row.style.gridTemplateColumns = 'minmax(36px, auto) minmax(32px, auto) 18px minmax(22px, auto) 14px 20px minmax(20px, auto) minmax(16px, 1fr) minmax(22px, auto)';
+        row.className = `ten-day-grid py-1 px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none w-full box-border`;
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
           setHourlyCompressedMode(true, i);
