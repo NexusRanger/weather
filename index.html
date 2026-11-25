@@ -26,7 +26,7 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=312">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link rel="manifest" href="manifest.json?v=376">
+  <link id="appManifestLink" rel="manifest" href="manifest.json?v=402">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=312">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=312">
@@ -34,7 +34,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>Ambient Weather &amp; Frost Watch</title>
+  <title>Ambient Weather (Dev)</title>
   <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet World Map (30-day History) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -670,9 +670,9 @@
       outline: none !important;
     }
 
-    /* Ambient TV idle mode: Suppress main-page yellow focus highlight after 10s of inactivity (except when actively flashing) */
-    body.focus-dormant .tv-focus-amber:focus:not(.loc-btn-flash),
-    body.focus-dormant .tv-focus-amber:focus-visible:not(.loc-btn-flash),
+    /* Ambient TV idle mode: Suppress main-page yellow focus highlight after 10s of inactivity (except when actively flashing or glowing) */
+    body.focus-dormant .tv-focus-amber:focus:not(.loc-btn-flash):not(.header-search-pulse),
+    body.focus-dormant .tv-focus-amber:focus-visible:not(.loc-btn-flash):not(.header-search-pulse),
     body.focus-dormant #footerTimeline:focus,
     body.focus-dormant #footerTimeline:focus-visible {
       outline: none !important;
@@ -712,6 +712,25 @@
       border-bottom-left-radius: 8px !important;
       border-bottom-right-radius: 8px !important;
     }
+    #historyLeafletMap .leaflet-control-zoom a.leaflet-control-zoom-out:not(:last-child) {
+      border-bottom-left-radius: 0 !important;
+      border-bottom-right-radius: 0 !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+    #historyLeafletMap .leaflet-control-drop-pin {
+      border-bottom-left-radius: 8px !important;
+      border-bottom-right-radius: 8px !important;
+      font-size: 16px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-decoration: none !important;
+      cursor: pointer !important;
+    }
+    #historyLeafletMap .leaflet-control-drop-pin:hover {
+      background: rgba(30, 41, 59, 0.95) !important;
+      color: #ffffff !important;
+    }
     #historyLeafletMap .leaflet-control-zoom a:hover,
     #radarLeafletMap .leaflet-control-zoom a:hover {
       background: rgba(30, 41, 59, 0.95) !important;
@@ -746,6 +765,8 @@
       scroll-snap-type: x proximity;
       touch-action: pan-x;
       scroll-padding-left: 6px;
+      padding-top: 12px !important;
+      margin-top: -12px !important;
     }
     #mapRecentChips > button {
       scroll-snap-align: start;
@@ -766,6 +787,56 @@
     }
     .close-btn-countdown-flash {
       animation: closeBtnWarnFlash 0.85s ease-in-out infinite !important;
+    }
+    /* Search Box Attention Pulse when Location Modal Opens (electric cyan glow) */
+    @keyframes searchBoxAttentionPulse {
+      0%, 100% {
+        border-color: rgba(56, 189, 248, 0.6);
+        background-color: rgba(2, 6, 23, 0.85);
+        box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+        transform: scale(1);
+      }
+      50% {
+        border-color: #38bdf8;
+        background-color: rgba(14, 165, 233, 0.18);
+        box-shadow: 0 0 22px rgba(56, 189, 248, 0.95), 0 0 40px rgba(56, 189, 248, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.35);
+        transform: scale(1.015);
+      }
+    }
+    .search-box-attention-pulse {
+      animation: searchBoxAttentionPulse 1.15s ease-in-out 6 !important;
+    }
+
+    /* Main Page Search Box Attention Pulse when first opened (exact match to location search modal glowing pulse, goes for ~7 seconds) */
+    @keyframes headerSearchAttentionPulse {
+      0%, 100% {
+        border-color: rgba(56, 189, 248, 0.5);
+        background-color: rgba(14, 165, 233, 0.12);
+        box-shadow: 0 0 0 rgba(56, 189, 248, 0);
+        transform: scale(1);
+      }
+      50% {
+        border-color: #38bdf8;
+        background-color: rgba(14, 165, 233, 0.28);
+        box-shadow: 0 0 0 1.5px #38bdf8, 0 0 22px rgba(56, 189, 248, 0.95), 0 0 40px rgba(56, 189, 248, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.35);
+        transform: scale(1.025);
+      }
+    }
+    .header-search-pulse {
+      animation: headerSearchAttentionPulse 1.25s ease-in-out 16 !important;
+      transition: none !important;
+    }
+    .header-search-pulse #headerSearchPrefix {
+      display: inline-block !important;
+      color: #38bdf8 !important;
+      font-weight: 700 !important;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+    }
+    .header-search-pulse #headerSearchPrefix::after {
+      content: "Search";
+    }
+    .header-search-pulse #headerPostcodeBadge {
+      display: none !important;
     }
     @keyframes closeHintPulse {
       0%, 100% { opacity: 1; transform: translateY(0); }
@@ -866,6 +937,58 @@
     }
     .ambient-glow-night {
       background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 70%);
+    }
+
+    /* Dynamic Typography Scaling driven by % scale buttons */
+    :root {
+      --text-scale: 1.0;
+    }
+    .text-\[9px\] {
+      font-size: calc(10px * var(--text-scale, 1)) !important;
+    }
+    .text-\[10px\] {
+      font-size: calc(11px * var(--text-scale, 1)) !important;
+    }
+    .text-\[11px\] {
+      font-size: calc(12px * var(--text-scale, 1)) !important;
+    }
+    .text-xs {
+      font-size: calc(12.5px * var(--text-scale, 1)) !important;
+    }
+    .text-sm {
+      font-size: calc(14px * var(--text-scale, 1)) !important;
+    }
+    .text-base {
+      font-size: calc(16px * var(--text-scale, 1)) !important;
+    }
+    .text-lg {
+      font-size: calc(18px * var(--text-scale, 1)) !important;
+    }
+    .text-xl {
+      font-size: calc(20px * var(--text-scale, 1)) !important;
+    }
+    .text-2xl {
+      font-size: calc(24px * var(--text-scale, 1)) !important;
+    }
+    .text-\[9\.5px\] {
+      font-size: calc(10.5px * var(--text-scale, 1)) !important;
+    }
+
+    /* 10-Day Forecast strict proportional track alignment */
+    .ten-day-grid {
+      display: grid;
+      align-items: center;
+      gap: 2px;
+      grid-template-columns: 
+        calc(46px * var(--text-scale, 1))
+        calc(40px * var(--text-scale, 1))
+        calc(22px * var(--text-scale, 1))
+        calc(28px * var(--text-scale, 1))
+        calc(16px * var(--text-scale, 1))
+        calc(20px * var(--text-scale, 1))
+        calc(22px * var(--text-scale, 1))
+        minmax(28px, 1fr)
+        calc(24px * var(--text-scale, 1));
     }
 
     /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 520px) - Zero scroll with TV Safe Area */
@@ -1439,7 +1562,7 @@
           </button>
         </div>
         <div class="header-actions-group flex items-center gap-1.5 flex-shrink-0">
-          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" title="Search or change location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" onpointerdown="this.classList.remove('header-search-pulse')" onanimationend="this.classList.remove('header-search-pulse')" title="Search or change location (Press OK)" class="header-search-pulse tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span class="text-[16px] sm:text-[17px] leading-none inline-flex items-center flex-shrink-0 select-none">🔍</span>
             <span id="headerSearchPrefix" class="hidden"></span>
             <span id="headerPostcodeBadge" class="font-mono text-white font-bold tracking-wide">GL5 5HH</span>
@@ -1508,7 +1631,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.209) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.235) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -1575,24 +1698,24 @@
           </div>
 
           <!-- 6 Dense Tiles (2 cols x 3 rows) -->
-          <div class="grid grid-cols-2 gap-1 mt-0.5 pt-0.5 border-t border-white/10 flex-1 min-h-0">
+          <div class="grid grid-cols-2 gap-1.5 mt-0.5 pt-0.5 border-t border-white/10 flex-1 min-h-0">
             
             <!-- Rain -->
-            <div id="rainTodayTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="rainTodayTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Rain</span>
-                <span id="precipProbToday" class="text-[9px] text-sky-400 font-mono leading-none whitespace-nowrap flex-shrink-0">--%</span>
+                <span id="precipProbToday" class="text-[9.5px] sm:text-[10px] text-sky-400 font-mono font-bold leading-tight whitespace-nowrap flex-shrink-0">--%</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="precipToday" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">0.0</span>
-                    <span class="text-[9px] text-slate-400 leading-none">mm</span>
+                    <span id="precipToday" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">0.0</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">mm</span>
                   </div>
-                  <div id="rainTileNowcast" class="text-[9px] text-slate-400 leading-none truncate">Accumulated</div>
+                  <div id="rainTileNowcast" class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Accumulated</div>
                 </div>
                 <div id="rainTileIconSlot" class="flex items-center justify-center flex-shrink-0" title="Rain / Dry status">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <path d="M10 24h15a5 5 0 0 0 .8-9.93A6.5 6.5 0 0 0 13.2 12.2 4.8 4.8 0 0 0 10 24z" fill="#cbd5e1"/>
                     <path d="M13 27l-1.2 3M18 27l-1.2 3M23 27l-1.2 3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
                   </svg>
@@ -1601,28 +1724,28 @@
             </div>
 
             <!-- Wind -->
-            <div id="windTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="windTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <div class="flex items-center gap-1.5">
                   <span>Wind</span>
                   <span id="windNearDots" class="inline-flex items-center" title="Peak wind expected in the next 3 hours"></span>
                 </div>
-                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[10px] leading-none whitespace-nowrap flex-shrink-0">--</span>
+                <span id="windCompass" class="text-sky-300 font-mono font-bold text-[10px] sm:text-[11px] leading-tight whitespace-nowrap flex-shrink-0">--</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="windSpeed" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">mph</span>
+                    <span id="windSpeed" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">mph</span>
                   </div>
-                  <div id="windGust" class="text-[9px] text-slate-500 truncate leading-none">Gusts: -- mph</div>
+                  <div id="windGust" class="text-[9.5px] sm:text-[10px] text-slate-400 truncate leading-tight">Gusts: -- mph</div>
                 </div>
-                <div class="w-7 h-7 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_6px_rgba(56,189,248,0.2)] flex-shrink-0" title="Wind flow compass">
+                <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-sky-500/15 border border-sky-400/40 flex items-center justify-center relative shadow-[inset_0_0_6px_rgba(56,189,248,0.2)] flex-shrink-0" title="Wind flow compass">
                   <span class="absolute top-0.5 text-[5px] font-mono font-bold text-sky-300/75 leading-none">N</span>
                   <span class="absolute bottom-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
                   <span class="absolute left-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
                   <span class="absolute right-0.5 w-0.5 h-0.5 bg-white/25 rounded-full"></span>
-                  <svg id="windArrowIcon" class="w-3.5 h-3.5 text-sky-300 transition-transform duration-700 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]" viewBox="0 0 24 24" fill="currentColor">
+                  <svg id="windArrowIcon" class="w-3 h-3 text-sky-300 transition-transform duration-700 drop-shadow-[0_0_4px_rgba(56,189,248,0.6)]" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                   </svg>
                 </div>
@@ -1630,21 +1753,21 @@
             </div>
 
             <!-- Barometer -->
-            <div id="barometerTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="barometerTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Barometer</span>
-                <span id="pressureTrend" class="text-[9px] font-mono text-emerald-400 leading-none whitespace-nowrap flex-shrink-0">Steady</span>
+                <span id="pressureTrend" class="text-[9.5px] sm:text-[10px] font-mono font-medium text-emerald-400 leading-tight whitespace-nowrap flex-shrink-0">Steady</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="barometer" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">----</span>
-                    <span class="text-[9px] text-slate-400 leading-none">hPa</span>
+                    <span id="barometer" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">----</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">hPa</span>
                   </div>
-                  <div class="text-[9px] text-slate-500 leading-none truncate">Surface pressure</div>
+                  <div class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Surface pressure</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Barometer dial">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <circle cx="18" cy="18" r="13" fill="rgba(15,23,42,0.55)" stroke="rgba(148,163,184,0.45)" stroke-width="2"/>
                     <path d="M9.5 24.5a11 11 0 1 1 17 0" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
                     <line id="baroNeedle" x1="18" y1="18" x2="18" y2="8.5" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" style="transform-origin: 18px 18px; transition: transform 0.6s ease;"/>
@@ -1655,21 +1778,21 @@
             </div>
 
             <!-- Humidity & Dew -->
-            <div class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Humidity</span>
-                <span id="dewPoint" class="text-[9px] font-mono text-slate-300 leading-none whitespace-nowrap flex-shrink-0">Dew --°</span>
+                <span id="dewPoint" class="text-[9.5px] sm:text-[10px] font-mono text-slate-300 leading-tight whitespace-nowrap flex-shrink-0">Dew --°</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="humidity" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">%</span>
+                    <span id="humidity" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">%</span>
                   </div>
-                  <div class="text-[9px] text-slate-500 leading-none truncate">Moisture level</div>
+                  <div class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Moisture level</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Humidity droplet">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <defs>
                       <linearGradient id="humDropGrad" x1="12" y1="6" x2="24" y2="30" gradientUnits="userSpaceOnUse">
                         <stop offset="0%" stop-color="#7dd3fc"/>
@@ -1684,21 +1807,21 @@
             </div>
 
             <!-- Air Quality (AQI) -->
-            <div id="aqiTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="aqiTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Air Quality</span>
-                <span id="aqiBadge" class="text-[9px] font-bold px-1 rounded bg-emerald-500/20 text-emerald-300 leading-none whitespace-nowrap flex-shrink-0">Good</span>
+                <span id="aqiBadge" class="text-[9.5px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 leading-tight whitespace-nowrap flex-shrink-0">Good</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="aqiVal" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">AQI</span>
+                    <span id="aqiVal" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">AQI</span>
                   </div>
-                  <div id="pm25Val" class="text-[9px] text-slate-500 truncate leading-none">PM2.5: --</div>
+                  <div id="pm25Val" class="text-[9.5px] sm:text-[10px] text-slate-400 truncate leading-tight">PM2.5: --</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Air Quality">
-                  <svg id="aqiLeafIcon" class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg id="aqiLeafIcon" class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <path d="M28 8C17 8 10 14 10 24c0 1.4.2 2.6.5 3.6 1 .3 2.2.4 3.5.4 10 0 14-7 14-20z" fill="#34d399" fill-opacity="0.28" stroke="#34d399" stroke-width="1.8" stroke-linejoin="round"/>
                     <path d="M9 28c4-4.5 9-9.5 15-14" stroke="#6ee7b7" stroke-width="1.8" stroke-linecap="round"/>
                   </svg>
@@ -1707,21 +1830,21 @@
             </div>
 
             <!-- Cloud & UV -->
-            <div id="cloudUvTile" class="glass-tile rounded-lg py-1 px-1.5 flex flex-col justify-between transition-all">
-              <div class="flex items-center justify-between gap-1 text-[10px] text-slate-400 leading-none">
+            <div id="cloudUvTile" class="glass-tile rounded-xl py-1 px-2 flex flex-col justify-between transition-all min-h-0 overflow-hidden">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-300 leading-tight">
                 <span class="whitespace-nowrap">Cloud &amp; UV</span>
-                <span id="uvIndexBadge" class="text-[9px] font-mono text-amber-400 leading-none whitespace-nowrap flex-shrink-0">UV: --</span>
+                <span id="uvIndexBadge" class="text-[9.5px] sm:text-[10px] font-mono font-medium text-amber-400 leading-tight whitespace-nowrap flex-shrink-0">UV: --</span>
               </div>
               <div class="flex items-end justify-between gap-1 mt-0.5">
                 <div class="min-w-0 flex-1 flex flex-col justify-end gap-0.5">
                   <div class="flex items-baseline gap-1">
-                    <span id="cloudCover" class="text-base sm:text-lg font-extrabold font-mono text-white leading-none">--</span>
-                    <span class="text-[9px] text-slate-400 leading-none">%</span>
+                    <span id="cloudCover" class="text-lg sm:text-xl font-extrabold font-mono text-white leading-none">--</span>
+                    <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium leading-none">%</span>
                   </div>
-                  <div class="text-[9px] text-slate-500 leading-none truncate">Sky cover</div>
+                  <div class="text-[9.5px] sm:text-[10px] text-slate-400 leading-tight truncate">Sky cover</div>
                 </div>
                 <div class="flex items-center justify-center flex-shrink-0" title="Cloud & UV">
-                  <svg class="w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 36 36" fill="none">
+                  <svg class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 36 36" fill="none">
                     <circle cx="23" cy="13" r="5.5" fill="#fbbf24"/>
                     <path d="M23 4.5v2M23 19.5v2M14.5 13h2M29.5 13h2M17 7l1.4 1.4M27.6 17.6L29 19M29 7l-1.4 1.4" stroke="#fbbf24" stroke-width="1.6" stroke-linecap="round"/>
                     <path d="M9 26.5h14.5a4.5 4.5 0 0 0 .7-8.94A5.8 5.8 0 0 0 12.8 16a4.3 4.3 0 0 0-3.8 10.5z" fill="#e2e8f0" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
@@ -1878,13 +2001,35 @@
       <div id="colSevenDay" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div class="flex flex-col flex-1 min-h-0">
-            <div class="flex items-center mb-1 flex-shrink-0">
-              <span id="tenDayForecastTitle" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5">
-                10-Day Forecast &bull; Frost &amp; Wind <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.7)]" title="Wind speed dot"></span>
+            <!-- Header Title & Mini Legend -->
+            <div class="flex items-center justify-between gap-1 mb-1 flex-shrink-0 min-w-0">
+              <span id="tenDayForecastTitle" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5 flex-shrink-0">
+                10-Day Forecast
               </span>
+              <div class="flex items-center gap-2 text-[9px] text-slate-400 font-medium whitespace-nowrap flex-shrink-0">
+                <span class="inline-flex items-center gap-0.5" title="Blue ice crystal = overnight frost risk (low <= 3.5°C)">
+                  <svg class="w-2.5 h-2.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M5 5l14 14M5 19L19 5"/></svg>
+                  <span>Frost</span>
+                </span>
+                <span class="inline-flex items-center gap-0.5" title="Wind: grey (calm), 1 green dot (gentle), 2 green dots (moderate), 3 yellow dots (strong), red bar (gale)">
+                  <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_3px_rgba(52,211,153,0.8)]"></span>
+                  <span>Wind</span>
+                </span>
+              </div>
             </div>
 
-            <div id="sevenDayList" class="flex-1 flex flex-col justify-between gap-[2px] min-h-0">
+            <!-- Column Headers Key Row -->
+            <div class="ten-day-grid py-0.5 px-2 rounded-lg text-[8.5px] uppercase tracking-wider font-semibold text-slate-400/90 border-b border-white/10 border-l-2 border-l-transparent select-none mb-0.5 flex-shrink-0 box-border">
+              <span></span>
+              <span></span>
+              <span class="text-center" title="Sky conditions">Sky</span>
+              <span class="text-right" title="Rain probability">Rain</span>
+              <span class="flex items-center justify-center text-cyan-300" title="Frost alert">Ice</span>
+              <span class="text-center" title="Peak wind">Wind</span>
+              <span class="col-span-3 text-center tracking-wider text-[8px] text-slate-400/80" style="grid-column: span 3 / span 3;" title="Temperature Range (Overnight Low to Daytime High)">Temp Range</span>
+            </div>
+
+            <div id="sevenDayList" class="flex-1 flex flex-col justify-between gap-[3px] min-h-0">
               <div class="text-xs text-slate-400 text-center py-4">Loading 10-day outlook...</div>
             </div>
           </div>
@@ -1982,7 +2127,7 @@
           <span id="timelineHintText" class="text-[8px] text-slate-400 opacity-85 hidden sm:inline-flex flex-col items-end leading-tight text-right whitespace-nowrap truncate">◀ Scroll left for overnight history • Click / OK for 24h glance</span>
           <span class="flex items-center gap-1 whitespace-nowrap flex-shrink-0"><span class="w-1.5 h-2.5 rounded-sm bg-gradient-to-t from-sky-400 to-amber-300"></span> Temp</span>
           <span class="flex items-center gap-1 whitespace-nowrap flex-shrink-0"><span class="w-3 h-1.5 rounded-sm bg-sky-400"></span> Rain %</span>
-          <span class="inline-flex items-center gap-1 whitespace-nowrap flex-shrink-0" title="Wind: Grey (Calm), Green (Gentle), Yellow (Strong), Red (Gale)"><span class="inline-flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span><span class="w-2.5 h-1.5 rounded-sm bg-red-500"></span></span> Wind</span>
+          <span class="inline-flex items-center gap-1 whitespace-nowrap flex-shrink-0" title="Wind: Grey (Calm), 1 Green Dot (Gentle), 2 Green Dots (Moderate), 3 Yellow Dots (Strong), Red Bar (Gale)"><span class="inline-flex items-center gap-0.5"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span><span class="w-2.5 h-1.5 rounded-sm bg-red-500"></span></span> Wind</span>
         </div>
       </div>
 
@@ -2114,7 +2259,7 @@
           <div class="flex gap-1.5">
             <div class="relative flex-1 flex items-center">
               <span class="pointer-events-none absolute left-2.5 text-sky-300/90 text-xs select-none" aria-hidden="true">🔍</span>
-              <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)">
+              <input id="locationInput" tabindex="0" type="text" placeholder="Search town, postcode (GL5 5HH), GPS or Maps link..." class="w-full h-[38px] bg-slate-950/85 border-2 border-sky-400/60 focus:border-sky-300 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] text-white placeholder-slate-400 focus:outline-none shadow-inner" onkeydown="handleLocationInputKeydown(event)" onfocus="stopSearchBoxPulse()" oninput="stopSearchBoxPulse()" onpointerdown="stopSearchBoxPulse()">
               <button id="locationClearBtn" type="button" tabindex="0" onclick="clearLocationInput()" onkeydown="handleLocationClearBtnKeydown(event)" class="tv-focus-amber hidden absolute right-1.5 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 rounded focus:outline-none cursor-pointer select-none" title="Clear search text">✕</button>
             </div>
             <button id="voiceSearchBtn" type="button" tabindex="0" onclick="toggleVoiceSearch()" onkeydown="handleVoiceSearchKeydown(event)" class="tv-focus-amber h-[38px] w-[38px] px-0 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border border-purple-300/50 shadow-[0_0_12px_rgba(168,85,247,0.4)] text-white rounded-xl text-base transition flex items-center justify-center focus:outline-none cursor-pointer flex-shrink-0" title="Voice Search (speak town or postcode)">
@@ -2385,7 +2530,7 @@
 
   <!-- 30-DAY LOCATION HISTORY WORLD MAP MODAL -->
   <div id="historyMapModal" onclick="closeHistoryMapModal()" onmousemove="resetHistoryMapAutoCloseTimer()" onkeydown="resetHistoryMapAutoCloseTimer()" ontouchstart="resetHistoryMapAutoCloseTimer()" onpointerdown="resetHistoryMapAutoCloseTimer()" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-2 sm:p-4 md:p-5 text-left cursor-pointer">
-    <div onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
+    <div id="historyMapModalCard" onclick="event.stopPropagation()" class="glass-card rounded-2xl p-3 sm:p-4 md:p-5 max-w-4xl w-full border border-white/20 shadow-2xl relative flex flex-col h-[88vh] max-h-[820px] overflow-hidden cursor-default">
       
       <!-- Modal Header -->
       <div class="pb-2 border-b border-white/10 flex-shrink-0">
@@ -2433,6 +2578,12 @@
       <!-- Leaflet Map Container -->
       <div class="flex-1 min-h-0 mt-2 mb-1 w-full rounded-xl overflow-hidden border border-white/15 relative bg-slate-950">
         <div id="historyLeafletMap" class="w-full h-full" style="height: 100%; min-height: 200px;"></div>
+        
+        <!-- Small Subtle Map Loading Spinner Pill -->
+        <div id="mapLoadingSpinnerPill" class="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 z-[560] flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-sky-400/40 shadow-lg text-xs font-medium text-sky-200 backdrop-blur-md transition-opacity duration-300 opacity-0 hidden">
+          <span class="inline-block w-3.5 h-3.5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></span>
+          <span class="tracking-wide text-[11px]">Loading map...</span>
+        </div>
         <!-- Floating Map Views & Privacy Info Box (toggled by the round 'i' button) -->
         <div id="mapViewInfoBox" onclick="event.stopPropagation()" class="hidden absolute top-3 right-3 z-[560] w-[min(360px,calc(100%-24px))] p-3 rounded-xl bg-slate-900/95 border border-sky-400/45 text-[11px] text-slate-200 leading-relaxed shadow-2xl backdrop-blur-md">
           <div class="flex items-start justify-between gap-2 mb-1.5">
@@ -2461,16 +2612,46 @@
           <div id="mapEmptyFilterSub" class="text-[11px] text-slate-300">Open the Location menu, press and hold any Recent Location, then choose Lock to pin it here.</div>
         </div>
         <!-- Luminous Center Target Reticle for Tablet/Touch Auto-Popup -->
-        <div class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
+        <div id="mapCenterReticle" class="pointer-events-none absolute inset-0 flex items-center justify-center z-[400]" aria-hidden="true">
           <div class="relative flex items-center justify-center">
             <!-- Subtle Crosshair Hairlines extending slightly beyond the ring -->
             <div class="absolute w-11 h-[1.5px] bg-gradient-to-r from-transparent via-sky-400/80 to-transparent"></div>
             <div class="absolute h-11 w-[1.5px] bg-gradient-to-b from-transparent via-sky-400/80 to-transparent"></div>
             <!-- Luminous Outer Ring -->
-            <div class="w-8 h-8 rounded-full border-2 border-sky-400/80 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.55),inset_0_0_8px_rgba(56,189,248,0.25)]">
+            <div id="mapCenterReticleRing" class="w-8 h-8 rounded-full border-2 border-sky-400/80 flex items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.55),inset_0_0_8px_rgba(56,189,248,0.25)] transition-colors">
               <!-- Crisp Center Dot -->
-              <div class="w-1.5 h-1.5 rounded-full bg-sky-300 shadow-[0_0_8px_#38bdf8]"></div>
+              <div id="mapCenterReticleDot" class="w-1.5 h-1.5 rounded-full bg-sky-300 shadow-[0_0_8px_#38bdf8] transition-colors"></div>
             </div>
+          </div>
+        </div>
+
+        <!-- Drop Pin at Center Confirmation Dialog -->
+        <div id="mapDropPinDialog" onclick="event.stopPropagation()" class="hidden absolute left-1/2 z-[570] w-[min(320px,calc(100%-24px))] p-2.5 rounded-xl bg-slate-900/95 border-2 border-amber-400/80 shadow-[0_8px_30px_rgba(0,0,0,0.85),0_0_16px_rgba(245,158,11,0.35)] backdrop-blur-md text-left flex flex-col gap-1.5 transition-all duration-200" style="top: max(142px, 50%); transform: translate(-50%, calc(-100% - 10px));">
+          <!-- Downward pointer arrow pointing exactly to center target reticle -->
+          <div class="absolute -bottom-[10px] left-1/2 -translate-x-1/2 w-0 h-0 border-x-[8px] border-x-transparent border-t-[10px] border-t-amber-400 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)] z-10 pointer-events-none"></div>
+
+          <div class="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
+            <div class="flex items-center gap-1.5 font-bold text-white text-xs">
+              <span class="text-sm leading-none">📍</span>
+              <span>Drop Pin Here</span>
+            </div>
+            <button type="button" onclick="closeDropPinDialog()" class="text-slate-400 hover:text-rose-300 text-xs p-1 rounded-lg bg-white/5 hover:bg-rose-500/20 transition focus:outline-none cursor-pointer" title="Cancel (Esc)">✕</button>
+          </div>
+
+          <div id="mapDropPinCoords" class="text-[9.5px] font-mono text-sky-300 bg-black/40 px-2 py-0.5 rounded-md border border-white/10 flex items-center justify-between">
+            <span id="mapDropPinCoordsText">51.5074°N, 0.1278°W</span>
+            <span id="mapDropPinStatus" class="text-[9px] text-amber-300 font-sans font-medium">Finding name...</span>
+          </div>
+
+          <input id="mapDropPinNameInput" type="text" maxlength="60" placeholder="Location name..." onkeydown="if(event.key==='Enter'){event.preventDefault();confirmCreateDropPinLocation();}else if(event.key==='Escape'){event.preventDefault();closeDropPinDialog();}" class="w-full px-2.5 py-1 rounded-lg bg-white/10 border border-white/20 text-white font-semibold text-xs focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition" />
+
+          <div class="flex items-center gap-1.5 pt-0.5">
+            <button id="mapDropPinConfirmBtn" type="button" onclick="confirmCreateDropPinLocation()" class="tv-focus-amber flex-1 py-1 px-3 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white font-bold text-xs shadow transition flex items-center justify-center gap-1 cursor-pointer focus:outline-none">
+              <span>✓ Confirm &amp; Create</span>
+            </button>
+            <button type="button" onclick="closeDropPinDialog()" class="tv-focus-amber py-1 px-3 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 active:bg-rose-500/40 border border-rose-400/40 hover:border-rose-300/60 text-rose-200 hover:text-white font-semibold text-xs transition cursor-pointer focus:outline-none flex items-center justify-center">
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -2481,14 +2662,16 @@
       </div>
 
       <!-- Quick Location Shortcuts Bar (Sorted by Distance from Current Location) & Compact Controls -->
-      <div class="pt-1.5 border-t border-white/10 flex flex-col gap-1 flex-shrink-0">
+      <div class="pt-1.5 border-t border-white/10 flex flex-col gap-1 flex-shrink-0 relative">
+        <!-- Extended touch swipe sensitivity zone above location chips for effortless finger swiping -->
+        <div id="mapChipsTopSwipeZone" class="w-full h-4 -mb-3 z-10 cursor-ew-resize touch-none select-none relative" title="Swipe to browse locations" style="touch-action: pan-x;"></div>
         <div class="flex items-center gap-1.5 w-full min-w-0">
           <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 px-0.5 flex-1 min-w-0" id="mapRecentChips" style="scrollbar-width: none;">
             <!-- Chips injected dynamically -->
           </div>
           <!-- Next Location Button at right-hand end of Carousel -->
           <div class="flex items-center flex-shrink-0 pr-0.5">
-            <button id="mapCarouselNextBtn" type="button" onclick="stepMapCarousel(1)" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2.5 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 hover:border-white/30 text-slate-300 hover:text-white text-[11px] font-medium transition flex items-center gap-1 flex-shrink-0 cursor-pointer shadow-sm leading-none select-none" title="Next Location (or swipe carousel sideways)" tabindex="0">
+            <button id="mapCarouselNextBtn" type="button" onclick="stepMapCarousel(1)" onkeydown="if(event.key==='ArrowLeft'){event.preventDefault();const chips=document.querySelectorAll('#mapRecentChips button');const t=chips[mapLastFocusedChipIndex]||chips[0];if(t){try{t.focus({preventScroll:true});}catch(_){t.focus();}}}else if(event.key==='ArrowDown'){event.preventDefault();const cb=document.getElementById('closeMapBtnBottom');if(cb)cb.focus();}else if(event.key==='ArrowUp'){event.preventDefault();const zOut=document.querySelector('#historyLeafletMap .leaflet-control-drop-pin')||document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');if(zOut&&zOut.offsetParent!==null){zOut.focus();}}" class="tv-focus-amber h-[26px] px-2.5 rounded-lg bg-white/10 hover:bg-white/20 active:bg-white/30 border border-white/15 hover:border-white/30 text-slate-300 hover:text-white text-[11px] font-medium transition flex items-center gap-1 flex-shrink-0 cursor-pointer shadow-sm leading-none select-none" title="Next Location (or swipe carousel sideways)" tabindex="0">
               <span>Next</span><span class="text-[10px] text-slate-400">▶</span>
             </button>
           </div>
@@ -2500,11 +2683,11 @@
             <span>✕ Close <span id="mapBtnCountdownBottom" class="text-amber-300 font-mono text-[9px] ml-0.5">(45s)</span></span>
           </button>
 
-          <!-- Center Midpoint: Touch gesture indicator -->
-          <div class="hidden sm:flex items-center justify-center gap-1.5 text-[10px] text-slate-400 select-none py-0.5 font-medium tracking-wide pointer-events-none mx-auto">
-            <span class="text-sky-400 font-mono text-[9px]">◀</span>
-            <span class="text-slate-300">Swipe to browse</span>
-            <span class="text-sky-400 font-mono text-[9px]">▶</span>
+          <!-- Center Midpoint: Interactive Swipable / Tappable gesture indicator -->
+          <div id="mapSwipeGuidanceBar" class="flex items-center justify-center gap-1.5 text-[10.5px] text-slate-300 select-none px-3 py-1 rounded-lg bg-white/10 hover:bg-white/15 active:bg-sky-500/25 border border-white/15 hover:border-sky-400/40 cursor-ew-resize font-medium tracking-wide shadow-sm touch-none transition mx-auto" title="Swipe left or right to browse locations">
+            <span class="text-sky-400 font-mono text-[10px] pointer-events-none">◀</span>
+            <span class="pointer-events-none font-semibold">Swipe to browse</span>
+            <span class="text-sky-400 font-mono text-[10px] pointer-events-none">▶</span>
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
@@ -3268,8 +3451,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 376;
-    const APP_VERSION = '1.10.209';
+    const APP_BUILD = 402;
+    const APP_VERSION = '1.10.235';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -3781,7 +3964,10 @@
           e.stopPropagation();
           document.body.classList.remove('focus-dormant');
           const locBtn = document.getElementById('headerLocationBtn');
-          if (locBtn) locBtn.focus({ preventScroll: true });
+          if (locBtn) {
+            locBtn.classList.remove('header-search-pulse');
+            locBtn.focus({ preventScroll: true });
+          }
           resetMainPageFocusActivity();
           return;
         }
@@ -4033,6 +4219,15 @@
     // -------------------------------------------------------------
     // Master switch: change to true when you want the Feedback pill visible for everyone
     const PUBLIC_FEEDBACK_ENABLED = false;
+
+    function isLocationAdmin() {
+      // Authenticated exclusively via secret password in search box (stored in localStorage)
+      try {
+        return localStorage.getItem('ambient_admin_unlocked') === 'true';
+      } catch (_) {
+        return false;
+      }
+    }
 
     function isFeedbackUnlocked() {
       if (PUBLIC_FEEDBACK_ENABLED) return true;
@@ -4371,12 +4566,13 @@
     const USER_RECENTS_STORAGE_KEY = 'ambient_user_recent_locations';
     const PUBLIC_MAP_CACHE_KEY = 'ambient_public_map_cache';
 
-    // Startup storage sanitization & migration: purge unwanted test queries (Workshop, Sturgeon County, Iran, IN, and previous Eiffel Tower test entries)
+    // Startup storage sanitization & migration: purge unwanted test queries (Workshop, Sturgeon County, Iran, IN, Eiffel Tower, and previous Gibraltar test entries)
     const EIFFEL_PURGE_CUTOFF = 1794999600000;
+    const GIBRALTAR_PURGE_CUTOFF = 1795471000000;
     try {
       const rawLoc = localStorage.getItem('ambient_weather_loc');
       if (rawLoc) {
-        if (/eiffel/i.test(rawLoc)) {
+        if (/eiffel/i.test(rawLoc) || /gibraltar/i.test(rawLoc)) {
           localStorage.removeItem('ambient_weather_loc');
           sessionStorage.removeItem('ambient_weather_loc');
         } else if (/workshop/i.test(rawLoc)) {
@@ -4410,9 +4606,11 @@
                 const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
                 if (n.includes('workshop')) return false;
                 if (n.includes('eiffel') && ts <= EIFFEL_PURGE_CUTOFF) return false;
+                if (n.includes('gibraltar') && ts <= GIBRALTAR_PURGE_CUTOFF) return false;
                 if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
                 if (typeof q.lat === 'number' && typeof q.lon === 'number') {
                   if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
+                  if (q.lat >= 35.8 && q.lat <= 36.4 && q.lon >= -5.6 && q.lon <= -5.1 && ts <= GIBRALTAR_PURGE_CUTOFF) return false;
                 }
                 return true;
               });
@@ -4560,9 +4758,11 @@
           const ts = q.timestamp ? new Date(q.timestamp).getTime() : 0;
           if (n.includes('workshop')) return false;
           if (n.includes('eiffel') && ts <= 1794999600000) return false;
+          if (n.includes('gibraltar') && ts <= 1795471000000) return false;
           if (n.includes('sturgeon') || n.includes('iran') || n === 'in' || n.includes('los angeles')) return false;
           if (typeof q.lat === 'number' && typeof q.lon === 'number') {
             if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return false;
+            if (q.lat >= 35.8 && q.lat <= 36.4 && q.lon >= -5.6 && q.lon <= -5.1 && ts <= 1795471000000) return false;
           }
           return true;
         });
@@ -4755,10 +4955,12 @@
         const ts = q.timestamp ? new Date(q.timestamp).getTime() : now;
         if (n.includes('workshop')) return;
         if (n.includes('eiffel') && ts <= 1794999600000) return;
+        if (n.includes('gibraltar') && ts <= 1795471000000) return;
         if (n.includes('minchinhampton') && ts <= 1795202600000) return;
         if (n.includes('los angeles') || n === 'united kingdom' || n === 'uk') return;
         if (n.includes('sturgeon') || n.includes('iran') || n === 'in') return;
         if (q.lat >= 24 && q.lat <= 40 && q.lon >= 44 && q.lon <= 64) return;
+        if (q.lat >= 35.8 && q.lat <= 36.4 && q.lon >= -5.6 && q.lon <= -5.1 && ts <= 1795471000000) return;
 
         const publicName = getDepersonalizedLocationName(q);
         if (!publicName || publicName.toLowerCase().includes('workshop')) return;
@@ -4902,6 +5104,34 @@
       updateHistoryMapCountdownDisplay();
     }
 
+    let mapLoadingSpinnerTimer = null;
+    function showMapLoadingSpinner() {
+      const spinner = document.getElementById('mapLoadingSpinnerPill');
+      if (!spinner) return;
+      if (mapLoadingSpinnerTimer) {
+        clearTimeout(mapLoadingSpinnerTimer);
+        mapLoadingSpinnerTimer = null;
+      }
+      spinner.classList.remove('hidden');
+      void spinner.offsetWidth;
+      spinner.classList.remove('opacity-0');
+      // Safety timeout: automatically fade out after 1200ms
+      mapLoadingSpinnerTimer = setTimeout(hideMapLoadingSpinner, 1200);
+    }
+
+    function hideMapLoadingSpinner() {
+      if (mapLoadingSpinnerTimer) {
+        clearTimeout(mapLoadingSpinnerTimer);
+        mapLoadingSpinnerTimer = null;
+      }
+      const spinner = document.getElementById('mapLoadingSpinnerPill');
+      if (!spinner || spinner.classList.contains('hidden')) return;
+      spinner.classList.add('opacity-0');
+      setTimeout(() => {
+        spinner.classList.add('hidden');
+      }, 300);
+    }
+
     function openHistoryMapModal() {
       if (!isMapUnlocked()) {
         // Without the password, clicking the globe does nothing
@@ -4921,6 +5151,7 @@
       savePreModalFocus('headerGlobeBtn');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      showMapLoadingSpinner();
       if (!modal._focusSyncAttached) {
         modal._focusSyncAttached = true;
         modal.addEventListener('focusin', () => { setTimeout(updateChipHighlightStates, 15); });
@@ -4939,6 +5170,8 @@
 
       resetHistoryMapAutoCloseTimer();
       updateHistoryMapCountdownDisplay();
+      initMapSwipeGuidanceBar();
+      initMapChipsTopSwipeZone();
 
       initOrRefreshHistoryMap(true);
       try { switchHistoryMapStyle(getHistoryMapStyle(), false); } catch (_) {}
@@ -5095,9 +5328,11 @@
       const toast = document.getElementById('mapToast');
       if (toast) { toast.classList.remove('opacity-100', 'translate-y-0'); toast.classList.add('opacity-0', 'translate-y-2'); }
       if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
+      if (typeof closeDropPinDialog === 'function') closeDropPinDialog();
       stopHistoryMapAutoCloseTimer();
       const modal = document.getElementById('historyMapModal');
       if (!modal || modal.classList.contains('hidden')) return;
+      hideMapLoadingSpinner();
       modal.classList.add('hidden');
       modal.classList.remove('flex');
       if (pop && history.state && history.state.modal === 'historyMap') {
@@ -5312,6 +5547,24 @@
       if (!container) return;
       const zoomIn = container.querySelector('.leaflet-control-zoom-in');
       const zoomOut = container.querySelector('.leaflet-control-zoom-out');
+      let pinBtn = container.querySelector('.leaflet-control-drop-pin');
+
+      if (!pinBtn && zoomOut && zoomOut.parentNode) {
+        pinBtn = document.createElement('a');
+        pinBtn.className = 'leaflet-control-drop-pin tv-focus-amber';
+        pinBtn.href = '#';
+        pinBtn.title = 'Drop Pin at Center (Create Location)';
+        pinBtn.setAttribute('role', 'button');
+        pinBtn.setAttribute('aria-label', 'Drop Pin at Center to create a location');
+        pinBtn.setAttribute('tabindex', '0');
+        pinBtn.innerHTML = '<span style="font-size: 16px; display: flex; align-items: center; justify-content: center; height: 100%; pointer-events: none;">📍</span>';
+        pinBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openDropPinDialog();
+        };
+        zoomOut.parentNode.appendChild(pinBtn);
+      }
 
       if (zoomIn) {
         zoomIn.setAttribute('tabindex', '0');
@@ -5347,18 +5600,21 @@
           zoomOut._dpadAttached = true;
           zoomOut.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown') {
-              // Down from minus (-) moves to the active/last-focused location
               e.preventDefault();
-              const target = getActiveOrLastFocusedChip();
-              if (target) {
-                try {
-                  const chipsEl = document.getElementById('mapRecentChips');
-                  if (chipsEl) {
-                    const targetLeft = Math.max(0, target.offsetLeft - 6);
-                    chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
-                  }
-                } catch (_) {}
-                try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+              if (pinBtn) {
+                pinBtn.focus();
+              } else {
+                const target = getActiveOrLastFocusedChip();
+                if (target) {
+                  try {
+                    const chipsEl = document.getElementById('mapRecentChips');
+                    if (chipsEl) {
+                      const targetLeft = Math.max(0, target.offsetLeft - 6);
+                      chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                    }
+                  } catch (_) {}
+                  try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+                }
               }
             } else if (e.key === 'ArrowUp') {
               e.preventDefault();
@@ -5374,6 +5630,650 @@
           });
         }
       }
+
+      if (pinBtn && !pinBtn._dpadAttached) {
+        pinBtn._dpadAttached = true;
+        pinBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const target = getActiveOrLastFocusedChip();
+            if (target) {
+              try {
+                const chipsEl = document.getElementById('mapRecentChips');
+                if (chipsEl) {
+                  const targetLeft = Math.max(0, target.offsetLeft - 6);
+                  chipsEl.scrollTo({ left: targetLeft, behavior: 'smooth' });
+                }
+              } catch (_) {}
+              try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (zoomOut) zoomOut.focus();
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const topClose = document.getElementById('closeMapBtnTop');
+            if (topClose) topClose.focus();
+          } else if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openDropPinDialog();
+          }
+        });
+      }
+    }
+
+    let dropPinActiveCoords = null;
+    let dropPinLookupAbort = null;
+
+    async function resolveSuitablePlaceName(lat, lon, signal) {
+      // 1. Check POPULAR_LANDMARKS_DATABASE (instant zero-latency match within radius)
+      if (typeof POPULAR_LANDMARKS_DATABASE !== 'undefined' && Array.isArray(POPULAR_LANDMARKS_DATABASE)) {
+        let nearestLm = null;
+        let nearestDistKm = Infinity;
+        for (const lm of POPULAR_LANDMARKS_DATABASE) {
+          if (typeof lm.lat === 'number' && typeof lm.lon === 'number') {
+            const d = (typeof calculateHaversineKm === 'function')
+              ? calculateHaversineKm(lat, lon, lm.lat, lm.lon)
+              : Math.hypot(lat - lm.lat, lon - lm.lon) * 111;
+            const maxRadius = lm.radiusKm || 25;
+            if (d <= maxRadius && d < nearestDistKm) {
+              nearestDistKm = d;
+              nearestLm = lm;
+            }
+          }
+        }
+        if (nearestLm) {
+          return {
+            name: nearestLm.name + (nearestLm.country ? `, ${nearestLm.country}` : ''),
+            geoName: nearestLm.city || nearestLm.name,
+            postcode: (Array.isArray(nearestLm.postcodes) && nearestLm.postcodes[0]) || nearestLm.postcode || '',
+            lat: nearestLm.lat,
+            lon: nearestLm.lon,
+            snapped: true,
+            snappedDistanceKm: nearestDistKm
+          };
+        }
+      }
+
+      // 2. Check DISCOVER_LOCATIONS_DATABASE (famous mountain peaks, summits & world landmarks)
+      if (typeof DISCOVER_LOCATIONS_DATABASE !== 'undefined' && Array.isArray(DISCOVER_LOCATIONS_DATABASE)) {
+        let nearestDisc = null;
+        let nearestDistKm = Infinity;
+        for (const loc of DISCOVER_LOCATIONS_DATABASE) {
+          if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+            const d = (typeof calculateHaversineKm === 'function')
+              ? calculateHaversineKm(lat, lon, loc.lat, loc.lon)
+              : Math.hypot(lat - loc.lat, lon - loc.lon) * 111;
+            if (d <= 25 && d < nearestDistKm) {
+              nearestDistKm = d;
+              nearestDisc = loc;
+            }
+          }
+        }
+        if (nearestDisc) {
+          return {
+            name: nearestDisc.name + (nearestDisc.country ? `, ${nearestDisc.country}` : ''),
+            geoName: nearestDisc.name,
+            postcode: '',
+            lat: nearestDisc.lat,
+            lon: nearestDisc.lon,
+            snapped: true,
+            snappedDistanceKm: nearestDistKm
+          };
+        }
+      }
+
+      // 3. UK Postcodes match (if in UK territory)
+      if (lat >= 49.5 && lat <= 61.0 && lon >= -9.0 && lon <= 2.5) {
+        try {
+          const pcRes = await fetch(`https://api.postcodes.io/postcodes?lat=${lat}&lon=${lon}&radius=2000&wideSearch=true`, { signal });
+          if (pcRes && pcRes.ok) {
+            const pcData = await pcRes.json();
+            if (pcData.result && pcData.result.length > 0) {
+              const r = pcData.result[0];
+              const town = r.parish || r.admin_ward || r.admin_district || r.ced || 'Local';
+              const name = (typeof shortenPlaceName === 'function') ? shortenPlaceName(town) : town;
+              const pcLat = typeof r.latitude === 'number' ? r.latitude : lat;
+              const pcLon = typeof r.longitude === 'number' ? r.longitude : lon;
+              const dKm = Math.hypot(lat - pcLat, lon - pcLon) * 111;
+              return {
+                name,
+                geoName: town,
+                postcode: r.postcode || '',
+                lat: dKm <= 5 ? pcLat : lat,
+                lon: dKm <= 5 ? pcLon : lon,
+                snapped: dKm <= 5,
+                snappedDistanceKm: dKm
+              };
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 4. Reverse Geocoding with BigDataCloud
+      let bdcTown = '';
+      let bdcCountry = '';
+      let bdcPostcode = '';
+      let snappedName = '';
+      let snappedGeoName = '';
+      try {
+        const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`, { signal });
+        if (bdcRes && bdcRes.ok) {
+          const d = await bdcRes.json();
+          bdcTown = d.locality || d.city || '';
+          bdcCountry = d.countryName || '';
+          bdcPostcode = d.postcode || '';
+          const sub = d.principalSubdivision || '';
+          if (bdcTown && sub && bdcTown !== sub) {
+            snappedName = `${bdcTown}, ${sub}`;
+          } else if (bdcTown && bdcCountry && bdcTown !== bdcCountry) {
+            snappedName = `${bdcTown}, ${bdcCountry}`;
+          } else if (bdcTown) {
+            snappedName = bdcTown;
+          } else if (sub && bdcCountry) {
+            snappedName = `${sub}, ${bdcCountry}`;
+          }
+          snappedGeoName = bdcTown || sub || bdcCountry || '';
+        }
+      } catch (_) {}
+
+      // 5. Query Open-Meteo Geocoding to snap coordinates onto the official town/city center
+      const targetQueryName = bdcTown || (snappedGeoName && snappedGeoName.split(',')[0].trim());
+      if (targetQueryName) {
+        try {
+          const omRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(targetQueryName)}&count=5&language=en&format=json`, { signal });
+          if (omRes && omRes.ok) {
+            const om = await omRes.json();
+            if (om && om.results && om.results.length > 0) {
+              let bestOm = null;
+              let minOmDistKm = Infinity;
+              for (const r of om.results) {
+                const dKm = (typeof calculateHaversineKm === 'function')
+                  ? calculateHaversineKm(lat, lon, r.latitude, r.longitude)
+                  : Math.hypot(lat - r.latitude, lon - r.longitude) * 111;
+                if (dKm < minOmDistKm) {
+                  minOmDistKm = dKm;
+                  bestOm = r;
+                }
+              }
+              // If the town/city center is within 25 km, SNAP onto its official center!
+              if (bestOm && minOmDistKm <= 25) {
+                const fullPlace = bestOm.name + (bestOm.country ? `, ${bestOm.country}` : '');
+                return {
+                  name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(fullPlace) : fullPlace,
+                  geoName: bestOm.name,
+                  postcode: bdcPostcode,
+                  lat: bestOm.latitude,
+                  lon: bestOm.longitude,
+                  snapped: true,
+                  snappedDistanceKm: minOmDistKm
+                };
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      // 6. Fallback to Nominatim Reverse Geocoding
+      try {
+        const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`, {
+          headers: { 'User-Agent': 'WeatherAppDev/1.0' },
+          signal
+        });
+        if (nomRes && nomRes.ok) {
+          const nom = await nomRes.json();
+          const addr = nom.address || {};
+          const place = addr.city || addr.town || addr.village || addr.hamlet || addr.suburb || nom.name || '';
+          const sub = addr.state || addr.county || '';
+          const country = addr.country || '';
+          let name = place;
+          if (place && sub && place !== sub) name += `, ${sub}`;
+          else if (place && country) name += `, ${country}`;
+          else if (!place) name = sub || country || '';
+
+          let nomLat = lat;
+          let nomLon = lon;
+          let nomSnapped = false;
+          if (nom.lat && nom.lon) {
+            const nLat = parseFloat(nom.lat);
+            const nLon = parseFloat(nom.lon);
+            const dKm = Math.hypot(lat - nLat, lon - nLon) * 111;
+            if (dKm <= 20) {
+              nomLat = nLat;
+              nomLon = nLon;
+              nomSnapped = true;
+            }
+          }
+
+          if (name) {
+            return {
+              name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(name) : name,
+              geoName: place || sub || country,
+              postcode: addr.postcode || bdcPostcode || '',
+              lat: nomLat,
+              lon: nomLon,
+              snapped: nomSnapped,
+              snappedDistanceKm: 0
+            };
+          }
+        }
+      } catch (_) {}
+
+      // 7. If BDC found at least a name without OM snap
+      if (snappedName) {
+        return {
+          name: (typeof shortenPlaceName === 'function') ? shortenPlaceName(snappedName) : snappedName,
+          geoName: snappedGeoName,
+          postcode: bdcPostcode,
+          lat,
+          lon,
+          snapped: false
+        };
+      }
+
+      // 8. Custom ocean/remote point
+      return {
+        name: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+        geoName: `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+        postcode: '',
+        lat,
+        lon,
+        snapped: false
+      };
+    }
+
+    function findExistingLocationAtCenter(centerLat, centerLon) {
+      if (!historyLeafletMap || !mapMarkerMap) return null;
+      let size;
+      try { size = historyLeafletMap.getSize(); } catch (_) { size = { x: 400, y: 300 }; }
+      const centerPt = L.point(size.x / 2, size.y / 2);
+      let bestMatch = null;
+      let minPixelDist = Infinity;
+
+      for (const key in mapMarkerMap) {
+        const entry = mapMarkerMap[key];
+        if (!entry || typeof entry.lat !== 'number' || typeof entry.lon !== 'number') continue;
+
+        // Container screen pixel distance check (reticle is 32px diameter, threshold 38px)
+        try {
+          const pt = historyLeafletMap.latLngToContainerPoint([entry.lat, entry.lon]);
+          const pixelDist = centerPt.distanceTo(pt);
+          if (pixelDist < 38 && pixelDist < minPixelDist) {
+            minPixelDist = pixelDist;
+            bestMatch = entry;
+          }
+        } catch (_) {}
+
+        // Geographic distance check (< 0.6 km)
+        if (!bestMatch) {
+          const geoKm = (typeof calculateHaversineKm === 'function')
+            ? calculateHaversineKm(centerLat, centerLon, entry.lat, entry.lon)
+            : Math.hypot(centerLat - entry.lat, centerLon - entry.lon) * 111;
+          if (geoKm < 0.6) {
+            bestMatch = entry;
+          }
+        }
+      }
+
+      // Check CURRENT_LOCATION reference as well
+      if (!bestMatch && typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION && typeof CURRENT_LOCATION.lat === 'number') {
+        const curKm = (typeof calculateHaversineKm === 'function')
+          ? calculateHaversineKm(centerLat, centerLon, CURRENT_LOCATION.lat, CURRENT_LOCATION.lon)
+          : Math.hypot(centerLat - CURRENT_LOCATION.lat, centerLon - CURRENT_LOCATION.lon) * 111;
+        if (curKm < 0.6) {
+          const curKey = `${CURRENT_LOCATION.lat.toFixed(4)}_${CURRENT_LOCATION.lon.toFixed(4)}`;
+          return mapMarkerMap[curKey] || {
+            lat: CURRENT_LOCATION.lat,
+            lon: CURRENT_LOCATION.lon,
+            query: CURRENT_LOCATION,
+            isCurrent: true
+          };
+        }
+      }
+
+      return bestMatch;
+    }
+
+    async function openDropPinDialog() {
+      if (!historyLeafletMap) return;
+      const dialog = document.getElementById('mapDropPinDialog');
+      if (!dialog) return;
+
+      const center = historyLeafletMap.getCenter();
+      let lat = Math.round(center.lat * 10000) / 10000;
+      let lon = Math.round(center.lng * 10000) / 10000;
+      lon = ((lon + 180) % 360 + 360) % 360 - 180;
+      lat = Math.max(-85, Math.min(85, lat));
+
+      // Prevent duplicate creation if reticle is already directly over an existing location
+      const existingAtCenter = findExistingLocationAtCenter(lat, lon);
+      if (existingAtCenter) {
+        const placeName = (existingAtCenter.query && (existingAtCenter.query.name || existingAtCenter.query.displayName)) || 'This location';
+        if (typeof showMapToast === 'function') {
+          showMapToast(`📍 "${placeName}" is already on your map`);
+        }
+        const key = `${existingAtCenter.lat.toFixed(4)}_${existingAtCenter.lon.toFixed(4)}`;
+        mapActivePopupKey = key;
+        if (existingAtCenter.marker) {
+          existingAtCenter.marker.openPopup();
+        }
+        const allChips = document.querySelectorAll('#mapRecentChips button');
+        const chip = Array.from(allChips).find(b => b._chipKey === key);
+        if (chip) {
+          try {
+            const chipsEl = document.getElementById('mapRecentChips');
+            if (chipsEl) chipsEl.scrollTo({ left: Math.max(0, chip.offsetLeft - 6), behavior: 'smooth' });
+            chip.focus({ preventScroll: true });
+          } catch (_) {}
+        }
+        updateChipHighlightStates();
+        return;
+      }
+
+      // Close and hide any open popup (including Current Location box) so the confirmation dialog is the only box visible
+      try { historyLeafletMap.closePopup(); } catch (_) {}
+      mapActivePopupKey = null;
+      updateChipHighlightStates();
+
+      dropPinActiveCoords = { lat, lon };
+
+      const coordsTextEl = document.getElementById('mapDropPinCoordsText');
+      const statusEl = document.getElementById('mapDropPinStatus');
+      const inputEl = document.getElementById('mapDropPinNameInput');
+      const reticleRing = document.getElementById('mapCenterReticleRing');
+      const reticleDot = document.getElementById('mapCenterReticleDot');
+
+      const coordStr = (typeof formatCoordDesc === 'function') ? formatCoordDesc(lat, lon) : `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+      if (coordsTextEl) coordsTextEl.textContent = coordStr;
+      if (statusEl) {
+        statusEl.textContent = 'Finding name...';
+        statusEl.style.color = '#f59e0b';
+      }
+      if (inputEl) inputEl.value = 'Locating...';
+
+      if (reticleRing) {
+        reticleRing.classList.remove('border-sky-400/80');
+        reticleRing.classList.add('border-amber-400', 'shadow-[0_0_16px_rgba(245,158,11,0.7)]');
+      }
+      if (reticleDot) {
+        reticleDot.classList.remove('bg-sky-300');
+        reticleDot.classList.add('bg-amber-400', 'shadow-[0_0_10px_#f59e0b]');
+      }
+
+      dialog.classList.remove('hidden');
+      dialog.classList.add('flex');
+
+      if (dropPinLookupAbort) {
+        dropPinLookupAbort.abort();
+        dropPinLookupAbort = null;
+      }
+      dropPinLookupAbort = new AbortController();
+
+      try {
+        const suitable = await resolveSuitablePlaceName(lat, lon, dropPinLookupAbort.signal);
+        if (dialog && !dialog.classList.contains('hidden')) {
+          if (suitable.snapped) {
+            // Check if snapped town/landmark is already on the map
+            const snappedExisting = findExistingLocationAtCenter(suitable.lat, suitable.lon) ||
+              Object.values(mapMarkerMap).find(e => e.query && e.query.name && suitable.name && e.query.name.toLowerCase() === suitable.name.toLowerCase());
+            if (snappedExisting) {
+              closeDropPinDialog();
+              const placeName = suitable.name || 'This location';
+              if (typeof showMapToast === 'function') {
+                showMapToast(`📍 "${placeName}" is already on your map`);
+              }
+              const key = `${snappedExisting.lat.toFixed(4)}_${snappedExisting.lon.toFixed(4)}`;
+              mapActivePopupKey = key;
+              if (snappedExisting.marker) {
+                snappedExisting.marker.openPopup();
+              }
+              const allChips = document.querySelectorAll('#mapRecentChips button');
+              const chip = Array.from(allChips).find(b => b._chipKey === key);
+              if (chip) {
+                try {
+                  const chipsEl = document.getElementById('mapRecentChips');
+                  if (chipsEl) chipsEl.scrollTo({ left: Math.max(0, chip.offsetLeft - 6), behavior: 'smooth' });
+                  chip.focus({ preventScroll: true });
+                } catch (_) {}
+              }
+              updateChipHighlightStates();
+              return;
+            }
+
+            dropPinActiveCoords = {
+              lat: suitable.lat,
+              lon: suitable.lon,
+              geoName: suitable.geoName || suitable.name,
+              postcode: suitable.postcode || ''
+            };
+            if (historyLeafletMap) {
+              historyLeafletMap.panTo([suitable.lat, suitable.lon], { duration: 0.35 });
+            }
+            if (coordsTextEl) {
+              coordsTextEl.textContent = (typeof formatCoordDesc === 'function')
+                ? formatCoordDesc(suitable.lat, suitable.lon)
+                : `${suitable.lat.toFixed(2)}°, ${suitable.lon.toFixed(2)}°`;
+            }
+          }
+          if (inputEl) {
+            inputEl.value = suitable.name || `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+          }
+          const confirmBtn = document.getElementById('mapDropPinConfirmBtn');
+          if (confirmBtn) {
+            try { confirmBtn.focus({ preventScroll: true }); } catch (_) { confirmBtn.focus(); }
+          }
+          if (statusEl) {
+            if (suitable.snapped) {
+              const shortCity = suitable.geoName || suitable.name.split(',')[0].trim();
+              statusEl.textContent = `✓ Centered on ${shortCity}`;
+              statusEl.style.color = '#34d399';
+            } else {
+              statusEl.textContent = suitable.postcode ? `Postcode: ${suitable.postcode}` : 'Ready';
+              statusEl.style.color = '#38bdf8';
+            }
+          }
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError' && inputEl) {
+          inputEl.value = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+          if (statusEl) {
+            statusEl.textContent = 'Custom point';
+            statusEl.style.color = '#94a3b8';
+          }
+        }
+      }
+    }
+
+    function closeDropPinDialog() {
+      const dialog = document.getElementById('mapDropPinDialog');
+      if (dialog) {
+        dialog.classList.add('hidden');
+        dialog.classList.remove('flex');
+      }
+      const reticleRing = document.getElementById('mapCenterReticleRing');
+      const reticleDot = document.getElementById('mapCenterReticleDot');
+      if (reticleRing) {
+        reticleRing.classList.add('border-sky-400/80');
+        reticleRing.classList.remove('border-amber-400', 'shadow-[0_0_16px_rgba(245,158,11,0.7)]');
+      }
+      if (reticleDot) {
+        reticleDot.classList.add('bg-sky-300');
+        reticleDot.classList.remove('bg-amber-400', 'shadow-[0_0_10px_#f59e0b]');
+      }
+      if (dropPinLookupAbort) {
+        dropPinLookupAbort.abort();
+        dropPinLookupAbort = null;
+      }
+    }
+
+    async function confirmCreateDropPinLocation() {
+      if (!dropPinActiveCoords) return;
+      const inputEl = document.getElementById('mapDropPinNameInput');
+      let chosenName = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : '';
+      const { lat, lon } = dropPinActiveCoords;
+
+      if (!chosenName) {
+        chosenName = `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+      }
+
+      closeDropPinDialog();
+
+      const geoName = (dropPinActiveCoords.geoName || chosenName);
+      const postcode = (dropPinActiveCoords.postcode || '');
+
+      const depName = (typeof getDepersonalizedLocationName === 'function')
+        ? (getDepersonalizedLocationName({ name: chosenName, geoName, lat, lon, postcode }) || chosenName)
+        : chosenName;
+      const norm = (typeof normalizeKnownLandmarkCoords === 'function')
+        ? normalizeKnownLandmarkCoords(depName, lat, lon, postcode)
+        : { lat, lon, postcode };
+      const finalLat = (typeof norm.lat === 'number') ? norm.lat : lat;
+      const finalLon = (typeof norm.lon === 'number') ? norm.lon : lon;
+
+      // 1. Update the Current Location of the dashboard to the newly created location!
+      await applySelectedLocation(chosenName, finalLat, finalLon, postcode || '', true, {
+        isCustomTitle: false,
+        geoName: geoName || depName
+      });
+
+      const key = `${finalLat.toFixed(4)}_${finalLon.toFixed(4)}`;
+      mapActivePopupKey = key;
+      lastScrolledChipKey = key;
+
+      // 2. Refresh map markers & bottom carousel
+      const curFilter = getMapViewFilter();
+      const currentQueries = getQueriesForMapFilter(curFilter);
+      renderHistoryMarkersAndChips(currentQueries, false, curFilter);
+
+      // 3. Center map and immediately pop up the location info box on the new location!
+      if (historyLeafletMap) {
+        historyLeafletMap.panTo([finalLat, finalLon], { duration: 0.35 });
+      }
+
+      setTimeout(() => {
+        let entry = mapMarkerMap[key];
+        if (!entry) {
+          entry = Object.values(mapMarkerMap).find(e => {
+            return e && typeof e.lat === 'number' &&
+              Math.hypot(e.lat - finalLat, e.lon - finalLon) * 111 < 1.0;
+          }) || Object.values(mapMarkerMap).find(e => e.query && e.query.isCurrent);
+        }
+        if (entry && entry.marker) {
+          mapActivePopupKey = (entry.query && typeof entry.query.lat === 'number')
+            ? `${entry.query.lat.toFixed(4)}_${entry.query.lon.toFixed(4)}`
+            : key;
+          entry.marker.openPopup();
+          stripMapCanvasFocusables();
+          scheduleAdaptivePopupPlacement();
+        }
+      }, 180);
+
+      // 4. Highlight & scroll carousel to the new Current Location (first chip)
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (chipsEl) {
+        chipsEl.scrollTo({ left: 0, behavior: 'smooth' });
+        const firstChip = chipsEl.querySelector('button');
+        if (firstChip) {
+          try { firstChip.focus({ preventScroll: true }); } catch (_) { firstChip.focus(); }
+        }
+      }
+      updateChipHighlightStates();
+
+      showMapToast(`📍 Current location updated to: ${chosenName}`);
+    }
+
+    function initMapSwipeGuidanceBar() {
+      const bar = document.getElementById('mapSwipeGuidanceBar');
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (!bar || !chipsEl || bar._swipeAttached) return;
+      bar._swipeAttached = true;
+
+      let isDragging = false;
+      let startX = 0;
+      let startScroll = 0;
+      let totalDx = 0;
+
+      const onPointerDown = (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startScroll = chipsEl.scrollLeft;
+        totalDx = 0;
+        try { bar.setPointerCapture(e.pointerId); } catch (_) {}
+        bar.classList.add('bg-sky-500/25', 'border-sky-400/60', 'text-white');
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onPointerMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        totalDx = dx;
+        chipsEl.scrollLeft = startScroll - dx * 1.5;
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onPointerUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { bar.releasePointerCapture(e.pointerId); } catch (_) {}
+        bar.classList.remove('bg-sky-500/25', 'border-sky-400/60', 'text-white');
+
+        if (Math.abs(totalDx) < 6) {
+          const rect = bar.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          if (clickX < rect.width / 2) {
+            stepMapCarousel(-1);
+          } else {
+            stepMapCarousel(1);
+          }
+        }
+      };
+
+      bar.addEventListener('pointerdown', onPointerDown);
+      bar.addEventListener('pointermove', onPointerMove);
+      bar.addEventListener('pointerup', onPointerUp);
+      bar.addEventListener('pointercancel', onPointerUp);
+      bar.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        chipsEl.scrollLeft += (e.deltaY || e.deltaX) * 1.2;
+        resetHistoryMapAutoCloseTimer();
+      }, { passive: false });
+    }
+
+    function initMapChipsTopSwipeZone() {
+      const topZone = document.getElementById('mapChipsTopSwipeZone');
+      const chipsEl = document.getElementById('mapRecentChips');
+      if (!topZone || !chipsEl || topZone._swipeAttached) return;
+      topZone._swipeAttached = true;
+
+      let isDragging = false;
+      let startX = 0;
+      let startScroll = 0;
+
+      const onDown = (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startScroll = chipsEl.scrollLeft;
+        try { topZone.setPointerCapture(e.pointerId); } catch (_) {}
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        chipsEl.scrollLeft = startScroll - dx * 1.5;
+        resetHistoryMapAutoCloseTimer();
+      };
+
+      const onUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        try { topZone.releasePointerCapture(e.pointerId); } catch (_) {}
+      };
+
+      topZone.addEventListener('pointerdown', onDown);
+      topZone.addEventListener('pointermove', onMove);
+      topZone.addEventListener('pointerup', onUp);
+      topZone.addEventListener('pointercancel', onUp);
     }
 
     function getMapCurrentReference() {
@@ -5400,8 +6300,8 @@
       if (!container) return;
       container.setAttribute('tabindex', '-1');
       setupHistoryMapZoomDpad();
-      // Keep map canvas tiles, links, and attribution at tabindex="-1" while keeping zoom buttons focusable
-      const nonZoomFocusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), button:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out), [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out)');
+      // Keep map canvas tiles, links, and attribution at tabindex="-1" while keeping zoom buttons & drop pin focusable
+      const nonZoomFocusables = container.querySelectorAll('a:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-drop-pin), button:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-drop-pin), [tabindex]:not(.leaflet-control-zoom-in):not(.leaflet-control-zoom-out):not(.leaflet-control-drop-pin)');
       nonZoomFocusables.forEach(el => {
         el.setAttribute('tabindex', '-1');
       });
@@ -5659,6 +6559,8 @@
     function autoOpenCenterMarkerPopup(force = false) {
       if (!historyLeafletMap) return;
       if (!force && Date.now() < mapProgrammaticFlyUntil) return;
+      const dropDialog = document.getElementById('mapDropPinDialog');
+      if (dropDialog && !dropDialog.classList.contains('hidden')) return;
 
       const size = historyLeafletMap.getSize();
       if (!size || !size.x || !size.y) return;
@@ -5864,6 +6766,9 @@
       }
 
       // Seamless wrapping across 180° antimeridian so places like Fiji / Taveuni Island never hit a boundary wall
+      if (save) {
+        showMapLoadingSpinner();
+      }
       historyBaseTileLayer = L.tileLayer(conf.base, {
         attribution: '',
         maxNativeZoom: conf.maxNativeZoom || conf.maxZoom || 16,
@@ -5871,6 +6776,10 @@
         detectRetina: false,
         noWrap: false
       }).addTo(historyLeafletMap);
+
+      historyBaseTileLayer.once('load', () => {
+        setTimeout(hideMapLoadingSpinner, 150);
+      });
 
       if (conf.ref) {
         historyRefTileLayer = L.tileLayer(conf.ref, {
@@ -6398,11 +7307,14 @@
               const botClose = document.getElementById('closeMapBtnBottom');
               if (botClose) botClose.focus();
             } else if (e.key === 'ArrowUp') {
-              // Pressing up from location goes up to the minus (-) zoom button!
+              // Pressing up from location goes up to the drop pin button (or minus (-) zoom button)!
               e.preventDefault();
               e.stopPropagation();
+              const pinBtn = document.querySelector('#historyLeafletMap .leaflet-control-drop-pin');
               const zOut = document.querySelector('#historyLeafletMap .leaflet-control-zoom-out');
-              if (zOut && zOut.offsetParent !== null) {
+              if (pinBtn && pinBtn.offsetParent !== null) {
+                pinBtn.focus();
+              } else if (zOut && zOut.offsetParent !== null) {
                 zOut.focus();
               } else {
                 const topClose = document.getElementById('closeMapBtnTop');
@@ -6712,6 +7624,77 @@
           popupWrapper.appendChild(currentBadge);
         }
 
+        // Easy Delete Location button (ONLY rendered for Phil / Admin)
+        if (typeof isLocationAdmin === 'function' && isLocationAdmin()) {
+          const isDefaultPublicPlace = (typeof DEFAULT_PUBLIC_MAP_LOCATIONS !== 'undefined' && Array.isArray(DEFAULT_PUBLIC_MAP_LOCATIONS))
+            ? DEFAULT_PUBLIC_MAP_LOCATIONS.some(def =>
+                (Math.abs(def.lat - q.lat) < 0.002 && Math.abs(def.lon - q.lon) < 0.002) ||
+                (def.name && q.name && def.name.toLowerCase() === q.name.toLowerCase())
+              )
+            : false;
+
+          if (!isDefaultPublicPlace) {
+            const deleteLocBtn = document.createElement('button');
+            deleteLocBtn.type = 'button';
+            deleteLocBtn.tabIndex = -1;
+            deleteLocBtn.style.cssText = 'margin-top: 6px; width: 100%; padding: 5px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; outline: none; box-sizing: border-box; background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(251, 113, 133, 0.3); color: #fda4af; cursor: pointer;';
+            deleteLocBtn.innerHTML = '<span>🗑️</span> <span>Delete Location</span>';
+            deleteLocBtn.title = 'Admin: Delete this location from map and database';
+
+            let deleteConfirmPending = false;
+            let deleteConfirmTimer = null;
+
+            deleteLocBtn.onclick = async (e) => {
+              if (e) {
+                e.stopPropagation();
+                if (e.preventDefault) e.preventDefault();
+              }
+              if (!deleteConfirmPending) {
+                deleteConfirmPending = true;
+                deleteLocBtn.innerHTML = '<span>⚠️</span> <span>Tap again to confirm delete</span>';
+                deleteLocBtn.style.background = 'rgba(239, 68, 68, 0.38)';
+                deleteLocBtn.style.border = '1px solid rgba(239, 68, 68, 0.8)';
+                deleteLocBtn.style.color = '#ffffff';
+                deleteConfirmTimer = setTimeout(() => {
+                  deleteConfirmPending = false;
+                  deleteLocBtn.innerHTML = '<span>🗑️</span> <span>Delete Location</span>';
+                  deleteLocBtn.style.background = 'rgba(244, 63, 94, 0.12)';
+                  deleteLocBtn.style.border = '1px solid rgba(251, 113, 133, 0.3)';
+                  deleteLocBtn.style.color = '#fda4af';
+                }, 4000);
+                return;
+              }
+
+              if (deleteConfirmTimer) clearTimeout(deleteConfirmTimer);
+              deleteLocBtn.innerHTML = '<span>⏳</span> <span>Deleting...</span>';
+              deleteLocBtn.disabled = true;
+
+              // If deleting the active CURRENT_LOCATION, revert gracefully to default
+              try {
+                if (typeof CURRENT_LOCATION !== 'undefined' && CURRENT_LOCATION) {
+                  const curName = (CURRENT_LOCATION.name || '').toLowerCase();
+                  const qName = (q.name || '').toLowerCase();
+                  const distTol = Math.hypot(CURRENT_LOCATION.lat - q.lat, CURRENT_LOCATION.lon - q.lon) * 111;
+                  if (curName === qName || distTol < 0.25) {
+                    localStorage.removeItem('ambient_weather_loc');
+                    sessionStorage.removeItem('ambient_weather_loc');
+                    if (typeof DEFAULT_PUBLIC_MAP_LOCATIONS !== 'undefined' && DEFAULT_PUBLIC_MAP_LOCATIONS.length > 0) {
+                      const fallback = DEFAULT_PUBLIC_MAP_LOCATIONS[0];
+                      if (typeof applySelectedLocation === 'function') {
+                        applySelectedLocation(fallback.name, fallback.lat, fallback.lon, fallback.postcode || 'GEO', false);
+                      }
+                    }
+                  }
+                }
+              } catch (_) {}
+
+              await deleteLocationFromHistoryAndDatabase(q);
+            };
+
+            popupWrapper.appendChild(deleteLocBtn);
+          }
+        }
+
         const marker = L.marker([q.lat, q.lon], {
           icon: customIcon,
           riseOnHover: true,
@@ -6848,14 +7831,56 @@
           mapCanvasEl.setAttribute('tabindex', '-1');
           mapCanvasEl.addEventListener('keydown', handleGlobalBack, true);
           mapCanvasEl.addEventListener('keyup', handleGlobalBack, true);
+
+          // Fat-finger touch swipe forwarder: gestures starting in the bottom 32px of the map area scroll the location carousel
+          let ffStartX = 0;
+          let ffStartY = 0;
+          let ffStartScroll = 0;
+          let ffActive = false;
+
+          mapCanvasEl.addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            const rect = mapCanvasEl.getBoundingClientRect();
+            if (touch.clientY >= rect.bottom - 32) {
+              ffActive = true;
+              ffStartX = touch.clientX;
+              ffStartY = touch.clientY;
+              const chipsEl = document.getElementById('mapRecentChips');
+              ffStartScroll = chipsEl ? chipsEl.scrollLeft : 0;
+            } else {
+              ffActive = false;
+            }
+          }, { passive: true });
+
+          mapCanvasEl.addEventListener('touchmove', (e) => {
+            if (!ffActive || e.touches.length !== 1) return;
+            const touch = e.touches[0];
+            const dx = touch.clientX - ffStartX;
+            const dy = touch.clientY - ffStartY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+              const chipsEl = document.getElementById('mapRecentChips');
+              if (chipsEl) {
+                chipsEl.scrollLeft = ffStartScroll - dx * 1.5;
+                resetHistoryMapAutoCloseTimer();
+              }
+            }
+          }, { passive: true });
+
+          mapCanvasEl.addEventListener('touchend', () => {
+            ffActive = false;
+          }, { passive: true });
         }
 
-        // Reset idle auto-close timer on direct map interactions (and dismiss info popover on tap/drag)
+        // Reset idle auto-close timer on direct map interactions (and dismiss info popover / drop-pin dialog on tap/drag/zoom)
         historyLeafletMap.on('dragstart zoomstart movestart', () => {
           resetHistoryMapAutoCloseTimer();
         });
         historyLeafletMap.on('click dragstart', () => {
           if (typeof toggleMapViewInfo === 'function') toggleMapViewInfo(false);
+        });
+        historyLeafletMap.on('dragstart zoomstart click', () => {
+          if (typeof closeDropPinDialog === 'function') closeDropPinDialog();
         });
 
         // Tablet / Touch Gesture UX: As you pan or zoom the map, automatically pop up the info card
@@ -6944,7 +7969,7 @@
                 const nLower = (depName || sq.name || '').trim().toLowerCase();
                 const latNum = parseFloat(sq.lat);
                 const lonNum = parseFloat(sq.lon);
-                const isPurged = nLower.includes('workshop') || nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000);
+                const isPurged = nLower.includes('workshop') || nLower.includes('probe') || nLower.includes('sturgeon') || nLower.includes('iran') || nLower === 'in' || (latNum >= 24 && latNum <= 40 && lonNum >= 44 && lonNum <= 64) || (nLower.includes('eiffel') && ts <= 1794999600000) || (nLower.includes('minchinhampton') && ts <= 1795202600000) || (nLower.includes('gibraltar') && ts <= 1795471000000) || (latNum >= 35.8 && latNum <= 36.4 && lonNum >= -5.6 && lonNum <= -5.1 && ts <= 1795471000000);
                 if (depName && !isPurged && !depName.toLowerCase().includes('workshop') && !nLower.includes('los angeles') && nLower !== 'united kingdom' && nLower !== 'uk' && !isPersonalLocationName(depName)) {
                   const norm = normalizeKnownLandmarkCoords(depName, latNum, lonNum, sq.postcode);
                   sheetQueries.push({
@@ -7083,35 +8108,37 @@
           }
         } catch (_) {}
 
-        // 3. Delete from Supabase public database table
-        const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
-        const tol = 0.0025;
-        const deletePromises = [];
+        // 3. Delete from Supabase public database table (Admin only)
+        if (typeof isLocationAdmin === 'function' && isLocationAdmin()) {
+          const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+          const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+          const tol = 0.0025;
+          const deletePromises = [];
 
-        if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
-          const coordUrl = `${SUPABASE_URL}/rest/v1/locations?lat=gte.${loc.lat - tol}&lat=lte.${loc.lat + tol}&lon=gte.${loc.lon - tol}&lon=lte.${loc.lon + tol}`;
-          deletePromises.push(fetch(coordUrl, {
-            method: 'DELETE',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY
-            }
-          }).catch(() => {}));
+          if (typeof loc.lat === 'number' && typeof loc.lon === 'number') {
+            const coordUrl = `${SUPABASE_URL}/rest/v1/locations?lat=gte.${loc.lat - tol}&lat=lte.${loc.lat + tol}&lon=gte.${loc.lon - tol}&lon=lte.${loc.lon + tol}`;
+            deletePromises.push(fetch(coordUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+
+          if (loc.name && typeof loc.name === 'string' && loc.name.trim().length > 1) {
+            const nameUrl = `${SUPABASE_URL}/rest/v1/locations?name=eq.${encodeURIComponent(loc.name.trim())}`;
+            deletePromises.push(fetch(nameUrl, {
+              method: 'DELETE',
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY
+              }
+            }).catch(() => {}));
+          }
+
+          await Promise.all(deletePromises);
         }
-
-        if (loc.name && typeof loc.name === 'string' && loc.name.trim().length > 1) {
-          const nameUrl = `${SUPABASE_URL}/rest/v1/locations?name=eq.${encodeURIComponent(loc.name.trim())}`;
-          deletePromises.push(fetch(nameUrl, {
-            method: 'DELETE',
-            headers: {
-              'apikey': SUPABASE_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_KEY
-            }
-          }).catch(() => {}));
-        }
-
-        await Promise.all(deletePromises);
 
         // 4. Close the popup
         if (historyLeafletMap) {
@@ -7461,7 +8488,7 @@
       // Priority 1: Always keep the user's saved location across reloads unless an explicit shared URL param was just opened
       const saved = loadSavedLocation();
       if (saved && saved.lat && saved.lon && !pc && !loc && !(lat && lon)) {
-        if (saved.name && /eiffel/i.test(saved.name)) {
+        if (saved.name && (/eiffel/i.test(saved.name) || (/gibraltar/i.test(saved.name) && (saved.timestamp ? new Date(saved.timestamp).getTime() <= 1795471000000 : true)))) {
           CURRENT_LOCATION = {
             name: 'Dunkirk Mills',
             postcode: 'GL5 5HH',
@@ -7543,6 +8570,28 @@
     // Embedded directly in GitHub codebase for zero-latency instant recognition
     // =========================================================================
     const POPULAR_LANDMARKS_DATABASE = [
+      {
+        id: 'rock_of_gibraltar',
+        name: 'Rock of Gibraltar',
+        city: 'Gibraltar',
+        country: 'Gibraltar',
+        postcode: 'GX11 1AA',
+        lat: 36.1408,
+        lon: -5.3536,
+        radiusKm: 25,
+        aliases: ['gibraltar', 'rock of gibraltar', 'south mole', 'strait of gibraltar', 'gibraltar rock'],
+        badgeStyle: 'bg-amber-500/20 border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.25)]',
+        svg: `<svg class="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" viewBox="0 0 48 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="25" width="48" height="11" fill="#0284c7" opacity="0.85"/>
+          <path d="M0 27 C12 26 24 28 48 27" stroke="#38bdf8" stroke-width="0.7" opacity="0.8"/>
+          <path d="M4 26 L11 25 L17 22 L23 16 L29 10 L34 7 L37 9 L39 15 L40 25 L44 26 Z" fill="#64748b" stroke="#94a3b8" stroke-width="0.6"/>
+          <path d="M29 10 L34 7 L37 9 L39 15 L40 25 L32 25 L23 16 Z" fill="#94a3b8" opacity="0.8"/>
+          <path d="M34 7 L37 9 L39 15 L40 25 L37 25 Z" fill="#cbd5e1" opacity="0.95"/>
+          <rect x="32" y="14" width="3" height="4" fill="#f8fafc" stroke="#475569" stroke-width="0.4"/>
+          <rect x="7" y="22" width="2.5" height="4" fill="#ef4444"/>
+          <circle cx="8.2" cy="21.5" r="1.1" fill="#fef08a"/>
+        </svg>`
+      },
       {
         id: 'white_house',
         name: 'The White House',
@@ -9148,6 +10197,7 @@
     }
 
     function handleLocationInputKeydown(e) {
+      stopSearchBoxPulse();
       if (e.key === 'Enter' || e.key === 'Select' || e.keyCode === 13 || e.keyCode === 23) {
         e.preventDefault();
         e.stopPropagation();
@@ -9944,6 +10994,7 @@ function joinSpacedLetters(text) {
 
       // Flash the location search button rectangle amber for 220ms before opening the dialog
       if (locBtn) {
+        locBtn.classList.remove('header-search-pulse');
         isOpeningLocationModal = true;
         document.body.classList.remove('focus-dormant');
         locBtn.focus({ preventScroll: true });
@@ -10070,6 +11121,11 @@ function joinSpacedLetters(text) {
       }
     }
 
+    function stopSearchBoxPulse() {
+      const input = document.getElementById('locationInput');
+      if (input) input.classList.remove('search-box-attention-pulse');
+    }
+
     function proceedOpenLocationModal() {
       if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       const modal = document.getElementById('locationModal');
@@ -10115,6 +11171,14 @@ function joinSpacedLetters(text) {
         modal.classList.add('flex');
         try { history.pushState({ modal: 'locationModal' }, ''); } catch (_) {}
       }
+
+      // Attention pulse on search box when opened
+      if (input) {
+        input.classList.remove('search-box-attention-pulse');
+        void input.offsetWidth;
+        input.classList.add('search-box-attention-pulse');
+      }
+
       renderLocationModalPicks();
       // Reset scroll & position AFTER the modal is visible (browsers ignore scrollTop=0 while display:none)
       resetLocationModalPosition();
@@ -10142,6 +11206,7 @@ function joinSpacedLetters(text) {
     }
 
     function closeLocationModal(pop = true) {
+      stopSearchBoxPulse();
       if (typeof stopVoiceSearch === 'function') stopVoiceSearch();
       window._locModalReopenGuardUntil = Date.now() + 850;
       modalTimerLocks['locationModal'] = false;
@@ -10575,6 +11640,29 @@ function joinSpacedLetters(text) {
       q = normalizeSpokenUkPostcode(q);
       q = joinSpacedLetters(q).trim();
       input.value = q;
+
+      // Check for secret admin password ("I am admin 123", "iamadmin123", "admin 123")
+      const normAdmin = q.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (normAdmin === 'iamadmin123' || normAdmin === 'admin123' || normAdmin === 'iamadmin') {
+        try { localStorage.setItem('ambient_admin_unlocked', 'true'); } catch (_) {}
+        if (status) {
+          status.style.color = '#34d399';
+          status.textContent = '👑 Admin privileges activated: Location deletion unlocked on this device!';
+        }
+        input.value = '';
+        setTimeout(() => closeLocationModal(false), 1200);
+        return;
+      }
+      if (normAdmin === 'adminoff' || normAdmin === 'lockadmin' || normAdmin === 'logoutadmin') {
+        try { localStorage.removeItem('ambient_admin_unlocked'); } catch (_) {}
+        if (status) {
+          status.style.color = '#f59e0b';
+          status.textContent = '🔒 Admin privileges deactivated.';
+        }
+        input.value = '';
+        setTimeout(() => closeLocationModal(false), 1200);
+        return;
+      }
 
       // Check for secret map unlock password
       if (q.toLowerCase() === 'showmethemap') {
@@ -12824,7 +13912,7 @@ function joinSpacedLetters(text) {
       if (landmarkIconCont && landmarkBadge) {
         if (activeLandmark && activeLandmark.id !== 'dunkirk_mills' && activeLandmark.id !== 'amberley_church' && activeLandmark.id !== 'stroud_hotel' && activeLandmark.id !== 'egypt_mill' && activeLandmark.id !== 'the_olive_tree' && activeLandmark.id !== 'duntisbourne_abbots') {
           landmarkBadge.className = `inline-flex items-center justify-center w-7 h-7 rounded-lg ${activeLandmark.badgeStyle || 'bg-sky-500/15 border border-sky-400/40 shadow-[0_0_10px_rgba(56,189,248,0.25)]'} p-0.5 transform hover:scale-110 transition cursor-pointer`;
-          landmarkBadge.innerHTML = activeLandmark.svg;
+          landmarkBadge.innerHTML = activeLandmark.svg || '<span class="text-xs">⛰️</span>';
           landmarkIconCont.title = `${activeLandmark.name} • ${activeLandmark.city ? activeLandmark.city + ', ' : ''}${activeLandmark.country}`;
           landmarkIconCont.classList.remove('hidden');
           landmarkIconCont.classList.add('inline-flex');
@@ -12869,14 +13957,27 @@ function joinSpacedLetters(text) {
           if (!isNaN(val) && val >= 0.75 && val <= 1.25) return val;
         }
       }
+      // On Chromecast hardware receiver (CrKey): default to 1.15 (115%) so living room TV text is bold and nicely spaced
+      const isCastHardwareReceiver = navigator.userAgent.includes('CrKey') || window.location.search.includes('cast_receiver=true');
+      if (isCastHardwareReceiver) {
+        return 1.15;
+      }
+      // On tablet in landscape: default to 1.08 (108%)
+      const isTabletLandscape = ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
+        window.matchMedia("(orientation: landscape) and (min-height: 520px) and (max-width: 1200px)").matches;
+      if (isTabletLandscape) {
+        return 1.08;
+      }
       return 1.0; // Default 100%
     }
 
-    function adjustScale(delta) {
+    function adjustScale(delta, broadcast = true) {
       currentScale = Math.max(0.75, Math.min(1.25, Math.round((currentScale + delta) * 100) / 100));
+      document.documentElement.style.setProperty('--text-scale', currentScale);
       const root = document.getElementById('dashboardRoot');
-      if (root && window.innerWidth > 600 && window.matchMedia("(orientation: landscape) and (min-height: 520px)").matches) {
-        root.style.transform = `scale(${currentScale})`;
+      if (root) {
+        // Keep layout naturally fitted to 100vw x 100vh without distortion or black letterbox borders
+        root.style.transform = '';
       }
       const label = document.getElementById('scaleLabel');
       if (label) {
@@ -12891,6 +13992,9 @@ function joinSpacedLetters(text) {
       } catch (_) {}
       if (typeof checkFullscreenState === 'function') {
         checkFullscreenState();
+      }
+      if (broadcast && typeof broadcastScaleToCast === 'function') {
+        broadcastScaleToCast(currentScale);
       }
     }
 
@@ -12907,6 +14011,7 @@ function joinSpacedLetters(text) {
     if (window.innerWidth > 600) {
       lastKnownFullscreenState = isCurrentFullscreen();
       currentScale = loadScaleForActiveMode();
+      document.documentElement.style.setProperty('--text-scale', currentScale);
       setTimeout(() => adjustScale(0), 10);
     }
 
@@ -12929,13 +14034,13 @@ function joinSpacedLetters(text) {
       67: { desc: 'Heavy Freezing Rain', iconDay: '🌨️', iconNight: '🌨️' },
       71: { desc: 'Slight Snow', iconDay: '🌨️', iconNight: '🌨️' },
       73: { desc: 'Moderate Snow', iconDay: '🌨️', iconNight: '🌨️' },
-      75: { desc: 'Heavy Snow', iconDay: '❄️', iconNight: '❄️' },
-      77: { desc: 'Snow Grains', iconDay: '❄️', iconNight: '❄️' },
+      75: { desc: 'Heavy Snow', iconDay: '🌨️', iconNight: '🌨️' },
+      77: { desc: 'Snow Grains', iconDay: '🌨️', iconNight: '🌨️' },
       80: { desc: 'Light Showers', iconDay: '🌦️', iconNight: '🌧️' },
       81: { desc: 'Passing Showers', iconDay: '🌧️', iconNight: '🌧️' },
       82: { desc: 'Heavy Showers', iconDay: '⛈️', iconNight: '⛈️' },
       85: { desc: 'Snow Showers', iconDay: '🌨️', iconNight: '🌨️' },
-      86: { desc: 'Heavy Snow Showers', iconDay: '❄️', iconNight: '❄️' },
+      86: { desc: 'Heavy Snow Showers', iconDay: '🌨️', iconNight: '🌨️' },
       95: { desc: 'Thunderstorm', iconDay: '⛈️', iconNight: '⛈️' },
       96: { desc: 'Thunder & Hail', iconDay: '⛈️', iconNight: '⛈️' },
       99: { desc: 'Severe Hailstorm', iconDay: '⛈️', iconNight: '⛈️' }
@@ -13110,7 +14215,12 @@ function joinSpacedLetters(text) {
       const now = getLocationWallClockNow(hourly && hourly._currentLocalTime);
       const currentHour = now.getHours();
 
-      const isTomorrow = currentHour >= 9;
+      // Time partitions:
+      // 1. Midnight to 08:59 AM -> evaluates "This Morning (05-08 AM)"
+      // 2. 09:00 AM to 15:59 PM (Daytime) -> morning frost has thawed; evaluates today's daytime driving & road conditions
+      // 3. 16:00 PM (4 PM) onwards -> advance forecast evaluating "Tomorrow (05-08 AM)"
+      const isTomorrow = currentHour >= 16;
+      const isDaytime = currentHour >= 9 && currentHour < 16;
       const targetDate = new Date(now);
       if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
       const targetDay = targetDate.getDate();
@@ -13145,8 +14255,11 @@ function joinSpacedLetters(text) {
       if (minAir === 999) minAir = (daily && daily.temperature_2m_min && daily.temperature_2m_min[0] !== undefined) ? daily.temperature_2m_min[0] : 8.0;
       if (minSurface === 999) minSurface = minAir;
 
+      // Real-world glass cooling:
+      // In clear sky, unobstructed open ground can radiate ~2.0°C below ambient air.
+      // In sheltered areas/valleys, thermal radiation from surrounding trees/slopes limits offset to ~1.4°C - 1.8°C.
       const isClearSky = minCloud < 45;
-      const radiativeOffset = isClearSky ? 2.5 : 0.8;
+      const radiativeOffset = isClearSky ? 1.6 : 0.5;
       const estimatedGlassTemp = Math.min(minSurface, minAir - radiativeOffset);
 
       const todayMax = (daily && daily.temperature_2m_max && daily.temperature_2m_max[0] !== undefined) ? Math.round(daily.temperature_2m_max[0]) : Math.round((cur && cur.temperature_2m) || 15);
@@ -13154,45 +14267,23 @@ function joinSpacedLetters(text) {
       const rainProbToday = (daily && daily.precipitation_probability_max && daily.precipitation_probability_max[0] !== undefined) ? Number(daily.precipitation_probability_max[0]) : 0;
       const windSpeed = Math.round((cur && cur.wind_speed_10m) || 0);
       const humidity = Math.round((cur && cur.relative_humidity_2m) || 70);
+      const curTemp = (cur && cur.temperature_2m !== undefined) ? cur.temperature_2m : minAir;
 
-      let sectionTitle = "Cold & Frost Watch";
-      let pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
-      let subLabel = "Windscreen Condition";
-      let timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : "This Morning (05-08 AM)";
-      let status = "Frost-Free";
-      let badgeText = "Glass Clear";
+      let sectionTitle = isTomorrow ? "Cold & Frost Watch" : (isDaytime ? "Outdoor & Driving" : "Cold & Frost Watch");
+      let pillClass = isDaytime ? "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1" : "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
+      let subLabel = isDaytime ? "Road & Driving Conditions" : "Windscreen Condition";
+      let timeLabel = isTomorrow ? "Tomorrow (05-08 AM)" : (isDaytime ? `Daytime • High ${todayMax}°C` : "This Morning (05-08 AM)");
+      let status = isTomorrow ? "Frost-Free Tomorrow" : "Frost-Free";
+      let badgeText = isTomorrow ? "Tomorrow: Clear" : "Glass Clear";
       let badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
       let cardBgClass = "bg-slate-900/60 border border-white/10";
       let icon = "🚗";
-      let detail = `Air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`;
+      let detail = isTomorrow
+        ? `Tomorrow morning air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`
+        : `Air ~${minAir.toFixed(1)}°C, surface ~${minSurface.toFixed(1)}°C at ${criticalHour} AM. No scraping needed.`;
 
-      // MODE 1: Cold / Frost Watch (when morning air <= 5.5°C or glass temp <= 4.0°C)
-      if (minAir <= 5.5 || estimatedGlassTemp <= 4.0) {
-        if (estimatedGlassTemp <= -0.5 || minAir <= 0.5 || minSurface <= 0.0) {
-          status = "Heavy Frost Alert";
-          icon = "❄️";
-          badgeText = "Warm Car 10m Early!";
-          badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
-          cardBgClass = "bg-rose-950/40 border border-rose-500/50 frost-alert-rose-pulse";
-          detail = `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
-        } else if (estimatedGlassTemp <= 1.5 || minAir <= 2.8) {
-          status = "Frost Likely";
-          icon = "🧊";
-          badgeText = "Warm Car 10m Early";
-          badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
-          cardBgClass = "bg-sky-950/40 border border-sky-400/80 frost-alert-pulse";
-          detail = `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
-        } else if (estimatedGlassTemp <= 3.0 || minAir <= 4.0) {
-          status = "Slight Frost Risk";
-          icon = "⚠️";
-          badgeText = "Patchy Ice";
-          badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
-          cardBgClass = "bg-amber-950/30 border border-amber-500/20";
-          detail = `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Hollows may catch patchy frost.`;
-        }
-      }
-      // MODE 2: Warm / Hot / High UV Watch (Summer or warm climates like Australia: peak >= 21°C or UV >= 6)
-      else if (todayMax >= 21 || maxUv >= 6.0) {
+      // 1. Summer / Warm / High UV Watch (peak >= 21°C or UV >= 6) takes precedence whenever warm
+      if (todayMax >= 21 || maxUv >= 6.0) {
         sectionTitle = "Sun & Heat Watch";
         pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
         subLabel = "Cabin & Sun Exposure";
@@ -13221,7 +14312,90 @@ function joinSpacedLetters(text) {
           detail = `Warm high of ${todayMax}°C with moderate UV (${maxUv.toFixed(1)}). Pleasant for driving & outdoors.`;
         }
       }
-      // MODE 3: Mild / Spring & Autumn Outdoor & Driving Watch (min > 5.5°C and max < 21°C)
+      // 2. Daytime (09:00 - 15:59): morning frost has passed; show daytime driving conditions
+      else if (isDaytime) {
+        sectionTitle = "Outdoor & Driving";
+        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1";
+        subLabel = "Road & Driving Conditions";
+        timeLabel = `Daytime • High ${todayMax}°C`;
+
+        if (curTemp <= 1.0) {
+          sectionTitle = "Cold & Road Ice Watch";
+          pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
+          icon = "🧊";
+          status = "Freezing Day • Ice Risk";
+          badgeText = "Icy Road Risk";
+          badgeClass = "bg-amber-500/30 text-amber-200 border border-amber-400/50 font-bold";
+          cardBgClass = "bg-amber-950/35 border border-amber-500/30";
+          detail = `Current temp ${curTemp.toFixed(1)}°C. Watch for ice on bridges, shaded spots & untreated roads.`;
+        } else if (rainProbToday >= 55 || windSpeed >= 22) {
+          icon = "🌦️";
+          status = "Wet / Breezy Roads";
+          badgeText = windSpeed >= 22 ? `Gusty (${windSpeed} mph)` : `${rainProbToday}% Rain Risk`;
+          badgeClass = "bg-sky-500/25 text-sky-200 border border-sky-400/40 font-bold";
+          cardBgClass = "bg-sky-950/30 border border-sky-500/30";
+          detail = `Frost-free daytime (${Math.round(curTemp)}°C now). Watch for surface spray & ${windSpeed} mph breeze on open roads.`;
+        } else if (humidity >= 86 && windSpeed < 10) {
+          icon = "🌫️";
+          status = "Mild & Damp Roads";
+          badgeText = "Damp Roads";
+          badgeClass = "bg-sky-500/20 text-sky-300 border border-sky-400/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = `Frost-free daytime (${Math.round(curTemp)}°C now), ${humidity}% humidity. Clear glass; roads may stay damp in shade.`;
+        } else {
+          icon = "🌿";
+          status = "Good Driving Day";
+          badgeText = "Clear Glass & Roads";
+          badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = `Mild daytime (${Math.round(curTemp)}°C now, ${todayMax}°C high) with ${windSpeed} mph breeze. Clear glass & good driving conditions.`;
+        }
+      }
+      // 3. Morning (00:00 - 08:59) or Evening Advance Forecast (16:00 - 23:59): evaluate frost for target morning
+      else if (minAir <= 5.0 || estimatedGlassTemp <= 3.0) {
+        sectionTitle = "Cold & Frost Watch";
+        pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 flex items-center gap-1 flex-shrink-0 whitespace-nowrap";
+        subLabel = "Windscreen Condition";
+
+        if (estimatedGlassTemp <= -1.0 || minAir <= -0.5 || (minAir <= 0.2 && minSurface <= -0.5)) {
+          status = "Heavy Frost Alert";
+          icon = "❄️";
+          badgeText = isTomorrow ? "Tomorrow: Warm Car Early" : "Warm Car 10m Early!";
+          badgeClass = "bg-rose-500/30 text-rose-300 border border-rose-400/50 animate-pulse font-bold";
+          cardBgClass = "bg-rose-950/40 border border-rose-500/50 frost-alert-rose-pulse";
+          detail = isTomorrow
+            ? `Tomorrow morning glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`
+            : `Glass freezing (~${estimatedGlassTemp.toFixed(1)}°C) at ${criticalHour} AM. Have de-icer & scraper ready.`;
+        } else if (estimatedGlassTemp < 0.0 || (minAir <= 1.0 && minSurface <= 0.2)) {
+          status = "Frost Likely";
+          icon = "🧊";
+          badgeText = isTomorrow ? "Tomorrow: Frost Likely" : "Warm Car 10m Early";
+          badgeClass = "bg-sky-500/30 text-sky-200 border border-sky-400/50 font-bold";
+          cardBgClass = "bg-sky-950/40 border border-sky-400/80 frost-alert-pulse";
+          detail = isTomorrow
+            ? `Tomorrow morning air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`
+            : `Air ${minAir.toFixed(1)}°C, ground ${minSurface.toFixed(1)}°C. Radiative cooling frosts glass!`;
+        } else if (estimatedGlassTemp <= 0.8 || minAir <= 2.0) {
+          status = "Slight Frost Risk";
+          icon = "⚠️";
+          badgeText = isTomorrow ? "Tomorrow: Patchy Frost" : "Patchy Frost Risk";
+          badgeClass = "bg-amber-500/20 text-amber-300 border border-amber-400/30";
+          cardBgClass = "bg-amber-950/30 border border-amber-500/20";
+          detail = isTomorrow
+            ? `Borderline tomorrow (${minAir.toFixed(1)}°C at ${criticalHour} AM). Open hollows may catch patchy frost; sheltered glass often stays clear.`
+            : `Borderline (${minAir.toFixed(1)}°C at ${criticalHour} AM). Open hollows may catch patchy frost; sheltered glass often stays clear.`;
+        } else {
+          status = isTomorrow ? "Frost-Free Tomorrow" : "Frost-Free • Cold Dew";
+          icon = "💧";
+          badgeText = isTomorrow ? "Tomorrow: Clear" : "Morning Dew";
+          badgeClass = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+          cardBgClass = "bg-slate-900/60 border border-white/10";
+          detail = isTomorrow
+            ? `Frost-free tomorrow (~${minAir.toFixed(1)}°C low). Cold morning dew on glass; no ice scraping needed.`
+            : `Frost-free (${minAir.toFixed(1)}°C low). Cold morning dew on windscreen; wipers or demister may be needed.`;
+        }
+      }
+      // 4. Mild morning/evening without frost
       else {
         sectionTitle = "Outdoor & Driving";
         pillClass = "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1";
@@ -14466,11 +15640,10 @@ function joinSpacedLetters(text) {
       }
       const periodSpan = Math.max(6, periodMax - periodMin);
 
-      // Dynamic panel title: include Frost & Wind with sample wind dot
+      // Keep panel title clean and concise: "10-Day Forecast"
       const titleEl = document.getElementById('tenDayForecastTitle');
       if (titleEl) {
-        const subFeatures = hasAnyFrostRisk ? 'Frost &amp; Wind' : 'Wind';
-        titleEl.innerHTML = `10-Day Forecast &bull; ${subFeatures} <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.7)] align-middle ml-0.5" title="Wind indicators: grey dot (calm), green dot (gentle), 2 blue dots (moderate), 3 yellow dots (strong), solid red bar (severe)"></span>`;
+        titleEl.textContent = '10-Day Forecast';
       }
 
       for (let i = 0; i < daysToShow; i++) {
@@ -14574,10 +15747,13 @@ function joinSpacedLetters(text) {
         const rightPct = Math.max(leftPct + 18, Math.min(100, Math.round(((max - periodMin) / periodSpan) * 100)));
         const widthPct = Math.max(18, rightPct - leftPct);
 
+        const frostIconHtml = hasFrostRisk
+          ? `<svg class="w-3.5 h-3.5 text-cyan-300 drop-shadow-[0_0_4px_rgba(34,211,238,0.7)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v20M2 12h20M5 5l14 14M5 19L19 5M9 3l3 3 3-3M9 21l3-3 3 3M3 9l3 3-3 3M21 9l-3 3 3 3"/></svg>`
+          : '&nbsp;';
+
         const row = document.createElement('div');
         row.setAttribute('data-day-index', i);
-        row.className = `grid items-center gap-0.5 py-[2px] px-1.5 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none w-full box-border`;
-        row.style.gridTemplateColumns = '38px 34px 18px 24px 14px 22px 20px minmax(16px, 1fr) 24px';
+        row.className = `ten-day-grid py-1 px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none w-full box-border`;
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
           setHourlyCompressedMode(true, i);
@@ -14599,10 +15775,10 @@ function joinSpacedLetters(text) {
           <span class="text-[9px] text-slate-400 font-mono tabular-nums leading-none whitespace-nowrap overflow-hidden">${dateSub}</span>
           <span class="flex items-center justify-center text-[12px] leading-none">${info.icon}</span>
           <span class="block w-full text-right text-[10px] text-sky-400 font-mono tabular-nums leading-none ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-70 font-medium'}">${rainProb}%</span>
-          <span class="flex items-center justify-center text-[10px] text-cyan-300 font-bold leading-none w-full">${hasFrostRisk ? '❄️' : '&nbsp;'}</span>
+          <span class="flex items-center justify-center leading-none w-full" title="${hasFrostRisk ? 'Overnight frost risk (low <= 3.5°C)' : ''}">${frostIconHtml}</span>
           <span class="flex items-center justify-center cursor-help leading-none w-full" title="${windDot.title}">${windDot.html}</span>
           <span class="block w-full text-right font-mono tabular-nums text-[10px] leading-none ${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${min}°</span>
-          <div class="min-w-0 w-full h-1.5 rounded-full bg-slate-800/90 overflow-hidden relative">
+          <div class="min-w-0 w-full h-2 rounded-full bg-slate-800/90 overflow-hidden relative shadow-inner">
             <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${leftPct}%; width: ${widthPct}%"></div>
           </div>
           <span class="block w-full text-right font-mono tabular-nums text-[11px] leading-none ${maxColorClass}">${max}°</span>
@@ -14904,7 +16080,7 @@ function joinSpacedLetters(text) {
       }, 45000);
     }
 
-    function stepPanoramicDay(delta, startDragPx = 0) {
+    function stepPanoramicDay(delta, startDragPx = 0, broadcast = true) {
       if (!isHourlyCompressed) return;
       const nextOffset = Math.max(-1, Math.min(9, panoramicDayOffset + delta));
       if (nextOffset !== panoramicDayOffset) {
@@ -14913,6 +16089,9 @@ function joinSpacedLetters(text) {
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
         renderHourly(cachedHourlyData, dir, startDragPx);
+        if (broadcast && typeof broadcastPanoramicDayToCast === 'function') {
+          broadcastPanoramicDayToCast(panoramicDayOffset);
+        }
       } else {
         // At boundary (-1 or +9): spring current row gently back to center
         const container = document.getElementById('hourlyTimeline');
@@ -14930,7 +16109,7 @@ function joinSpacedLetters(text) {
       resetPanoramicAutoTimer();
     }
 
-    function stepPanoramicDayTo(targetOffset) {
+    function stepPanoramicDayTo(targetOffset, broadcast = true) {
       if (!isHourlyCompressed) return;
       const nextOffset = Math.max(-1, Math.min(9, targetOffset));
       if (nextOffset !== panoramicDayOffset) {
@@ -14939,6 +16118,9 @@ function joinSpacedLetters(text) {
         syncPanoramicLockUI();
         updateTenDayForecastIndicator();
         renderHourly(cachedHourlyData, dir);
+        if (broadcast && typeof broadcastPanoramicDayToCast === 'function') {
+          broadcastPanoramicDayToCast(panoramicDayOffset);
+        }
       }
       resetPanoramicAutoTimer();
     }
@@ -14964,8 +16146,8 @@ function joinSpacedLetters(text) {
       } else if (maxW < 25) {
         return {
           level: 'Moderate',
-          color: 'text-sky-400',
-          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span></span>',
+          color: 'text-emerald-400',
+          html: '<span class="inline-flex items-center gap-0.5" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_3px_rgba(52,211,153,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_3px_rgba(52,211,153,0.7)]"></span></span>',
           title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate breeze)'
         };
       } else if (maxW < 35) {
@@ -14978,7 +16160,7 @@ function joinSpacedLetters(text) {
       } else {
         return {
           level: 'Severe Gale',
-          color: 'text-red-400',
+          color: 'text-red-500',
           html: '<span class="inline-block max-w-full w-[18px] h-1.5 rounded-sm bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.9)]" title="Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe Gale Warning)"></span>',
           title: 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Severe gale warning)'
         };
@@ -15008,7 +16190,7 @@ function joinSpacedLetters(text) {
         const title = 'Wind: ' + s + ' mph, Gusts: ' + g + ' mph (Moderate Breeze)' + suffix;
         return {
           level: 'Moderate',
-          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span><span class="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_3px_rgba(56,189,248,0.6)]"></span></span>',
+          html: '<span class="inline-flex items-center gap-0.5" title="' + title.replace(/"/g, '&quot;') + '"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_3px_rgba(52,211,153,0.7)]"></span><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_3px_rgba(52,211,153,0.7)]"></span></span>',
           title: title
         };
       } else if (maxW < 35) {
@@ -15217,7 +16399,7 @@ function joinSpacedLetters(text) {
             <div class="w-full flex items-center justify-center h-2 my-0.5 cursor-help" title="${windBadge.title}">
               ${windBadge.html}
             </div>
-            <div class="h-1.5 w-full bg-slate-800/90 rounded-full overflow-hidden border border-white/10" title="Rain: ${rainProb}%">
+            <div class="h-1.5 w-full bg-slate-900/95 rounded-full overflow-hidden border border-sky-400/40 shadow-[inset_0_0_2px_rgba(0,0,0,0.6)]" title="Rain: ${rainProb}%">
               <div class="h-full ${rainProb >= 50 ? 'bg-sky-400' : rainProb > 0 ? 'bg-sky-500/80' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
             </div>
           `;
@@ -15350,7 +16532,7 @@ function joinSpacedLetters(text) {
               <span class="text-[8px] font-mono ${rainProb >= 30 ? 'text-sky-400 font-bold' : 'text-slate-500'} leading-none">
                 ${rainProb}%
               </span>
-              <div class="h-2 w-full bg-slate-800/90 rounded-full mt-0.5 overflow-hidden border border-white/10">
+              <div class="h-2 w-full bg-slate-900/95 rounded-full mt-0.5 overflow-hidden border border-sky-400/40 shadow-[inset_0_0_2px_rgba(0,0,0,0.6)]">
                 <div class="h-full ${rainProb >= 50 ? 'bg-gradient-to-r from-sky-400 via-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(56,189,248,0.5)]' : rainProb > 0 ? 'bg-sky-400' : 'bg-transparent'} rounded-full" style="width: ${rainProb}%"></div>
               </div>
             </div>
@@ -15439,7 +16621,7 @@ function joinSpacedLetters(text) {
       }, 60);
     });
 
-    function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true, animDirection = null) {
+    function setHourlyCompressedMode(compressed, initialOffset = 0, shouldFocus = true, animDirection = null, broadcast = true) {
       const prevCompressed = isHourlyCompressed;
       const prevOffset = (typeof panoramicDayOffset === 'number') ? panoramicDayOffset : 0;
       isHourlyCompressed = compressed;
@@ -15510,6 +16692,10 @@ function joinSpacedLetters(text) {
         renderHourly(cachedHourlyData);
 
         if (shouldFocus && footer) footer.focus({ preventScroll: true });
+      }
+
+      if (broadcast && typeof broadcastHourlyCompressedToCast === 'function') {
+        broadcastHourlyCompressedToCast(isHourlyCompressed, panoramicDayOffset);
       }
     }
 
@@ -16066,30 +17252,74 @@ function joinSpacedLetters(text) {
     const CAST_NAMESPACE = 'urn:x-cast:com.nexusranger.weather';
     let isCastConnected = false;
 
-    function broadcastLocationToCast(loc) {
-      if (!loc || !loc.lat || !loc.lon) return;
+    function sendCastMessage(payload) {
       if (typeof cast === 'undefined' || !cast.framework) return;
       try {
         const castCtx = cast.framework.CastContext.getInstance();
         const session = castCtx.getCurrentSession();
         if (session && typeof session.sendMessage === 'function') {
-          const payload = {
-            type: 'SYNC_LOCATION',
-            location: {
-              name: loc.name || '',
-              geoName: loc.geoName || loc.name || '',
-              lat: loc.lat,
-              lon: loc.lon,
-              postcode: loc.postcode || ''
-            }
-          };
           session.sendMessage(CAST_NAMESPACE, JSON.stringify(payload)).catch(err => {
             console.warn('Cast sendMessage warning:', err);
           });
         }
       } catch (err) {
-        console.warn('broadcastLocationToCast error:', err);
+        console.warn('sendCastMessage error:', err);
       }
+    }
+
+    function broadcastLocationToCast(loc) {
+      if (!loc || !loc.lat || !loc.lon) return;
+      sendCastMessage({
+        type: 'SYNC_LOCATION',
+        location: {
+          name: loc.name || '',
+          geoName: loc.geoName || loc.name || '',
+          lat: loc.lat,
+          lon: loc.lon,
+          postcode: loc.postcode || ''
+        }
+      });
+    }
+
+    function broadcastFullStateToCast(loc = (typeof CURRENT_LOCATION !== 'undefined' ? CURRENT_LOCATION : null)) {
+      if (!loc || !loc.lat || !loc.lon) return;
+      sendCastMessage({
+        type: 'SET_FULL_STATE',
+        location: {
+          name: loc.name || '',
+          geoName: loc.geoName || loc.name || '',
+          lat: loc.lat,
+          lon: loc.lon,
+          postcode: loc.postcode || ''
+        },
+        isHourlyCompressed: typeof isHourlyCompressed !== 'undefined' ? isHourlyCompressed : false,
+        panoramicDayOffset: typeof panoramicDayOffset !== 'undefined' ? panoramicDayOffset : 0,
+        isPanoramicLocked: typeof isPanoramicLocked !== 'undefined' ? isPanoramicLocked : false,
+        scale: typeof currentScale !== 'undefined' ? currentScale : 1.0,
+        displayMode: typeof CURRENT_DISPLAY_MODE !== 'undefined' ? CURRENT_DISPLAY_MODE : 'full'
+      });
+    }
+
+    function broadcastHourlyCompressedToCast(compressed, offset = 0) {
+      sendCastMessage({
+        type: 'SET_HOURLY_COMPRESSED',
+        compressed: !!compressed,
+        offset: typeof offset === 'number' ? offset : 0
+      });
+    }
+
+    function broadcastPanoramicDayToCast(offset) {
+      sendCastMessage({
+        type: 'SET_PANORAMIC_DAY',
+        offset: typeof offset === 'number' ? offset : 0
+      });
+    }
+
+    function broadcastScaleToCast(scale) {
+      sendCastMessage({
+        type: 'SET_SCALE',
+        scale: typeof scale === 'number' ? scale : 1.0
+      });
     }
 
     let isTvDeviceDetected = false;
@@ -16185,7 +17415,7 @@ function joinSpacedLetters(text) {
             if (window.cast && cast.framework && cast.framework.CastReceiverContext) {
               const recCtx = cast.framework.CastReceiverContext.getInstance();
 
-              // Listen for custom location sync messages from the sender tablet/phone
+              // Listen for custom messages from the sender tablet/phone
               recCtx.addCustomMessageListener(CAST_NAMESPACE, function(customEvent) {
                 try {
                   console.log('Received Cast custom message on TV:', customEvent.data);
@@ -16193,13 +17423,41 @@ function joinSpacedLetters(text) {
                   if (typeof msg === 'string') {
                     try { msg = JSON.parse(msg); } catch (_) {}
                   }
-                  if (msg && msg.type === 'SYNC_LOCATION' && msg.location) {
+                  if (!msg) return;
+
+                  if (msg.type === 'SYNC_LOCATION' && msg.location) {
                     const loc = msg.location;
                     if (loc.lat && loc.lon) {
                       applySelectedLocation(loc.name || loc.geoName, loc.lat, loc.lon, loc.postcode || '', false);
                     }
-                  }
-                  if (msg && msg.type === 'SET_DISPLAY_MODE') {
+                  } else if (msg.type === 'SET_FULL_STATE') {
+                    if (msg.location && msg.location.lat && msg.location.lon) {
+                      applySelectedLocation(msg.location.name || msg.location.geoName, msg.location.lat, msg.location.lon, msg.location.postcode || '', false);
+                    }
+                    if (typeof msg.isHourlyCompressed === 'boolean' && typeof setHourlyCompressedMode === 'function') {
+                      setHourlyCompressedMode(msg.isHourlyCompressed, msg.panoramicDayOffset || 0, false, null, false);
+                    }
+                    if (typeof msg.scale === 'number' && typeof adjustScale === 'function') {
+                      currentScale = Math.max(0.75, Math.min(1.25, msg.scale));
+                      adjustScale(0, false);
+                    }
+                    if (msg.displayMode && typeof setDisplayMode === 'function') {
+                      setDisplayMode(msg.displayMode);
+                    }
+                  } else if (msg.type === 'SET_HOURLY_COMPRESSED') {
+                    if (typeof setHourlyCompressedMode === 'function') {
+                      setHourlyCompressedMode(!!msg.compressed, msg.offset || 0, false, null, false);
+                    }
+                  } else if (msg.type === 'SET_PANORAMIC_DAY') {
+                    if (typeof stepPanoramicDayTo === 'function' && typeof msg.offset === 'number') {
+                      stepPanoramicDayTo(msg.offset, false);
+                    }
+                  } else if (msg.type === 'SET_SCALE') {
+                    if (typeof msg.scale === 'number' && typeof adjustScale === 'function') {
+                      currentScale = Math.max(0.75, Math.min(1.25, msg.scale));
+                      adjustScale(0, false);
+                    }
+                  } else if (msg.type === 'SET_DISPLAY_MODE') {
                     if (msg.location && msg.location.lat && msg.location.lon) {
                       applySelectedLocation(msg.location.name || msg.location.geoName, msg.location.lat, msg.location.lon, msg.location.postcode || '', false);
                     }
@@ -16291,17 +17549,17 @@ function joinSpacedLetters(text) {
                         if (typeof parsed === 'string') {
                           try { parsed = JSON.parse(parsed); } catch (_) {}
                         }
-                        if (parsed && parsed.type === 'REQUEST_LOCATION') {
-                          broadcastLocationToCast(CURRENT_LOCATION);
+                        if (parsed && (parsed.type === 'REQUEST_LOCATION' || parsed.type === 'REQUEST_FULL_STATE')) {
+                          broadcastFullStateToCast(CURRENT_LOCATION);
                         }
                       });
                     } catch (_) {}
 
-                    // Immediately beam current location across with staggered retries to ensure receiver receives it once loaded
-                    broadcastLocationToCast(CURRENT_LOCATION);
-                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 800);
-                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 2000);
-                    setTimeout(() => broadcastLocationToCast(CURRENT_LOCATION), 4000);
+                    // Immediately beam full state across with staggered retries to ensure receiver receives it once loaded
+                    broadcastFullStateToCast(CURRENT_LOCATION);
+                    setTimeout(() => broadcastFullStateToCast(CURRENT_LOCATION), 800);
+                    setTimeout(() => broadcastFullStateToCast(CURRENT_LOCATION), 2000);
+                    setTimeout(() => broadcastFullStateToCast(CURRENT_LOCATION), 4000);
                   }
                 }
               }
@@ -16817,6 +18075,15 @@ function joinSpacedLetters(text) {
         modalGps.title = 'GPS Locate not available on TV receiver';
         modalGps.tabIndex = -1;
       }
+
+      // Apply living room TV scale boost (1.15) if user has not explicitly customized scale
+      try {
+        const saved = localStorage.getItem('dashboard_scale_windowed') || localStorage.getItem('dashboard_scale');
+        if (!saved && typeof adjustScale === 'function') {
+          currentScale = 1.15;
+          adjustScale(0, false);
+        }
+      } catch (_) {}
     }
 
     initGoogleCast();
