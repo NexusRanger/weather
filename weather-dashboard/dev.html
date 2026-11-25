@@ -1966,13 +1966,37 @@
       <div id="colSevenDay" class="h-full flex flex-col min-w-0">
         <div class="glass-card rounded-2xl p-2.5 flex flex-col justify-between h-full">
           <div class="flex flex-col flex-1 min-h-0">
-            <div class="flex items-center mb-1 flex-shrink-0">
+            <!-- Header Title & Mini Legend -->
+            <div class="flex items-center justify-between gap-1 mb-1 flex-shrink-0">
               <span id="tenDayForecastTitle" class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full bg-slate-500/20 text-slate-300 border border-slate-400/30 whitespace-nowrap inline-flex items-center gap-1.5">
-                10-Day Forecast &bull; Frost &amp; Wind <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.7)]" title="Wind speed dot"></span>
+                10-Day Forecast &bull; Frost &amp; Wind
               </span>
+              <div class="flex items-center gap-2 text-[9px] text-slate-400 font-medium whitespace-nowrap">
+                <span class="inline-flex items-center gap-0.5" title="Blue ice crystal = overnight frost risk (low <= 3.5°C)">
+                  <svg class="w-2.5 h-2.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M2 12h20M5 5l14 14M5 19L19 5"/></svg>
+                  <span>Frost</span>
+                </span>
+                <span class="inline-flex items-center gap-0.5" title="Wind indicators: green (gentle), blue (moderate), amber (strong), red (gale)">
+                  <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_3px_rgba(52,211,153,0.8)]"></span>
+                  <span>Wind</span>
+                </span>
+              </div>
             </div>
 
-            <div id="sevenDayList" class="flex-1 flex flex-col justify-between gap-[2px] min-h-0">
+            <!-- Column Headers Key Row -->
+            <div class="grid items-center gap-0.5 py-0.5 px-2 text-[8.5px] uppercase tracking-wider font-semibold text-slate-400/90 border-b border-white/10 select-none mb-0.5 flex-shrink-0" style="grid-template-columns: minmax(36px, auto) minmax(32px, auto) 18px minmax(22px, auto) 14px 20px minmax(20px, auto) minmax(16px, 1fr) minmax(22px, auto);">
+              <span class="truncate">Day</span>
+              <span class="truncate">Date</span>
+              <span class="text-center" title="Sky conditions">Sky</span>
+              <span class="text-right" title="Rain probability">Rain</span>
+              <span class="flex items-center justify-center text-cyan-300" title="Frost alert">Ice</span>
+              <span class="text-center" title="Peak wind">Wind</span>
+              <span class="text-right" title="Overnight / morning low">Low</span>
+              <span class="text-center text-[7.5px] text-slate-500" title="Temperature range">Range</span>
+              <span class="text-right" title="Daytime high">High</span>
+            </div>
+
+            <div id="sevenDayList" class="flex-1 flex flex-col justify-between gap-[3px] min-h-0">
               <div class="text-xs text-slate-400 text-center py-4">Loading 10-day outlook...</div>
             </div>
           </div>
@@ -3394,8 +3418,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 398;
-    const APP_VERSION = '1.10.231-dev';
+    const APP_BUILD = 399;
+    const APP_VERSION = '1.10.232-dev';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13977,13 +14001,13 @@ function joinSpacedLetters(text) {
       67: { desc: 'Heavy Freezing Rain', iconDay: '🌨️', iconNight: '🌨️' },
       71: { desc: 'Slight Snow', iconDay: '🌨️', iconNight: '🌨️' },
       73: { desc: 'Moderate Snow', iconDay: '🌨️', iconNight: '🌨️' },
-      75: { desc: 'Heavy Snow', iconDay: '❄️', iconNight: '❄️' },
-      77: { desc: 'Snow Grains', iconDay: '❄️', iconNight: '❄️' },
+      75: { desc: 'Heavy Snow', iconDay: '🌨️', iconNight: '🌨️' },
+      77: { desc: 'Snow Grains', iconDay: '🌨️', iconNight: '🌨️' },
       80: { desc: 'Light Showers', iconDay: '🌦️', iconNight: '🌧️' },
       81: { desc: 'Passing Showers', iconDay: '🌧️', iconNight: '🌧️' },
       82: { desc: 'Heavy Showers', iconDay: '⛈️', iconNight: '⛈️' },
       85: { desc: 'Snow Showers', iconDay: '🌨️', iconNight: '🌨️' },
-      86: { desc: 'Heavy Snow Showers', iconDay: '❄️', iconNight: '❄️' },
+      86: { desc: 'Heavy Snow Showers', iconDay: '🌨️', iconNight: '🌨️' },
       95: { desc: 'Thunderstorm', iconDay: '⛈️', iconNight: '⛈️' },
       96: { desc: 'Thunder & Hail', iconDay: '⛈️', iconNight: '⛈️' },
       99: { desc: 'Severe Hailstorm', iconDay: '⛈️', iconNight: '⛈️' }
@@ -15583,11 +15607,11 @@ function joinSpacedLetters(text) {
       }
       const periodSpan = Math.max(6, periodMax - periodMin);
 
-      // Dynamic panel title: include Frost & Wind with sample wind dot
+      // Dynamic panel title: include Frost & Wind
       const titleEl = document.getElementById('tenDayForecastTitle');
       if (titleEl) {
         const subFeatures = hasAnyFrostRisk ? 'Frost &amp; Wind' : 'Wind';
-        titleEl.innerHTML = `10-Day Forecast &bull; ${subFeatures} <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.7)] align-middle ml-0.5" title="Wind indicators: grey dot (calm), green dot (gentle), 2 blue dots (moderate), 3 yellow dots (strong), solid red bar (severe)"></span>`;
+        titleEl.innerHTML = `10-Day Forecast &bull; ${subFeatures}`;
       }
 
       for (let i = 0; i < daysToShow; i++) {
@@ -15691,9 +15715,13 @@ function joinSpacedLetters(text) {
         const rightPct = Math.max(leftPct + 18, Math.min(100, Math.round(((max - periodMin) / periodSpan) * 100)));
         const widthPct = Math.max(18, rightPct - leftPct);
 
+        const frostIconHtml = hasFrostRisk
+          ? `<svg class="w-3.5 h-3.5 text-cyan-300 drop-shadow-[0_0_4px_rgba(34,211,238,0.7)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v20M2 12h20M5 5l14 14M5 19L19 5M9 3l3 3 3-3M9 21l3-3 3 3M3 9l3 3-3 3M21 9l-3 3 3 3"/></svg>`
+          : '&nbsp;';
+
         const row = document.createElement('div');
         row.setAttribute('data-day-index', i);
-        row.className = `grid items-center gap-0.5 py-[2px] px-1.5 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none w-full box-border`;
+        row.className = `grid items-center gap-0.5 py-1 px-2 rounded-lg glass-tile text-xs transition border-l-2 ${hasFrostRisk ? 'border-l-cyan-400' : 'border-l-transparent'} cursor-pointer select-none w-full box-border`;
         row.style.gridTemplateColumns = 'minmax(36px, auto) minmax(32px, auto) 18px minmax(22px, auto) 14px 20px minmax(20px, auto) minmax(16px, 1fr) minmax(22px, auto)';
         row.title = `Click to view 24h panoramic forecast for ${dayName}`;
         row.onclick = () => {
@@ -15716,10 +15744,10 @@ function joinSpacedLetters(text) {
           <span class="text-[9px] text-slate-400 font-mono tabular-nums leading-none whitespace-nowrap overflow-hidden">${dateSub}</span>
           <span class="flex items-center justify-center text-[12px] leading-none">${info.icon}</span>
           <span class="block w-full text-right text-[10px] text-sky-400 font-mono tabular-nums leading-none ${rainProb > 20 ? 'opacity-100 font-bold' : 'opacity-70 font-medium'}">${rainProb}%</span>
-          <span class="flex items-center justify-center text-[10px] text-cyan-300 font-bold leading-none w-full">${hasFrostRisk ? '❄️' : '&nbsp;'}</span>
+          <span class="flex items-center justify-center leading-none w-full" title="${hasFrostRisk ? 'Overnight frost risk (low <= 3.5°C)' : ''}">${frostIconHtml}</span>
           <span class="flex items-center justify-center cursor-help leading-none w-full" title="${windDot.title}">${windDot.html}</span>
           <span class="block w-full text-right font-mono tabular-nums text-[10px] leading-none ${min <= 2 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${min}°</span>
-          <div class="min-w-0 w-full h-1.5 rounded-full bg-slate-800/90 overflow-hidden relative">
+          <div class="min-w-0 w-full h-2 rounded-full bg-slate-800/90 overflow-hidden relative shadow-inner">
             <div class="absolute inset-y-0 bg-gradient-to-r ${min <= 2 ? 'from-cyan-400 to-amber-400' : 'from-sky-400 to-amber-400'} rounded-full" style="left: ${leftPct}%; width: ${widthPct}%"></div>
           </div>
           <span class="block w-full text-right font-mono tabular-nums text-[11px] leading-none ${maxColorClass}">${max}°</span>
