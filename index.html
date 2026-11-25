@@ -26,7 +26,7 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=312">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link id="appManifestLink" rel="manifest" href="manifest.json?v=404">
+  <link id="appManifestLink" rel="manifest" href="manifest.json?v=405">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=312">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=312">
@@ -991,8 +991,8 @@
         calc(24px * var(--text-scale, 1));
     }
 
-    /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 560px) - Zero scroll with TV Safe Area */
-    @media (orientation: landscape) and (min-height: 560px) {
+    /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 520px) - Zero scroll with TV Safe Area */
+    @media (orientation: landscape) and (min-height: 520px) {
       html, body {
         height: 100vh;
         width: 100vw;
@@ -1023,16 +1023,19 @@
       }
     }
 
-    /* 1b. TABLET IN LANDSCAPE (Moderate widescreen with height >= 560px): Adjust oversized TV bezel padding so all 5 pills fit */
-    @media (orientation: landscape) and (min-height: 560px) and (max-width: 1100px) {
+    /* 1b. TABLET IN LANDSCAPE (Moderate widescreen with height >= 520px): Adjust oversized TV bezel padding so all 5 pills fit */
+    @media (orientation: landscape) and (min-height: 520px) and (max-width: 1100px) {
       #dashboardRoot {
         padding-left: max(14px, env(safe-area-inset-left)) !important;
         padding-right: max(14px, env(safe-area-inset-right)) !important;
       }
     }
 
-    /* 2. PHONE IN LANDSCAPE (Short screens: height < 560px - e.g. phone sideways) */
-    @media (orientation: landscape) and (max-height: 559px) {
+    /* 2. PHONE IN LANDSCAPE (Short screens: height <= 515px - e.g. phone sideways) */
+    @media (orientation: landscape) and (max-height: 515px) {
+      :root {
+        --text-scale: 0.95;
+      }
       html, body {
         height: auto !important;
         min-height: 100vh;
@@ -1643,7 +1646,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.237) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.238) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3463,8 +3466,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 404;
-    const APP_VERSION = '1.10.237';
+    const APP_BUILD = 405;
+    const APP_VERSION = '1.10.238';
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -13974,13 +13977,12 @@ function joinSpacedLetters(text) {
       if (isCastHardwareReceiver) {
         return 1.15;
       }
-      // On tablet in landscape: default to 1.08 (108%)
-      const isTabletLandscape = ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
-        window.matchMedia("(orientation: landscape) and (min-height: 520px) and (max-width: 1200px)").matches;
-      if (isTabletLandscape) {
-        return 1.08;
+      // On phone in landscape (height <= 515px): default to 0.95 (95%)
+      const isPhoneLandscape = window.matchMedia("(orientation: landscape) and (max-height: 515px)").matches;
+      if (isPhoneLandscape) {
+        return 0.95;
       }
-      return 1.0; // Default 100%
+      return 1.0; // Default 100% (Tablet landscape, Shield TV & desktop default)
     }
 
     function adjustScale(delta, broadcast = true) {
