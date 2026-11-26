@@ -26,7 +26,7 @@
   <meta name="twitter:description" content="Live weather, rain nowcast, traffic &amp; frost watch dashboard.">
   <meta name="twitter:image" content="https://nexusranger.github.io/weather/share-icon.jpg?v=312">
   <!-- App & Browser Icons (PNG + SVG) -->
-  <link id="appManifestLink" rel="manifest" href="manifest.json?v=405">
+  <link id="appManifestLink" rel="manifest" href="manifest.json?v=406">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=312">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png?v=312">
@@ -35,6 +35,38 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Ambient Weather (Dev)</title>
+  <script>
+    (function() {
+      try {
+        var ua = (navigator.userAgent || '').toLowerCase();
+        var hasTvUa = (
+          ua.includes('shield') ||
+          ua.includes('android tv') ||
+          ua.includes('googletv') ||
+          ua.includes('smarttv') ||
+          ua.includes('smart-tv') ||
+          ua.includes('tv bro') ||
+          ua.includes('crkey') ||
+          ua.includes('aft') ||
+          ua.includes('nexus player') ||
+          ua.includes('mibox') ||
+          ua.includes('bravia') ||
+          ua.includes('apple tv') ||
+          ua.includes('webos') ||
+          ua.includes('tizen') ||
+          (ua.includes('android') && (ua.includes('tv') || ua.includes('large screen'))) ||
+          window.location.search.includes('tv=true') ||
+          window.location.search.includes('tv=1') ||
+          window.location.search.includes('shield=true') ||
+          window.location.search.includes('cast_receiver=true')
+        );
+        var isTouch = ('ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+        if (hasTvUa || !isTouch) {
+          document.documentElement.classList.add('is-tv-layout');
+        }
+      } catch (_) {}
+    })();
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet World Map (30-day History) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -339,10 +371,10 @@
     }
 
     /* TV Focus Warm Amber Glow (Uniform, crisp, standard-thickness border across all focusable elements) */
-    body:not(.focus-dormant) .tv-focus-amber:focus,
-    body:not(.focus-dormant) .tv-focus-amber:focus-visible,
-    body:not(.focus-dormant) #headerLocationBtn:focus,
-    body:not(.focus-dormant) #headerLocationBtn:focus-visible,
+    body:not(.focus-dormant) .tv-focus-amber:focus:not(.header-search-pulse),
+    body:not(.focus-dormant) .tv-focus-amber:focus-visible:not(.header-search-pulse),
+    body:not(.focus-dormant) #headerLocationBtn:focus:not(.header-search-pulse),
+    body:not(.focus-dormant) #headerLocationBtn:focus-visible:not(.header-search-pulse),
     #headerLocationBtn.loc-btn-flash,
     body.focus-dormant #headerLocationBtn.loc-btn-flash {
       outline: 0 none transparent !important;
@@ -823,7 +855,7 @@
       }
     }
     .header-search-pulse {
-      animation: headerSearchAttentionPulse 1.25s ease-in-out 16 !important;
+      animation: headerSearchAttentionPulse 1.25s ease-in-out infinite !important;
       transition: none !important;
     }
     .header-search-pulse #headerSearchPrefix {
@@ -831,9 +863,6 @@
       color: #38bdf8 !important;
       font-weight: 700 !important;
       text-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
-    }
-    .header-search-pulse #headerSearchPrefix::after {
-      content: "Search";
     }
     .header-search-pulse #headerPostcodeBadge {
       display: none !important;
@@ -991,8 +1020,8 @@
         calc(24px * var(--text-scale, 1));
     }
 
-    /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 520px) - Zero scroll with TV Safe Area */
-    @media (orientation: landscape) and (min-height: 520px) {
+    /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 470px - Shield TV, TV Bro, Tablets, Desktops) - Zero scroll */
+    @media (orientation: landscape) and (min-height: 470px) {
       html, body {
         height: 100vh;
         width: 100vw;
@@ -1023,16 +1052,50 @@
       }
     }
 
-    /* 1b. TABLET IN LANDSCAPE (Moderate widescreen with height >= 520px): Adjust oversized TV bezel padding so all 5 pills fit */
-    @media (orientation: landscape) and (min-height: 520px) and (max-width: 1100px) {
+    /* Absolute Guarantee for Shield TV, TV Bro, and Desktop Displays: Always 3 columns zero-scroll */
+    html.is-tv-layout,
+    html.is-tv-layout body {
+      height: 100vh !important;
+      width: 100vw !important;
+      overflow: hidden !important;
+    }
+    html.is-tv-layout #dashboardRoot {
+      height: 100vh !important;
+      width: 100vw !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      padding: max(8px, env(safe-area-inset-top)) max(46px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(46px, env(safe-area-inset-left)) !important;
+      transform: none !important;
+    }
+    html.is-tv-layout #mainGrid {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 8px !important;
+      flex: 1 1 0% !important;
+      min-height: 0 !important;
+      height: auto !important;
+      margin: 2px 0 !important;
+    }
+    html.is-tv-layout #colSevenDay {
+      grid-column: auto !important;
+      max-width: none !important;
+      width: 100% !important;
+      margin: 0 !important;
+      justify-self: stretch !important;
+    }
+
+    /* 1b. TABLET IN LANDSCAPE (Moderate widescreen with height >= 470px and width <= 1100px): Adjust TV bezel padding */
+    @media (orientation: landscape) and (min-height: 470px) and (max-width: 1100px) {
       #dashboardRoot {
         padding-left: max(14px, env(safe-area-inset-left)) !important;
         padding-right: max(14px, env(safe-area-inset-right)) !important;
       }
     }
 
-    /* 2. PHONE IN LANDSCAPE (Short screens: height <= 515px - e.g. phone sideways) */
-    @media (orientation: landscape) and (max-height: 515px) {
+    /* 2. PHONE IN LANDSCAPE (Screens with height < 470px - e.g. phone sideways) */
+    @media (orientation: landscape) and (max-height: 469px) {
       :root {
         --text-scale: 0.95;
       }
@@ -1059,6 +1122,7 @@
         gap: 8px !important;
         height: auto !important;
         flex: none !important;
+        margin: 4px 0 16px 0 !important;
       }
       #colSevenDay {
         grid-column: 1 / -1 !important;
@@ -1577,10 +1641,10 @@
           </button>
         </div>
         <div class="header-actions-group flex items-center gap-1.5 flex-shrink-0">
-          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" onpointerdown="this.classList.remove('header-search-pulse')" onanimationend="this.classList.remove('header-search-pulse')" title="Search or change location (Press OK)" class="header-search-pulse tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
+          <button id="headerLocationBtn" tabindex="0" onclick="openLocationModal()" onpointerdown="stopHeaderSearchPulse()" title="Search or change location (Press OK)" class="header-search-pulse tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-500/25 via-indigo-500/20 to-sky-500/15 text-sky-200 hover:text-white border border-sky-400/40 hover:border-sky-300/70 shadow-[0_0_12px_rgba(56,189,248,0.2)] hover:shadow-[0_0_16px_rgba(56,189,248,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span class="text-[16px] sm:text-[17px] leading-none inline-flex items-center flex-shrink-0 select-none">🔍</span>
-            <span id="headerSearchPrefix" class="hidden"></span>
-            <span id="headerPostcodeBadge" class="font-mono text-white font-bold tracking-wide">GL5 5HH</span>
+            <span id="headerSearchPrefix" class="font-bold text-sky-300">Search</span>
+            <span id="headerPostcodeBadge" class="hidden font-mono text-white font-bold tracking-wide">GL5 5HH</span>
           </button>
           <button id="gpsHeaderBtn" tabindex="0" onclick="detectCurrentLocation()" title="Find my current GPS location (Press OK)" class="tv-focus-amber text-xs font-semibold px-2.5 py-1 rounded-xl bg-gradient-to-r from-emerald-500/25 via-sky-500/20 to-emerald-500/15 text-emerald-200 hover:text-white border border-emerald-400/40 hover:border-emerald-300/70 shadow-[0_0_12px_rgba(52,211,153,0.2)] hover:shadow-[0_0_16px_rgba(52,211,153,0.35)] transition flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap focus:outline-none cursor-pointer">
             <span id="gpsButtonIcon" class="text-xs">📍</span>
@@ -1646,7 +1710,7 @@
               <span id="updateAvailableDot" class="hidden absolute -top-1 -right-1 w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_6px_#38bdf8] animate-pulse"></span>
             </button>
             <div id="reloadFocusBadge" class="hidden absolute right-0 top-full mt-1.5 px-3 py-1.5 rounded-lg bg-slate-900/95 border border-emerald-500/40 text-[11px] font-sans font-medium whitespace-nowrap shadow-2xl z-50 pointer-events-none text-emerald-300 backdrop-blur-md">
-              <span>✓ Up to date (v1.10.238) &bull; Press OK to refresh</span>
+              <span>✓ Up to date (v1.10.239) &bull; Press OK to refresh</span>
             </div>
           </div>
           <div class="relative inline-flex items-center">
@@ -3466,8 +3530,27 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 405;
-    const APP_VERSION = '1.10.238';
+    const APP_BUILD = 406;
+    const APP_VERSION = '1.10.239';
+
+    function stopHeaderSearchPulse() {
+      const locBtn = document.getElementById('headerLocationBtn');
+      if (locBtn) {
+        locBtn.classList.remove('header-search-pulse');
+      }
+      const searchPrefix = document.getElementById('headerSearchPrefix');
+      const postcodeBadge = document.getElementById('headerPostcodeBadge');
+      if (searchPrefix) {
+        searchPrefix.classList.add('hidden');
+        searchPrefix.textContent = '';
+      }
+      if (postcodeBadge) {
+        postcodeBadge.classList.remove('hidden');
+      }
+    }
+
+    // Attention pulse on search box runs for first 7 seconds on initial startup, then cleanly reveals postcode
+    setTimeout(stopHeaderSearchPulse, 7000);
 
     // D-Pad UX: Pressing 'Up' in ANY info box / modal jumps directly to the top Close button.
     // If the user performs TWO upward clicks while focused on the Close button,
@@ -11009,7 +11092,7 @@ function joinSpacedLetters(text) {
 
       // Flash the location search button rectangle amber for 220ms before opening the dialog
       if (locBtn) {
-        locBtn.classList.remove('header-search-pulse');
+        stopHeaderSearchPulse();
         isOpeningLocationModal = true;
         document.body.classList.remove('focus-dormant');
         locBtn.focus({ preventScroll: true });
@@ -13766,23 +13849,39 @@ function joinSpacedLetters(text) {
       const hasValidPostcode = (rawPc && rawPc !== 'undefined' && rawPc !== 'GEO' && rawPc !== 'GPS');
       const badgeEl = document.getElementById('headerPostcodeBadge');
       const prefixEl = document.getElementById('headerSearchPrefix');
-      if (hasValidPostcode) {
-        if (prefixEl) {
-          prefixEl.textContent = '';
-          prefixEl.className = 'hidden';
-        }
-        if (badgeEl) {
-          badgeEl.textContent = rawPc;
-          badgeEl.className = 'font-mono text-white font-bold tracking-wide';
-        }
-      } else {
+      const locBtn = document.getElementById('headerLocationBtn');
+      const isPulsing = locBtn && locBtn.classList.contains('header-search-pulse');
+
+      if (badgeEl) {
+        badgeEl.textContent = hasValidPostcode ? rawPc : 'Search';
+      }
+
+      if (isPulsing) {
         if (prefixEl) {
           prefixEl.textContent = 'Search';
-          prefixEl.className = 'inline text-sky-200 font-semibold';
+          prefixEl.className = 'font-bold text-sky-300';
         }
         if (badgeEl) {
-          badgeEl.textContent = '';
-          badgeEl.className = 'hidden';
+          badgeEl.className = 'hidden font-mono text-white font-bold tracking-wide';
+        }
+      } else {
+        if (hasValidPostcode) {
+          if (prefixEl) {
+            prefixEl.textContent = '';
+            prefixEl.className = 'hidden';
+          }
+          if (badgeEl) {
+            badgeEl.className = 'font-mono text-white font-bold tracking-wide';
+          }
+        } else {
+          if (prefixEl) {
+            prefixEl.textContent = 'Search';
+            prefixEl.className = 'inline text-sky-200 font-semibold';
+          }
+          if (badgeEl) {
+            badgeEl.textContent = '';
+            badgeEl.className = 'hidden';
+          }
         }
       }
       const coordsEl = document.getElementById('headerCoords');
