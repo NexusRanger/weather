@@ -968,39 +968,39 @@
       background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 70%);
     }
 
-    /* Dynamic Typography Scaling driven by % scale buttons */
+    /* Dynamic Typography Scaling driven by % scale buttons (Calibrated: 90% is new 100% baseline) */
     :root {
       --text-scale: 1.0;
     }
-    .text-\[9px\] {
+    .text-[9px] {
+      font-size: calc(9px * var(--text-scale, 1)) !important;
+    }
+    .text-[10px] {
       font-size: calc(10px * var(--text-scale, 1)) !important;
     }
-    .text-\[10px\] {
+    .text-[11px] {
       font-size: calc(11px * var(--text-scale, 1)) !important;
     }
-    .text-\[11px\] {
-      font-size: calc(12px * var(--text-scale, 1)) !important;
-    }
     .text-xs {
-      font-size: calc(12.5px * var(--text-scale, 1)) !important;
+      font-size: calc(11.25px * var(--text-scale, 1)) !important;
     }
     .text-sm {
-      font-size: calc(14px * var(--text-scale, 1)) !important;
+      font-size: calc(12.6px * var(--text-scale, 1)) !important;
     }
     .text-base {
-      font-size: calc(16px * var(--text-scale, 1)) !important;
+      font-size: calc(14.4px * var(--text-scale, 1)) !important;
     }
     .text-lg {
-      font-size: calc(18px * var(--text-scale, 1)) !important;
+      font-size: calc(16.2px * var(--text-scale, 1)) !important;
     }
     .text-xl {
-      font-size: calc(20px * var(--text-scale, 1)) !important;
+      font-size: calc(18px * var(--text-scale, 1)) !important;
     }
     .text-2xl {
-      font-size: calc(24px * var(--text-scale, 1)) !important;
+      font-size: calc(21.6px * var(--text-scale, 1)) !important;
     }
-    .text-\[9\.5px\] {
-      font-size: calc(10.5px * var(--text-scale, 1)) !important;
+    .text-[9.5px] {
+      font-size: calc(9.5px * var(--text-scale, 1)) !important;
     }
 
     /* 10-Day Forecast strict proportional track alignment */
@@ -1009,15 +1009,15 @@
       align-items: center;
       gap: 2px;
       grid-template-columns: 
-        calc(46px * var(--text-scale, 1))
-        calc(40px * var(--text-scale, 1))
-        calc(22px * var(--text-scale, 1))
-        calc(28px * var(--text-scale, 1))
-        calc(16px * var(--text-scale, 1))
+        calc(41px * var(--text-scale, 1))
+        calc(36px * var(--text-scale, 1))
         calc(20px * var(--text-scale, 1))
-        calc(22px * var(--text-scale, 1))
-        minmax(28px, 1fr)
-        calc(24px * var(--text-scale, 1));
+        calc(25px * var(--text-scale, 1))
+        calc(14px * var(--text-scale, 1))
+        calc(18px * var(--text-scale, 1))
+        calc(20px * var(--text-scale, 1))
+        minmax(26px, 1fr)
+        calc(22px * var(--text-scale, 1));
     }
 
     /* 1. TV & LARGE WIDESCREEN (Landscape with height >= 470px - Shield TV, TV Bro, Tablets, Desktops) - Zero scroll */
@@ -1086,6 +1086,33 @@
       justify-self: stretch !important;
     }
 
+    /* 1a. SHIELD TV & SHORT WIDESCREEN (Height between 470px and 600px): Compact row padding to eliminate status strip overlap */
+    @media (orientation: landscape) and (min-height: 470px) and (max-height: 600px) {
+      .ten-day-grid {
+        padding-top: 1px !important;
+        padding-bottom: 1px !important;
+      }
+      #sevenDayList {
+        gap: 1.5px !important;
+      }
+      #colLocalInfo {
+        margin-top: 1px !important;
+        margin-bottom: 1px !important;
+      }
+      #colFrost .glass-card {
+        padding: 4px 8px !important;
+      }
+      #colFrost .glass-tile {
+        padding: 1.5px 4px !important;
+      }
+      #colWeather .glass-card {
+        padding: 4px 8px !important;
+      }
+      #stargazingAdviceContainer {
+        display: none !important;
+      }
+    }
+
     /* 1b. TABLET IN LANDSCAPE (Moderate widescreen with height >= 470px and width <= 1100px): Adjust TV bezel padding */
     @media (orientation: landscape) and (min-height: 470px) and (max-width: 1100px) {
       #dashboardRoot {
@@ -1097,7 +1124,7 @@
     /* 2. PHONE IN LANDSCAPE (Screens with height < 470px - e.g. phone sideways) */
     @media (orientation: landscape) and (max-height: 469px) {
       :root {
-        --text-scale: 0.95;
+        --text-scale: 1.0;
       }
       html, body {
         height: auto !important;
@@ -3530,8 +3557,8 @@
   <!-- SCRIPT LOGIC -->
   <script src="traffic-flood.js?v=320"></script>
     <script>
-    const APP_BUILD = 406;
-    const APP_VERSION = '1.10.239';
+    const APP_BUILD = 407;
+    const APP_VERSION = '1.10.240';
 
     function stopHeaderSearchPulse() {
       const locBtn = document.getElementById('headerLocationBtn');
@@ -14056,6 +14083,17 @@ function joinSpacedLetters(text) {
     }
 
     function loadScaleForActiveMode() {
+      // Build 407 Calibration: Reset previous scale overrides so Tablet and Shield start cleanly on calibrated 100%
+      const scaleBuildKey = 'dashboard_scale_calibrated_build';
+      try {
+        if (localStorage.getItem(scaleBuildKey) !== '407') {
+          localStorage.removeItem('dashboard_scale_windowed');
+          localStorage.removeItem('dashboard_scale_fullscreen');
+          localStorage.removeItem('dashboard_scale');
+          localStorage.setItem(scaleBuildKey, '407');
+        }
+      } catch (_) {}
+
       const inFs = isCurrentFullscreen();
       const key = getActiveModeScaleKey(inFs);
       const saved = localStorage.getItem(key);
@@ -14076,12 +14114,7 @@ function joinSpacedLetters(text) {
       if (isCastHardwareReceiver) {
         return 1.15;
       }
-      // On phone in landscape (height <= 515px): default to 0.95 (95%)
-      const isPhoneLandscape = window.matchMedia("(orientation: landscape) and (max-height: 515px)").matches;
-      if (isPhoneLandscape) {
-        return 0.95;
-      }
-      return 1.0; // Default 100% (Tablet landscape, Shield TV & desktop default)
+      return 1.0; // Default 100% across Tablet landscape, Shield TV, Desktop & Phone
     }
 
     function adjustScale(delta, broadcast = true) {
