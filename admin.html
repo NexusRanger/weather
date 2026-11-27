@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#030712">
+  <title>Weather Dashboard — Admin Telemetry</title>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=312">
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=312">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="qrcode.min.js?v=244"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #060813;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 15% -10%, rgba(56, 189, 248, 0.14), transparent 60%),
+        radial-gradient(ellipse 65% 45% at 85% 0%, rgba(139, 92, 246, 0.10), transparent 60%);
+      color: #f1f5f9;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.55);
+    }
+    .glass-tile {
+      background: rgba(2, 6, 23, 0.48);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pill-btn {
+      transition: all 150ms ease;
+    }
+    .pill-active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.55);
+      color: #e0f2fe;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.15);
+    }
+    .pill-idle {
+      background: rgba(15, 23, 42, 0.65);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+    }
+    .pill-idle:hover {
+      color: #e2e8f0;
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+    .leaflet-container {
+      background: #030712 !important;
+      font-family: inherit !important;
+    }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      background: rgba(15, 23, 42, 0.96) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.65) !important;
+    }
+    .leaflet-bar a {
+      background-color: rgba(15, 23, 42, 0.92) !important;
+      color: #94a3b8 !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+    .leaflet-bar a:hover {
+      background-color: rgba(30, 41, 59, 1) !important;
+      color: #38bdf8 !important;
+    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 9999px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.45); }
+    .heatmap-cell {
+      transition: transform 120ms ease, outline-color 120ms ease;
+    }
+    .heatmap-cell:hover {
+      transform: scale(1.18);
+      outline: 1px solid rgba(255, 255, 255, 0.7);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased selection:bg-sky-500/30 selection:text-sky-100">
+
+  <!-- ====================================================================== -->
+  <!-- 1. AUTHENTICATION GATE                                                  -->
+  <!-- ====================================================================== -->
+  <div id="loginView" class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6">
+      <div class="flex items-center gap-3.5">
+        <img src="icon-192.png?v=312" alt="Weather Icon" class="w-12 h-12 rounded-2xl border border-white/10 shadow-lg bg-slate-900">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">Weather Telemetry</h1>
+            <span class="px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded-full bg-sky-500/15 text-sky-300 border border-sky-400/30">Private</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Companion analytics &amp; growth admin console</p>
+        </div>
+      </div>
+
+      <div id="authCheckingBox" class="hidden py-6 text-center text-sm text-slate-400">
+        Checking session...
+      </div>
+
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label for="loginEmail" class="block text-xs font-medium text-slate-300 mb-1.5">Admin Email</label>
+          <input id="loginEmail" type="email" required autocomplete="email" placeholder="you@example.com"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400/70 focus:ring-2 focus:ring-sky-500/20">
+        </div>
+        <div>
+          <label for="loginPassword" class="block text-xs font-medium text-slate-300 mb-1.5">Password</label>
+          <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="••••••••••••"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-400/70 focus:ring-2 focus:ring-sky-500/20">
+        </div>
+
+        <div id="loginErrorBox" class="hidden rounded-xl bg-rose-500/10 border border-rose-500/30 px-3.5 py-2.5 text-xs text-rose-200 leading-relaxed"></div>
+
+        <button id="loginSubmitBtn" type="submit"
+          class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white font-semibold text-sm shadow-lg shadow-sky-900/30 transition cursor-pointer disabled:opacity-60">
+          Sign In to Admin Console
+        </button>
+
+        <div id="wrongUserActions" class="hidden pt-1 text-center">
+          <button type="button" id="deniedSignOutBtn" class="text-xs text-slate-400 hover:text-white underline cursor-pointer">
+            Sign out of current account
+          </button>
+        </div>
+      </form>
+
+      <!-- Collapsible First-Time Setup Guide -->
+      <details class="glass-tile rounded-2xl p-3.5 text-xs text-slate-300">
+        <summary class="cursor-pointer font-semibold text-slate-200 flex items-center justify-between select-none">
+          <span>First-time Supabase Setup (3 Steps)</span>
+          <span class="text-[10px] font-mono text-sky-400">SQL + Auth</span>
+        </summary>
+        <ol class="mt-3 space-y-2 text-[11px] text-slate-400 list-decimal list-inside leading-relaxed">
+          <li>Open <code class="text-sky-300 font-mono">supabase-analytics-setup.sql</code> and replace <code class="text-amber-300 font-mono">'YOUR_EMAIL@example.com'</code> with your email.</li>
+          <li>Paste and run the script once in <strong>Supabase Dashboard → SQL Editor</strong>.</li>
+          <li>In <strong>Authentication → Providers → Email</strong>, turn <strong>OFF</strong> <em>"Allow new users to sign up"</em>, then go to <strong>Authentication → Users → Add user</strong> to create your single admin account.</li>
+        </ol>
+      </details>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- 2. MAIN ADMIN DASHBOARD                                                 -->
+  <!-- ====================================================================== -->
+  <div id="dashboardView" class="hidden pb-14">
+
+    <!-- Sticky Header & Filter Bar -->
+    <header class="sticky top-0 z-30 border-b border-white/10 bg-[#060813]/85 backdrop-blur-xl">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <img src="icon-192.png?v=312" alt="Logo" class="w-9 h-9 rounded-xl border border-white/10 bg-slate-900">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">Weather Dashboard Admin</h1>
+                <span id="livePulseBadge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/25">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span id="liveActiveCount">0 active now</span>
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400 font-mono" id="lastRefreshedLabel">Waiting for sync...</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="adminEmailBadge" class="hidden sm:inline-flex px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] font-mono text-slate-300"></span>
+            <a href="#devicesSection" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition">
+              My Devices
+            </a>
+            <button id="refreshBtn" type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 text-xs font-semibold text-sky-200 transition cursor-pointer">
+              ↻ Refresh
+            </button>
+            <button id="signOutBtn" type="button" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/35 text-xs font-medium text-slate-300 hover:text-rose-200 transition cursor-pointer">
+              Sign Out
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-2.5 pt-1 border-t border-white/5 text-xs">
+          <!-- Date Range -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mr-1">Range</span>
+            <button data-filter="range" data-value="7d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">7D</button>
+            <button data-filter="range" data-value="14d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">14D</button>
+            <button data-filter="range" data-value="30d" class="pill-btn pill-active px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">30D</button>
+            <button data-filter="range" data-value="90d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">90D</button>
+            <button data-filter="range" data-value="all" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">All</button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-4">
+            <!-- Audience -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mr-1">Audience</span>
+              <button data-filter="audience" data-value="external" class="pill-btn pill-active px-2.5 py-1 rounded-lg border text-xs font-medium cursor-pointer">External Users</button>
+              <button data-filter="audience" data-value="all" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-medium cursor-pointer">All Traffic</button>
+              <button data-filter="audience" data-value="mine" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-medium cursor-pointer">My Devices</button>
+            </div>
+
+            <!-- Environment -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mr-1">Env</span>
+              <button data-filter="env" data-value="live" class="pill-btn pill-active px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">Live</button>
+              <button data-filter="env" data-value="dev" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">Dev</button>
+              <button data-filter="env" data-value="local" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">Local</button>
+              <button data-filter="env" data-value="all" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">All</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+
+      <!-- Smart Status / Setup Banner -->
+      <div id="statusBanner" class="hidden glass-card rounded-2xl p-4 border border-amber-400/30 bg-amber-500/5"></div>
+
+      <!-- KPI Summary Strip (6 Cards) -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5">
+        <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Today</span>
+            <span id="kpiTodayDelta" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-slate-400">—</span>
+          </div>
+          <div>
+            <div class="text-2xl font-extrabold text-white font-mono" id="kpiTodayUnique">0</div>
+            <div class="text-xs text-slate-400 mt-0.5"><span id="kpiTodayVisits" class="text-slate-200 font-mono">0</span> total visits today</div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400" id="kpiPeriodLabel">30D Visitors</span>
+            <span id="kpiPeriodDelta" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-slate-400">—</span>
+          </div>
+          <div>
+            <div class="text-2xl font-extrabold text-white font-mono" id="kpiPeriodUnique">0</div>
+            <div class="text-xs text-slate-400 mt-0.5"><span id="kpiPeriodVisits" class="text-slate-200 font-mono">0</span> visits in period</div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Stickiness</span>
+            <span id="kpiReturningPct" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300">0% ret</span>
+          </div>
+          <div>
+            <div class="text-2xl font-extrabold text-white font-mono" id="kpiStickiness">0%</div>
+            <div class="text-xs text-slate-400 mt-0.5">WAU <span id="kpiWau" class="text-slate-200 font-mono">0</span> &bull; MAU <span id="kpiMau" class="text-slate-200 font-mono">0</span></div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Repeat Users</span>
+            <span id="kpiPowerRegulars" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300">0 (5d+)</span>
+          </div>
+          <div>
+            <div class="text-2xl font-extrabold text-white font-mono" id="kpiRepeatUsers">0</div>
+            <div class="text-xs text-slate-400 mt-0.5"><span id="kpiRepeatPct" class="text-slate-200 font-mono">0%</span> visited 2+ days</div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Stay-Open Time</span>
+            <span id="kpiLongSessions" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300">0 ambient</span>
+          </div>
+          <div>
+            <div class="text-2xl font-extrabold text-white font-mono" id="kpiMedianDur">0s</div>
+            <div class="text-xs text-slate-400 mt-0.5">Avg <span id="kpiAvgDur" class="text-slate-200 font-mono">0s</span> &bull; 15m+ stays</div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cast to TV</span>
+            <span id="kpiCastPct" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300">0%</span>
+          </div>
+          <div>
+            <div class="text-2xl font-extrabold text-white font-mono" id="kpiCastSessions">0</div>
+            <div class="text-xs text-slate-400 mt-0.5" id="kpiCastSplit">0 rec &bull; 0 senders</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 1: Daily Visitors & Growth Trajectory -->
+      <section class="glass-card rounded-3xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-white">Daily Visitors &amp; Growth Trajectory</h2>
+            <p class="text-xs text-slate-400">Track whether daily reach and returning regulars are trending upward</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button data-chart-mode="trend" class="pill-btn pill-active px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Visitors &amp; 7D Trend</button>
+            <button data-chart-mode="retention" class="pill-btn pill-idle px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">New vs Returning</button>
+            <button id="exportCsvBtn" type="button" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-slate-300 transition cursor-pointer">
+              ↓ CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="relative h-72 sm:h-80 w-full">
+          <canvas id="dailyChartCanvas"></canvas>
+        </div>
+
+        <details class="glass-tile rounded-2xl overflow-hidden" open>
+          <summary class="px-4 py-2.5 text-xs font-semibold text-slate-300 cursor-pointer select-none flex items-center justify-between hover:bg-white/5">
+            <span>Exact Daily Numbers Table</span>
+            <span class="text-[11px] font-mono text-slate-400" id="dailyTableCount">0 days</span>
+          </summary>
+          <div class="max-h-64 overflow-auto custom-scroll border-t border-white/5">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="sticky top-0 bg-slate-950/95 text-slate-400 text-[11px] uppercase">
+                <tr>
+                  <th class="px-4 py-2">Date</th>
+                  <th class="px-4 py-2 text-right">Unique</th>
+                  <th class="px-4 py-2 text-right">Visits</th>
+                  <th class="px-4 py-2 text-right text-sky-300">New</th>
+                  <th class="px-4 py-2 text-right text-emerald-300">Returning</th>
+                  <th class="px-4 py-2 text-right text-amber-300">Cast</th>
+                  <th class="px-4 py-2 text-right">Avg Dur</th>
+                </tr>
+              </thead>
+              <tbody id="dailyNumbersTbody" class="divide-y divide-white/5 text-slate-200"></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <!-- Section 2: Regularity, Stay-Open Behavior & Peak Activity Heatmap -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- Loyalty Tiers + Session Duration -->
+        <div class="lg:col-span-5 space-y-5">
+          <div class="glass-card rounded-3xl p-5 space-y-4">
+            <div>
+              <h2 class="text-base font-bold text-white">Visitor Regularity &amp; Loyalty</h2>
+              <p class="text-xs text-slate-400">How many distinct days each visitor returned in this period</p>
+            </div>
+            <div id="loyaltyTiersBox" class="space-y-3"></div>
+          </div>
+
+          <div class="glass-card rounded-3xl p-5 space-y-3">
+            <div>
+              <h2 class="text-base font-bold text-white">Stay-Open Duration</h2>
+              <p class="text-xs text-slate-400">Quick weather checks vs ambient wall/TV displays</p>
+            </div>
+            <div class="relative h-48 w-full">
+              <canvas id="durationChartCanvas"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peak Activity Heatmap -->
+        <div class="lg:col-span-7 glass-card rounded-3xl p-5 flex flex-col justify-between space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 class="text-base font-bold text-white">Peak Usage Times</h2>
+              <p class="text-xs text-slate-400">Visits by day of week and hour (your local time)</p>
+            </div>
+            <span id="peakSummaryPill" class="px-2.5 py-1 rounded-full text-[11px] font-mono bg-sky-500/15 text-sky-300 border border-sky-400/25">Peak: —</span>
+          </div>
+
+          <div class="overflow-x-auto custom-scroll pb-1">
+            <div id="activityHeatmapGrid" class="min-w-[540px] space-y-1.5"></div>
+          </div>
+
+          <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-white/5">
+            <span>Hover any cell for exact visits &amp; unique devices</span>
+            <div class="flex items-center gap-1.5">
+              <span>Low</span>
+              <span class="w-3 h-3 rounded-sm bg-slate-800/80 border border-white/10"></span>
+              <span class="w-3 h-3 rounded-sm bg-sky-500/25"></span>
+              <span class="w-3 h-3 rounded-sm bg-sky-500/50"></span>
+              <span class="w-3 h-3 rounded-sm bg-sky-400/75"></span>
+              <span class="w-3 h-3 rounded-sm bg-sky-300"></span>
+              <span>Peak</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Where It's Used (Map + Chosen Areas + Visitor Regions) -->
+      <section class="glass-card rounded-3xl p-5 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-white">Where It's Used</h2>
+            <p class="text-xs text-slate-400">Chosen weather areas and approximate visitor regions (locked personal locations stay private)</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button data-map-source="analytics" class="pill-btn pill-active px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Analytics Visits</button>
+            <button data-map-source="legacy" class="pill-btn pill-idle px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Legacy 30D Public Map (<span id="legacyLocationsCount">0</span>)</button>
+          </div>
+        </div>
+
+        <div id="usageMap" class="h-80 sm:h-96 w-full rounded-2xl border border-white/10 overflow-hidden z-10"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Chosen Weather Locations -->
+          <div class="glass-tile rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white">Top Chosen Weather Areas</h3>
+              <span id="lockedCountBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/10">0 locked</span>
+            </div>
+            <div id="topChosenLocationsList" class="space-y-2.5 max-h-72 overflow-y-auto custom-scroll pr-1"></div>
+          </div>
+
+          <!-- Visitor Access Locations -->
+          <div class="glass-tile rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white">Visitor Access Regions</h3>
+              <span class="text-[11px] text-slate-400">Approx geo &amp; timezone</span>
+            </div>
+            <div id="visitorRegionsList" class="space-y-2.5 max-h-72 overflow-y-auto custom-scroll pr-1"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Device Popularity, Platforms & Google Cast Spotlight -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-4 glass-card rounded-3xl p-5 space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Device Categories</h2>
+            <p class="text-xs text-slate-400">Mobile vs Desktop vs TV / Shield vs Cast</p>
+          </div>
+          <div class="relative h-56 w-full">
+            <canvas id="deviceCategoryCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 glass-card rounded-3xl p-5 space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Popular Devices &amp; Models</h2>
+            <p class="text-xs text-slate-400">Ranked by visits in selected window</p>
+          </div>
+          <div id="deviceModelsList" class="space-y-2.5 max-h-60 overflow-y-auto custom-scroll pr-1"></div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-5">
+          <!-- Google Cast Spotlight -->
+          <div class="glass-card rounded-3xl p-5 space-y-3 border border-amber-400/20">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-white">Google Cast to TV</h2>
+                <p class="text-xs text-slate-400">Clicks, connected senders &amp; TV receivers</p>
+              </div>
+              <span class="text-xl" aria-hidden="true">📺</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="glass-tile rounded-xl p-2.5">
+                <div class="text-lg font-bold font-mono text-sky-300" id="castClicksCount">0</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Cast Clicks</div>
+              </div>
+              <div class="glass-tile rounded-xl p-2.5">
+                <div class="text-lg font-bold font-mono text-emerald-300" id="castSendersCount">0</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Senders</div>
+              </div>
+              <div class="glass-tile rounded-xl p-2.5">
+                <div class="text-lg font-bold font-mono text-amber-300" id="castReceiversCount">0</div>
+                <div class="text-[10px] text-slate-400 mt-0.5">Receivers</div>
+              </div>
+            </div>
+            <div class="text-xs text-slate-400 flex items-center justify-between pt-1">
+              <span>Unique devices casting:</span>
+              <span id="castUniqueDevices" class="font-mono font-semibold text-white">0</span>
+            </div>
+          </div>
+
+          <!-- Browsers, PWA & Versions -->
+          <div class="glass-card rounded-3xl p-5 space-y-3">
+            <h2 class="text-base font-bold text-white">Browsers, PWA &amp; Versions</h2>
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-300">PWA Standalone vs Browser</span>
+                <span id="pwaRatioLabel" class="font-mono text-sky-300">0% PWA</span>
+              </div>
+              <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div id="pwaRatioBar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 pt-1">
+              <div>
+                <div class="text-[11px] text-slate-400 uppercase font-semibold mb-1.5">Browsers</div>
+                <div id="browsersList" class="space-y-1 text-xs"></div>
+              </div>
+              <div>
+                <div class="text-[11px] text-slate-400 uppercase font-semibold mb-1.5">Versions</div>
+                <div id="versionsList" class="space-y-1 text-xs"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5 & 6: Feature Engagement + User Feedback Inbox -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-6 glass-card rounded-3xl p-5 space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-white">Feature &amp; Modal Engagement</h2>
+            <p class="text-xs text-slate-400">Which tools visitors open (Total opens &amp; % of sessions)</p>
+          </div>
+          <div class="relative h-72 w-full">
+            <canvas id="featuresChartCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6 glass-card rounded-3xl p-5 flex flex-col space-y-4">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-base font-bold text-white">User Feedback Inbox</h2>
+              <p class="text-xs text-slate-400" id="feedbackStatsSubtitle">Checking Google Apps Script endpoint...</p>
+            </div>
+            <button id="retryFeedbackBtn" type="button" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-200 transition cursor-pointer">
+              Test Connection
+            </button>
+          </div>
+          <div id="feedbackInboxBody" class="flex-1 max-h-72 overflow-y-auto custom-scroll space-y-2.5 pr-1"></div>
+        </div>
+      </section>
+
+      <!-- Section 7: My Devices, Owner Exclusion & Promote to Live -->
+      <section id="devicesSection" class="glass-card rounded-3xl p-5 space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-white">My Devices &amp; Owner Exclusion</h2>
+            <p class="text-xs text-slate-400">Tag your PC, phone, and Shield TV so your own views don't skew public visitor stats</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- This Browser Card -->
+          <div class="glass-tile rounded-2xl p-4 flex flex-col justify-between gap-3">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white">This Browser</span>
+                <span id="thisBrowserOwnerBadge" class="px-2 py-0.5 rounded-full text-[10px] font-mono">Checking...</span>
+              </div>
+              <p class="text-[11px] text-slate-400 font-mono break-all">ID: <span id="thisBrowserVisitorId" class="text-slate-200">—</span></p>
+              <p class="text-[11px] text-slate-400 leading-relaxed">Marks <code class="text-sky-300">localStorage</code> on this origin so visits from this browser are flagged as yours.</p>
+            </div>
+            <button id="toggleThisBrowserOwnerBtn" type="button"
+              class="w-full py-2 px-3 rounded-xl border text-xs font-semibold transition cursor-pointer">
+              Mark This Browser as Owner
+            </button>
+          </div>
+
+          <!-- Tag Phone / TV QR & Links Card -->
+          <div class="glass-tile rounded-2xl p-4 md:col-span-2 flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div class="space-y-2.5 flex-1 w-full">
+              <div>
+                <h3 class="text-xs font-bold text-white">Tag Your Phone, Tablet, or Shield TV</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">Open either <code class="text-sky-300">?owner=1</code> URL once on a device (or scan the QR on your phone) to tag it permanently.</p>
+              </div>
+              <div class="space-y-1.5 text-[11px] font-mono">
+                <div class="flex items-center gap-2 bg-slate-950/70 border border-white/10 rounded-xl px-2.5 py-1.5">
+                  <span class="text-emerald-300 shrink-0">LIVE</span>
+                  <span id="ownerLiveUrlText" class="truncate text-slate-300 flex-1">https://nexusranger.github.io/weather/?owner=1</span>
+                  <button type="button" data-copy-target="ownerLiveUrlText" class="copy-btn px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white cursor-pointer shrink-0">Copy</button>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-950/70 border border-white/10 rounded-xl px-2.5 py-1.5">
+                  <span class="text-sky-300 shrink-0">DEV </span>
+                  <span id="ownerDevUrlText" class="truncate text-slate-300 flex-1">https://nexusranger.github.io/weather/dev.html?owner=1</span>
+                  <button type="button" data-copy-target="ownerDevUrlText" class="copy-btn px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white cursor-pointer shrink-0">Copy</button>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-950/70 border border-white/10 rounded-xl px-2.5 py-1.5">
+                  <span class="text-amber-300 shrink-0">LOC </span>
+                  <span id="ownerLocalUrlText" class="truncate text-slate-300 flex-1">http://localhost:8080/dev.html?owner=1</span>
+                  <button type="button" data-copy-target="ownerLocalUrlText" class="copy-btn px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white cursor-pointer shrink-0">Copy</button>
+                </div>
+              </div>
+            </div>
+            <div class="shrink-0 flex flex-col items-center gap-1.5">
+              <div id="ownerQrBox" class="p-2 rounded-xl bg-white border border-white/20"></div>
+              <span class="text-[10px] font-mono text-slate-400">Scan to tag Dev/Live</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detected Devices / Retroactive Exclusion Table -->
+        <div class="glass-tile rounded-2xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-white">Detected Devices (Retroactive Exclusion)</h3>
+              <p class="text-[11px] text-slate-400">Spot your own TV/phone/PC below and click <strong>Exclude as Mine</strong> to filter all past &amp; future visits from external stats</p>
+            </div>
+            <span id="detectedDevicesCount" class="text-[11px] font-mono text-slate-400">0 devices</span>
+          </div>
+          <div class="max-h-80 overflow-auto custom-scroll">
+            <table class="w-full text-left text-xs">
+              <thead class="sticky top-0 bg-slate-950/95 text-slate-400 text-[11px] uppercase font-mono">
+                <tr>
+                  <th class="px-4 py-2.5">Device ID</th>
+                  <th class="px-4 py-2.5">Model &amp; OS / Browser</th>
+                  <th class="px-4 py-2.5">Last Location</th>
+                  <th class="px-4 py-2.5">Last Seen</th>
+                  <th class="px-4 py-2.5 text-right">Visits</th>
+                  <th class="px-4 py-2.5">Status</th>
+                  <th class="px-4 py-2.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="detectedDevicesTbody" class="divide-y divide-white/5 text-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Promote to Live Cheat Sheet -->
+        <div class="glass-tile rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="space-y-1">
+            <h3 class="text-xs font-bold text-white">Ready to enable on Live (<code class="text-sky-300 font-mono">index.html</code>)?</h3>
+            <p class="text-[11px] text-slate-400">Once you have verified tracking on <code class="text-sky-300 font-mono">dev.html</code>, add this single line right before <code class="text-slate-300 font-mono">&lt;/body&gt;</code> in <code class="text-sky-300 font-mono">index.html</code>:</p>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono">
+            <code id="promoteSnippetText" class="text-emerald-300">&lt;script defer src="analytics.js?v=1"&gt;&lt;/script&gt;</code>
+            <button type="button" data-copy-target="promoteSnippetText" class="copy-btn px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] cursor-pointer">Copy</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Exclude Device Nickname Modal -->
+  <div id="excludeModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm items-center justify-center p-4">
+    <div class="glass-card rounded-2xl max-w-sm w-full p-5 space-y-4">
+      <div>
+        <h3 class="text-sm font-bold text-white">Exclude Device as Mine</h3>
+        <p class="text-xs text-slate-400 mt-1">Device <code id="excludeModalVisitorId" class="font-mono text-sky-300"></code> will be excluded from External Users stats.</p>
+      </div>
+      <div>
+        <label for="excludeDeviceLabelInput" class="block text-xs text-slate-300 mb-1.5">Optional nickname (e.g. Living Room Shield)</label>
+        <input id="excludeDeviceLabelInput" type="text" maxlength="60" placeholder="My Shield TV / Phone"
+          class="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-white/10 text-sm text-white focus:outline-none focus:border-sky-400">
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="excludeCancelBtn" type="button" class="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-medium text-slate-300 cursor-pointer">Cancel</button>
+        <button id="excludeConfirmBtn" type="button" class="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-xs font-semibold text-white cursor-pointer">Exclude Device</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const SUPABASE_URL = 'https://kfxvxehzbtdiflwjcpmo.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_uLs2WDllT95YH15WEzjqFw_O9_nkT8v';
+      const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/AKfycbzEDy0euGKwHedIrIBA12ZTQdJNRZtfdIPJHPvE--ea3qtR4qDjM24Y3LjTZVSMDptu/exec';
+      const OWNER_KEY = 'ambient_analytics_owner';
+      const VISITOR_KEY = 'ambient_visitor_id';
+
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      const state = {
+        user: null,
+        filters: {
+          range: '30d',
+          audience: 'external',
+          env: 'live'
+        },
+        chartMode: 'trend',
+        mapSource: 'analytics',
+        setupMissing: false,
+        allSessions: [],
+        allEvents: [],
+        loadedFetchDays: null,
+        excludedMap: new Map(),
+        legacyLocations: [],
+        charts: {
+          daily: null,
+          duration: null,
+          deviceCategory: null,
+          features: null
+        },
+        map: null,
+        mapLayer: null,
+        excludeTargetId: null
+      };
+
+      function $(id) {
+        return document.getElementById(id);
+      }
+
+      function escapeHtml(val) {
+        return String(val == null ? '' : val)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function toLocalDayKey(dateInput) {
+        const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+        if (isNaN(d.getTime())) return '';
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+
+      function formatShortDay(dayKey) {
+        const parts = dayKey.split('-');
+        if (parts.length !== 3) return dayKey;
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      }
+
+      function fmtDuration(sec) {
+        const s = Math.max(0, Math.round(Number(sec) || 0));
+        if (s < 60) return `${s}s`;
+        const m = Math.floor(s / 60);
+        if (m < 60) return `${m}m ${s % 60}s`;
+        const h = Math.floor(m / 60);
+        return `${h}h ${m % 60}m`;
+      }
+
+      function fmtTimeAgo(iso) {
+        if (!iso) return '—';
+        const diff = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+        if (diff < 60) return `${diff}s ago`;
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        return `${Math.floor(diff / 86400)}d ago`;
+      }
+
+      function countryFlag(code) {
+        if (!code || code.length !== 2) return '🌐';
+        const up = code.toUpperCase();
+        try {
+          return String.fromCodePoint(...[...up].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+        } catch (_) {
+          return '🌐';
+        }
+      }
+
+      function isMissingTableError(err) {
+        if (!err) return false;
+        const code = String(err.code || '');
+        const msg = String(err.message || '');
+        return (
+          code === '42P01' ||
+          code === 'PGRST205' ||
+          msg.includes('does not exist') ||
+          msg.includes('Could not find the table')
+        );
+      }
+
+      async function fetchAllPaginated(buildQuery, maxRows = 15000) {
+        const pageSize = 1000;
+        let offset = 0;
+        const all = [];
+        while (offset < maxRows) {
+          const { data, error } = await buildQuery().range(offset, offset + pageSize - 1);
+          if (error) throw error;
+          if (!Array.isArray(data) || data.length === 0) break;
+          all.push(...data);
+          if (data.length < pageSize) break;
+          offset += pageSize;
+        }
+        return all;
+      }
+
+      function rangeToDays(range) {
+        if (range === '7d') return 7;
+        if (range === '14d') return 14;
+        if (range === '30d') return 30;
+        if (range === '90d') return 90;
+        return 0;
+      }
+
+      // ------------------------------------------------------------------
+      // Authentication Flow
+      // ------------------------------------------------------------------
+      function showLoginError(msg, showSignOut) {
+        const box = $('loginErrorBox');
+        box.textContent = msg;
+        box.classList.remove('hidden');
+        $('wrongUserActions').classList.toggle('hidden', !showSignOut);
+      }
+
+      function clearLoginError() {
+        $('loginErrorBox').classList.add('hidden');
+        $('wrongUserActions').classList.add('hidden');
+      }
+
+      async function verifyAdminAndEnter(user) {
+        clearLoginError();
+        state.user = user;
+        state.setupMissing = false;
+
+        try {
+          const { data, error } = await sb.from('analytics_admins').select('email');
+          if (error) {
+            if (isMissingTableError(error)) {
+              state.setupMissing = true;
+            } else {
+              throw error;
+            }
+          } else if (!data || data.length === 0) {
+            showLoginError(
+              `Access denied: ${user.email || 'this account'} is not listed in public.analytics_admins.`,
+              true
+            );
+            $('loginView').classList.remove('hidden');
+            $('dashboardView').classList.add('hidden');
+            return;
+          }
+        } catch (err) {
+          showLoginError(err.message || 'Unable to verify admin privileges.', true);
+          $('loginView').classList.remove('hidden');
+          $('dashboardView').classList.add('hidden');
+          return;
+        }
+
+        $('adminEmailBadge').textContent = user.email || 'Admin';
+        $('loginView').classList.add('hidden');
+        $('dashboardView').classList.remove('hidden');
+
+        initOwnerTools();
+        initUsageMap();
+        await loadAllData();
+        loadFeedbackInbox();
+      }
+
+      async function checkInitialAuth() {
+        $('authCheckingBox').classList.remove('hidden');
+        try {
+          const { data: { session } } = await sb.auth.getSession();
+          $('authCheckingBox').classList.add('hidden');
+          if (session && session.user) {
+            await verifyAdminAndEnter(session.user);
+          } else {
+            $('loginView').classList.remove('hidden');
+            $('dashboardView').classList.add('hidden');
+          }
+        } catch (_) {
+          $('authCheckingBox').classList.add('hidden');
+        }
+      }
+
+      $('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearLoginError();
+        const btn = $('loginSubmitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Signing in...';
+        try {
+          const email = $('loginEmail').value.trim();
+          const password = $('loginPassword').value;
+          const { data, error } = await sb.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          if (data && data.user) {
+            await verifyAdminAndEnter(data.user);
+          }
+        } catch (err) {
+          showLoginError(err.message || 'Sign-in failed.', false);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Sign In to Admin Console';
+        }
+      });
+
+      async function doSignOut() {
+        await sb.auth.signOut().catch(() => {});
+        state.user = null;
+        state.allSessions = [];
+        state.allEvents = [];
+        $('dashboardView').classList.add('hidden');
+        $('loginView').classList.remove('hidden');
+        $('loginPassword').value = '';
+      }
+
+      $('signOutBtn').addEventListener('click', doSignOut);
+      $('deniedSignOutBtn').addEventListener('click', doSignOut);
+
+      // ------------------------------------------------------------------
+      // Data Loading
+      // ------------------------------------------------------------------
+      async function loadAllData() {
+        const refreshBtn = $('refreshBtn');
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '↻ Loading...';
+
+        try {
+          if (state.setupMissing) {
+            // Re-check whether the SQL script has now been run
+            const probe = await sb.from('analytics_admins').select('email');
+            if (!probe.error) {
+              if (!probe.data || probe.data.length === 0) {
+                showLoginError(
+                  `Access denied: ${(state.user && state.user.email) || 'this account'} is not in public.analytics_admins.`,
+                  true
+                );
+                $('dashboardView').classList.add('hidden');
+                $('loginView').classList.remove('hidden');
+                return;
+              }
+              state.setupMissing = false;
+            }
+          }
+
+          const days = rangeToDays(state.filters.range);
+          const fetchDays = days > 0 ? Math.max(days * 2, 30) : 0;
+          const sessionCutoffIso = fetchDays > 0
+            ? new Date(Date.now() - fetchDays * 86400000).toISOString()
+            : null;
+          const eventDays = days > 0 ? Math.max(days, 30) : 0;
+          const eventCutoffIso = eventDays > 0
+            ? new Date(Date.now() - eventDays * 86400000).toISOString()
+            : null;
+
+          const sessionsPromise = state.setupMissing
+            ? Promise.resolve([])
+            : fetchAllPaginated(() => {
+                let q = sb
+                  .from('analytics_sessions')
+                  .select('*')
+                  .order('started_at', { ascending: false });
+                if (sessionCutoffIso) q = q.gte('started_at', sessionCutoffIso);
+                return q;
+              }).catch((err) => {
+                if (isMissingTableError(err)) {
+                  state.setupMissing = true;
+                  return [];
+                }
+                throw err;
+              });
+
+          const eventsPromise = state.setupMissing
+            ? Promise.resolve([])
+            : fetchAllPaginated(() => {
+                let q = sb
+                  .from('analytics_events')
+                  .select('*')
+                  .order('created_at', { ascending: false });
+                if (eventCutoffIso) q = q.gte('created_at', eventCutoffIso);
+                return q;
+              }).catch((err) => {
+                if (isMissingTableError(err)) return [];
+                throw err;
+              });
+
+          const excludedPromise = state.setupMissing
+            ? Promise.resolve({ data: [] })
+            : sb.from('analytics_excluded_devices').select('*').then((res) => {
+                if (res.error && !isMissingTableError(res.error)) throw res.error;
+                return res;
+              });
+
+          const legacyPromise = sb
+            .from('locations')
+            .select('name,postcode,lat,lon,timestamp')
+            .order('timestamp', { ascending: false })
+            .limit(1000)
+            .then((res) => (res.error ? [] : (res.data || [])))
+            .catch(() => []);
+
+          const [sessions, events, excludedRes, legacyLocs] = await Promise.all([
+            sessionsPromise,
+            eventsPromise,
+            excludedPromise,
+            legacyPromise
+          ]);
+
+          state.loadedFetchDays = fetchDays;
+          state.allSessions = sessions || [];
+          state.allEvents = events || [];
+          state.excludedMap = new Map();
+          ((excludedRes && excludedRes.data) || []).forEach((row) => {
+            state.excludedMap.set(row.visitor_id, row);
+          });
+          state.legacyLocations = legacyLocs || [];
+          $('legacyLocationsCount').textContent = String(state.legacyLocations.length);
+
+          $('lastRefreshedLabel').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+          renderDashboard();
+        } catch (err) {
+          showStatusBanner(
+            'error',
+            `Error loading analytics: ${escapeHtml(err.message || String(err))}`
+          );
+        } finally {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = '↻ Refresh';
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // Filtering & Aggregation Helpers
+      // ------------------------------------------------------------------
+      function isSessionMine(s) {
+        return Boolean(s.is_owner) || state.excludedMap.has(s.visitor_id);
+      }
+
+      function matchesAudience(s) {
+        if (state.filters.audience === 'external') return !isSessionMine(s);
+        if (state.filters.audience === 'mine') return isSessionMine(s);
+        return true;
+      }
+
+      function matchesEnv(s) {
+        if (state.filters.env === 'all') return true;
+        return (s.env || 'live') === state.filters.env;
+      }
+
+      function showStatusBanner(kind, htmlContent) {
+        const el = $('statusBanner');
+        if (!kind) {
+          el.classList.add('hidden');
+          el.innerHTML = '';
+          return;
+        }
+        const styleMap = {
+          warn: 'border-amber-400/35 bg-amber-500/10 text-amber-100',
+          info: 'border-sky-400/35 bg-sky-500/10 text-sky-100',
+          error: 'border-rose-400/35 bg-rose-500/10 text-rose-100'
+        };
+        el.className = `glass-card rounded-2xl p-4 text-xs flex flex-wrap items-center justify-between gap-3 ${styleMap[kind] || styleMap.info}`;
+        el.innerHTML = htmlContent;
+        el.classList.remove('hidden');
+      }
+
+      function updateStatusBanner(envAudienceSessions, periodSessions) {
+        if (state.setupMissing) {
+          showStatusBanner(
+            'warn',
+            `<div><strong>Setup Required:</strong> Analytics tables aren't in Supabase yet. Paste <code class="font-mono text-amber-200">supabase-analytics-setup.sql</code> into Supabase SQL Editor and run it, then click Refresh.</div>
+             <button id="bannerRefreshBtn" type="button" class="px-3 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 border border-amber-300/40 text-amber-100 font-semibold cursor-pointer">Check Again</button>`
+          );
+          const checkBtn = $('bannerRefreshBtn');
+          if (checkBtn) checkBtn.addEventListener('click', () => loadAllData());
+          return;
+        }
+
+        if (state.allSessions.length === 0) {
+          showStatusBanner(
+            'info',
+            `<div><strong>Ready to collect telemetry:</strong> No visits recorded yet. Open <code class="font-mono text-sky-200">dev.html</code> in your browser to send a test session (your legacy 30-day map pins are already available under <em>Legacy 30D Public Map</em> below).</div>`
+          );
+          return;
+        }
+
+        if (periodSessions.length === 0 && state.filters.env === 'live') {
+          const devOrLocalCount = state.allSessions.filter(
+            (s) => (s.env === 'dev' || s.env === 'local') && matchesAudience(s)
+          ).length;
+          if (devOrLocalCount > 0) {
+            showStatusBanner(
+              'info',
+              `<div><strong>No Live traffic in this window yet</strong> — found <strong class="font-mono">${devOrLocalCount}</strong> session${devOrLocalCount === 1 ? '' : 's'} in Dev/Local matching your audience filter.</div>
+               <button id="switchToAllEnvBtn" type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/25 hover:bg-sky-500/35 border border-sky-400/40 text-sky-100 font-semibold cursor-pointer">Switch Env to All</button>`
+            );
+            const btn = $('switchToAllEnvBtn');
+            if (btn) {
+              btn.addEventListener('click', () => setFilter('env', 'all'));
+            }
+            return;
+          }
+        }
+
+        if (envAudienceSessions.length === 0 && state.filters.audience === 'external') {
+          const ownerCount = state.allSessions.filter((s) => matchesEnv(s)).length;
+          if (ownerCount > 0) {
+            showStatusBanner(
+              'info',
+              `<div><strong>No External traffic yet</strong> under <em>${escapeHtml(state.filters.env.toUpperCase())}</em> — ${ownerCount} owner/excluded session${ownerCount === 1 ? '' : 's'} hidden.</div>
+               <button id="switchToAllAudBtn" type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/25 hover:bg-sky-500/35 border border-sky-400/40 text-sky-100 font-semibold cursor-pointer">View All Traffic</button>`
+            );
+            const btn = $('switchToAllAudBtn');
+            if (btn) {
+              btn.addEventListener('click', () => setFilter('audience', 'all'));
+            }
+            return;
+          }
+        }
+
+        showStatusBanner(null, '');
+      }
+
+      function computeDeltaBadge(current, previous, suffix) {
+        if (previous === null || previous === undefined) {
+          return { text: suffix || '—', cls: 'bg-white/5 text-slate-400' };
+        }
+        if (previous === 0) {
+          if (current === 0) return { text: '0%', cls: 'bg-white/5 text-slate-400' };
+          return { text: `↑ New`, cls: 'bg-emerald-500/15 text-emerald-300' };
+        }
+        const pct = Math.round(((current - previous) / previous) * 100);
+        if (pct > 0) {
+          return { text: `↑ +${pct}%${suffix ? ' ' + suffix : ''}`, cls: 'bg-emerald-500/15 text-emerald-300' };
+        }
+        if (pct < 0) {
+          return { text: `↓ ${pct}%${suffix ? ' ' + suffix : ''}`, cls: 'bg-rose-500/15 text-rose-300' };
+        }
+        return { text: `0%${suffix ? ' ' + suffix : ''}`, cls: 'bg-white/5 text-slate-400' };
+      }
+
+      function buildDayKeys(days, sessions) {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const keys = [];
+        if (days > 0) {
+          for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(todayStart.getTime() - i * 86400000);
+            keys.push(toLocalDayKey(d));
+          }
+          return keys;
+        }
+        if (sessions.length === 0) {
+          for (let i = 29; i >= 0; i--) {
+            keys.push(toLocalDayKey(new Date(todayStart.getTime() - i * 86400000)));
+          }
+          return keys;
+        }
+        let minMs = todayStart.getTime();
+        sessions.forEach((s) => {
+          const t = new Date(s.started_at).getTime();
+          if (t < minMs) minMs = t;
+        });
+        const minDate = new Date(minMs);
+        const startDay = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
+        const diffDays = Math.min(365, Math.max(1, Math.round((todayStart - startDay) / 86400000)));
+        for (let i = diffDays; i >= 0; i--) {
+          keys.push(toLocalDayKey(new Date(todayStart.getTime() - i * 86400000)));
+        }
+        return keys;
+      }
+
+      // ------------------------------------------------------------------
+      // Main Render Pipeline
+      // ------------------------------------------------------------------
+      function renderDashboard() {
+        const nowMs = Date.now();
+        const days = rangeToDays(state.filters.range);
+        const periodStartMs = days > 0 ? nowMs - days * 86400000 : 0;
+        const prevStartMs = days > 0 ? nowMs - days * 2 * 86400000 : 0;
+
+        const envAudienceSessions = state.allSessions.filter(
+          (s) => matchesAudience(s) && matchesEnv(s)
+        );
+
+        // Track each visitor's earliest seen timestamp across envAudienceSessions
+        const visitorFirstSeenMs = new Map();
+        envAudienceSessions.forEach((s) => {
+          const t = new Date(s.started_at).getTime();
+          const prev = visitorFirstSeenMs.get(s.visitor_id);
+          if (prev === undefined || t < prev) visitorFirstSeenMs.set(s.visitor_id, t);
+        });
+
+        const periodSessions = envAudienceSessions.filter(
+          (s) => new Date(s.started_at).getTime() >= periodStartMs
+        );
+        const prevSessions = days > 0
+          ? envAudienceSessions.filter((s) => {
+              const t = new Date(s.started_at).getTime();
+              return t >= prevStartMs && t < periodStartMs;
+            })
+          : [];
+
+        const periodEvents = state.allEvents.filter((ev) => {
+          if (!matchesAudience(ev) || !matchesEnv(ev)) return false;
+          return new Date(ev.created_at).getTime() >= periodStartMs;
+        });
+
+        updateStatusBanner(envAudienceSessions, periodSessions);
+
+        // Live Active Now (last 15 min across selected audience/env)
+        const activeVisitors = new Set();
+        envAudienceSessions.forEach((s) => {
+          const seenMs = new Date(s.last_seen_at || s.started_at).getTime();
+          if (nowMs - seenMs <= 15 * 60 * 1000) activeVisitors.add(s.visitor_id);
+        });
+        $('liveActiveCount').textContent = `${activeVisitors.size} active now`;
+
+        // KPIs
+        renderKpis(envAudienceSessions, periodSessions, prevSessions, visitorFirstSeenMs, days);
+
+        // Daily series + chart + table
+        const dayStats = computeDailyStats(periodSessions, visitorFirstSeenMs, days);
+        state.lastDayStats = dayStats;
+        renderDailyChart(dayStats);
+        renderDailyTable(dayStats);
+
+        // Regularity, Duration, Heatmap
+        renderLoyaltyAndDuration(periodSessions);
+        renderHeatmap(periodSessions);
+
+        // Where It's Used
+        renderLocationsSection(periodSessions);
+
+        // Devices & Cast
+        renderDevicesAndCast(periodSessions, periodEvents);
+
+        // Feature Engagement
+        renderFeatureEngagement(periodSessions, periodEvents);
+
+        // My Devices & Detected Devices Table
+        renderDetectedDevicesTable();
+      }
+
+      function renderKpis(envAudienceSessions, periodSessions, prevSessions, visitorFirstSeenMs, days) {
+        const nowMs = Date.now();
+        const todayKey = toLocalDayKey(new Date());
+
+        const todaySessions = envAudienceSessions.filter((s) => toLocalDayKey(s.started_at) === todayKey);
+        const todayUnique = new Set(todaySessions.map((s) => s.visitor_id)).size;
+
+        // Previous 7-day daily avg (excluding today)
+        const prev7DailyMap = new Map();
+        for (let i = 1; i <= 7; i++) {
+          prev7DailyMap.set(toLocalDayKey(new Date(nowMs - i * 86400000)), new Set());
+        }
+        envAudienceSessions.forEach((s) => {
+          const dk = toLocalDayKey(s.started_at);
+          if (prev7DailyMap.has(dk)) prev7DailyMap.get(dk).add(s.visitor_id);
+        });
+        let prev7Sum = 0;
+        prev7DailyMap.forEach((set) => { prev7Sum += set.size; });
+        const prev7Avg = prev7Sum / 7;
+
+        $('kpiTodayUnique').textContent = String(todayUnique);
+        $('kpiTodayVisits').textContent = String(todaySessions.length);
+        const todayDelta = computeDeltaBadge(todayUnique, prev7Avg > 0 ? prev7Avg : 0, 'vs 7d avg');
+        $('kpiTodayDelta').textContent = todayDelta.text;
+        $('kpiTodayDelta').className = `text-[11px] font-mono px-2 py-0.5 rounded-full ${todayDelta.cls}`;
+
+        // Period Visitors & Growth
+        const periodUnique = new Set(periodSessions.map((s) => s.visitor_id)).size;
+        const prevUnique = days > 0 ? new Set(prevSessions.map((s) => s.visitor_id)).size : null;
+        $('kpiPeriodLabel').textContent = days > 0 ? `${days}D Visitors` : 'All-Time Visitors';
+        $('kpiPeriodUnique').textContent = String(periodUnique);
+        $('kpiPeriodVisits').textContent = String(periodSessions.length);
+        const periodDelta = days > 0
+          ? computeDeltaBadge(periodUnique, prevUnique, '')
+          : { text: 'All time', cls: 'bg-white/5 text-slate-400' };
+        $('kpiPeriodDelta').textContent = periodDelta.text;
+        $('kpiPeriodDelta').className = `text-[11px] font-mono px-2 py-0.5 rounded-full ${periodDelta.cls}`;
+
+        // WAU / MAU / Stickiness & Returning %
+        const wauSet = new Set();
+        const mauSet = new Set();
+        const last7DayVisitors = new Map();
+        for (let i = 0; i < 7; i++) {
+          last7DayVisitors.set(toLocalDayKey(new Date(nowMs - i * 86400000)), new Set());
+        }
+        envAudienceSessions.forEach((s) => {
+          const t = new Date(s.started_at).getTime();
+          if (nowMs - t <= 30 * 86400000) mauSet.add(s.visitor_id);
+          if (nowMs - t <= 7 * 86400000) wauSet.add(s.visitor_id);
+          const dk = toLocalDayKey(t);
+          if (last7DayVisitors.has(dk)) last7DayVisitors.get(dk).add(s.visitor_id);
+        });
+        let dauSum7 = 0;
+        last7DayVisitors.forEach((set) => { dauSum7 += set.size; });
+        const avgDau7 = dauSum7 / 7;
+        const stickiness = mauSet.size > 0 ? Math.round((avgDau7 / mauSet.size) * 100) : 0;
+
+        let returningCount = 0;
+        const seenInPeriod = new Set();
+        periodSessions.forEach((s) => {
+          if (seenInPeriod.has(s.visitor_id)) return;
+          seenInPeriod.add(s.visitor_id);
+          const firstMs = visitorFirstSeenMs.get(s.visitor_id);
+          const sMs = new Date(s.started_at).getTime();
+          // Returning if they have an earlier visit before this one, or multiple sessions in period
+          const visitorDays = new Set(
+            periodSessions.filter((x) => x.visitor_id === s.visitor_id).map((x) => toLocalDayKey(x.started_at))
+          );
+          if (visitorDays.size > 1 || (firstMs !== undefined && firstMs < sMs - 60000)) {
+            returningCount++;
+          }
+        });
+        const returningPct = periodUnique > 0 ? Math.round((returningCount / periodUnique) * 100) : 0;
+
+        $('kpiStickiness').textContent = `${stickiness}%`;
+        $('kpiWau').textContent = String(wauSet.size);
+        $('kpiMau').textContent = String(mauSet.size);
+        $('kpiReturningPct').textContent = `${returningPct}% ret`;
+
+        // Repeat Users (2+ distinct days)
+        const daysByVisitor = new Map();
+        periodSessions.forEach((s) => {
+          if (!daysByVisitor.has(s.visitor_id)) daysByVisitor.set(s.visitor_id, new Set());
+          daysByVisitor.get(s.visitor_id).add(toLocalDayKey(s.started_at));
+        });
+        let repeat2 = 0;
+        let repeat5 = 0;
+        daysByVisitor.forEach((set) => {
+          if (set.size >= 2) repeat2++;
+          if (set.size >= 5) repeat5++;
+        });
+        const repeatPct = periodUnique > 0 ? Math.round((repeat2 / periodUnique) * 100) : 0;
+        $('kpiRepeatUsers').textContent = String(repeat2);
+        $('kpiRepeatPct').textContent = `${repeatPct}%`;
+        $('kpiPowerRegulars').textContent = `${repeat5} (5d+)`;
+
+        // Stay-Open Duration
+        const durations = periodSessions.map((s) => Number(s.duration_sec || 0)).sort((a, b) => a - b);
+        let medianDur = 0;
+        let avgDur = 0;
+        let longCount = 0;
+        if (durations.length > 0) {
+          const mid = Math.floor(durations.length / 2);
+          medianDur = durations.length % 2 === 0
+            ? Math.round((durations[mid - 1] + durations[mid]) / 2)
+            : durations[mid];
+          avgDur = Math.round(durations.reduce((a, b) => a + b, 0) / durations.length);
+          longCount = durations.filter((d) => d >= 900).length;
+        }
+        $('kpiMedianDur').textContent = fmtDuration(medianDur);
+        $('kpiAvgDur').textContent = fmtDuration(avgDur);
+        $('kpiLongSessions').textContent = `${longCount} ambient`;
+
+        // Cast to TV
+        const castSessions = periodSessions.filter(
+          (s) => s.used_cast || s.cast_mode === 'receiver' || s.device_type === 'cast_receiver'
+        );
+        const castReceivers = castSessions.filter(
+          (s) => s.cast_mode === 'receiver' || s.device_type === 'cast_receiver'
+        ).length;
+        const castSenders = castSessions.length - castReceivers;
+        const castPct = periodSessions.length > 0
+          ? Math.round((castSessions.length / periodSessions.length) * 100)
+          : 0;
+        $('kpiCastSessions').textContent = String(castSessions.length);
+        $('kpiCastPct').textContent = `${castPct}%`;
+        $('kpiCastSplit').textContent = `${castReceivers} rec • ${castSenders} senders`;
+      }
+
+      // ------------------------------------------------------------------
+      // Section 1: Daily Visitors & Growth Chart + Table
+      // ------------------------------------------------------------------
+      function computeDailyStats(periodSessions, visitorFirstSeenMs, days) {
+        const dayKeys = buildDayKeys(days, periodSessions);
+        const map = new Map();
+        dayKeys.forEach((dk) => {
+          map.set(dk, {
+            dayKey: dk,
+            label: formatShortDay(dk),
+            visitors: new Set(),
+            newVisitors: new Set(),
+            retVisitors: new Set(),
+            visits: 0,
+            castVisits: 0,
+            durationSum: 0
+          });
+        });
+
+        periodSessions.forEach((s) => {
+          const dk = toLocalDayKey(s.started_at);
+          const bucket = map.get(dk);
+          if (!bucket) return;
+          bucket.visits++;
+          bucket.visitors.add(s.visitor_id);
+          bucket.durationSum += Number(s.duration_sec || 0);
+          if (s.used_cast || s.cast_mode === 'receiver' || s.device_type === 'cast_receiver') {
+            bucket.castVisits++;
+          }
+          const firstDayKey = toLocalDayKey(visitorFirstSeenMs.get(s.visitor_id));
+          if (firstDayKey === dk) {
+            bucket.newVisitors.add(s.visitor_id);
+          } else {
+            bucket.retVisitors.add(s.visitor_id);
+          }
+        });
+
+        const rows = Array.from(map.values()).map((b) => ({
+          dayKey: b.dayKey,
+          label: b.label,
+          unique: b.visitors.size,
+          visits: b.visits,
+          newCount: b.newVisitors.size,
+          retCount: b.retVisitors.size,
+          castCount: b.castVisits,
+          avgDur: b.visits > 0 ? Math.round(b.durationSum / b.visits) : 0
+        }));
+
+        // 7-day rolling average of unique visitors
+        for (let i = 0; i < rows.length; i++) {
+          const start = Math.max(0, i - 6);
+          let sum = 0;
+          for (let j = start; j <= i; j++) sum += rows[j].unique;
+          rows[i].ma7 = Math.round((sum / (i - start + 1)) * 10) / 10;
+        }
+        return rows;
+      }
+
+      function renderDailyChart(rows) {
+        const ctx = $('dailyChartCanvas').getContext('2d');
+        if (state.charts.daily) {
+          state.charts.daily.destroy();
+          state.charts.daily = null;
+        }
+
+        const labels = rows.map((r) => r.label);
+        const commonOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#cbd5e1', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.95)',
+              borderColor: 'rgba(255,255,255,0.15)',
+              borderWidth: 1,
+              titleColor: '#f8fafc',
+              bodyColor: '#cbd5e1'
+            }
+          },
+          scales: {
+            x: {
+              stacked: state.chartMode === 'retention',
+              ticks: { color: '#94a3b8', maxRotation: 0, autoSkip: true, maxTicksLimit: 12, font: { size: 11 } },
+              grid: { color: 'rgba(255,255,255,0.04)' }
+            },
+            y: {
+              stacked: state.chartMode === 'retention',
+              beginAtZero: true,
+              ticks: { color: '#94a3b8', precision: 0, font: { size: 11 } },
+              grid: { color: 'rgba(255,255,255,0.06)' }
+            }
+          }
+        };
+
+        const datasets = state.chartMode === 'retention'
+          ? [
+              {
+                type: 'bar',
+                label: 'New Visitors',
+                data: rows.map((r) => r.newCount),
+                backgroundColor: 'rgba(56, 189, 248, 0.78)',
+                borderRadius: 4
+              },
+              {
+                type: 'bar',
+                label: 'Returning Visitors',
+                data: rows.map((r) => r.retCount),
+                backgroundColor: 'rgba(52, 211, 153, 0.82)',
+                borderRadius: 4
+              }
+            ]
+          : [
+              {
+                type: 'bar',
+                label: 'Unique Visitors',
+                data: rows.map((r) => r.unique),
+                backgroundColor: 'rgba(56, 189, 248, 0.72)',
+                borderColor: 'rgba(56, 189, 248, 1)',
+                borderWidth: 1,
+                borderRadius: 5,
+                order: 3
+              },
+              {
+                type: 'line',
+                label: 'Total Visits',
+                data: rows.map((r) => r.visits),
+                borderColor: 'rgba(167, 139, 250, 0.9)',
+                backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                borderWidth: 2,
+                borderDash: [5, 4],
+                tension: 0.3,
+                pointRadius: 2,
+                order: 2
+              },
+              {
+                type: 'line',
+                label: '7-Day Trend Avg',
+                data: rows.map((r) => r.ma7),
+                borderColor: 'rgba(52, 211, 153, 0.95)',
+                backgroundColor: 'rgba(52, 211, 153, 0.12)',
+                borderWidth: 2.5,
+                tension: 0.35,
+                pointRadius: 0,
+                order: 1
+              }
+            ];
+
+        state.charts.daily = new Chart(ctx, {
+          data: { labels, datasets },
+          options: commonOptions
+        });
+      }
+
+      function renderDailyTable(rows) {
+        $('dailyTableCount').textContent = `${rows.length} days`;
+        const tbody = $('dailyNumbersTbody');
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-4 text-center text-slate-500">No data</td></tr>';
+          return;
+        }
+        const desc = [...rows].reverse();
+        tbody.innerHTML = desc.map((r) => `
+          <tr class="hover:bg-white/5">
+            <td class="px-4 py-2 text-slate-300">${escapeHtml(r.dayKey)}</td>
+            <td class="px-4 py-2 text-right font-semibold text-white">${r.unique}</td>
+            <td class="px-4 py-2 text-right text-slate-300">${r.visits}</td>
+            <td class="px-4 py-2 text-right text-sky-300">${r.newCount}</td>
+            <td class="px-4 py-2 text-right text-emerald-300">${r.retCount}</td>
+            <td class="px-4 py-2 text-right text-amber-300">${r.castCount}</td>
+            <td class="px-4 py-2 text-right text-slate-400">${fmtDuration(r.avgDur)}</td>
+          </tr>
+        `).join('');
+      }
+
+      $('exportCsvBtn').addEventListener('click', () => {
+        const rows = state.lastDayStats || [];
+        if (!rows.length) return;
+        const header = 'date,unique_visitors,total_visits,new_visitors,returning_visitors,cast_sessions,avg_duration_sec,moving_avg_7d';
+        const lines = rows.map((r) =>
+          [r.dayKey, r.unique, r.visits, r.newCount, r.retCount, r.castCount, r.avgDur, r.ma7].join(',')
+        );
+        const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `weather-daily-stats-${state.filters.range}-${state.filters.env}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      // ------------------------------------------------------------------
+      // Section 2: Loyalty Tiers, Session Duration & Peak Heatmap
+      // ------------------------------------------------------------------
+      function renderLoyaltyAndDuration(periodSessions) {
+        const daysPerVisitor = new Map();
+        periodSessions.forEach((s) => {
+          if (!daysPerVisitor.has(s.visitor_id)) daysPerVisitor.set(s.visitor_id, new Set());
+          daysPerVisitor.get(s.visitor_id).add(toLocalDayKey(s.started_at));
+        });
+
+        const totalVisitors = daysPerVisitor.size;
+        const tiers = [
+          { label: '1 day (Tried once)', min: 1, max: 1, color: 'bg-slate-400' },
+          { label: '2–3 days (Occasional)', min: 2, max: 3, color: 'bg-sky-400' },
+          { label: '4–7 days (Regular)', min: 4, max: 7, color: 'bg-emerald-400' },
+          { label: '8+ days (Power / Daily)', min: 8, max: Infinity, color: 'bg-violet-400' }
+        ].map((t) => {
+          let count = 0;
+          daysPerVisitor.forEach((set) => {
+            if (set.size >= t.min && set.size <= t.max) count++;
+          });
+          const pct = totalVisitors > 0 ? Math.round((count / totalVisitors) * 100) : 0;
+          return { ...t, count, pct };
+        });
+
+        $('loyaltyTiersBox').innerHTML = totalVisitors === 0
+          ? '<div class="text-xs text-slate-500 py-4 text-center">No visitor frequency data in this window.</div>'
+          : tiers.map((t) => `
+            <div class="space-y-1">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-300">${escapeHtml(t.label)}</span>
+                <span class="font-mono text-slate-200">${t.count} <span class="text-slate-500">(${t.pct}%)</span></span>
+              </div>
+              <div class="h-2 rounded-full bg-slate-800/90 overflow-hidden">
+                <div class="h-full ${t.color} rounded-full transition-all" style="width:${t.pct}%"></div>
+              </div>
+            </div>
+          `).join('');
+
+        // Duration Distribution Chart
+        const durBuckets = [
+          { label: '<1m', count: 0 },
+          { label: '1–5m', count: 0 },
+          { label: '5–30m', count: 0 },
+          { label: '30m–2h', count: 0 },
+          { label: '2h+ TV', count: 0 }
+        ];
+        periodSessions.forEach((s) => {
+          const d = Number(s.duration_sec || 0);
+          if (d < 60) durBuckets[0].count++;
+          else if (d < 300) durBuckets[1].count++;
+          else if (d < 1800) durBuckets[2].count++;
+          else if (d < 7200) durBuckets[3].count++;
+          else durBuckets[4].count++;
+        });
+
+        const durCtx = $('durationChartCanvas').getContext('2d');
+        if (state.charts.duration) {
+          state.charts.duration.destroy();
+          state.charts.duration = null;
+        }
+        state.charts.duration = new Chart(durCtx, {
+          type: 'bar',
+          data: {
+            labels: durBuckets.map((b) => b.label),
+            datasets: [{
+              label: 'Sessions',
+              data: durBuckets.map((b) => b.count),
+              backgroundColor: [
+                'rgba(148, 163, 184, 0.7)',
+                'rgba(56, 189, 248, 0.75)',
+                'rgba(52, 211, 153, 0.75)',
+                'rgba(167, 139, 250, 0.75)',
+                'rgba(251, 191, 36, 0.8)'
+              ],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } },
+              y: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0, font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
+            }
+          }
+        });
+      }
+
+      function renderHeatmap(periodSessions) {
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        // grid[row 0..6][hour 0..23]
+        const grid = Array.from({ length: 7 }, () =>
+          Array.from({ length: 24 }, () => ({ visits: 0, visitors: new Set() }))
+        );
+
+        let maxVisits = 0;
+        let peakInfo = null;
+
+        periodSessions.forEach((s) => {
+          const d = new Date(s.started_at);
+          if (isNaN(d.getTime())) return;
+          const row = (d.getDay() + 6) % 7; // Mon=0 .. Sun=6
+          const hr = d.getHours();
+          const cell = grid[row][hr];
+          cell.visits++;
+          cell.visitors.add(s.visitor_id);
+          if (cell.visits > maxVisits) {
+            maxVisits = cell.visits;
+            peakInfo = `${dayNames[row]} ${String(hr).padStart(2, '0')}:00 (${cell.visits})`;
+          }
+        });
+
+        $('peakSummaryPill').textContent = peakInfo ? `Peak: ${peakInfo}` : 'Peak: —';
+
+        const hourHeaders = Array.from({ length: 24 }, (_, h) =>
+          `<div class="text-[9px] font-mono text-slate-500 text-center">${h % 3 === 0 ? String(h).padStart(2, '0') : ''}</div>`
+        ).join('');
+
+        const rowsHtml = grid.map((rowArr, rIdx) => {
+          const cellsHtml = rowArr.map((cell, hr) => {
+            const ratio = maxVisits > 0 ? cell.visits / maxVisits : 0;
+            let bg = 'bg-slate-800/70 border-white/5';
+            if (cell.visits > 0) {
+              if (ratio >= 0.78) bg = 'bg-sky-300 border-sky-200/60';
+              else if (ratio >= 0.52) bg = 'bg-sky-400/75 border-sky-300/40';
+              else if (ratio >= 0.28) bg = 'bg-sky-500/50 border-sky-400/30';
+              else bg = 'bg-sky-500/25 border-sky-400/20';
+            }
+            const title = `${dayNames[rIdx]} ${String(hr).padStart(2, '0')}:00 — ${cell.visits} visit${cell.visits === 1 ? '' : 's'} (${cell.visitors.size} unique)`;
+            return `<div title="${escapeHtml(title)}" class="heatmap-cell h-6 rounded border ${bg}"></div>`;
+          }).join('');
+          return `
+            <div class="grid items-center gap-1" style="grid-template-columns: 36px repeat(24, minmax(0, 1fr));">
+              <div class="text-[11px] font-mono text-slate-400">${dayNames[rIdx]}</div>
+              ${cellsHtml}
+            </div>
+          `;
+        }).join('');
+
+        $('activityHeatmapGrid').innerHTML = `
+          <div class="grid items-center gap-1 mb-1" style="grid-template-columns: 36px repeat(24, minmax(0, 1fr));">
+            <div></div>
+            ${hourHeaders}
+          </div>
+          ${rowsHtml}
+        `;
+      }
+
+      // ------------------------------------------------------------------
+      // Section 3: Where It's Used (Leaflet Map + Locations + Visitor Geo)
+      // ------------------------------------------------------------------
+      function initUsageMap() {
+        if (state.map || typeof L === 'undefined') return;
+        state.map = L.map('usageMap', {
+          center: [52.4, -1.7],
+          zoom: 6,
+          zoomControl: true,
+          attributionControl: false
+        });
+
+        L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}?v=258',
+          { maxZoom: 16 }
+        ).addTo(state.map);
+
+        L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}?v=258',
+          { maxZoom: 16, opacity: 0.7 }
+        ).addTo(state.map);
+
+        state.mapLayer = L.layerGroup().addTo(state.map);
+        setTimeout(() => {
+          if (state.map) state.map.invalidateSize();
+        }, 120);
+      }
+
+      function renderLocationsSection(periodSessions) {
+        // Aggregate chosen weather locations from sessions (including locations_viewed if present)
+        const locMap = new Map();
+        let lockedCount = 0;
+
+        function addPlace(name, postcode, lat, lon, locked, visitorId, timestampIso) {
+          if (locked || name === 'Private (Locked)') {
+            lockedCount++;
+            return;
+          }
+          const cleanName = (name || '').trim();
+          if (!cleanName) return;
+          const pc = (postcode || '').trim().toUpperCase();
+          const key = `${cleanName.toLowerCase()}|${pc}`;
+          if (!locMap.has(key)) {
+            locMap.set(key, {
+              name: cleanName,
+              postcode: pc,
+              lat: typeof lat === 'number' && isFinite(lat) ? lat : null,
+              lon: typeof lon === 'number' && isFinite(lon) ? lon : null,
+              visits: 0,
+              visitors: new Set(),
+              lastSeen: timestampIso
+            });
+          }
+          const entry = locMap.get(key);
+          entry.visits++;
+          if (visitorId) entry.visitors.add(visitorId);
+          if (entry.lat === null && typeof lat === 'number' && isFinite(lat)) entry.lat = lat;
+          if (entry.lon === null && typeof lon === 'number' && isFinite(lon)) entry.lon = lon;
+          if (timestampIso && (!entry.lastSeen || timestampIso > entry.lastSeen)) {
+            entry.lastSeen = timestampIso;
+          }
+        }
+
+        periodSessions.forEach((s) => {
+          const viewed = Array.isArray(s.locations_viewed) && s.locations_viewed.length > 0
+            ? s.locations_viewed
+            : null;
+          if (viewed) {
+            viewed.forEach((v) => {
+              addPlace(v.name, v.postcode, v.lat, v.lon, Boolean(v.locked), s.visitor_id, v.at || s.started_at);
+            });
+          } else if (s.loc_name || s.loc_locked) {
+            addPlace(s.loc_name, s.loc_postcode, s.loc_lat, s.loc_lon, Boolean(s.loc_locked), s.visitor_id, s.started_at);
+          }
+        });
+
+        const topPlaces = Array.from(locMap.values()).sort((a, b) => b.visits - a.visits);
+        const maxPlaceVisits = topPlaces.length ? topPlaces[0].visits : 1;
+
+        $('lockedCountBadge').textContent = `${lockedCount} locked`;
+
+        $('topChosenLocationsList').innerHTML = topPlaces.length === 0
+          ? `<div class="text-xs text-slate-500 py-6 text-center">${lockedCount > 0 ? `All ${lockedCount} visits used a locked location.` : 'No chosen locations recorded in this filter.'}</div>`
+          : topPlaces.slice(0, 30).map((p) => {
+              const width = Math.max(6, Math.round((p.visits / maxPlaceVisits) * 100));
+              return `
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="font-medium text-slate-100 truncate">${escapeHtml(p.name)}</span>
+                      ${p.postcode ? `<span class="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-sky-300 shrink-0">${escapeHtml(p.postcode)}</span>` : ''}
+                    </div>
+                    <span class="font-mono text-slate-300 shrink-0">${p.visits} <span class="text-slate-500">(${p.visitors.size}u)</span></span>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                    <div class="h-full bg-sky-400/80 rounded-full" style="width:${width}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+        // Visitor Access Regions (Geo with Timezone fallback)
+        const regionMap = new Map();
+        periodSessions.forEach((s) => {
+          let label = '';
+          let flag = '🌐';
+          let isTzFallback = false;
+          if (s.geo_country || s.geo_city) {
+            flag = countryFlag(s.geo_country_code);
+            const parts = [s.geo_city, s.geo_region, s.geo_country].filter(Boolean);
+            label = parts.join(', ');
+          } else if (s.timezone) {
+            label = `${s.timezone} (Timezone)`;
+            isTzFallback = true;
+          } else {
+            label = 'Unknown Region';
+          }
+          if (!regionMap.has(label)) {
+            regionMap.set(label, { label, flag, isTzFallback, visits: 0, visitors: new Set() });
+          }
+          const r = regionMap.get(label);
+          r.visits++;
+          r.visitors.add(s.visitor_id);
+        });
+
+        const topRegions = Array.from(regionMap.values()).sort((a, b) => b.visits - a.visits);
+        const maxReg = topRegions.length ? topRegions[0].visits : 1;
+
+        $('visitorRegionsList').innerHTML = topRegions.length === 0
+          ? '<div class="text-xs text-slate-500 py-6 text-center">No visitor region data in this filter.</div>'
+          : topRegions.slice(0, 30).map((r) => {
+              const width = Math.max(6, Math.round((r.visits / maxReg) * 100));
+              return `
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span>${r.flag}</span>
+                      <span class="text-slate-100 truncate">${escapeHtml(r.label)}</span>
+                    </div>
+                    <span class="font-mono text-slate-300 shrink-0">${r.visits} <span class="text-slate-500">(${r.visitors.size}u)</span></span>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                    <div class="h-full ${r.isTzFallback ? 'bg-slate-400/70' : 'bg-emerald-400/80'} rounded-full" style="width:${width}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+        // Plot pins on Leaflet map
+        renderUsageMapMarkers(topPlaces);
+      }
+
+      function renderUsageMapMarkers(analyticsPlaces) {
+        if (!state.map || !state.mapLayer) return;
+        state.mapLayer.clearLayers();
+
+        let points = [];
+        if (state.mapSource === 'legacy') {
+          const legacyMap = new Map();
+          state.legacyLocations.forEach((row) => {
+            const lat = Number(row.lat);
+            const lon = Number(row.lon);
+            if (!isFinite(lat) || !isFinite(lon)) return;
+            const name = (row.name || 'Location').trim();
+            const key = `${name.toLowerCase()}|${lat.toFixed(2)}|${lon.toFixed(2)}`;
+            if (!legacyMap.has(key)) {
+              legacyMap.set(key, {
+                name,
+                postcode: row.postcode || '',
+                lat,
+                lon,
+                visits: 0,
+                visitors: null,
+                lastSeen: row.timestamp
+              });
+            }
+            const item = legacyMap.get(key);
+            item.visits++;
+            if (row.timestamp && (!item.lastSeen || row.timestamp > item.lastSeen)) {
+              item.lastSeen = row.timestamp;
+            }
+          });
+          points = Array.from(legacyMap.values());
+        } else {
+          points = (analyticsPlaces || []).filter((p) => p.lat !== null && p.lon !== null);
+        }
+
+        if (points.length === 0) {
+          state.map.setView([52.4, -1.7], 5);
+          return;
+        }
+
+        const bounds = [];
+        points.forEach((p) => {
+          bounds.push([p.lat, p.lon]);
+          const radius = Math.min(18, Math.max(6, 5 + Math.sqrt(p.visits) * 2.2));
+          const color = state.mapSource === 'legacy' ? '#a78bfa' : '#38bdf8';
+          const marker = L.circleMarker([p.lat, p.lon], {
+            radius,
+            color,
+            weight: 1.5,
+            fillColor: color,
+            fillOpacity: 0.45
+          });
+          const uniqueLine = p.visitors ? `<div>Unique devices: <strong>${p.visitors.size}</strong></div>` : '';
+          marker.bindPopup(`
+            <div style="font-size:12px;line-height:1.45">
+              <div style="font-weight:700;color:#fff">${escapeHtml(p.name)}</div>
+              ${p.postcode ? `<div style="color:#7dd3fc;font-family:monospace">${escapeHtml(p.postcode)}</div>` : ''}
+              <div style="margin-top:4px;color:#cbd5e1">
+                <div>Visits / entries: <strong>${p.visits}</strong></div>
+                ${uniqueLine}
+                <div>Last seen: ${escapeHtml(fmtTimeAgo(p.lastSeen))}</div>
+              </div>
+            </div>
+          `);
+          marker.addTo(state.mapLayer);
+        });
+
+        if (bounds.length === 1) {
+          state.map.setView(bounds[0], 9);
+        } else {
+          state.map.fitBounds(bounds, { padding: [36, 36], maxZoom: 11 });
+        }
+      }
+
+      // ------------------------------------------------------------------
+      // Section 4: Devices, Browsers, PWA, Versions & Google Cast
+      // ------------------------------------------------------------------
+      function renderDevicesAndCast(periodSessions, periodEvents) {
+        // 1. Device Category Donut
+        const catCounts = {
+          mobile: 0,
+          desktop: 0,
+          tv: 0,
+          tablet: 0,
+          cast_receiver: 0
+        };
+        periodSessions.forEach((s) => {
+          const t = s.device_type || 'desktop';
+          catCounts[t] = (catCounts[t] || 0) + 1;
+        });
+
+        const catDefs = [
+          { key: 'mobile', label: 'Mobile', color: 'rgba(56, 189, 248, 0.85)' },
+          { key: 'desktop', label: 'Desktop', color: 'rgba(167, 139, 250, 0.85)' },
+          { key: 'tv', label: 'TV / Shield', color: 'rgba(52, 211, 153, 0.85)' },
+          { key: 'tablet', label: 'Tablet', color: 'rgba(244, 114, 182, 0.85)' },
+          { key: 'cast_receiver', label: 'Cast Receiver', color: 'rgba(251, 191, 36, 0.85)' }
+        ];
+
+        const catCtx = $('deviceCategoryCanvas').getContext('2d');
+        if (state.charts.deviceCategory) {
+          state.charts.deviceCategory.destroy();
+          state.charts.deviceCategory = null;
+        }
+        state.charts.deviceCategory = new Chart(catCtx, {
+          type: 'doughnut',
+          data: {
+            labels: catDefs.map((d) => d.label),
+            datasets: [{
+              data: catDefs.map((d) => catCounts[d.key] || 0),
+              backgroundColor: catDefs.map((d) => d.color),
+              borderColor: '#0f172a',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: { color: '#cbd5e1', boxWidth: 11, font: { size: 11 } }
+              }
+            }
+          }
+        });
+
+        // 2. Popular Device Models
+        const modelMap = new Map();
+        periodSessions.forEach((s) => {
+          const label = s.device_model || s.device_type || 'Unknown';
+          modelMap.set(label, (modelMap.get(label) || 0) + 1);
+        });
+        const models = Array.from(modelMap.entries()).sort((a, b) => b[1] - a[1]);
+        const totalSess = periodSessions.length || 1;
+        const maxModel = models.length ? models[0][1] : 1;
+
+        $('deviceModelsList').innerHTML = models.length === 0
+          ? '<div class="text-xs text-slate-500 py-8 text-center">No device data yet.</div>'
+          : models.slice(0, 15).map(([name, count]) => {
+              const pct = Math.round((count / totalSess) * 100);
+              const bar = Math.max(6, Math.round((count / maxModel) * 100));
+              return `
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-200 truncate">${escapeHtml(name)}</span>
+                    <span class="font-mono text-slate-300 shrink-0">${count} <span class="text-slate-500">(${pct}%)</span></span>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                    <div class="h-full bg-violet-400/80 rounded-full" style="width:${bar}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+
+        // 3. Google Cast Spotlight
+        const castClicks = periodEvents.filter((e) => e.event_type === 'cast_click').length;
+        const castSenders = periodSessions.filter(
+          (s) => s.used_cast && s.cast_mode === 'sender'
+        ).length;
+        const castReceivers = periodSessions.filter(
+          (s) => s.cast_mode === 'receiver' || s.device_type === 'cast_receiver'
+        ).length;
+        const uniqueCasters = new Set(
+          periodSessions
+            .filter((s) => s.used_cast || s.cast_mode === 'receiver' || s.device_type === 'cast_receiver')
+            .map((s) => s.visitor_id)
+        ).size;
+
+        $('castClicksCount').textContent = String(castClicks);
+        $('castSendersCount').textContent = String(castSenders);
+        $('castReceiversCount').textContent = String(castReceivers);
+        $('castUniqueDevices').textContent = String(uniqueCasters);
+
+        // 4. Browsers, PWA & Versions
+        const pwaCount = periodSessions.filter((s) => s.is_pwa).length;
+        const pwaPct = periodSessions.length > 0 ? Math.round((pwaCount / periodSessions.length) * 100) : 0;
+        $('pwaRatioLabel').textContent = `${pwaPct}% PWA (${pwaCount})`;
+        $('pwaRatioBar').style.width = `${pwaPct}%`;
+
+        const browserMap = new Map();
+        const verMap = new Map();
+        periodSessions.forEach((s) => {
+          const b = s.device_browser || 'Other';
+          browserMap.set(b, (browserMap.get(b) || 0) + 1);
+          const v = s.app_version || 'Unknown';
+          verMap.set(v, (verMap.get(v) || 0) + 1);
+        });
+
+        const browsers = Array.from(browserMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        $('browsersList').innerHTML = browsers.length === 0
+          ? '<div class="text-slate-500">—</div>'
+          : browsers.map(([b, c]) =>
+              `<div class="flex justify-between text-slate-300"><span class="truncate">${escapeHtml(b)}</span><span class="font-mono text-slate-400">${c}</span></div>`
+            ).join('');
+
+        const versions = Array.from(verMap.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        $('versionsList').innerHTML = versions.length === 0
+          ? '<div class="text-slate-500">—</div>'
+          : versions.map(([v, c]) =>
+              `<div class="flex justify-between text-slate-300"><span class="truncate font-mono text-[11px]">${escapeHtml(v)}</span><span class="font-mono text-slate-400">${c}</span></div>`
+            ).join('');
+      }
+
+      // ------------------------------------------------------------------
+      // Section 5: Feature & Modal Engagement
+      // ------------------------------------------------------------------
+      function renderFeatureEngagement(periodSessions, periodEvents) {
+        const FEATURE_LABELS = {
+          radar: 'Live Radar',
+          traffic: 'Traffic Flow',
+          river: 'River & Flood',
+          wonders: 'World Wonders',
+          world_map: '30D World Map',
+          location_picker: 'Location Search',
+          share: 'Share / QR',
+          cast_options: 'Cast Options',
+          feedback: 'Feedback',
+          credits: 'Credits'
+        };
+
+        const openCounts = new Map();
+        const sessionCounts = new Map();
+        Object.keys(FEATURE_LABELS).forEach((k) => {
+          openCounts.set(k, 0);
+          sessionCounts.set(k, 0);
+        });
+
+        periodEvents.forEach((ev) => {
+          if (ev.event_type === 'modal_open' && ev.event_target) {
+            const k = ev.event_target;
+            openCounts.set(k, (openCounts.get(k) || 0) + 1);
+          }
+        });
+
+        periodSessions.forEach((s) => {
+          if (Array.isArray(s.features_used)) {
+            s.features_used.forEach((k) => {
+              sessionCounts.set(k, (sessionCounts.get(k) || 0) + 1);
+            });
+          }
+        });
+
+        const totalSess = periodSessions.length || 1;
+        const ranked = Array.from(openCounts.keys())
+          .map((k) => ({
+            key: k,
+            label: FEATURE_LABELS[k] || k,
+            opens: openCounts.get(k) || 0,
+            sess: sessionCounts.get(k) || 0,
+            pct: Math.round(((sessionCounts.get(k) || 0) / totalSess) * 100)
+          }))
+          .sort((a, b) => (b.opens - a.opens) || (b.sess - a.sess));
+
+        const ctx = $('featuresChartCanvas').getContext('2d');
+        if (state.charts.features) {
+          state.charts.features.destroy();
+          state.charts.features = null;
+        }
+        state.charts.features = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ranked.map((r) => `${r.label} (${r.pct}%)`),
+            datasets: [
+              {
+                label: 'Total Opens',
+                data: ranked.map((r) => r.opens),
+                backgroundColor: 'rgba(56, 189, 248, 0.78)',
+                borderRadius: 5
+              },
+              {
+                label: 'Sessions Using',
+                data: ranked.map((r) => r.sess),
+                backgroundColor: 'rgba(52, 211, 153, 0.75)',
+                borderRadius: 5
+              }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+            },
+            scales: {
+              x: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0, font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } },
+              y: { ticks: { color: '#e2e8f0', font: { size: 11 } }, grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      // ------------------------------------------------------------------
+      // Section 6: User Feedback Inbox
+      // ------------------------------------------------------------------
+      async function loadFeedbackInbox() {
+        const body = $('feedbackInboxBody');
+        const sub = $('feedbackStatsSubtitle');
+        sub.textContent = 'Checking Google Apps Script endpoint...';
+        body.innerHTML = '<div class="text-xs text-slate-500 py-8 text-center">Loading feedback feed...</div>';
+
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = setTimeout(() => {
+          if (controller) try { controller.abort(); } catch (_) {}
+        }, 5000);
+
+        try {
+          const res = await fetch(`${FEEDBACK_ENDPOINT}?action=getFeedback`, controller ? { signal: controller.signal } : {});
+          clearTimeout(timer);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          const items = (json && Array.isArray(json.data)) ? json.data : [];
+
+          if (items.length === 0) {
+            sub.textContent = 'Connected — 0 submissions yet';
+            body.innerHTML = `
+              <div class="glass-tile rounded-2xl p-5 text-center space-y-2">
+                <div class="text-sm font-semibold text-slate-200">No feedback submissions yet</div>
+                <p class="text-xs text-slate-400">Once visitors submit ratings or comments in the dashboard feedback modal, they will appear here.</p>
+              </div>
+            `;
+            return;
+          }
+
+          const rated = items.filter((i) => Number(i.stars) > 0);
+          const avgStars = rated.length
+            ? (rated.reduce((sum, i) => sum + Number(i.stars), 0) / rated.length).toFixed(1)
+            : '—';
+          sub.textContent = `${items.length} submission${items.length === 1 ? '' : 's'} • Avg ★ ${avgStars}`;
+
+          body.innerHTML = items.map((item) => {
+            const starsNum = Math.min(5, Math.max(0, Number(item.stars || 0)));
+            const stars = starsNum > 0 ? ('★'.repeat(starsNum) + '☆'.repeat(5 - starsNum)) : 'No rating';
+            return `
+              <div class="glass-tile rounded-xl p-3 space-y-1.5 text-xs">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-amber-400 font-mono">${stars}</span>
+                  <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                    ${item.location ? `<span>${escapeHtml(item.location)}</span>` : ''}
+                    ${item.timestamp ? `<span>${escapeHtml(fmtTimeAgo(item.timestamp))}</span>` : ''}
+                  </div>
+                </div>
+                <p class="text-slate-200 leading-relaxed">"${escapeHtml(item.comment || item.message || '')}"</p>
+                ${item.agentReply ? `<div class="p-2 rounded-lg bg-sky-500/10 border border-sky-400/20 text-[11px] text-sky-200"><strong>Reply:</strong> ${escapeHtml(item.agentReply)}</div>` : ''}
+              </div>
+            `;
+          }).join('');
+        } catch (_) {
+          clearTimeout(timer);
+          sub.textContent = 'Waiting for feedback endpoint';
+          body.innerHTML = `
+            <div class="glass-tile rounded-2xl p-5 text-center space-y-2">
+              <div class="text-sm font-semibold text-slate-200">Feedback feed isn't connected yet</div>
+              <p class="text-xs text-slate-400 leading-relaxed">Once your Google Apps Script feedback endpoint is deployed and returning JSON, user submissions will automatically load here.</p>
+            </div>
+          `;
+        }
+      }
+
+      $('retryFeedbackBtn').addEventListener('click', loadFeedbackInbox);
+
+      // ------------------------------------------------------------------
+      // Section 7: My Devices, QR Tagging & Retroactive Exclusion
+      // ------------------------------------------------------------------
+      function renderThisBrowserOwnerState() {
+        let vid = null;
+        let isOwner = false;
+        try {
+          vid = localStorage.getItem(VISITOR_KEY);
+          isOwner = localStorage.getItem(OWNER_KEY) === 'true' || localStorage.getItem('ambient_admin_unlocked') === 'true';
+        } catch (_) {}
+
+        $('thisBrowserVisitorId').textContent = vid || 'Not tracked on this origin yet';
+        const badge = $('thisBrowserOwnerBadge');
+        const btn = $('toggleThisBrowserOwnerBtn');
+
+        if (isOwner) {
+          badge.textContent = 'Owner Tagged';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-400/30';
+          btn.textContent = 'Unmark This Browser as Owner';
+          btn.className = 'w-full py-2 px-3 rounded-xl border border-amber-400/35 bg-amber-500/10 hover:bg-amber-500/20 text-xs font-semibold text-amber-200 transition cursor-pointer';
+        } else {
+          badge.textContent = 'Not Tagged';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-800 text-slate-400 border border-white/10';
+          btn.textContent = 'Mark This Browser as Owner';
+          btn.className = 'w-full py-2 px-3 rounded-xl border border-emerald-400/35 bg-emerald-500/15 hover:bg-emerald-500/25 text-xs font-semibold text-emerald-200 transition cursor-pointer';
+        }
+      }
+
+      let ownerQrBuilt = false;
+      function initOwnerTools() {
+        renderThisBrowserOwnerState();
+
+        const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', ''].includes(location.hostname) || location.protocol === 'file:';
+        const localUrl = isLocal && location.origin !== 'null'
+          ? `${location.origin}/dev.html?owner=1`
+          : 'http://localhost:8080/dev.html?owner=1';
+        $('ownerLocalUrlText').textContent = localUrl;
+
+        if (!ownerQrBuilt && typeof QRCode !== 'undefined') {
+          ownerQrBuilt = true;
+          const qrTarget = $('ownerQrBox');
+          qrTarget.innerHTML = '';
+          try {
+            new QRCode(qrTarget, {
+              text: 'https://nexusranger.github.io/weather/?owner=1',
+              width: 96,
+              height: 96,
+              colorDark: '#0f172a',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch (_) {}
+        }
+      }
+
+      $('toggleThisBrowserOwnerBtn').addEventListener('click', () => {
+        try {
+          const currentlyOwner = localStorage.getItem(OWNER_KEY) === 'true';
+          if (currentlyOwner) {
+            localStorage.removeItem(OWNER_KEY);
+          } else {
+            localStorage.setItem(OWNER_KEY, 'true');
+          }
+        } catch (_) {}
+        renderThisBrowserOwnerState();
+      });
+
+      document.querySelectorAll('.copy-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const targetId = btn.getAttribute('data-copy-target');
+          const el = $(targetId);
+          if (!el) return;
+          const text = el.textContent.trim();
+          try {
+            await navigator.clipboard.writeText(text);
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 1400);
+          } catch (_) {}
+        });
+      });
+
+      function renderDetectedDevicesTable() {
+        const devMap = new Map();
+        state.allSessions.forEach((s) => {
+          if (!devMap.has(s.visitor_id)) {
+            devMap.set(s.visitor_id, {
+              visitor_id: s.visitor_id,
+              device_model: s.device_model || s.device_type || 'Unknown',
+              device_os: s.device_os || '',
+              device_browser: s.device_browser || '',
+              loc_name: s.loc_name || 'Unknown',
+              last_seen_at: s.last_seen_at || s.started_at,
+              visits: 0,
+              is_owner: Boolean(s.is_owner)
+            });
+          }
+          const d = devMap.get(s.visitor_id);
+          d.visits++;
+          if (s.is_owner) d.is_owner = true;
+          const seen = s.last_seen_at || s.started_at;
+          if (seen && seen > d.last_seen_at) {
+            d.last_seen_at = seen;
+            if (s.loc_name) d.loc_name = s.loc_name;
+          }
+        });
+
+        const devices = Array.from(devMap.values()).sort((a, b) =>
+          (b.last_seen_at || '').localeCompare(a.last_seen_at || '')
+        );
+        $('detectedDevicesCount').textContent = `${devices.length} device${devices.length === 1 ? '' : 's'}`;
+
+        const tbody = $('detectedDevicesTbody');
+        if (devices.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-6 text-center text-slate-500">No devices recorded yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = devices.slice(0, 60).map((d) => {
+          const excl = state.excludedMap.get(d.visitor_id);
+          let statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-sky-500/10 text-sky-300 border border-sky-400/20">External</span>';
+          if (excl) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/15 text-amber-300 border border-amber-400/30">Excluded${excl.label ? ': ' + escapeHtml(excl.label) : ''}</span>`;
+          } else if (d.is_owner) {
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">Owner Tag</span>';
+          }
+
+          const actionBtn = excl
+            ? `<button type="button" data-unexclude-id="${escapeHtml(d.visitor_id)}" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-slate-300 cursor-pointer">Restore</button>`
+            : `<button type="button" data-exclude-id="${escapeHtml(d.visitor_id)}" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 text-[11px] text-amber-200 cursor-pointer">Exclude as Mine</button>`;
+
+          return `
+            <tr class="hover:bg-white/5">
+              <td class="px-4 py-2.5 font-mono text-[11px] text-slate-400">${escapeHtml(d.visitor_id.slice(0, 8))}…</td>
+              <td class="px-4 py-2.5">
+                <div class="font-medium text-slate-100">${escapeHtml(d.device_model)}</div>
+                <div class="text-[11px] text-slate-400">${escapeHtml([d.device_os, d.device_browser].filter(Boolean).join(' • '))}</div>
+              </td>
+              <td class="px-4 py-2.5 text-slate-300">${escapeHtml(d.loc_name)}</td>
+              <td class="px-4 py-2.5 font-mono text-[11px] text-slate-400">${escapeHtml(fmtTimeAgo(d.last_seen_at))}</td>
+              <td class="px-4 py-2.5 text-right font-mono text-slate-200">${d.visits}</td>
+              <td class="px-4 py-2.5">${statusBadge}</td>
+              <td class="px-4 py-2.5 text-right">${actionBtn}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function openExcludeModal(visitorId) {
+        state.excludeTargetId = visitorId;
+        $('excludeModalVisitorId').textContent = visitorId.slice(0, 12) + '…';
+        $('excludeDeviceLabelInput').value = '';
+        $('excludeModal').classList.remove('hidden');
+        $('excludeModal').classList.add('flex');
+        setTimeout(() => $('excludeDeviceLabelInput').focus(), 40);
+      }
+
+      function closeExcludeModal() {
+        state.excludeTargetId = null;
+        $('excludeModal').classList.add('hidden');
+        $('excludeModal').classList.remove('flex');
+      }
+
+      $('excludeCancelBtn').addEventListener('click', closeExcludeModal);
+      $('excludeModal').addEventListener('click', (e) => {
+        if (e.target === $('excludeModal')) closeExcludeModal();
+      });
+
+      $('excludeConfirmBtn').addEventListener('click', async () => {
+        if (!state.excludeTargetId) return;
+        const vid = state.excludeTargetId;
+        const label = $('excludeDeviceLabelInput').value.trim() || 'My Device';
+        $('excludeConfirmBtn').disabled = true;
+        try {
+          const { error } = await sb
+            .from('analytics_excluded_devices')
+            .upsert({ visitor_id: vid, label }, { onConflict: 'visitor_id' });
+          if (error) throw error;
+          state.excludedMap.set(vid, { visitor_id: vid, label });
+          closeExcludeModal();
+          renderDashboard();
+        } catch (err) {
+          alert('Could not exclude device: ' + (err.message || err));
+        } finally {
+          $('excludeConfirmBtn').disabled = false;
+        }
+      });
+
+      $('detectedDevicesTbody').addEventListener('click', async (e) => {
+        const exclBtn = e.target.closest('[data-exclude-id]');
+        if (exclBtn) {
+          openExcludeModal(exclBtn.getAttribute('data-exclude-id'));
+          return;
+        }
+        const unexclBtn = e.target.closest('[data-unexclude-id]');
+        if (unexclBtn) {
+          const vid = unexclBtn.getAttribute('data-unexclude-id');
+          unexclBtn.disabled = true;
+          try {
+            const { error } = await sb
+              .from('analytics_excluded_devices')
+              .delete()
+              .eq('visitor_id', vid);
+            if (error) throw error;
+            state.excludedMap.delete(vid);
+            renderDashboard();
+          } catch (err) {
+            alert('Could not restore device: ' + (err.message || err));
+          } finally {
+            unexclBtn.disabled = false;
+          }
+        }
+      });
+
+      // ------------------------------------------------------------------
+      // Filter & Toggle Listeners
+      // ------------------------------------------------------------------
+      function setFilter(group, value) {
+        state.filters[group] = value;
+        document.querySelectorAll(`[data-filter="${group}"]`).forEach((btn) => {
+          const active = btn.getAttribute('data-value') === value;
+          btn.classList.toggle('pill-active', active);
+          btn.classList.toggle('pill-idle', !active);
+        });
+        if (group === 'range') {
+          const days = rangeToDays(value);
+          const needed = days > 0 ? Math.max(days * 2, 30) : 0;
+          const needReload =
+            state.loadedFetchDays === null ||
+            (state.loadedFetchDays !== 0 && (needed === 0 || needed > state.loadedFetchDays));
+          if (needReload) {
+            loadAllData();
+            return;
+          }
+        }
+        renderDashboard();
+      }
+
+      document.querySelectorAll('[data-filter]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          setFilter(btn.getAttribute('data-filter'), btn.getAttribute('data-value'));
+        });
+      });
+
+      document.querySelectorAll('[data-chart-mode]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.chartMode = btn.getAttribute('data-chart-mode');
+          document.querySelectorAll('[data-chart-mode]').forEach((b) => {
+            const active = b.getAttribute('data-chart-mode') === state.chartMode;
+            b.classList.toggle('pill-active', active);
+            b.classList.toggle('pill-idle', !active);
+          });
+          if (state.lastDayStats) renderDailyChart(state.lastDayStats);
+        });
+      });
+
+      document.querySelectorAll('[data-map-source]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.mapSource = btn.getAttribute('data-map-source');
+          document.querySelectorAll('[data-map-source]').forEach((b) => {
+            const active = b.getAttribute('data-map-source') === state.mapSource;
+            b.classList.toggle('pill-active', active);
+            b.classList.toggle('pill-idle', !active);
+          });
+          renderDashboard();
+        });
+      });
+
+      $('refreshBtn').addEventListener('click', () => {
+        loadAllData();
+        loadFeedbackInbox();
+      });
+
+      checkInitialAuth();
+    })();
+  </script>
+</body>
+</html>
