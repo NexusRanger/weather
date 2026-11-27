@@ -20,6 +20,29 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
+
+  <!-- Dedicated Fullscreen Map Modal (at body level to bypass any backdrop-filter containing block traps) -->
+  <div id="mapFullscreenModal" class="hidden fixed inset-0 z-[99999] bg-[#030712] flex flex-col p-3 sm:p-5">
+    <div class="flex items-center justify-between pb-3 flex-shrink-0 border-b border-white/10">
+      <div class="flex items-center gap-2.5">
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <span>🌍</span>
+          <span>Where It's Used &bull; Fullscreen Map</span>
+        </h2>
+        <span id="fsMapSourceBadge" class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-400/30">Analytics Visits</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="toggleMapFullscreen()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/25 text-white font-semibold text-xs transition cursor-pointer flex items-center gap-2 shadow-lg">
+          <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          <span>Exit Fullscreen Map (Esc)</span>
+        </button>
+      </div>
+    </div>
+    <div id="fsMapTarget" class="flex-1 w-full rounded-2xl overflow-hidden mt-3 border border-white/15 min-h-0"></div>
+  </div>
+
   <script>
     tailwind.config = {
       theme: {
@@ -106,23 +129,7 @@
       outline: 1px solid rgba(255, 255, 255, 0.7);
       z-index: 10;
     }
-  
-    #usageMapContainer.map-fullscreen-active {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 9999 !important;
-      background: #030712 !important;
-      padding: 16px !important;
-      box-sizing: border-box !important;
-    }
-    #usageMapContainer.map-fullscreen-active #usageMap {
-      width: 100% !important;
-      height: 100% !important;
-      border-radius: 16px !important;
-    }
-  </style>
+</style>
 </head>
 <body class="font-sans antialiased selection:bg-sky-500/30 selection:text-sky-100">
 
@@ -453,14 +460,8 @@
           </div>
         </div>
 
-        <div id="usageMapContainer" class="relative w-full">
+        <div id="usageMapNormalContainer" class="relative w-full">
           <div id="usageMap" class="h-80 sm:h-96 w-full rounded-2xl border border-white/10 overflow-hidden z-10 transition-all duration-300"></div>
-          <button id="exitMapFsBtn" type="button" onclick="toggleMapFullscreen()" class="hidden absolute top-4 right-4 z-[1000] px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/20 text-white font-semibold text-xs shadow-2xl backdrop-blur-md flex items-center gap-2 cursor-pointer">
-            <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-            <span>Exit Fullscreen Map</span>
-          </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -2530,27 +2531,66 @@
         if (label) {
           label.textContent = document.fullscreenElement ? 'Exit Fullscreen' : 'Full Screen';
         }
+        if (!document.fullscreenElement) {
+          const modal = document.getElementById('mapFullscreenModal');
+          if (modal && !modal.classList.contains('hidden')) {
+            toggleMapFullscreen();
+          }
+        }
       });
 
       window.toggleMapFullscreen = function() {
-        const container = document.getElementById('usageMapContainer');
-        const exitBtn = document.getElementById('exitMapFsBtn');
+        const modal = document.getElementById('mapFullscreenModal');
+        const normalContainer = document.getElementById('usageMapNormalContainer');
+        const fsTarget = document.getElementById('fsMapTarget');
+        const mapEl = document.getElementById('usageMap');
         const label = document.getElementById('mapFullscreenLabel');
-        if (!container) return;
-        const isFs = container.classList.toggle('map-fullscreen-active');
-        if (exitBtn) exitBtn.classList.toggle('hidden', !isFs);
-        if (label) label.textContent = isFs ? 'Exit Fullscreen' : 'Fullscreen Map';
+        if (!modal || !normalContainer || !fsTarget || !mapEl) return;
+
+        const isOpening = modal.classList.contains('hidden');
+
+        if (isOpening) {
+          mapEl.classList.remove('h-80', 'sm:h-96');
+          mapEl.classList.add('h-full');
+          fsTarget.appendChild(mapEl);
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+          if (label) label.textContent = 'Exit Fullscreen';
+          const fsBadge = document.getElementById('fsMapSourceBadge');
+          if (fsBadge) {
+            fsBadge.textContent = state.mapSource === 'legacy' ? 'Legacy 30D Public Map' : 'Analytics Visits';
+          }
+          if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          }
+        } else {
+          mapEl.classList.remove('h-full');
+          mapEl.classList.add('h-80', 'sm:h-96');
+          normalContainer.appendChild(mapEl);
+          modal.classList.add('hidden');
+          document.body.style.overflow = '';
+          if (label) label.textContent = 'Fullscreen Map';
+          if (document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+
         setTimeout(() => {
           if (state.map) {
             state.map.invalidateSize();
           }
-        }, 150);
+        }, 100);
+        setTimeout(() => {
+          if (state.map) {
+            state.map.invalidateSize();
+          }
+        }, 300);
       };
 
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-          const container = document.getElementById('usageMapContainer');
-          if (container && container.classList.contains('map-fullscreen-active')) {
+          const modal = document.getElementById('mapFullscreenModal');
+          if (modal && !modal.classList.contains('hidden')) {
             toggleMapFullscreen();
           }
         } else if ((e.key === 'f' || e.key === 'F') && !e.target.matches('input, textarea, select')) {
