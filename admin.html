@@ -106,6 +106,22 @@
       outline: 1px solid rgba(255, 255, 255, 0.7);
       z-index: 10;
     }
+  
+    #usageMapContainer.map-fullscreen-active {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 9999 !important;
+      background: #030712 !important;
+      padding: 16px !important;
+      box-sizing: border-box !important;
+    }
+    #usageMapContainer.map-fullscreen-active #usageMap {
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 16px !important;
+    }
   </style>
 </head>
 <body class="font-sans antialiased selection:bg-sky-500/30 selection:text-sky-100">
@@ -202,6 +218,12 @@
             <button id="refreshBtn" type="button" class="px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 text-xs font-semibold text-sky-200 transition cursor-pointer">
               ↻ Refresh
             </button>
+            <button id="fullscreenBtn" type="button" onclick="toggleFullscreen()" title="Toggle Fullscreen (F)" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+              </svg>
+              <span id="fullscreenBtnLabel">Full Screen</span>
+            </button>
             <button id="signOutBtn" type="button" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/35 text-xs font-medium text-slate-300 hover:text-rose-200 transition cursor-pointer">
               Sign Out
             </button>
@@ -213,10 +235,10 @@
           <!-- Date Range -->
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="text-[11px] text-slate-500 uppercase tracking-wider font-semibold mr-1">Range</span>
-            <button data-filter="range" data-value="7d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">7D</button>
-            <button data-filter="range" data-value="14d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">14D</button>
-            <button data-filter="range" data-value="30d" class="pill-btn pill-active px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">30D</button>
-            <button data-filter="range" data-value="90d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">90D</button>
+            <button data-filter="range" data-value="7d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">7<span class="text-sky-400 font-bold ml-0.5">D</span></button>
+            <button data-filter="range" data-value="14d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">14<span class="text-sky-400 font-bold ml-0.5">D</span></button>
+            <button data-filter="range" data-value="30d" class="pill-btn pill-active px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">30<span class="text-sky-400 font-bold ml-0.5">D</span></button>
+            <button data-filter="range" data-value="90d" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">90<span class="text-sky-400 font-bold ml-0.5">D</span></button>
             <button data-filter="range" data-value="all" class="pill-btn pill-idle px-2.5 py-1 rounded-lg border text-xs font-mono cursor-pointer">All</button>
           </div>
 
@@ -262,7 +284,7 @@
 
         <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-2">
           <div class="flex items-center justify-between">
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400" id="kpiPeriodLabel">30D Visitors</span>
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400" id="kpiPeriodLabel">30<span class="text-sky-400 font-bold ml-0.5">D</span> Visitors</span>
             <span id="kpiPeriodDelta" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-slate-400">—</span>
           </div>
           <div>
@@ -324,7 +346,7 @@
             <p class="text-xs text-slate-400">Track whether daily reach and returning regulars are trending upward</p>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
-            <button data-chart-mode="trend" class="pill-btn pill-active px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Visitors &amp; 7D Trend</button>
+            <button data-chart-mode="trend" class="pill-btn pill-active px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Visitors &amp; 7<span class="text-sky-400 font-bold ml-0.5">D</span> Trend</button>
             <button data-chart-mode="retention" class="pill-btn pill-idle px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">New vs Returning</button>
             <button id="exportCsvBtn" type="button" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-slate-300 transition cursor-pointer">
               ↓ CSV
@@ -421,11 +443,25 @@
           </div>
           <div class="flex items-center gap-1.5">
             <button data-map-source="analytics" class="pill-btn pill-active px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Analytics Visits</button>
-            <button data-map-source="legacy" class="pill-btn pill-idle px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Legacy 30D Public Map (<span id="legacyLocationsCount">0</span>)</button>
+            <button data-map-source="legacy" class="pill-btn pill-idle px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer">Legacy 30<span class="text-sky-400 font-bold ml-0.5">D</span> Public Map (<span id="legacyLocationsCount">0</span>)</button>
+            <button id="mapFullscreenBtn" type="button" onclick="toggleMapFullscreen()" title="Toggle Fullscreen Map" class="pill-btn pill-idle px-3 py-1.5 rounded-xl border text-xs font-medium cursor-pointer flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+              </svg>
+              <span id="mapFullscreenLabel">Fullscreen Map</span>
+            </button>
           </div>
         </div>
 
-        <div id="usageMap" class="h-80 sm:h-96 w-full rounded-2xl border border-white/10 overflow-hidden z-10"></div>
+        <div id="usageMapContainer" class="relative w-full">
+          <div id="usageMap" class="h-80 sm:h-96 w-full rounded-2xl border border-white/10 overflow-hidden z-10 transition-all duration-300"></div>
+          <button id="exitMapFsBtn" type="button" onclick="toggleMapFullscreen()" class="hidden absolute top-4 right-4 z-[1000] px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-white/20 text-white font-semibold text-xs shadow-2xl backdrop-blur-md flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            <span>Exit Fullscreen Map</span>
+          </button>
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <!-- Chosen Weather Locations -->
@@ -632,18 +668,6 @@
               </thead>
               <tbody id="detectedDevicesTbody" class="divide-y divide-white/5 text-slate-200"></tbody>
             </table>
-          </div>
-        </div>
-
-        <!-- Promote to Live Cheat Sheet -->
-        <div class="glass-tile rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="space-y-1">
-            <h3 class="text-xs font-bold text-white">Ready to enable on Live (<code class="text-sky-300 font-mono">index.html</code>)?</h3>
-            <p class="text-[11px] text-slate-400">Once you have verified tracking on <code class="text-sky-300 font-mono">dev.html</code>, add this single line right before <code class="text-slate-300 font-mono">&lt;/body&gt;</code> in <code class="text-sky-300 font-mono">index.html</code>:</p>
-          </div>
-          <div class="flex items-center gap-2 bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono">
-            <code id="promoteSnippetText" class="text-emerald-300">&lt;script defer src="analytics.js?v=1"&gt;&lt;/script&gt;</code>
-            <button type="button" data-copy-target="promoteSnippetText" class="copy-btn px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px] cursor-pointer">Copy</button>
           </div>
         </div>
       </section>
@@ -1258,7 +1282,7 @@
         // Period Visitors & Growth
         const periodUnique = new Set(periodSessions.map((s) => s.visitor_id)).size;
         const prevUnique = days > 0 ? new Set(prevSessions.map((s) => s.visitor_id)).size : null;
-        $('kpiPeriodLabel').textContent = days > 0 ? `${days}D Visitors` : 'All-Time Visitors';
+        $('kpiPeriodLabel').innerHTML = days > 0 ? `${days}<span class="text-sky-400 font-bold ml-0.5">D</span> Visitors` : 'All-Time Visitors';
         $('kpiPeriodUnique').textContent = String(periodUnique);
         $('kpiPeriodVisits').textContent = String(periodSessions.length);
         const periodDelta = days > 0
@@ -2491,7 +2515,52 @@
         loadFeedbackInbox();
       });
 
+      
+      // Fullscreen & Map Fullscreen Handlers
+      window.toggleFullscreen = function() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      };
+
+      document.addEventListener('fullscreenchange', () => {
+        const label = document.getElementById('fullscreenBtnLabel');
+        if (label) {
+          label.textContent = document.fullscreenElement ? 'Exit Fullscreen' : 'Full Screen';
+        }
+      });
+
+      window.toggleMapFullscreen = function() {
+        const container = document.getElementById('usageMapContainer');
+        const exitBtn = document.getElementById('exitMapFsBtn');
+        const label = document.getElementById('mapFullscreenLabel');
+        if (!container) return;
+        const isFs = container.classList.toggle('map-fullscreen-active');
+        if (exitBtn) exitBtn.classList.toggle('hidden', !isFs);
+        if (label) label.textContent = isFs ? 'Exit Fullscreen' : 'Fullscreen Map';
+        setTimeout(() => {
+          if (state.map) {
+            state.map.invalidateSize();
+          }
+        }, 150);
+      };
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const container = document.getElementById('usageMapContainer');
+          if (container && container.classList.contains('map-fullscreen-active')) {
+            toggleMapFullscreen();
+          }
+        } else if ((e.key === 'f' || e.key === 'F') && !e.target.matches('input, textarea, select')) {
+          e.preventDefault();
+          toggleFullscreen();
+        }
+      });
+
       checkInitialAuth();
+
     })();
   </script>
 </body>
